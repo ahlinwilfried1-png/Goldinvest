@@ -27,6 +27,7 @@ const INITIAL_USERS: User[] = [
     id: 'u-admin',
     name: 'Administrateur Principal',
     whatsapp: '+2250102030405',
+    password: 'admin',
     country: 'Côte d’Ivoire',
     balance: 1250000,
     dailyEarnings: 0,
@@ -41,6 +42,7 @@ const INITIAL_USERS: User[] = [
     id: 'u-1',
     name: 'Aline Ouédraogo',
     whatsapp: '+22670717273',
+    password: 'user123',
     country: 'Burkina Faso',
     balance: 14200,
     dailyEarnings: 600,
@@ -56,6 +58,7 @@ const INITIAL_USERS: User[] = [
     id: 'u-2',
     name: 'Koffi Kouamé',
     whatsapp: '+2250708091011',
+    password: 'user123',
     country: 'Côte d’Ivoire',
     balance: 38000,
     dailyEarnings: 2500,
@@ -71,6 +74,7 @@ const INITIAL_USERS: User[] = [
     id: 'u-3',
     name: 'Moussa Diarra',
     whatsapp: '+22360616263',
+    password: 'user123',
     country: 'Mali',
     balance: 2400,
     dailyEarnings: 0,
@@ -264,7 +268,23 @@ export class DataStore {
   }
 
   static getProducts(): Product[] {
-    return getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
+    const list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
+    let changed = false;
+    const now = new Date();
+    
+    const updated = list.map(p => {
+      if (p.isBlocked && p.reopenDateTime && now >= new Date(p.reopenDateTime)) {
+        changed = true;
+        return { ...p, isBlocked: false, reopenDateTime: undefined };
+      }
+      return p;
+    });
+
+    if (changed) {
+      this.saveProducts(updated);
+      return updated;
+    }
+    return list;
   }
 
   static saveProducts(products: Product[]): void {
@@ -357,19 +377,13 @@ export class DataStore {
       return { success: false, message: 'Ce compte a été bloqué par l\'administrateur. Veuillez contacter le support.' };
     }
     
-    // In our live responsive system, we support a simple password comparison for demo code
     if (passwordString.trim() === '') {
       return { success: false, message: 'Mot de passe requis.' };
     }
     
-    // Auto-approve password if matching or fallback
-    if (passwordString === 'admin' && user.role === 'admin') {
-      this.saveCurrentUser(user);
-      return { success: true, user, message: 'Connexion administrateur réussie.' };
-    }
-    
-    // Standard user simple validation
-    if (passwordString === 'user123' || passwordString === 'admin' || passwordString.length >= 4) {
+    // Check specific user set password or fallback to defaults
+    const expectedPassword = user.password || (user.role === 'admin' ? 'admin' : 'user123');
+    if (passwordString === expectedPassword) {
       this.saveCurrentUser(user);
       return { success: true, user, message: 'Connexion réussie.' };
     }
@@ -382,6 +396,7 @@ export class DataStore {
     name: string;
     whatsapp: string;
     country: string;
+    password?: string;
     referredByCode: string;
   }): { success: boolean, user?: User, message: string } {
     const users = this.getUsers();
@@ -412,11 +427,12 @@ export class DataStore {
       id: `u-${Date.now()}`,
       name: data.name,
       whatsapp: data.whatsapp,
+      password: data.password || 'user123',
       country: data.country,
-      balance: 1000, // 1,000 FCFA Welcome Signup Bonus as requested
+      balance: 200, // 200 FCFA Welcome Signup Bonus as requested
       dailyEarnings: 0,
       totalEarnings: 0,
-      bonus: 1000,
+      bonus: 200,
       referralCode,
       referredBy: refereeId,
       role: 'user',
@@ -433,7 +449,7 @@ export class DataStore {
       id: `not-${Date.now()}`,
       userId: newUser.id,
       title: 'Bienvenue sur GoldInvest !',
-      message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 1 000 FCFA a été crédité sur votre compte.',
+      message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.',
       type: 'bonus',
       createdAt: new Date().toISOString(),
       read: false
@@ -447,7 +463,7 @@ export class DataStore {
         id: `not-ref-${Date.now()}`,
         userId: refereeId,
         title: 'Nouveau parrainage',
-        message: `${newUser.name} s'est inscrit en utilisant votre lien. Vous recevrez 10% de commission sur ses investissements !`,
+        message: `${newUser.name} s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !`,
         type: 'info',
         createdAt: new Date().toISOString(),
         read: false
@@ -561,6 +577,10 @@ export class DataStore {
       return { success: false, message: 'Le produit d\'investissement sélectionné est introuvable.' };
     }
 
+    if (targetProduct.isBlocked) {
+      return { success: false, message: 'Ce plan d\'investissement VIP est temporairement bloqué ou suspendu par l\'administration.' };
+    }
+
     const users = this.getUsers();
     const userIdx = users.findIndex(u => u.id === userId);
     if (userIdx === -1) {
@@ -605,12 +625,13 @@ export class DataStore {
     this.saveInvestments(investments);
 
     // Process MLM Commission split!
-    // Level 1: 10%
-    // Level 2: 5%
+    // Level 1: 20%
+    // Level 2: 3%
+    // Level 3: 1%
     if (user.referredBy) {
       const parentUser = users.find(u => u.id === user.referredBy);
       if (parentUser) {
-        const commAmtLvl1 = Math.round(targetProduct.price * 0.10); // 10%
+        const commAmtLvl1 = Math.round(targetProduct.price * 0.20); // 20%
         parentUser.balance += commAmtLvl1;
         parentUser.bonus += commAmtLvl1;
         
@@ -632,7 +653,7 @@ export class DataStore {
           id: `not-com1-${Date.now()}`,
           userId: parentUser.id,
           title: 'Commission MLM reçue !',
-          message: `Félicitations, vous avez perçu ${commAmtLvl1} FCFA (Niveau 1) car votre affilié ${user.name} a investi de l'argent dans le plan ${targetProduct.name}.`,
+          message: `Félicitations, vous avez perçu ${commAmtLvl1} FCFA (Niveau 1 : 20%) car votre affilié ${user.name} a investi de l'argent dans le plan ${targetProduct.name}.`,
           type: 'bonus',
           createdAt: new Date().toISOString(),
           read: false
@@ -646,11 +667,11 @@ export class DataStore {
           this.saveCurrentUser(currentUser);
         }
 
-        // Level 2 MLM: 5%
+        // Level 2 MLM: 3%
         if (parentUser.referredBy) {
           const grandParentUser = users.find(u => u.id === parentUser.referredBy);
           if (grandParentUser) {
-            const commAmtLvl2 = Math.round(targetProduct.price * 0.05); // 5%
+            const commAmtLvl2 = Math.round(targetProduct.price * 0.03); // 3%
             grandParentUser.balance += commAmtLvl2;
             grandParentUser.bonus += commAmtLvl2;
 
@@ -672,7 +693,7 @@ export class DataStore {
               id: `not-com2-${Date.now()}`,
               userId: grandParentUser.id,
               title: 'Commission MLM Niveau 2 !',
-              message: `Vous avez perçu ${commAmtLvl2} FCFA (Niveau 2) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
+              message: `Vous avez perçu ${commAmtLvl2} FCFA (Niveau 2 : 3%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
               type: 'bonus',
               createdAt: new Date().toISOString(),
               read: false
@@ -683,6 +704,47 @@ export class DataStore {
               currentUser.balance = grandParentUser.balance;
               currentUser.bonus = grandParentUser.bonus;
               this.saveCurrentUser(currentUser);
+            }
+
+            // Level 3 MLM: 1%
+            if (grandParentUser.referredBy) {
+              const greatGrandParentUser = users.find(u => u.id === grandParentUser.referredBy);
+              if (greatGrandParentUser) {
+                const commAmtLvl3 = Math.round(targetProduct.price * 0.01); // 1%
+                greatGrandParentUser.balance += commAmtLvl3;
+                greatGrandParentUser.bonus += commAmtLvl3;
+
+                const newCommLvl3: Commission = {
+                  id: `com-${Date.now()}-3`,
+                  userId: greatGrandParentUser.id,
+                  fromUserName: user.name,
+                  level: 3,
+                  amount: commAmtLvl3,
+                  createdAt: new Date().toISOString()
+                };
+                const currentComms3 = this.getCommissions();
+                currentComms3.unshift(newCommLvl3);
+                this.saveCommissions(currentComms3);
+
+                // Notify great-grandparent
+                const ggpNotifs = this.getNotifications();
+                ggpNotifs.unshift({
+                  id: `not-com3-${Date.now()}`,
+                  userId: greatGrandParentUser.id,
+                  title: 'Commission MLM Niveau 3 !',
+                  message: `Vous avez perçu ${commAmtLvl3} FCFA (Niveau 3 : 1%) suite à l'investissement de ${user.name} (parrainé indirectement par un membre de votre réseau).`,
+                  type: 'bonus',
+                  createdAt: new Date().toISOString(),
+                  read: false
+                });
+                this.saveNotifications(ggpNotifs);
+
+                if (currentUser && currentUser.id === greatGrandParentUser.id) {
+                  currentUser.balance = greatGrandParentUser.balance;
+                  currentUser.bonus = greatGrandParentUser.bonus;
+                  this.saveCurrentUser(currentUser);
+                }
+              }
             }
           }
         }
@@ -934,13 +996,16 @@ export class DataStore {
   }
 
   // Modify user balances
-  static updateUserBalance(userId: string, data: { balance: number, bonus: number, role: 'user' | 'admin' }): void {
+  static updateUserBalance(userId: string, data: { balance: number, bonus: number, role: 'user' | 'admin', password?: string }): void {
     const users = this.getUsers();
     const idx = users.findIndex(u => u.id === userId);
     if (idx !== -1) {
       users[idx].balance = data.balance;
       users[idx].bonus = data.bonus;
       users[idx].role = data.role;
+      if (data.password !== undefined && data.password.trim() !== '') {
+        users[idx].password = data.password;
+      }
       this.saveUsers(users);
 
       const current = this.getCurrentUser();
@@ -948,9 +1013,30 @@ export class DataStore {
         current.balance = data.balance;
         current.bonus = data.bonus;
         current.role = data.role;
+        if (data.password !== undefined && data.password.trim() !== '') {
+          current.password = data.password;
+        }
         this.saveCurrentUser(current);
       }
     }
+  }
+
+  // Self-change or admin-change password helper
+  static changeUserPassword(userId: string, newPasswordString: string): boolean {
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx !== -1) {
+      users[idx].password = newPasswordString;
+      this.saveUsers(users);
+      
+      const current = this.getCurrentUser();
+      if (current && current.id === userId) {
+        current.password = newPasswordString;
+        this.saveCurrentUser(current);
+      }
+      return true;
+    }
+    return false;
   }
 
   // Financial Queue management
@@ -1116,6 +1202,16 @@ export class DataStore {
     let list = this.getProducts();
     list = list.filter(p => p.id !== productId);
     this.saveProducts(list);
+  }
+
+  static toggleBlockProduct(productId: string, isBlocked: boolean, reopenDateTime?: string): void {
+    const list = this.getProducts();
+    const idx = list.findIndex(p => p.id === productId);
+    if (idx !== -1) {
+      list[idx].isBlocked = isBlocked;
+      list[idx].reopenDateTime = isBlocked ? (reopenDateTime || undefined) : undefined;
+      this.saveProducts(list);
+    }
   }
 
   // Create Bonus code

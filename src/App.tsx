@@ -60,7 +60,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans tracking-tight leading-normal overflow-x-hidden select-none">
+    <div className="min-h-screen bg-black font-sans tracking-tight leading-normal overflow-x-hidden select-none">
       
       {/* 1. MARKETING PORTAL LANDING */}
       {currentScreen === 'home' && (

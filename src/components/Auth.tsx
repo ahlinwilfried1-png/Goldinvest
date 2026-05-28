@@ -34,7 +34,7 @@ export default function Auth({
   // Sign up fields
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [country, setCountry] = useState('Côte d’Ivoire');
+  const [country, setCountry] = useState('Cameroun');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
@@ -59,16 +59,7 @@ export default function Auth({
   };
 
   const countriesList = [
-    'Côte d’Ivoire',
-    'Burkina Faso',
-    'Mali',
-    'Sénégal',
-    'Togo',
-    'Bénin',
     'Cameroun',
-    'Niger',
-    'Guinée',
-    'France',
   ];
 
   // Form submission dispatcher
@@ -116,6 +107,7 @@ export default function Auth({
           name,
           whatsapp,
           country,
+          password,
           referredByCode: referralCode
         });
 
@@ -159,13 +151,13 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative bg-slate-950">
+    <div className="min-h-screen flex items-center justify-center p-4 relative bg-black">
       {/* Background gradients */}
-      <div className="absolute top-[20%] left-[20%] w-72 h-72 bg-yellow-500/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[20%] w-80 h-80 bg-blue-500/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[20%] left-[20%] w-72 h-72 bg-yellow-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[20%] w-80 h-80 bg-night-blue-light/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Main card */}
-      <div className="w-full max-w-lg bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-yellow-500/20 p-6 md:p-8 shadow-2xl relative">
+      <div className="w-full max-w-lg bg-[#070e24]/90 backdrop-blur-xl rounded-3xl border border-yellow-500/25 p-6 md:p-8 shadow-2xl relative">
         
         {/* Header navigation */}
         <button 
@@ -186,7 +178,7 @@ export default function Auth({
           </h2>
           <p className="text-xs text-slate-400 mt-1.5">
             {isRegister 
-              ? 'Créez votre dossier d\'affiliation et offrez-vous 1 000 FCFA gratuits' 
+              ? 'Créez votre dossier d\'affiliation et offrez-vous 200 XAF gratuits' 
               : 'Accédez de manière cryptée et sécurisée à votre tableau de bord financier'
             }
           </p>
@@ -438,7 +430,7 @@ export default function Auth({
             }}
             className="text-yellow-400 font-bold hover:underline ml-1 focus:outline-none"
           >
-            {isRegister ? 'Connectez-vous ici' : 'Inscrivez-vous maintenant (+1 000F)'}
+            {isRegister ? 'Connectez-vous ici' : 'Inscrivez-vous maintenant (+200F)'}
           </button>
         </div>
       </div>

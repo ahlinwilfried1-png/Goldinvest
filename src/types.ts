@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   whatsapp: string;
+  password?: string;
   country: string;
   balance: number;
   dailyEarnings: number;
@@ -46,6 +47,8 @@ export interface Product {
   durationDays: number;
   totalReturn: number;
   tag?: string;
+  isBlocked?: boolean;
+  reopenDateTime?: string;
 }
 
 export interface Investment {
@@ -67,7 +70,7 @@ export interface Commission {
   id: string;
   userId: string;
   fromUserName: string;
-  level: 1 | 2;
+  level: 1 | 2 | 3;
   amount: number;
   createdAt: string;
 }

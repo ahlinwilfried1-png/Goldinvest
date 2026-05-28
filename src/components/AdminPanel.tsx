@@ -17,7 +17,8 @@ import {
   Gift, 
   Sparkles,
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  Search
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification } from '../types';
 import { DataStore, DEFAULT_PRODUCTS } from '../dataStore';
@@ -43,11 +44,15 @@ export default function AdminPanel({
   // Navigation tab
   const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform'>('deposits');
 
+  // Search filter query for users tab
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+
   // Edit user modal state
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editBalance, setEditBalance] = useState<number>(0);
   const [editBonus, setEditBonus] = useState<number>(0);
   const [editRole, setEditRole] = useState<'user' | 'admin'>('user');
+  const [editPassword, setEditPassword] = useState<string>('');
 
   // New product form state
   const [newVipLevel, setNewVipLevel] = useState(1);
@@ -68,6 +73,31 @@ export default function AdminPanel({
 
   // Picture receipt lightbox state
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+
+  // Product blocking states
+  const [schedulingBlockProductId, setSchedulingBlockProductId] = useState<string | null>(null);
+  const [blockReopenTime, setBlockReopenTime] = useState<string>('');
+
+  const handleToggleBlockProduct = (id: string, currentlyBlocked: boolean) => {
+    if (currentlyBlocked) {
+      DataStore.toggleBlockProduct(id, false);
+      syncLocalStates();
+    } else {
+      setSchedulingBlockProductId(id);
+      const date = new Date();
+      date.setHours(date.getHours() + 1);
+      const tzOffset = date.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16);
+      setBlockReopenTime(localISOTime);
+    }
+  };
+
+  const handleConfirmProductBlock = (id: string, useSchedule: boolean) => {
+    const reopenISO = useSchedule && blockReopenTime ? new Date(blockReopenTime).toISOString() : undefined;
+    DataStore.toggleBlockProduct(id, true, reopenISO);
+    setSchedulingBlockProductId(null);
+    syncLocalStates();
+  };
 
   // Refresh lists
   const syncLocalStates = () => {
@@ -90,6 +120,7 @@ export default function AdminPanel({
     setEditBalance(user.balance);
     setEditBonus(user.bonus);
     setEditRole(user.role);
+    setEditPassword(user.password || (user.role === 'admin' ? 'admin' : 'user123'));
   };
 
   const handleSaveUser = () => {
@@ -97,7 +128,8 @@ export default function AdminPanel({
       DataStore.updateUserBalance(editingUser.id, {
         balance: editBalance,
         bonus: editBonus,
-        role: editRole
+        role: editRole,
+        password: editPassword
       });
       setEditingUser(null);
       syncLocalStates();
@@ -246,6 +278,16 @@ export default function AdminPanel({
                   <option value="user">Utilisateur Client</option>
                   <option value="admin">Administrateur Système</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Mot de passe d'accès</label>
+                <input
+                  type="text"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Modifier le mot de passe"
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:border-yellow-500/40"
+                />
               </div>
 
               <div className="pt-4 flex gap-3">
@@ -521,69 +563,99 @@ export default function AdminPanel({
       )}
 
       {/* 3. USERS CONFIGURATION TABLE */}
-      {activeAdminTab === 'users' && (
-        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider font-semibold">Portefeuille des Affiliés</h3>
-            <span className="text-[10px] text-slate-400">Total : {users.length} comptes enregistrés</span>
-          </div>
+      {activeAdminTab === 'users' && (() => {
+        const filteredUsers = users.filter((u) => {
+          const query = userSearchQuery.trim().toLowerCase();
+          if (!query) return true;
+          return (
+            (u.name || '').toLowerCase().includes(query) ||
+            (u.whatsapp || '').toLowerCase().includes(query) ||
+            (u.country || '').toLowerCase().includes(query)
+          );
+        });
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300 border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
-                  <th className="p-3">Id</th>
-                  <th className="p-3">Nom Complet</th>
-                  <th className="p-3 font-mono">WhatsApp</th>
-                  <th className="p-3">Solde (FCFA)</th>
-                  <th className="p-3">Bonus (FCFA)</th>
-                  <th className="p-3">Code Parrainage</th>
-                  <th className="p-3 text-center">Rôle</th>
-                  <th className="p-3 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {users.map((user) => (
-                  <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
-                    <td className="p-3 text-[10px] font-mono text-slate-500">{user.id}</td>
-                    <td className="p-3">
-                      <span className="font-semibold text-white block">{user.name}</span>
-                      <span className="text-[10px] text-slate-400 block">{user.country}</span>
-                    </td>
-                    <td className="p-3 font-mono text-slate-300">{user.whatsapp}</td>
-                    <td className="p-3 font-bold font-mono text-yellow-400">{user.balance.toLocaleString()} F</td>
-                    <td className="p-3 font-bold font-mono text-slate-400">{user.bonus.toLocaleString()} F</td>
-                    <td className="p-3 font-mono text-slate-300 text-yellow-500/80">{user.referralCode}</td>
-                    <td className="p-3 text-center">
-                      <span className={`px-2 py-0.5 text-[10px] font-semibold font-mono rounded-full ${user.role === 'admin' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30' : 'bg-slate-800 text-slate-400'}`}>
-                        {user.role.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => openEditUserModal(user)}
-                          className="w-7 h-7 bg-slate-950 hover:bg-slate-800 border border-slate-800 flex items-center justify-center rounded duration-150"
-                          title="Modifier les montants/droits"
-                        >
-                          <Edit className="w-3.5 h-3.5 text-slate-300" />
-                        </button>
-                        <button
-                          onClick={() => handleBlockToggle(user.id, user.isBlocked)}
-                          className={`w-7 h-7 flex items-center justify-center rounded duration-150 ${user.isBlocked ? 'bg-red-500 text-slate-950' : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-red-400'}`}
-                          title={user.isBlocked ? "Débloquer le compte" : "Bloquer l'investisseur"}
-                        >
-                          {user.isBlocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                    </td>
+        return (
+          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 overflow-hidden">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+              <div>
+                <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider font-semibold">Portefeuille des Affiliés</h3>
+                <span className="text-[10px] text-slate-400">Total : {users.length} comptes enregistrés</span>
+              </div>
+
+              {/* Search user input */}
+              <div className="relative w-full md:w-72">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
+                  <Search className="w-4 h-4" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Rechercher un utilisateur (nom, WhatsApp...)"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 text-xs rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300 border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
+                    <th className="p-3">Nom Complet</th>
+                    <th className="p-3 font-mono">WhatsApp</th>
+                    <th className="p-3">Solde (FCFA)</th>
+                    <th className="p-3 text-center">Rôle</th>
+                    <th className="p-3 text-center">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-slate-500 font-mono">
+                        Aucun utilisateur trouvé correspondant à votre recherche
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
+                        <td className="p-3">
+                          <span className="font-semibold text-white block">{user.name}</span>
+                          <span className="text-[10px] text-slate-400 block">{user.country}</span>
+                        </td>
+                        <td className="p-3 font-mono text-slate-300">{user.whatsapp}</td>
+                        <td className="p-3 font-bold font-mono text-yellow-400">{user.balance.toLocaleString()} F</td>
+                        <td className="p-3 text-center">
+                          <span className={`px-2 py-0.5 text-[10px] font-semibold font-mono rounded-full ${user.role === 'admin' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30' : 'bg-slate-800 text-slate-400'}`}>
+                            {user.role.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="p-3 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => openEditUserModal(user)}
+                              className="w-7 h-7 bg-slate-950 hover:bg-slate-800 border border-slate-800 flex items-center justify-center rounded duration-150"
+                              title="Modifier les montants/droits"
+                            >
+                              <Edit className="w-3.5 h-3.5 text-slate-300" />
+                            </button>
+                            <button
+                              onClick={() => handleBlockToggle(user.id, user.isBlocked)}
+                              className={`w-7 h-7 flex items-center justify-center rounded duration-150 ${user.isBlocked ? 'bg-red-500 text-slate-950' : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-red-400'}`}
+                              title={user.isBlocked ? "Débloquer le compte" : "Bloquer l'investisseur"}
+                            >
+                              {user.isBlocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 4. PRODUCTS MANAGEMENT */}
       {activeAdminTab === 'products' && (
@@ -677,44 +749,123 @@ export default function AdminPanel({
 
           {/* List of custom VIP packages */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((p) => (
-              <div key={p.id} className="bg-slate-950 p-5 rounded-xl border border-slate-800 flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-[10px] text-yellow-500 font-mono uppercase font-bold">Niveau {p.vipLevel}</span>
-                      <h4 className="font-display font-medium text-white text-sm block mt-0.5">{p.name}</h4>
+            {products.map((p) => {
+              const isCurrentlyBlocked = p.isBlocked === true;
+              const formattedReopenTime = p.reopenDateTime 
+                ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+                : null;
+
+              return (
+                <div key={p.id} className={`p-5 rounded-xl border flex flex-col justify-between ${isCurrentlyBlocked ? 'bg-red-950/20 border-red-900/40' : 'bg-slate-950 border-slate-800'}`}>
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-[10px] text-yellow-500 font-mono uppercase font-bold">Niveau {p.vipLevel}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isCurrentlyBlocked ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></span>
+                        </div>
+                        <h4 className="font-display font-medium text-white text-sm block mt-0.5">{p.name}</h4>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteProduct(p.id)}
+                        className="text-red-400 hover:text-red-500 p-1 bg-red-500/10 rounded"
+                        title="Supprimer le VIP"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleDeleteProduct(p.id)}
-                      className="text-red-400 hover:text-red-500 p-1 bg-red-500/10 rounded"
-                      title="Supprimer le VIP"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+
+                    <div className="space-y-1 mt-4 text-xs font-mono">
+                      <div className="flex justify-between text-slate-400">
+                        <span>Prix :</span>
+                        <span className="text-white font-bold">{p.price.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="flex justify-between text-slate-400">
+                        <span>Dividendes :</span>
+                        <span className="text-green-400">+{p.dailyReturn.toLocaleString()} F / Jour</span>
+                      </div>
+                      <div className="flex justify-between text-slate-400">
+                        <span>Cycle :</span>
+                        <span className="text-yellow-400">{p.durationDays} Jours</span>
+                      </div>
+                      <div className="flex justify-between text-slate-400 font-bold border-t border-slate-900 pt-1.5 mt-1.5 font-mono">
+                        <span>Retour brut :</span>
+                        <span className="text-white">{(p.dailyReturn * p.durationDays).toLocaleString()} FCFA</span>
+                      </div>
+                      
+                      {isCurrentlyBlocked && (
+                        <div className="bg-red-950/35 border border-red-900/30 rounded-lg p-2.5 mt-3 font-sans">
+                          <p className="text-[10px] text-red-400 font-bold flex items-center gap-1.5">
+                            <Lock className="w-3 h-3" />
+                            <span>INVESTISSEMENT BLOQUÉ</span>
+                          </p>
+                          {formattedReopenTime && (
+                            <p className="text-[9px] text-slate-300 mt-0.5 font-mono">
+                              Réouverture le : {formattedReopenTime}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-1 mt-4 text-xs font-mono">
-                    <div className="flex justify-between text-slate-400">
-                      <span>Prix :</span>
-                      <span className="text-white font-bold">{p.price.toLocaleString()} FCFA</span>
-                    </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>Dividendes :</span>
-                      <span className="text-green-400">+{p.dailyReturn.toLocaleString()} F / Jour</span>
-                    </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>Cycle :</span>
-                      <span className="text-yellow-400">{p.durationDays} Jours</span>
-                    </div>
-                    <div className="flex justify-between text-slate-400 font-bold border-t border-slate-900 pt-1.5 mt-1.5">
-                      <span>Retour brut :</span>
-                      <span className="text-white">{(p.dailyReturn * p.durationDays).toLocaleString()} FCFA</span>
-                    </div>
+                  {/* Block / Unblock Action triggers */}
+                  <div className="mt-5 pt-3 border-t border-slate-900">
+                    {schedulingBlockProductId === p.id ? (
+                      <div className="space-y-3 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                        <div>
+                          <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">HEURE DE RÉOUVERTURE (OPTIONNELLE)</label>
+                          <input
+                            type="datetime-local"
+                            value={blockReopenTime}
+                            onChange={(e) => setBlockReopenTime(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 text-xs text-yellow-400 p-1.5 rounded focus:outline-none focus:border-yellow-500/40"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleConfirmProductBlock(p.id, false)}
+                            className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold uppercase transition-all"
+                          >
+                            Bloquer à vie
+                          </button>
+                          <button
+                            onClick={() => handleConfirmProductBlock(p.id, true)}
+                            className="flex-1 py-1.5 gold-bg-gradient text-slate-950 rounded text-[10px] font-bold uppercase transition-all"
+                            disabled={!blockReopenTime}
+                          >
+                            Planifier Heure
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => setSchedulingBlockProductId(null)}
+                          className="w-full py-1 text-slate-500 hover:text-slate-400 text-[10px] uppercase font-bold text-center"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleToggleBlockProduct(p.id, isCurrentlyBlocked)}
+                        className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${isCurrentlyBlocked ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'}`}
+                      >
+                        {isCurrentlyBlocked ? (
+                          <>
+                            <Unlock className="w-3.5 h-3.5" />
+                            <span>Débloquer immédiatement</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Bloquer / Planifier Heure</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
