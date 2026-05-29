@@ -98,13 +98,13 @@ export default function Home({
   }, []);
 
   return (
-    <div className="w-full relative bg-black">
+    <div className="w-full relative bg-[#030611] overflow-x-hidden">
       {/* BACKGROUND EFFECTS */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-yellow-400/5 blur-[150px] rounded-full -z-10 pointer-events-none" />
-      <div className="absolute top-[800px] left-0 w-[500px] h-[500px] bg-night-blue-light/10 blur-[130px] rounded-full -z-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-full max-w-[600px] h-[600px] bg-yellow-400/5 blur-[150px] rounded-full -z-10 pointer-events-none" />
+      <div className="absolute top-[800px] left-0 w-full max-w-[500px] h-[500px] bg-night-blue-light/10 blur-[130px] rounded-full -z-10 pointer-events-none" />
 
       {/* TOP NAVIGATION BAR FOR LANDING */}
-      <nav className="w-full flex justify-between items-center py-5 px-4 md:px-12 border-b border-yellow-500/15 bg-[#000000]/90 backdrop-blur-md sticky top-0 z-50">
+      <nav className="w-full flex justify-between items-center py-5 px-4 md:px-12 border-b border-yellow-500/15 bg-[#030611]/90 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center space-x-2">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/10">
             <TrendingUp className="w-5 h-5 text-slate-950 stroke-[2.5]" />
@@ -279,7 +279,7 @@ export default function Home({
       </section>
 
       {/* INVESTMENT ADVANTAGES */}
-      <section className="bg-black py-10 border-t border-b border-yellow-500/15 px-4 md:px-12">
+      <section className="bg-[#050b1d]/40 py-10 border-t border-b border-yellow-500/10 px-4 md:px-12">
         <div className="max-w-[1600px] mx-auto">
           <div className="text-center mb-8">
             <h2 className="font-display font-bold text-xl md:text-2xl text-white">Pourquoi Choisir Notre Plateforme Fintech ?</h2>
@@ -329,8 +329,8 @@ export default function Home({
       {/* INVESTMENT PLANS DISPLAY */}
       <section className="py-10 px-4 md:px-12 max-w-[1600px] mx-auto animate-fade-in" id="plans">
         <div className="text-center mb-8">
-          <span className="text-xs font-bold text-yellow-500 font-mono tracking-widest uppercase block mb-1">CATALOGUE</span>
-          <h2 className="font-display font-bold text-2xl text-white tracking-tight">Nos Packages d'Investissement VIP</h2>
+          <span className="text-xs font-bold text-yellow-500 tracking-wider uppercase block mb-1">CATALOGUE</span>
+          <h2 className="font-bold text-2xl text-white tracking-tight">Nos Packages d'Investissement VIP</h2>
           <p className="text-xs text-slate-400 mt-1 max-w-lg mx-auto">Choisissez le package adapté à vos objectifs financiers et commencez à percevoir vos dividendes dans 24 heures.</p>
         </div>
 
@@ -343,17 +343,17 @@ export default function Home({
             >
               {/* Product Header Highlight */}
               <div className="p-5 border-b border-yellow-500/10 relative">
-                <div className="absolute top-4 right-4 bg-yellow-500/10 border border-yellow-500/30 text-yellow-450 text-[10px] font-mono font-bold px-2 py-1 rounded-md">
+                <div className="absolute top-4 right-4 bg-yellow-500/10 border border-yellow-500/30 text-yellow-450 text-[10px] font-bold px-2 py-1 rounded-md">
                   {product.tag || 'Actif'}
                 </div>
-                <div className="text-[11px] text-yellow-400/80 font-mono font-bold uppercase tracking-wider mb-1">MODULE FINANCIER</div>
-                <h3 className="text-lg font-display font-bold text-white group-hover:text-yellow-400 transition-colors uppercase">{product.name}</h3>
+                <div className="text-[11px] text-yellow-400/80 font-bold uppercase tracking-wider mb-1">MODULE FINANCIER</div>
+                <h3 className="text-lg font-bold text-white group-hover:text-yellow-400 transition-colors uppercase">{product.name}</h3>
               </div>
 
               {/* Product price big text */}
-              <div className="p-5 bg-black/50 text-center border-b border-yellow-500/10">
+              <div className="p-5 bg-[#030611]/60 text-center border-b border-yellow-500/10">
                 <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">Prix d'acquisition</div>
-                <div className="text-3xl font-display font-extrabold text-white mt-1 group-hover:scale-105 transition-transform duration-300">
+                <div className="text-3xl font-extrabold text-white mt-1 group-hover:scale-105 transition-transform duration-300">
                   {product.price.toLocaleString()} <span className="text-sm text-yellow-450 font-sans font-extrabold">FCFA</span>
                 </div>
               </div>
@@ -362,15 +362,15 @@ export default function Home({
               <div className="p-5 space-y-3 flex-1 text-slate-300">
                 <div className="flex justify-between text-xs py-1.5 border-b border-slate-900">
                   <span className="text-slate-400">Revenus Quotidiens :</span>
-                  <span className="text-green-400 font-bold font-mono">+{product.dailyReturn.toLocaleString()} FCFA / jour</span>
+                  <span className="text-green-400 font-bold">+{product.dailyReturn.toLocaleString()} FCFA / jour</span>
                 </div>
                 <div className="flex justify-between text-xs py-1.5 border-b border-slate-900">
                   <span className="text-slate-400">Durée du cycle :</span>
-                  <span className="text-yellow-400 font-mono font-bold">{product.durationDays} Jours</span>
+                  <span className="text-yellow-400 font-bold">{product.durationDays} Jours</span>
                 </div>
                 <div className="flex justify-between text-xs py-1.5 font-bold">
                   <span className="text-slate-200">Gain Total Garanti :</span>
-                  <span className="text-white bg-yellow-500/15 border border-yellow-500/20 px-2.5 py-1 rounded-lg text-[11px] font-mono">
+                  <span className="text-white bg-yellow-500/15 border border-yellow-500/20 px-2.5 py-1 rounded-lg text-[11px]">
                     {product.totalReturn.toLocaleString()} FCFA
                   </span>
                 </div>
@@ -380,7 +380,7 @@ export default function Home({
               <div className="p-5 pt-0">
                 <button
                   onClick={() => onSelectProduct(product)}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-yellow-500/15 to-amber-600/15 border border-yellow-500/35 text-yellow-400 text-xs font-bold hover:from-yellow-400 hover:to-amber-500 hover:text-slate-950 transition-all font-display uppercase tracking-widest shadow-md shine-gold group-hover:border-yellow-400"
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-yellow-500/15 to-amber-600/15 border border-yellow-500/35 text-yellow-400 text-xs font-bold hover:from-yellow-400 hover:to-amber-500 hover:text-slate-950 transition-all uppercase tracking-widest shadow-md shine-gold group-hover:border-yellow-400"
                 >
                   Activer ce Plan
                 </button>
@@ -391,7 +391,7 @@ export default function Home({
       </section>
 
       {/* MLM MULTI-LEVEL INCOME & MLM STATISTICS */}
-      <section className="bg-black/95 py-10 border-t border-b border-yellow-500/15 px-4 md:px-12">
+      <section className="bg-[#030611] py-10 border-t border-b border-yellow-500/10 px-4 md:px-12">
         <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div>
             <span className="text-xs font-bold text-yellow-500 font-mono tracking-widest uppercase block mb-1">CROISSANCE MLM</span>
@@ -503,7 +503,7 @@ export default function Home({
       </section>
 
       {/* FAQ SECTION */}
-      <section className="py-10 bg-black border-t border-yellow-500/15 px-4 md:px-12" id="faq">
+      <section className="py-10 bg-[#050b1d]/40 border-t border-yellow-500/10 px-4 md:px-12" id="faq">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-6">
             <h2 className="font-display font-bold text-2xl text-white">Questions Fréquemment Posées</h2>
@@ -549,7 +549,7 @@ export default function Home({
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-black border-t border-yellow-500/15 py-10 px-4 text-center">
+      <footer className="bg-[#030611] border-t border-yellow-500/10 py-10 px-4 text-center">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
           <div className="flex items-center space-x-2 text-left">
             <div className="w-8 h-8 rounded-lg bg-yellow-500 flex items-center justify-center">

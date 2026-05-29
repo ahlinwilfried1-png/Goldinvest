@@ -42,7 +42,9 @@ export default function AdminPanel({
   const [bonusCodes, setBonusCodes] = useState<BonusCode[]>(() => DataStore.getBonusCodes());
 
   // Navigation tab
-  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform'>('deposits');
+  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'affiliations'>('deposits');
+  const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
+  const [affiliateSearchQuery, setAffiliateSearchQuery] = useState('');
 
   // Search filter query for users tab
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -53,6 +55,16 @@ export default function AdminPanel({
   const [editBonus, setEditBonus] = useState<number>(0);
   const [editRole, setEditRole] = useState<'user' | 'admin'>('user');
   const [editPassword, setEditPassword] = useState<string>('');
+  const [editReferredBy, setEditReferredBy] = useState<string>('');
+
+  // Edit product modal state
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editProductVipLevel, setEditProductVipLevel] = useState<number>(1);
+  const [editProductName, setEditProductName] = useState<string>('');
+  const [editProductPrice, setEditProductPrice] = useState<number>(5000);
+  const [editProductDailyReturn, setEditProductDailyReturn] = useState<number>(1000);
+  const [editProductDuration, setEditProductDuration] = useState<number>(10);
+  const [editProductTag, setEditProductTag] = useState<string>('');
 
   // New product form state
   const [newVipLevel, setNewVipLevel] = useState(1);
@@ -106,6 +118,7 @@ export default function AdminPanel({
     setWithdrawals(DataStore.getWithdrawals());
     setProducts(DataStore.getProducts());
     setBonusCodes(DataStore.getBonusCodes());
+    setCommissions(DataStore.getCommissions());
     onRefreshData();
   };
 
@@ -121,6 +134,7 @@ export default function AdminPanel({
     setEditBonus(user.bonus);
     setEditRole(user.role);
     setEditPassword(user.password || (user.role === 'admin' ? 'admin' : 'user123'));
+    setEditReferredBy(user.referredBy || '');
   };
 
   const handleSaveUser = () => {
@@ -129,10 +143,27 @@ export default function AdminPanel({
         balance: editBalance,
         bonus: editBonus,
         role: editRole,
-        password: editPassword
+        password: editPassword,
+        referredBy: editReferredBy === '' ? null : editReferredBy
       });
       setEditingUser(null);
       syncLocalStates();
+    }
+  };
+
+  const handleDeleteSponsor = (filleulId: string) => {
+    const filleul = users.find(u => u.id === filleulId);
+    if (filleul) {
+      if (window.confirm(`Êtes-vous sûr de vouloir supprimer le parrain de ${filleul.name} ?`)) {
+        DataStore.updateUserBalance(filleul.id, {
+          balance: filleul.balance,
+          bonus: filleul.bonus,
+          role: filleul.role,
+          password: filleul.password,
+          referredBy: null
+        });
+        syncLocalStates();
+      }
     }
   };
 
@@ -179,6 +210,31 @@ export default function AdminPanel({
   const handleDeleteProduct = (id: string) => {
     if (confirm('Voulez-vous vraiment supprimer définitivement ce package d\'investissement VIP ?')) {
       DataStore.deleteProduct(id);
+      syncLocalStates();
+    }
+  };
+
+  const openEditProductModal = (product: Product) => {
+    setEditingProduct(product);
+    setEditProductVipLevel(product.vipLevel);
+    setEditProductName(product.name);
+    setEditProductPrice(product.price);
+    setEditProductDailyReturn(product.dailyReturn);
+    setEditProductDuration(product.durationDays);
+    setEditProductTag(product.tag || '');
+  };
+
+  const handleSaveProduct = () => {
+    if (editingProduct) {
+      DataStore.updateProduct(editingProduct.id, {
+        vipLevel: editProductVipLevel,
+        name: editProductName,
+        price: editProductPrice,
+        dailyReturn: editProductDailyReturn,
+        durationDays: editProductDuration,
+        tag: editProductTag || undefined
+      });
+      setEditingProduct(null);
       syncLocalStates();
     }
   };
@@ -280,6 +336,22 @@ export default function AdminPanel({
                 </select>
               </div>
               <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Parrain / Sponsor Direct</label>
+                <select
+                  value={editReferredBy}
+                  onChange={(e) => setEditReferredBy(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-xs md:text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                >
+                  <option value="">Aucun Sponsor (Inscrit en Direct)</option>
+                  {users.filter(u => u.id !== editingUser.id).map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.whatsapp}) - Code: {u.referralCode}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-500 mt-1">Vous pouvez associer l'investisseur à un parrain ou choisir "Aucun" pour supprimer son affiliation.</p>
+              </div>
+              <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Mot de passe d'accès</label>
                 <input
                   type="text"
@@ -299,6 +371,100 @@ export default function AdminPanel({
                 </button>
                 <button
                   onClick={handleSaveUser}
+                  className="flex-1 py-3 text-xs font-bold rounded-xl gold-bg-gradient text-slate-950 shadow-md shadow-yellow-500/10"
+                >
+                  Enregistrer les modifications
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Editing product modal overlay */}
+      {editingProduct && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[99] flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-yellow-500/30 rounded-3xl p-6 md:p-8 relative">
+            <button 
+              onClick={() => setEditingProduct(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-display font-bold text-lg text-white mb-6">⚙️ Modifier le Produit VIP</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau VIP (Indice)</label>
+                <input
+                  type="number"
+                  value={editProductVipLevel}
+                  onChange={(e) => setEditProductVipLevel(parseInt(e.target.value) || 1)}
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:border-yellow-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nom du Plan</label>
+                <input
+                  type="text"
+                  value={editProductName}
+                  onChange={(e) => setEditProductName(e.target.value)}
+                  placeholder="Ex: VIP Platine 5"
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Prix d'acquisition (FCFA)</label>
+                <input
+                  type="number"
+                  value={editProductPrice}
+                  onChange={(e) => setEditProductPrice(parseInt(e.target.value) || 0)}
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-yellow-300 font-mono focus:outline-none focus:border-yellow-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Rendement Journalier (FCFA)</label>
+                <input
+                  type="number"
+                  value={editProductDailyReturn}
+                  onChange={(e) => setEditProductDailyReturn(parseInt(e.target.value) || 0)}
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-green-400 font-mono focus:outline-none focus:border-yellow-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Durée de l'effet (Jours)</label>
+                <input
+                  type="number"
+                  value={editProductDuration}
+                  onChange={(e) => setEditProductDuration(parseInt(e.target.value) || 1)}
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:border-yellow-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Slogan / Tag visuel</label>
+                <input
+                  type="text"
+                  value={editProductTag}
+                  onChange={(e) => setEditProductTag(e.target.value)}
+                  placeholder="Ex: Populaire, Offre Spéciale"
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  onClick={() => setEditingProduct(null)}
+                  className="flex-1 py-3 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-800"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSaveProduct}
                   className="flex-1 py-3 text-xs font-bold rounded-xl gold-bg-gradient text-slate-950 shadow-md shadow-yellow-500/10"
                 >
                   Enregistrer les modifications
@@ -378,6 +544,12 @@ export default function AdminPanel({
           className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors ${activeAdminTab === 'users' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
         >
           <span>Clients MLM ({users.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveAdminTab('affiliations')}
+          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors ${activeAdminTab === 'affiliations' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <span>📈 Filiations ({users.filter(u => u.referredBy).length})</span>
         </button>
         <button
           onClick={() => setActiveAdminTab('products')}
@@ -576,6 +748,14 @@ export default function AdminPanel({
 
         return (
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 overflow-hidden">
+            {/* INSTRUCTION BANNER FOR DESIGNATING ADMINS / REMOVING SPONSORS */}
+            <div className="bg-[#0b132a]/80 border border-yellow-500/10 rounded-xl p-3.5 mb-5 space-y-1 text-xs">
+              <span className="font-bold text-yellow-400 block">💡 Administration des Rôles & Affiliations :</span>
+              <p className="text-slate-400 leading-relaxed">
+                Pour <strong>nommer d'autres comptes administrateurs</strong>, recherchez l'utilisateur concerné et cliquez sur le bouton de modification <span className="text-slate-200">⚙️</span>, puis changez son rôle en <em>"Administrateur Système"</em>. De la même façon, vous pouvez directement modifier ou <strong>supprimer son parrain / sponsor direct</strong>.
+              </p>
+            </div>
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
               <div>
                 <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider font-semibold">Portefeuille des Affiliés</h3>
@@ -603,6 +783,8 @@ export default function AdminPanel({
                   <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
                     <th className="p-3">Nom Complet</th>
                     <th className="p-3 font-mono">WhatsApp</th>
+                    <th className="p-3">Parrain (Sponsor)</th>
+                    <th className="p-3 text-center">Filleuls Directs</th>
                     <th className="p-3">Solde (FCFA)</th>
                     <th className="p-3 text-center">Rôle</th>
                     <th className="p-3 text-center">Actions</th>
@@ -611,47 +793,150 @@ export default function AdminPanel({
                 <tbody className="divide-y divide-slate-800/60">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-slate-500 font-mono">
+                      <td colSpan={7} className="p-8 text-center text-slate-500 font-mono">
                         Aucun utilisateur trouvé correspondant à votre recherche
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((user) => (
-                      <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
-                        <td className="p-3">
-                          <span className="font-semibold text-white block">{user.name}</span>
-                          <span className="text-[10px] text-slate-400 block">{user.country}</span>
-                        </td>
-                        <td className="p-3 font-mono text-slate-300">{user.whatsapp}</td>
-                        <td className="p-3 font-bold font-mono text-yellow-400">{user.balance.toLocaleString()} F</td>
-                        <td className="p-3 text-center">
-                          <span className={`px-2 py-0.5 text-[10px] font-semibold font-mono rounded-full ${user.role === 'admin' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30' : 'bg-slate-800 text-slate-400'}`}>
-                            {user.role.toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="p-3 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => openEditUserModal(user)}
-                              className="w-7 h-7 bg-slate-950 hover:bg-slate-800 border border-slate-800 flex items-center justify-center rounded duration-150"
-                              title="Modifier les montants/droits"
+                    filteredUsers.map((user) => {
+                      const sponsor = users.find(u => u.id === user.referredBy);
+                      const directRefs = users.filter(u => u.referredBy === user.id);
+
+                      return (
+                        <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
+                          <td className="p-3">
+                            <span className="font-semibold text-white block">{user.name}</span>
+                            <span className="text-[10px] text-slate-400 block">{user.country}</span>
+                          </td>
+                          <td className="p-3 font-mono text-slate-300">
+                            <a 
+                              href={`https://wa.me/${user.whatsapp.replace(/[^0-9]/g, '')}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-slate-300 hover:text-green-400 flex items-center gap-1 transition-colors"
                             >
-                              <Edit className="w-3.5 h-3.5 text-slate-300" />
-                            </button>
-                            <button
-                              onClick={() => handleBlockToggle(user.id, user.isBlocked)}
-                              className={`w-7 h-7 flex items-center justify-center rounded duration-150 ${user.isBlocked ? 'bg-red-500 text-slate-950' : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-red-400'}`}
-                              title={user.isBlocked ? "Débloquer le compte" : "Bloquer l'investisseur"}
-                            >
-                              {user.isBlocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                              <span>📱</span>
+                              <span>{user.whatsapp}</span>
+                            </a>
+                          </td>
+                          <td className="p-3">
+                            {sponsor ? (
+                              <div className="space-y-0.5">
+                                <span className="font-medium text-slate-200 block text-[11px]">{sponsor.name}</span>
+                                <span className="text-[9px] text-yellow-500 font-mono block">Code: {sponsor.referralCode}</span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-500 italic">Aucun (Direct)</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-center">
+                            {directRefs.length > 0 ? (
+                              <div className="inline-flex flex-col items-center">
+                                <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[10px] font-bold rounded-full">
+                                  {directRefs.length} filleul(s)
+                                </span>
+                                <span className="text-[8px] text-slate-500 block mt-0.5 max-w-[120px] truncate">
+                                  ({directRefs.map(r => r.name.split(' ')[0]).join(', ')})
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-600 text-[10px] italic">0 filleul</span>
+                            )}
+                          </td>
+                          <td className="p-3 font-bold font-mono text-yellow-400">{user.balance.toLocaleString()} F</td>
+                          <td className="p-3 text-center">
+                            <span className={`px-2 py-0.5 text-[10px] font-semibold font-mono rounded-full ${user.role === 'admin' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30' : 'bg-slate-800 text-slate-400'}`}>
+                              {user.role.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => openEditUserModal(user)}
+                                className="w-7 h-7 bg-slate-950 hover:bg-slate-800 border border-slate-800 flex items-center justify-center rounded duration-150"
+                                title="Modifier les montants/droits"
+                              >
+                                <Edit className="w-3.5 h-3.5 text-slate-300" />
+                              </button>
+                              <button
+                                onClick={() => handleBlockToggle(user.id, user.isBlocked)}
+                                className={`w-7 h-7 flex items-center justify-center rounded duration-150 ${user.isBlocked ? 'bg-red-500 text-slate-950' : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-red-400'}`}
+                                title={user.isBlocked ? "Débloquer le compte" : "Bloquer l'investisseur"}
+                              >
+                                {user.isBlocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* LIVE SPONSORSHIP RELATIONS & NETWORKS */}
+            <div className="mt-8 border-t border-slate-800/80 pt-6">
+              <div className="mb-4">
+                <h4 className="font-display font-bold text-xs text-yellow-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <span>📈</span>
+                  <span>Suivi en Temps Réel des Liens de Parrainage (MLM)</span>
+                </h4>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Ci-dessous s'affiche la liste de tous les filleuls qui se sont inscrits en utilisant un lien de parrainage de nos membres.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {users.filter(u => u.referredBy).length === 0 ? (
+                  <div className="col-span-2 p-6 rounded-2xl bg-slate-950/20 border border-dashed border-slate-800 text-center text-slate-500 text-xs">
+                    Aucun filleul actif ne s'est inscrit via un lien pour le moment.
+                  </div>
+                ) : (
+                  users.filter(u => u.referredBy).map((filleul) => {
+                    const parrain = users.find(u => u.id === filleul.referredBy);
+                    return (
+                      <div 
+                        key={filleul.id} 
+                        className="p-3 rounded-xl bg-slate-950/60 border border-yellow-500/5 hover:border-yellow-500/20 flex items-center justify-between gap-4 transition-all"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-white block">{filleul.name}</span>
+                            <span className="text-[8px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 px-1 py-0.2 rounded font-mono uppercase">Filleul</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400">
+                            WhatsApp: <span className="font-mono text-slate-200">{filleul.whatsapp}</span> | Pays: <span className="text-slate-300">{filleul.country}</span>
+                          </p>
+                          <span className="text-[9px] text-slate-500 block">
+                            Inscrit le : {new Date(filleul.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+
+                        <div className="text-right border-l border-slate-800 pl-4 space-y-1.5 flex flex-col items-end justify-center">
+                          <div>
+                            <span className="text-[8px] text-slate-400 block uppercase tracking-wider font-semibold">Parrain / Sponsor</span>
+                            <span className="text-xs font-bold text-yellow-500 block">
+                              {parrain ? parrain.name : "Code inconnu"}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono block">
+                              WA: {parrain ? parrain.whatsapp : "N/A"}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSponsor(filleul.id)}
+                            className="text-[9px] font-bold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 border border-red-500/30 rounded px-2 py-0.5 duration-100 flex items-center gap-1 cursor-pointer"
+                            title="Supprimer ce lien d'affiliation"
+                          >
+                            <Trash2 className="w-2.5 h-2.5" />
+                            <span>Supprimer</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         );
@@ -766,13 +1051,22 @@ export default function AdminPanel({
                         </div>
                         <h4 className="font-display font-medium text-white text-sm block mt-0.5">{p.name}</h4>
                       </div>
-                      <button
-                        onClick={() => handleDeleteProduct(p.id)}
-                        className="text-red-400 hover:text-red-500 p-1 bg-red-500/10 rounded"
-                        title="Supprimer le VIP"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEditProductModal(p)}
+                          className="text-slate-350 hover:text-yellow-400 p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded duration-150"
+                          title="Modifier le VIP"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(p.id)}
+                          className="text-red-400 hover:text-red-500 p-1.5 bg-red-500/10 rounded duration-150"
+                          title="Supprimer le VIP"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="space-y-1 mt-4 text-xs font-mono">
@@ -994,6 +1288,194 @@ export default function AdminPanel({
           </div>
         </div>
       )}
+
+      {/* 6. AFFILIATIONS & PARRAINAGES */}
+      {activeAdminTab === 'affiliations' && (() => {
+        const filteredFilleuls = users.filter((u) => {
+          if (!u.referredBy) return false;
+          const query = affiliateSearchQuery.trim().toLowerCase();
+          if (!query) return true;
+          
+          const parrain = users.find(s => s.id === u.referredBy);
+          return (
+            (u.name || '').toLowerCase().includes(query) ||
+            (u.whatsapp || '').toLowerCase().includes(query) ||
+            (u.country || '').toLowerCase().includes(query) ||
+            (parrain?.name || '').toLowerCase().includes(query) ||
+            (parrain?.referralCode || '').toLowerCase().includes(query)
+          );
+        });
+
+        const totalCommissionsAmount = commissions.reduce((acc, c) => acc + c.amount, 0);
+
+        return (
+          <div className="space-y-6 animate-fade-in text-left">
+            {/* STATS DE PARRAINAGE */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold">Filleuls Enregistrés via Lien</span>
+                <div className="text-xl font-bold text-white mt-1">
+                  {users.filter(u => u.referredBy).length} Membres
+                </div>
+                <p className="text-[9px] text-yellow-500/80 font-mono mt-1">Associés à un parrain actif</p>
+              </div>
+              <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold">Total Commissions MLM Versées</span>
+                <div className="text-xl font-bold text-green-400 mt-1">
+                  {totalCommissionsAmount.toLocaleString()} FCFA
+                </div>
+                <p className="text-[9px] text-slate-400 font-mono mt-1">Niveaux 1 (20%), 2 (3%), et 3 (1%)</p>
+              </div>
+              <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold">Commissions MLM Payées</span>
+                <div className="text-xl font-bold text-white mt-1">
+                  {commissions.length} Transactions
+                </div>
+                <p className="text-[9px] text-green-450 font-mono mt-1">Dispersées automatiquement</p>
+              </div>
+            </div>
+
+            {/* BARRE DE RECHERCHE FILTRÉE */}
+            <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Suivi en Temps Réel des Liens de Parrainage</h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    Ci-dessous s'affiche la liste de tous les filleuls qui se sont inscrits en utilisant un lien de parrainage ou code d'affiliation de nos membres.
+                  </p>
+                </div>
+                <div className="relative max-w-sm w-full">
+                  <span className="absolute left-3.5 top-3 text-slate-500">
+                    <Search className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Rechercher un filleul, parrain ou code..."
+                    value={affiliateSearchQuery}
+                    onChange={(e) => setAffiliateSearchQuery(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2 pl-10 pr-4 text-xs text-white focus:outline-none placeholder-slate-600 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* LISTE DES FILIATIONS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredFilleuls.length === 0 ? (
+                  <div className="col-span-2 p-8 rounded-2xl bg-slate-950/20 border border-dashed border-slate-800 text-center text-slate-500 text-xs">
+                    Aucun filleul actif correspondant aux critères de recherche n'est enregistré.
+                  </div>
+                ) : (
+                  filteredFilleuls.map((filleul) => {
+                    const parrain = users.find(u => u.id === filleul.referredBy);
+                    return (
+                      <div 
+                        key={filleul.id} 
+                        className="p-4 rounded-xl bg-slate-950/60 border border-yellow-500/5 hover:border-yellow-500/20 flex items-center justify-between gap-4 transition-all text-left"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-bold text-white block">{filleul.name}</span>
+                            <span className="text-[8px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded font-mono uppercase font-semibold">Filleul</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400">
+                            WhatsApp: <span className="font-mono text-slate-200">{filleul.whatsapp}</span> | Pays: <span className="text-slate-300">{filleul.country}</span>
+                          </p>
+                          <span className="text-[9px] text-slate-500 block">
+                            Inscrit le : {new Date(filleul.createdAt).toLocaleString('fr-FR')}
+                          </span>
+                        </div>
+
+                        <div className="text-right border-l border-slate-800 pl-4 space-y-1.5 flex flex-col items-end justify-center min-w-[120px]">
+                          <div>
+                            <span className="text-[8px] text-slate-500 block uppercase tracking-wider font-bold">Parrain / Sponsor</span>
+                            <span className="text-xs font-bold text-yellow-500 block truncate max-w-[140px]">
+                              {parrain ? parrain.name : "Code inconnu"}
+                            </span>
+                            <span className="text-[9px] text-slate-400 font-mono block">
+                              WA: {parrain ? parrain.whatsapp : "N/A"}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSponsor(filleul.id)}
+                            className="text-[8px] font-bold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 border border-red-500/30 rounded px-2 py-0.5 duration-100 flex items-center gap-1 cursor-pointer"
+                            title="Supprimer ce lien d'affiliation"
+                          >
+                            <Trash2 className="w-2.5 h-2.5" />
+                            <span>Supprimer</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* COMMISSION MLM TRANSACTIONS DETAIL */}
+            <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+              <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span>💰</span>
+                <span>Historique des Commissions Affiliation MLM versées</span>
+              </h3>
+              
+              <div className="overflow-x-auto text-[11px] md:text-xs">
+                <table className="w-full text-left text-slate-300 border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
+                      <th className="p-3">Bénéficiaire (Parrain)</th>
+                      <th className="p-3">Initié par (Filleul)</th>
+                      <th className="p-3">Niveau d'Affiliation</th>
+                      <th className="p-3">Montant Reçu</th>
+                      <th className="p-3">Date du versement</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {commissions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-slate-500 font-mono">
+                          Aucune commission de parrainage n'a encore été payée sur la plateforme.
+                        </td>
+                      </tr>
+                    ) : (
+                      commissions.map((comm) => {
+                        const beneficiary = users.find(u => u.id === comm.userId);
+                        return (
+                          <tr key={comm.id} className="hover:bg-slate-900/10">
+                            <td className="p-3 text-left">
+                              <span className="font-semibold text-white block">{beneficiary ? beneficiary.name : 'Membre Inconnu'}</span>
+                              <span className="text-[10px] text-slate-400 block font-mono">{beneficiary ? beneficiary.whatsapp : ''}</span>
+                            </td>
+                            <td className="p-3 font-medium text-slate-200 text-left">
+                              {comm.fromUserName}
+                            </td>
+                            <td className="p-3 text-left">
+                              <span className={`px-2 py-0.5 text-[9px] font-bold rounded ${
+                                comm.level === 1 
+                                  ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' 
+                                  : comm.level === 2
+                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                  : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                              }`}>
+                                Niveau {comm.level} {comm.level === 1 ? '(20%)' : comm.level === 2 ? '(3%)' : '(1%)'}
+                              </span>
+                            </td>
+                            <td className="p-3 font-mono font-bold text-green-400 text-left">
+                              +{comm.amount.toLocaleString()} FCFA
+                            </td>
+                            <td className="p-3 text-slate-400 text-[10px] font-mono text-left">
+                              {new Date(comm.createdAt).toLocaleString('fr-FR')}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

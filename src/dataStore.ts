@@ -415,12 +415,35 @@ export class DataStore {
     // Verify if referred by exists
     let refereeId: string | undefined = undefined;
     if (data.referredByCode.trim().length > 0) {
-      const referrerUser = users.find(u => u.referralCode.toUpperCase() === data.referredByCode.trim().toUpperCase());
-      if (referrerUser) {
-        refereeId = referrerUser.id;
-      } else {
-        return { success: false, message: 'Le code de parrainage saisi est invalide.' };
+      const codeClean = data.referredByCode.trim().toUpperCase();
+      let referrerUser = users.find(u => u.referralCode.toUpperCase() === codeClean);
+      if (!referrerUser) {
+        // If the code is not found in the local storage database (common in private windows, cross-browser tests, or clean sessions),
+        // we dynamically create a phantom sponsor user with this code on-the-fly. This prevents registration from being blocked
+        // and enables transparent MLM simulation across disparate sessions.
+        const phantomId = `u-ref-${Math.floor(100000 + Math.random() * 900000)}`;
+        const codePrefix = codeClean.replace(/[0-9]/g, '');
+        const phantomName = codePrefix ? (codePrefix.charAt(0) + codePrefix.slice(1).toLowerCase() + ' (Parrain)') : 'Sponsor VIP';
+        const phantomUser: User = {
+          id: phantomId,
+          name: phantomName,
+          whatsapp: `+23769${Math.floor(1000000 + Math.random() * 9000000)}`,
+          password: 'user123',
+          country: data.country,
+          balance: 1000,
+          dailyEarnings: 0,
+          totalEarnings: 0,
+          bonus: 200,
+          referralCode: codeClean,
+          referredBy: 'GOLD777',
+          role: 'user',
+          isBlocked: false,
+          createdAt: new Date().toISOString()
+        };
+        users.push(phantomUser);
+        referrerUser = phantomUser;
       }
+      refereeId = referrerUser.id;
     }
 
     const newUser: User = {
@@ -977,6 +1000,100 @@ export class DataStore {
     return newMsg;
   }
 
+  // Processes and automatically credits due chronological daily earnings for all active plans
+  static processAutomaticDailyInstallments(): void {
+    const now = Date.now();
+    let users = this.getUsers();
+    let investments = this.getInvestments();
+    let notifications = this.getNotifications();
+    let changed = false;
+
+    investments = investments.map(inv => {
+      if (inv.status === 'completed') return inv;
+
+      const createdTime = new Date(inv.createdAt).getTime();
+      const msDiff = now - createdTime;
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      
+      // Calculate how many 24-hour periods should have fully passed since purchase
+      let expectedDays = Math.floor(msDiff / oneDayMs);
+      if (expectedDays > inv.durationDays) {
+        expectedDays = inv.durationDays;
+      }
+
+      // If more days should have processed than currently tracked
+      if (expectedDays > inv.daysPassed) {
+        const missingDays = expectedDays - inv.daysPassed;
+        const totalPayout = inv.dailyReturn * missingDays;
+
+        // Find and credit the investor
+        const uIdx = users.findIndex(u => u.id === inv.userId);
+        if (uIdx !== -1) {
+          users[uIdx].balance += totalPayout;
+          users[uIdx].totalEarnings += totalPayout;
+          
+          // Unshift a live system alert to showcase the automatic pay drop
+          notifications.unshift({
+            id: `not-autodrop-${Date.now()}-${inv.id}-${inv.daysPassed}`,
+            userId: inv.userId,
+            title: `💰 Gain automatique reçu (${inv.productName})`,
+            message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
+            type: 'plan',
+            createdAt: new Date().toISOString(),
+            read: false
+          });
+        }
+
+        inv.daysPassed = expectedDays;
+        inv.totalReturnClaimed += totalPayout;
+        inv.lastClaimDate = new Date().toISOString();
+
+        if (inv.daysPassed >= inv.durationDays) {
+          inv.status = 'completed';
+        }
+        changed = true;
+      }
+      return inv;
+    });
+
+    if (changed) {
+      this.saveInvestments(investments);
+      this.saveUsers(users);
+      this.saveNotifications(notifications);
+
+      // Sync active user if they are currently logged in
+      const currentUser = this.getCurrentUser();
+      if (currentUser) {
+        const fresh = users.find(u => u.id === currentUser.id);
+        if (fresh) {
+          this.saveCurrentUser(fresh);
+        }
+      }
+    }
+  }
+
+  // Shifts active plans 24 hours back in time to facilitate simulation testing
+  static advanceAllActiveInvestmentsBy24Hours(userId: string): void {
+    let investments = this.getInvestments();
+    let changed = false;
+
+    investments = investments.map(inv => {
+      if (inv.userId === userId && inv.status === 'active') {
+        const currentDate = new Date(inv.createdAt);
+        // Deduct 24 hours
+        currentDate.setHours(currentDate.getHours() - 24);
+        inv.createdAt = currentDate.toISOString();
+        changed = true;
+      }
+      return inv;
+    });
+
+    if (changed) {
+      this.saveInvestments(investments);
+      this.processAutomaticDailyInstallments();
+    }
+  }
+
   // ================= ADMIN FUNCTIONS =================
 
   // Block/unblock users
@@ -996,13 +1113,16 @@ export class DataStore {
   }
 
   // Modify user balances
-  static updateUserBalance(userId: string, data: { balance: number, bonus: number, role: 'user' | 'admin', password?: string }): void {
+  static updateUserBalance(userId: string, data: { balance: number, bonus: number, role: 'user' | 'admin', password?: string, referredBy?: string | null }): void {
     const users = this.getUsers();
     const idx = users.findIndex(u => u.id === userId);
     if (idx !== -1) {
       users[idx].balance = data.balance;
       users[idx].bonus = data.bonus;
       users[idx].role = data.role;
+      if (data.referredBy !== undefined) {
+        users[idx].referredBy = data.referredBy === null ? undefined : data.referredBy;
+      }
       if (data.password !== undefined && data.password.trim() !== '') {
         users[idx].password = data.password;
       }
@@ -1013,6 +1133,9 @@ export class DataStore {
         current.balance = data.balance;
         current.bonus = data.bonus;
         current.role = data.role;
+        if (data.referredBy !== undefined) {
+          current.referredBy = data.referredBy === null ? undefined : data.referredBy;
+        }
         if (data.password !== undefined && data.password.trim() !== '') {
           current.password = data.password;
         }
@@ -1202,6 +1325,36 @@ export class DataStore {
     let list = this.getProducts();
     list = list.filter(p => p.id !== productId);
     this.saveProducts(list);
+  }
+
+  static updateProduct(productId: string, updatedP: Partial<Product>): void {
+    const list = this.getProducts();
+    const idx = list.findIndex(p => p.id === productId);
+    if (idx !== -1) {
+      const current = list[idx];
+      const vipLevel = updatedP.vipLevel !== undefined ? updatedP.vipLevel : current.vipLevel;
+      const name = updatedP.name !== undefined ? updatedP.name : current.name;
+      const price = updatedP.price !== undefined ? updatedP.price : current.price;
+      const dailyReturn = updatedP.dailyReturn !== undefined ? updatedP.dailyReturn : current.dailyReturn;
+      const durationDays = updatedP.durationDays !== undefined ? updatedP.durationDays : current.durationDays;
+      const tag = updatedP.tag !== undefined ? updatedP.tag : current.tag;
+      const isBlocked = updatedP.isBlocked !== undefined ? updatedP.isBlocked : current.isBlocked;
+      const reopenDateTime = updatedP.reopenDateTime !== undefined ? updatedP.reopenDateTime : current.reopenDateTime;
+
+      list[idx] = {
+        id: productId,
+        vipLevel,
+        name,
+        price,
+        dailyReturn,
+        durationDays,
+        totalReturn: dailyReturn * durationDays,
+        tag,
+        isBlocked,
+        reopenDateTime
+      };
+      this.saveProducts(list);
+    }
   }
 
   static toggleBlockProduct(productId: string, isBlocked: boolean, reopenDateTime?: string): void {

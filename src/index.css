@@ -22,11 +22,20 @@
   --dark-black: #000000;
 }
 
+html, body, #root {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: #000000;
   color: #ffffff;
-  overflow-x: hidden;
 }
 
 /* Glassmorphism utility using deep night blue and luminous gold glow */

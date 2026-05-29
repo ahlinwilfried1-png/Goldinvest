@@ -139,8 +139,20 @@ export default function Dashboard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
+  // MLM sponsorship dynamic calculation based on real user registration tree
+  const allUsers = DataStore.getUsers();
+  const level1Users = allUsers.filter(u => u.referredBy === userState.id);
+  const level1Ids = level1Users.map(u => u.id);
+  const level2Users = level1Ids.length > 0 ? allUsers.filter(u => u.referredBy && level1Ids.includes(u.referredBy)) : [];
+  const level2Ids = level2Users.map(u => u.id);
+  const level3Users = level2Ids.length > 0 ? allUsers.filter(u => u.referredBy && level2Ids.includes(u.referredBy)) : [];
+  const totalReferrals = level1Users.length + level2Users.length + level3Users.length;
+
   // Sync state function from local storage
   const syncDashboardData = () => {
+    // Process automatic chronological daily rewards on sync
+    DataStore.processAutomaticDailyInstallments();
+
     const cur = DataStore.getCurrentUser();
     if (cur) {
       setUserState(cur);
@@ -171,6 +183,16 @@ export default function Dashboard({
   useEffect(() => {
     syncDashboardData();
 
+    // Setup periodic check interval to automatically credit of earnings in real-time
+    const interval = setInterval(() => {
+      const oldBal = userState.balance;
+      DataStore.processAutomaticDailyInstallments();
+      const fresh = DataStore.getCurrentUser();
+      if (fresh && fresh.balance !== oldBal) {
+        syncDashboardData();
+      }
+    }, 5000);
+
     // Listen to custom automated support response events
     const handleNewMessage = () => {
       syncDashboardData();
@@ -178,9 +200,10 @@ export default function Dashboard({
     window.addEventListener('gi_new_message', handleNewMessage);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener('gi_new_message', handleNewMessage);
     };
-  }, [currentUser.id]);
+  }, [currentUser.id, userState.balance]);
 
   useEffect(() => {
     // Scroll to bottom of support chat when opened or new messages spawn
@@ -430,14 +453,20 @@ export default function Dashboard({
     }
   };
 
+  const handleFastForwardTime = () => {
+    DataStore.advanceAllActiveInvestmentsBy24Hours(userState.id);
+    syncDashboardData();
+    alert("⏱️ Voyage temporel effectué ! Vos plans d'investissement actifs ont vieilli de 24 Heures pour le test. Vos revenus quotidiens correspondants ont été crédités d'office ! Vous pouvez voir votre solde principal s'actualiser.");
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-[#030611] text-white flex flex-col font-sans w-full max-w-full relative overflow-x-hidden">
       
       {/* GLOW DECORATIONS */}
-      <div className="absolute top-0 left-0 w-[500px] h-[300px] bg-yellow-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full max-w-[500px] h-[300px] bg-yellow-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
       {/* DASHBOARD TOP HEADER */}
-      <header className="bg-[#000000]/95 border-b border-yellow-500/15 py-4 px-4 md:px-12 sticky top-0 z-40 backdrop-blur-md">
+      <header className="bg-[#030611]/90 border-b border-yellow-500/15 py-4 px-4 md:px-12 sticky top-0 z-40 backdrop-blur-md">
         <div className="max-w-full mx-auto flex justify-between items-center">
           
           <div className="flex items-center space-x-2">
@@ -603,13 +632,98 @@ export default function Dashboard({
                 </motion.div>
               </motion.div>
 
-              {/* DYNAMIC SYSTEM ANNOUNCEMENT TICKER */}
-              <div className="bg-[#0b1229]/60 border border-yellow-500/10 p-2.5 rounded-xl flex items-center space-x-2 text-left">
-                <Bell className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                <div className="text-[11px]">
-                  <span className="font-bold text-slate-200 mr-1 inline">Info:</span>
-                  <span className="text-slate-400 inline">{notifications.length > 0 ? notifications[0].message : "Faites de GoldInvest votre source de revenus passifs stable n°1."}</span>
-                </div>
+              {/* COMPREHENSIVE DIRECT VIP SUGGESTIONS OR ACTIVE INVESTMENTS */}
+              <div className="mt-4 pt-1 border-t border-slate-900">
+                {activeInvestments.length === 0 ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center px-1">
+                      <h4 className="text-[11px] font-bold text-yellow-500 uppercase tracking-widest">🔥 Packages VIP Recommandés</h4>
+                      <button 
+                        onClick={() => setActiveTab('products')}
+                        className="text-[10px] text-yellow-400 font-bold hover:underline"
+                      >
+                        Voir tout →
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {products.slice(0, 2).map((p) => (
+                        <div 
+                          key={p.id}
+                          className="bg-[#0b1229]/60 border border-yellow-500/10 rounded-2xl p-3 flex flex-col justify-between text-left space-y-3"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-[8px] text-yellow-400 font-bold uppercase bg-yellow-500/10 px-1.5 py-0.5 rounded">Plan VIP {p.vipLevel}</span>
+                              <h5 className="font-semibold text-xs text-white mt-1.5 leading-tight">{p.name}</h5>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[8px] text-slate-400 block font-bold">Investissement</span>
+                              <strong className="text-xs text-yellow-400 font-bold leading-tight">{p.price.toLocaleString()} F</strong>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 bg-slate-950/40 p-2 rounded-xl text-[10px] border border-slate-900">
+                            <div>
+                              <span className="text-slate-400 text-[8px] block uppercase">Revenu / Jour</span>
+                              <span className="text-green-400 font-bold font-mono">+{p.dailyReturn.toLocaleString()} F</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 text-[8px] block uppercase">Gains Totaux</span>
+                              <span className="text-white font-bold font-mono">{(p.dailyReturn * p.durationDays).toLocaleString()} F</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleBuyProduct(p)}
+                            className="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-[10px] uppercase font-bold tracking-wider rounded-xl transition-all shadow-md shadow-yellow-500/5 text-center font-sans"
+                          >
+                            Activer pour {p.price.toLocaleString()} F
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center px-1">
+                      <h4 className="text-[11px] font-bold text-yellow-500 uppercase tracking-widest leading-none">💼 Vos Investissements Actifs ({activeInvestments.length})</h4>
+                      <button 
+                        onClick={() => setActiveTab('products')}
+                        className="text-[10px] text-yellow-400 font-bold hover:underline"
+                      >
+                        Gérer →
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {activeInvestments.slice(0, 3).map((inv) => (
+                        <div 
+                          key={inv.id}
+                          className="bg-[#0b1229]/60 p-3 rounded-2xl border border-yellow-500/10 flex items-center justify-between gap-3 text-left"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[8px] text-yellow-400 font-bold bg-yellow-400/5 border border-yellow-400/15 px-1 rounded uppercase">Plan VIP {inv.productName}</span>
+                            <div className="text-[11px] font-semibold text-slate-200">
+                              Investi : {inv.price.toLocaleString()} F | Gain/j : <span className="text-green-400 font-bold font-mono">+{inv.dailyReturn.toLocaleString()} F</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-mono">
+                              Progression : {inv.daysPassed} / {inv.durationDays} Jours
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => handleClaimReturn(inv.id)}
+                            disabled={inv.isClaimedToday || inv.status === 'completed'}
+                            className={`py-1.5 px-3 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all shadow ${inv.isClaimedToday || inv.status === 'completed' ? 'bg-slate-950 border border-slate-900 text-slate-500 cursor-not-allowed' : 'bg-green-500 hover:bg-green-400 text-slate-950'}`}
+                          >
+                            {inv.isClaimedToday ? 'Récolté ✔' : 'Récolter'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>
@@ -619,8 +733,8 @@ export default function Dashboard({
           {activeTab === 'products' && (
             <div className="space-y-4">
               <div className="text-center max-w-xl mx-auto mb-2 animate-fade-in">
-                <span className="text-[10px] font-bold text-yellow-500 font-mono tracking-widest uppercase block mb-0.5">PRODUITS VIP DISPONIBLES</span>
-                <h3 className="text-base sm:text-lg font-display font-medium text-white">Activez des parts d'investissement durables</h3>
+                <span className="text-[10px] font-bold text-yellow-500 tracking-wider uppercase block mb-0.5">Produits VIP Disponibles</span>
+                <h3 className="text-base sm:text-lg font-semibold text-white">Activez des parts d'investissement durables</h3>
               </div>
 
               {/* STATS: NOMBRE DE PRODUITS À GAUCHE ET REVENU À DROITE */}
@@ -631,8 +745,8 @@ export default function Dashboard({
                     <Briefcase className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[9px] sm:text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Produits Actifs</span>
-                    <span className="text-sm font-bold font-mono text-white block">{activeInvestments.length}</span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 block font-semibold">Produits Actifs</span>
+                    <span className="text-sm font-bold text-white block">{activeInvestments.length}</span>
                   </div>
                 </div>
 
@@ -642,8 +756,8 @@ export default function Dashboard({
                     <TrendingUp className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[9px] sm:text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Revenu Quotidien</span>
-                    <span className="text-sm font-bold font-mono text-green-400 block">+{userState.dailyEarnings.toLocaleString()} F</span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 block font-semibold">Revenu Quotidien</span>
+                    <span className="text-sm font-bold text-green-400 block">+{userState.dailyEarnings.toLocaleString()} F</span>
                   </div>
                 </div>
               </div>
@@ -652,7 +766,7 @@ export default function Dashboard({
               {activeInvestments.length > 0 && (
                 <div className="max-w-4xl mx-auto bg-slate-900/20 border border-slate-900 rounded-2xl p-3 mb-2 text-left">
                   <div className="mb-2">
-                    <h4 className="text-xs font-bold text-yellow-500 uppercase tracking-widest font-display">Collecte active de vos dividendes</h4>
+                    <h4 className="text-xs font-bold text-yellow-500 tracking-wider">Collecte active de vos dividendes</h4>
                     <p className="text-[11px] text-slate-300 mt-0.5">Cliquez sur récolter pour verser vos gains disponibles.</p>
                   </div>
                   <div className="space-y-2">
@@ -662,8 +776,8 @@ export default function Dashboard({
                         className="bg-slate-900/60 p-2.5 rounded-xl border border-yellow-500/10 hover:border-yellow-500/20 transition-all flex flex-col sm:flex-row justify-between sm:items-center gap-2"
                       >
                         <div className="space-y-0.5">
-                          <span className="text-[9px] text-yellow-400 font-mono font-bold uppercase">MODULE VIP {inv.productName}</span>
-                          <div className="text-[11px] font-semibold text-slate-200 font-mono">
+                          <span className="text-[9px] text-yellow-400 font-bold">Module VIP {inv.productName}</span>
+                          <div className="text-[11px] font-semibold text-slate-200">
                             Investi : {inv.price.toLocaleString()} F | Gain/j : <span className="text-green-400">+{inv.dailyReturn.toLocaleString()} F</span>
                           </div>
                           <div className="text-[11px] text-slate-400">
@@ -673,13 +787,13 @@ export default function Dashboard({
 
                         <div>
                           {inv.status === 'completed' ? (
-                            <span className="px-3 py-1 bg-slate-950 border border-slate-800 text-slate-400 text-[10px] font-semibold rounded-lg block text-center font-mono">
-                              CYCLE COMPLÉTÉ
+                            <span className="px-3 py-1 bg-slate-950 border border-slate-800 text-slate-400 text-[10px] font-semibold rounded-lg block text-center">
+                              Cycle complété
                             </span>
                           ) : (
                             <button
                               onClick={() => handleClaimReturn(inv.id)}
-                              className="px-3 py-1.5 bg-green-500 hover:bg-green-400 text-slate-950 text-[10px] font-bold rounded-lg transition-all shadow-md flex items-center space-x-1 uppercase cursor-pointer"
+                              className="px-3 py-1.5 bg-green-500 hover:bg-green-400 text-slate-950 text-[10px] font-bold rounded-lg transition-all shadow-md flex items-center space-x-1 cursor-pointer"
                             >
                               <Coins className="w-3 h-3" />
                               <span>Récolter ({inv.dailyReturn} F)</span>
@@ -707,20 +821,20 @@ export default function Dashboard({
                       {/* Product Header */}
                       <div className="p-2 sm:p-2.5 border-b border-yellow-500/10">
                         <div className="flex justify-between items-center">
-                          <span className="text-[8px] sm:text-[9px] text-yellow-400 font-mono font-bold uppercase">Plan VIP {p.vipLevel}</span>
+                          <span className="text-[8px] sm:text-[9px] text-yellow-400 font-bold">Plan VIP {p.vipLevel}</span>
                           {isBlocked ? (
-                            <span className="text-[8px] bg-red-500/20 border border-red-500/40 text-red-400 font-bold px-1 py-0.5 rounded uppercase font-mono">Clos</span>
+                            <span className="text-[8px] bg-red-500/20 border border-red-500/40 text-red-400 font-bold px-1 py-0.5 rounded uppercase">Clos</span>
                           ) : p.tag ? (
-                            <span className="text-[8px] bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 font-bold px-1 py-0.5 rounded uppercase font-mono truncate max-w-[65px]">{p.tag}</span>
+                            <span className="text-[8px] bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 font-bold px-1 py-0.5 rounded truncate max-w-[65px]">{p.tag}</span>
                           ) : null}
                         </div>
-                        <h4 className="text-xs font-display font-bold text-white mt-1 leading-tight">{p.name}</h4>
+                        <h4 className="text-xs font-semibold text-white mt-1 leading-tight">{p.name}</h4>
                       </div>
 
                       {/* Fluid image under the header */}
                       <div className="w-full h-14 sm:h-18 overflow-hidden relative bg-slate-950 border-b border-yellow-500/5">
                         <img 
-                          src={getVipImage(p.vipLevel)} 
+                           src={getVipImage(p.vipLevel)} 
                           alt={p.name} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90" 
                           referrerPolicy="no-referrer"
@@ -730,9 +844,9 @@ export default function Dashboard({
 
                       {/* Compact Price / Required amount */}
                       <div className="p-1.5 text-center bg-slate-950/40 border-b border-yellow-500/5">
-                        <span className="text-[9px] text-slate-400 block uppercase font-bold">Montant Requis</span>
-                        <strong className="text-xs sm:text-sm font-mono font-bold text-white block mt-0.5">
-                          {p.price.toLocaleString()} <span className="text-[9px] text-yellow-400 font-sans font-bold">F</span>
+                        <span className="text-[9px] text-slate-400 block font-bold">Montant requis</span>
+                        <strong className="text-xs sm:text-sm font-bold text-white block mt-0.5">
+                          {p.price.toLocaleString()} <span className="text-[9px] text-yellow-400 font-bold">F</span>
                         </strong>
                       </div>
 
@@ -740,24 +854,24 @@ export default function Dashboard({
                       <div className="p-2 space-y-1 text-[10px] sm:text-[11px] text-slate-200 flex-1">
                         <div className="flex justify-between pb-0.5 border-b border-slate-900/65">
                           <span className="text-slate-300">Revenu :</span>
-                          <span className="text-green-400 font-bold font-mono">+{p.dailyReturn.toLocaleString()} F / j</span>
+                          <span className="text-green-400 font-bold">+{p.dailyReturn.toLocaleString()} F / j</span>
                         </div>
                         <div className="flex justify-between pb-0.5 border-b border-slate-900/65">
                           <span className="text-slate-300">Cycle :</span>
-                          <span className="text-yellow-400 font-bold font-mono">{p.durationDays} jrs</span>
+                          <span className="text-yellow-400 font-bold">{p.durationDays} jrs</span>
                         </div>
                         <div className="flex justify-between font-bold pt-0.5">
                           <span className="text-slate-200">Gain :</span>
-                          <span className="text-white font-mono bg-yellow-500/10 px-1 py-0.5 rounded text-[9px] font-bold">
+                          <span className="text-white bg-yellow-500/10 px-1 py-0.5 rounded text-[9px] font-bold border border-yellow-500/10">
                             {(p.dailyReturn * p.durationDays).toLocaleString()} F
                           </span>
                         </div>
                         
                         {isBlocked && (
-                          <div className="bg-red-950/30 border border-red-900/50 rounded-lg p-1 mt-1 text-center font-sans">
-                            <span className="block text-red-400 font-extrabold text-[8px] tracking-wide">FERMÉ</span>
+                          <div className="bg-red-950/30 border border-red-900/50 rounded-lg p-1 mt-1 text-center">
+                            <span className="block text-red-400 font-bold text-[8px] tracking-wide">Fermé</span>
                             {formattedReopenTime ? (
-                              <span className="block text-[7px] text-slate-300 font-mono">
+                              <span className="block text-[7px] text-slate-300">
                                 {formattedReopenTime}
                               </span>
                             ) : null}
@@ -770,7 +884,7 @@ export default function Dashboard({
                         <button
                           onClick={() => handleBuyProduct(p)}
                           disabled={isBlocked}
-                          className={`w-full py-1.5 rounded-lg text-[10px] font-extrabold transition-all duration-150 font-display uppercase tracking-wider ${isBlocked ? 'bg-[#0f152d] border border-slate-800 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-yellow-500/15 to-amber-600/15 border border-yellow-500/25 text-yellow-400 hover:from-yellow-400 hover:to-amber-500 hover:text-slate-950 hover:border-yellow-400'}`}
+                          className={`w-full py-1.5 rounded-lg text-[10px] font-bold transition-all duration-150 tracking-wider ${isBlocked ? 'bg-[#0f152d] border border-slate-800 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-yellow-500/15 to-amber-600/15 border border-yellow-500/25 text-yellow-400 hover:from-yellow-400 hover:to-amber-500 hover:text-slate-950 hover:border-yellow-400'}`}
                         >
                           {isBlocked ? 'Suspendu' : "Activer"}
                          </button>
@@ -1055,7 +1169,7 @@ export default function Dashboard({
                 <div className="bg-slate-900/40 border border-slate-900 rounded-xl p-2.5">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Total Filleuls</span>
                   <div className="text-sm font-bold font-mono text-white mt-0.5">
-                    {commissions.length + 2} membres
+                    {totalReferrals} membres
                   </div>
                   <span className="text-[8px] text-slate-500 block mt-0.5">Membres actifs</span>
                 </div>
@@ -1126,175 +1240,148 @@ export default function Dashboard({
                   </table>
                 </div>
               </div>
+
+              {/* LIVE NETWORK STRUCTURE - DIRECT REFERRED USERS */}
+              <div className="bg-[#0b1229]/40 border border-yellow-500/10 rounded-xl p-4 text-left space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+                  <h3 className="text-xs font-display font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <span>👥</span>
+                    <span>Vos Filleuls Directs (Niveau 1)</span>
+                  </h3>
+                  <span className="text-[10px] bg-yellow-500/15 border border-yellow-500/35 px-2 py-0.5 rounded-md text-yellow-400 font-bold font-mono">
+                    {level1Users.length} inscrit(s)
+                  </span>
+                </div>
+
+                {level1Users.length === 0 ? (
+                  <p className="text-[11px] text-slate-450 leading-relaxed text-center py-4 bg-slate-950/10 rounded-lg">
+                    Vous n'avez pas encore de filleuls inscrits directement avec votre code de parrainage. Partagez votre lien d'invitation pour commencer à multiplier vos gains !
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {level1Users.map(u => (
+                      <div key={u.id} className="p-3 bg-slate-950/80 border border-slate-900 rounded-xl flex flex-col justify-between hover:border-yellow-500/25 transition-all">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-100 text-xs truncate">{u.name}</span>
+                            <span className="text-[9px] font-mono text-slate-500 uppercase">ID: {u.id.substring(0, 6)}</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 block mt-1">Sponsorisé le : {new Date(u.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="mt-3 pt-2.5 border-t border-slate-900 flex justify-between items-center text-[10px]">
+                          <span className="text-slate-450 italic">{u.country}</span>
+                          <a 
+                            href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-green-400 font-semibold flex items-center space-x-1 hover:text-green-350 transition-colors"
+                          >
+                            <span>💬 WhatsApp</span>
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </div>
           )}
 
-          {/* USER PROFILE & LIVE SUPPORT IN-APP CHAT */}
+          {/* USER PROFILE */}
           {activeTab === 'profile' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+            <div className="max-w-2xl mx-auto w-full space-y-4 text-left">
               
-              {/* PROFILE CONTROL LIST */}
-              <div className="lg:col-span-12 xl:col-span-5 space-y-4 text-left">
-                <div className="bg-slate-900/40 p-4 border border-slate-900 rounded-xl relative">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-slate-950 font-bold text-base">
-                      {userState.name.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="font-display font-medium text-base text-white">{userState.name}</h3>
-                      <span className="text-xs text-slate-400 font-mono"> WhatsApp : {userState.whatsapp}</span>
-                    </div>
+              <div className="bg-slate-900/40 p-4 border border-slate-900 rounded-xl relative">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-slate-950 font-bold text-base">
+                    {userState.name.charAt(0)}
                   </div>
-
-                  <div className="mt-4 pt-3 border-t border-slate-800 space-y-1 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Pays identifié :</span>
-                      <span className="font-semibold text-white">{userState.country}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Niveau de compte :</span>
-                      <span className="font-semibold text-yellow-500 uppercase tracking-wider">Investisseur VIP {activeInvestments.length > 0 ? 'Actif' : 'Standard'}</span>
-                    </div>
+                  <div>
+                    <h3 className="font-display font-medium text-base text-white">{userState.name}</h3>
+                    <span className="text-xs text-slate-400 font-mono"> WhatsApp : {userState.whatsapp}</span>
                   </div>
                 </div>
 
-                {/* BONUS CODE USE BOX */}
-                <div className="bg-slate-900/40 p-4 border border-slate-900 rounded-xl">
-                  <h4 className="font-display font-bold text-[11px] text-yellow-500 uppercase tracking-widest mb-1.5">Saisir un Code Bonus</h4>
-                  
-                  {bonusError && <div className="p-2 mb-2 bg-red-400/10 border border-red-500/20 rounded-lg text-[10px] text-red-200">{bonusError}</div>}
-                  {bonusSuccess && <div className="p-2 mb-2 bg-green-400/10 border border-green-500/20 rounded-lg text-[10px] text-green-300 font-semibold">{bonusSuccess}</div>}
-
-                  <form onSubmit={submitBonusCode} className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Ex: GOLD777, WELCOME500"
-                      value={bonusCodeInput}
-                      onChange={(e) => setBonusCodeInput(e.target.value)}
-                      className="flex-1 bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 font-mono tracking-wider focus:outline-none uppercase"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-display font-bold text-[11px] uppercase tracking-wider rounded-lg transition-all"
-                    >
-                      Appliquer
-                    </button>
-                  </form>
-                </div>
-
-                {/* PASSWORD CHANGE BOX */}
-                <div className="bg-slate-900/40 p-4 border border-slate-900 rounded-xl">
-                  <h4 className="font-display font-bold text-[11px] text-yellow-500 uppercase tracking-widest mb-2">🔑 Modifier Votre Mot de Passe</h4>
-
-                  {pwdError && <div className="p-2 mb-2 bg-red-400/10 border border-red-500/20 rounded-lg text-[10px] text-red-200">{pwdError}</div>}
-                  {pwdSuccess && <div className="p-2 mb-2 bg-green-400/10 border border-green-500/20 rounded-lg text-[10px] text-green-300 font-semibold">{pwdSuccess}</div>}
-
-                  <form onSubmit={handlePasswordChange} className="space-y-2 text-xs">
-                    <div>
-                      <label className="block text-slate-400 mb-0.5 uppercase tracking-wider text-[8px]">Ancien mot de passe</label>
-                      <input
-                        type="password"
-                        placeholder="••••••••"
-                        value={oldPassword}
-                        onChange={(e) => setOldPassword(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg py-2 px-3 text-xs text-white placeholder-slate-650 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 mb-0.5 uppercase tracking-wider text-[8px]">Nouveau mot de passe</label>
-                      <input
-                        type="password"
-                        placeholder="Minimum 5 caractères"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg py-2 px-3 text-xs text-white placeholder-slate-650 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 mb-0.5 uppercase tracking-wider text-[8px]">Nouveau de passe (confirmation)</label>
-                      <input
-                        type="password"
-                        placeholder="Confirm"
-                        value={confirmNewPassword}
-                        onChange={(e) => setConfirmNewPassword(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg py-2 px-3 text-xs text-white placeholder-slate-650 focus:outline-none"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-display font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all"
-                    >
-                      Enregistrer
-                    </button>
-                  </form>
-                </div>
-
-                {/* DEMO SWITCH HELPER */}
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-900 space-y-1.5">
-                  <span className="text-[10px] text-yellow-500 font-bold uppercase tracking-wider block">Outil de Test Admin</span>
-                  <p className="text-[11px] text-slate-400 leading-normal">
-                    Activez les privilèges d'administration pour valider des dépôts ou retraits d'argent.
-                  </p>
-                  <button
-                    onClick={handleSecretPromote}
-                    className="w-full py-1.5 bg-slate-905 hover:bg-slate-800 border border-yellow-500/10 rounded-lg text-[10px] text-white font-mono uppercase tracking-wider transition-all"
-                  >
-                    🚀 Devenir Admin Démo
-                  </button>
+                <div className="mt-4 pt-3 border-t border-slate-800 space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Pays identifié :</span>
+                    <span className="font-semibold text-white">{userState.country}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Niveau de compte :</span>
+                    <span className="font-semibold text-yellow-500 uppercase tracking-wider">Investisseur VIP {activeInvestments.length > 0 ? 'Actif' : 'Standard'}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* LIVE CHAT MESSENGER SIMULATION */}
-              <div className="lg:col-span-12 xl:col-span-7 bg-[#0b1229]/50 border border-yellow-500/15 rounded-2xl p-4 flex flex-col min-h-[300px] lg:min-h-[400px] text-left">
-                <div className="border-b border-slate-800/80 pb-4 flex justify-between items-center flex-shrink-0">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-ping" />
-                    <div>
-                      <h4 className="font-bold text-xs text-white uppercase tracking-wider">Assistance en Direct</h4>
-                      <span className="text-[9px] text-slate-400">Conseillers financiers en ligne (Moins de 1m)</span>
-                    </div>
-                  </div>
-                  <HelpCircle className="w-4 h-4 text-slate-500" />
-                </div>
+              {/* BONUS CODE USE BOX */}
+              <div className="bg-slate-900/40 p-4 border border-slate-900 rounded-xl">
+                <h4 className="font-display font-bold text-[11px] text-yellow-500 uppercase tracking-widest mb-1.5">Saisir un Code Bonus</h4>
+                
+                {bonusError && <div className="p-2 mb-2 bg-red-400/10 border border-red-500/20 rounded-lg text-[10px] text-red-200">{bonusError}</div>}
+                {bonusSuccess && <div className="p-2 mb-2 bg-green-400/10 border border-green-500/20 rounded-lg text-[10px] text-green-300 font-semibold">{bonusSuccess}</div>}
 
-                {/* Messages feed area */}
-                <div className="flex-1 overflow-y-auto py-4 space-y-3 max-h-[280px]">
-                  {supportMessages.length === 0 ? (
-                    <div className="text-center py-10 text-xs text-slate-500">Posez votre question. Notre conseiller vous répondra immédiatement.</div>
-                  ) : (
-                    supportMessages.map((msg) => (
-                      <div 
-                        key={msg.id}
-                        className={`max-w-[80%] p-3.5 rounded-2xl text-xs leading-relaxed ${msg.sender === 'user' ? 'bg-yellow-500/15 border border-yellow-400/20 text-yellow-100 ml-auto rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'}`}
-                      >
-                        <div className="font-bold text-[9px] uppercase tracking-wide text-slate-400 mb-1">
-                          {msg.sender === 'user' ? 'Vous' : 'Expert GoldInvest'}
-                        </div>
-                        <p>{msg.message}</p>
-                        <span className="text-[8px] text-slate-550 block text-right mt-1.5 font-mono">
-                          {new Date(msg.createdAt).toLocaleTimeString()}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                  <div ref={chatBottomRef} />
-                </div>
-
-                {/* Input box */}
-                <form onSubmit={handleSendChatMessage} className="flex gap-2 border-t border-slate-850 pt-3 flex-shrink-0">
+                <form onSubmit={submitBonusCode} className="flex gap-2">
                   <input
                     type="text"
-                    required
-                    placeholder="Tapez votre message ici..."
-                    value={chatMessageInput}
-                    onChange={(e) => setChatMessageInput(e.target.value)}
-                    className="flex-1 bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-3 px-4 text-xs text-white focus:outline-none placeholder-slate-600"
+                    placeholder="Ex: GOLD777, WELCOME500"
+                    value={bonusCodeInput}
+                    onChange={(e) => setBonusCodeInput(e.target.value)}
+                    className="flex-1 bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 font-mono tracking-wider focus:outline-none uppercase"
                   />
                   <button
                     type="submit"
-                    className="w-11 h-11 rounded-xl gold-bg-gradient flex items-center justify-center text-slate-950 hover:opacity-90 active:scale-95 duration-150"
+                    className="px-3 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-display font-bold text-[11px] uppercase tracking-wider rounded-lg transition-all"
                   >
-                    <Send className="w-4.5 h-4.5 text-slate-950 stroke-[2.5]" />
+                    Appliquer
+                  </button>
+                </form>
+              </div>
+
+              {/* PASSWORD CHANGE BOX */}
+              <div className="bg-slate-900/40 p-4 border border-slate-900 rounded-xl">
+                <h4 className="font-display font-bold text-[11px] text-yellow-500 uppercase tracking-widest mb-2">🔑 Modifier Votre Mot de Passe</h4>
+
+                {pwdError && <div className="p-2 mb-2 bg-red-400/10 border border-red-500/20 rounded-lg text-[10px] text-red-200">{pwdError}</div>}
+                {pwdSuccess && <div className="p-2 mb-2 bg-green-400/10 border border-green-500/20 rounded-lg text-[10px] text-green-300 font-semibold">{pwdSuccess}</div>}
+
+                <form onSubmit={handlePasswordChange} className="space-y-2 text-xs">
+                  <div>
+                    <label className="block text-slate-400 mb-0.5 uppercase tracking-wider text-[8px]">Ancien mot de passe</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-0.5 uppercase tracking-wider text-[8px]">Nouveau mot de passe</label>
+                    <input
+                      type="password"
+                      placeholder="Minimum 5 caractères"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg py-2 px-3 text-xs text-white placeholder-slate-650 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-0.5 uppercase tracking-wider text-[8px]">Nouveau de passe (confirmation)</label>
+                    <input
+                      type="password"
+                      placeholder="Confirm"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-display font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all"
+                  >
+                    Enregistrer
                   </button>
                 </form>
               </div>
@@ -1356,131 +1443,7 @@ export default function Dashboard({
         </div>
       </footer>
 
-      {/* ONCE ONLY DISMISSIBLE OVERLAY COMMUNIQUÉ */}
-      {showAnnouncementDismissible && (
-        <div id="welcome-announcement-modal" className="fixed inset-0 bg-slate-950/85 backdrop-blur-xl z-[9000] flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#070e24]/95 border border-yellow-500/35 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-[0_0_50px_rgba(234,179,8,0.25)] relative overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-yellow-500/10 to-transparent rounded-bl-full pointer-events-none" />
-            
-            <div className="flex items-start md:items-center space-x-3 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/30 flex-shrink-0 animate-pulse">
-                <Bell className="w-6 h-6 text-slate-950 font-bold" />
-              </div>
-              <div className="text-left">
-                <h3 className="text-lg md:text-xl font-display font-bold text-white tracking-tight">📢 Communiqué Officiel GoldInvest</h3>
-                <p className="text-xs text-yellow-500/80 font-mono tracking-wider uppercase">Guide de bienvenue & règles de la plateforme</p>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs text-slate-200 mt-4 text-left">
-              {/* Left Column: Rules */}
-              <div className="space-y-3.5 bg-black/45 p-4 rounded-2xl border border-slate-900">
-                <div className="flex items-center space-x-2 pb-2 border-b border-slate-900/65">
-                  <span className="text-base">🌍</span>
-                  <span className="font-semibold text-white">Pays éligibles :</span>
-                </div>
-                <div className="text-yellow-400 font-semibold pl-6">
-                  Cameroun 🇨🇲 | Togo 🇹🇬 | Burkina Faso 🇧🇫
-                </div>
-
-                <div className="space-y-2.5 pt-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span>🎁</span>
-                      <span className="text-slate-350">Bonus inscription :</span>
-                    </div>
-                    <span className="font-bold text-yellow-400 font-mono">200 FCFA</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span>📥</span>
-                      <span className="text-slate-350">Dépôt minimum :</span>
-                    </div>
-                    <span className="font-bold text-slate-100 font-mono">3 000 FCFA</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span>💲</span>
-                      <span className="text-slate-350">Retrait minimum :</span>
-                    </div>
-                    <span className="font-bold text-slate-100 font-mono">1 000 FCFA <span className="text-[10px] text-slate-400 font-normal">(12% frais)</span></span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span>🔥</span>
-                      <span className="text-slate-350">Bonus quotidien :</span>
-                    </div>
-                    <span className="font-bold text-green-400 font-mono">20 FCFA / jour</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: MLM & Communication Link */}
-              <div className="space-y-4 bg-black/45 p-4 rounded-2xl border border-slate-900 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center space-x-2 pb-2 border-b border-slate-900/65">
-                    <span>🤝</span>
-                    <span className="font-semibold text-white">Commissions de Parrainage :</span>
-                  </div>
-                  
-                  <div className="space-y-2 pt-3">
-                    <div className="bg-slate-950/80 px-3.5 py-2.5 rounded-xl border border-yellow-500/10 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-100 font-bold uppercase tracking-wider">🥇 Niveau 1 (Direct)</span>
-                      <span className="text-yellow-400 font-mono font-bold text-xs">20% GAIN</span>
-                    </div>
-                    <div className="bg-slate-950/80 px-3.5 py-2.5 rounded-xl border border-yellow-500/10 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-100 font-bold uppercase tracking-wider">🥈 Niveau 2 (Indirect)</span>
-                      <span className="text-yellow-300 font-mono font-bold text-xs">3% GAIN</span>
-                    </div>
-                    <div className="bg-slate-950/80 px-3.5 py-2.5 rounded-xl border border-yellow-500/10 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-100 font-bold uppercase tracking-wider">🥉 Niveau 3 (Sous-affiliation)</span>
-                      <span className="text-yellow-250 font-mono font-bold text-xs">1% GAIN</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 text-left">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span>💬</span>
-                    <span className="font-semibold text-white text-[11px]">Groupe de Discussion Officiel :</span>
-                  </div>
-                  {/* DEDICATED WHATSAPP GROUP LINK BUTTON */}
-                  <a 
-                    href="https://chat.whatsapp.com/G0ldInvestPremiumOfficialGroup" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-gradient-to-r from-[#25D366]/20 to-[#128C7E]/20 border border-[#25D366]/40 hover:border-[#25D366] text-[#25D366] transition-all transform hover:scale-[1.01]"
-                    id="btn-announcement-whatsapp-group"
-                  >
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]"></span>
-                    </span>
-                    <span className="font-bold text-[10px] uppercase tracking-wider">👉 Groupe WhatsApp 👈</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* ACTION FOOTER DISMISS BUTTON */}
-            <div className="mt-8 pt-4 border-t border-slate-900 flex justify-end">
-              <button
-                onClick={() => {
-                  setShowAnnouncementDismissible(false);
-                  try {
-                    sessionStorage.setItem('announcement_closed_goldinvest', 'true');
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-                className="w-full sm:w-auto px-8 py-3.5 bg-yellow-500 hover:bg-yellow-400 active:scale-[0.98] text-slate-950 rounded-xl font-display font-bold text-xs uppercase tracking-widest duration-150 shadow-lg shadow-yellow-500/10 cursor-pointer"
-              >
-                J'AI COMPRIS, ACCÉDER AU COMPTE
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

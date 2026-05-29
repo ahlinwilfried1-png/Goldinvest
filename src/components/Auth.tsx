@@ -14,6 +14,11 @@ import {
 } from 'lucide-react';
 import { DataStore } from '../dataStore';
 
+export const eligibleCountries = [
+  { name: 'Cameroun', code: '+237' },
+  { name: 'Burkina Faso', code: '+226' },
+];
+
 interface AuthProps {
   initialIsRegister?: boolean;
   onAuthSuccess: (user: any) => void;
@@ -31,9 +36,18 @@ export default function Auth({
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Pre-fill sponsor referral code if captured from a direct web link
+  React.useEffect(() => {
+    const captured = localStorage.getItem('gi_captured_ref');
+    if (captured) {
+      setReferralCode(captured);
+    }
+  }, []);
+
   // Sign up fields
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [selectedCode, setSelectedCode] = useState('+237');
   const [country, setCountry] = useState('Cameroun');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -43,38 +57,11 @@ export default function Auth({
   const [loginWhatsapp, setLoginWhatsapp] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
-  // Anti-spam simulation check
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
-  const [captchaNum1, setCaptchaNum1] = useState(Math.floor(2 + Math.random() * 8));
-  const [captchaNum2, setCaptchaNum2] = useState(Math.floor(1 + Math.random() * 9));
-  const [captchaVerified, setCaptchaVerified] = useState(false);
-  const [enteredCaptcha, setEnteredCaptcha] = useState('');
-
-  // Regenerate simple math captcha for robot check
-  const refreshCaptcha = () => {
-    setCaptchaNum1(Math.floor(2 + Math.random() * 8));
-    setCaptchaNum2(Math.floor(1 + Math.random() * 9));
-    setEnteredCaptcha('');
-    setCaptchaVerified(false);
-  };
-
-  const countriesList = [
-    'Cameroun',
-  ];
-
   // Form submission dispatcher
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
-
-    // Check captcha
-    const sum = captchaNum1 + captchaNum2;
-    if (parseInt(enteredCaptcha) !== sum) {
-      setErrorMessage('La vérification de protection anti-robot a échoué. Veuillez essayer à nouveau.');
-      refreshCaptcha();
-      return;
-    }
 
     setLoading(true);
 
@@ -82,12 +69,12 @@ export default function Auth({
       if (isRegister) {
         // Registration validations
         if (name.trim().length < 3) {
-          setErrorMessage('Veuillez entrer un nom et prénom complet valide (au moins 3 caractères).');
+          setErrorMessage("Veuillez entrer un nom d'utilisateur valide (au moins 3 caractères).");
           setLoading(false);
           return;
         }
         if (!whatsapp.trim()) {
-          setErrorMessage('Le numéro WhatsApp est requis.');
+          setErrorMessage('Le numéro de téléphone est requis.');
           setLoading(false);
           return;
         }
@@ -102,10 +89,13 @@ export default function Auth({
           return;
         }
 
+        const cleanPhone = whatsapp.trim().replace(/^0+/, '');
+        const fullWhatsapp = `${selectedCode}${cleanPhone}`;
+
         // Call database
         const result = DataStore.register({
-          name,
-          whatsapp,
+          name: name.trim(),
+          whatsapp: fullWhatsapp,
           country,
           password,
           referredByCode: referralCode
@@ -207,7 +197,7 @@ export default function Auth({
             /* REGISTRATION FIELDS */
             <>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Nom et Prénom</label>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Nom d'utilisateur</label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-3.5 text-slate-500">
                     <UserIcon className="w-4 h-4" />
@@ -215,7 +205,7 @@ export default function Auth({
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Alain Kouadio"
+                    placeholder="Ex: alain225"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
@@ -223,10 +213,24 @@ export default function Auth({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">WhatsApp (Sans indicatif)</label>
-                  <div className="relative">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Indicatif plus numéro du pays</label>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedCode}
+                    onChange={(e) => {
+                      const code = e.target.value;
+                      setSelectedCode(code);
+                      const found = eligibleCountries.find(c => c.code === code);
+                      if (found) setCountry(found.name);
+                    }}
+                    className="bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 px-3 text-xs md:text-sm text-white focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
+                  >
+                    {eligibleCountries.map((c, i) => (
+                      <option key={i} value={c.code}>{c.code} ({c.name})</option>
+                    ))}
+                  </select>
+                  <div className="relative flex-1">
                     <span className="absolute left-3.5 top-3.5 text-slate-500">
                       <Smartphone className="w-4 h-4" />
                     </span>
@@ -238,24 +242,6 @@ export default function Auth({
                       onChange={(e) => setWhatsapp(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
                     />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Pays de Résidence</label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-3.5 text-slate-500">
-                      <MapPin className="w-4 h-4" />
-                    </span>
-                    <select
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 pl-10 pr-4 text-sm text-white focus:outline-none transition-colors appearance-none cursor-pointer"
-                    >
-                      {countriesList.map((c, i) => (
-                        <option key={i} value={c} className="bg-slate-900 text-white">{c}</option>
-                      ))}
-                    </select>
                   </div>
                 </div>
               </div>
@@ -283,7 +269,7 @@ export default function Auth({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Confirmation</label>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Confirmer le mot de passe</label>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -304,7 +290,7 @@ export default function Auth({
                   onChange={(e) => setReferralCode(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 px-4 text-sm text-yellow-300 font-mono focus:outline-none transition-colors"
                 />
-                <span className="text-[10px] text-slate-400 mt-1 block">Renseignez le code d'un ami pour lui reverser des commissions.</span>
+                <span className="text-[10px] text-slate-400 mt-1 block">Renseignez le code d'un ami pour lui reverser des commissions d'affiliation.</span>
               </div>
             </>
           ) : (
@@ -370,35 +356,6 @@ export default function Auth({
             </>
           )}
 
-          {/* MATH SHIELD ANTI-BOT CHALLENGE */}
-          <div className="bg-slate-950/60 p-4 rounded-xl border border-yellow-500/15">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Sécurité Anti-Robot Captcha</span>
-              <button 
-                type="button"
-                onClick={refreshCaptcha}
-                className="text-yellow-400 hover:rotate-180 transition-transform duration-500"
-              >
-                <RotateCw className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <span className="text-sm font-bold bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-yellow-400 font-mono">
-                {captchaNum1} + {captchaNum2} =
-              </span>
-              <input
-                type="number"
-                required
-                placeholder="Ranger"
-                value={enteredCaptcha}
-                onChange={(e) => setEnteredCaptcha(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-lg p-2 text-sm text-center text-white font-mono placeholder-slate-700 focus:outline-none"
-              />
-            </div>
-            <p className="text-[9px] text-slate-500 mt-1.5 uppercase tracking-wider">Résolvez cette addition mathématique simple pour valider la session.</p>
-          </div>
-
           {/* SUBMIT BUTTON */}
           <button
             type="submit"
@@ -426,7 +383,6 @@ export default function Auth({
               setIsRegister(!isRegister);
               setErrorMessage('');
               setSuccessMessage('');
-              refreshCaptcha();
             }}
             className="text-yellow-400 font-bold hover:underline ml-1 focus:outline-none"
           >

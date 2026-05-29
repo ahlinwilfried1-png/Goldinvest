@@ -16,19 +16,26 @@ export default function App() {
   useEffect(() => {
     // 1. Recover active user logs
     const active = DataStore.getCurrentUser();
-    if (active) {
-      setUser(active);
-      setCurrentScreen('dashboard');
-    }
 
     // 2. Fetch configured VIP levels
     setProducts(DataStore.getProducts());
 
-    // 3. Catch referral tags in URL parameters to auto-fill MLM boxes later
+    // 3. Catch referral tags in URL parameters (supports ?ref=, ?code=, ?r=, ?parrain=, ?sponsor=)
     const params = new URLSearchParams(window.location.search);
-    const refCode = params.get('ref');
+    const refCode = params.get('ref') || params.get('code') || params.get('r') || params.get('parrain') || params.get('sponsor');
     if (refCode) {
       localStorage.setItem('gi_captured_ref', refCode.toUpperCase());
+      if (active) {
+        setUser(active);
+        setCurrentScreen('dashboard');
+      } else {
+        // Bypass home landing page entirely for users coming via a referral/sponsor link
+        setIsRegisterFlow(true);
+        setCurrentScreen('auth');
+      }
+    } else if (active) {
+      setUser(active);
+      setCurrentScreen('dashboard');
     }
   }, []);
 
