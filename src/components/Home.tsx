@@ -10,11 +10,7 @@ import {
   CheckCircle2, 
   Briefcase, 
   Award, 
-  Coins,
-  DollarSign,
-  MessageCircle,
-  Send,
-  Headphones
+  Coins
 } from 'lucide-react';
 import { Product } from '../types';
 
@@ -578,78 +574,7 @@ export default function Home({
         </div>
       </footer>
 
-      {/* FLOATING SOCIAL & CUSTOMER SUPPORT SIDE BAR */}
-      <div className="fixed right-3 md:right-5 top-1/2 -translate-y-1/2 z-[100] flex flex-col space-y-4" id="floating-support-bar">
-        {/* Support floating button 1 - Service Client VIP */}
-        <a 
-          href="https://wa.me/2250708091011?text=Bonjour%20GoldInvest%20Premium%2C%20je%20souhaite%20contacter%20le%20Service%20Client%20VIP"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group relative w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-black/90 border border-yellow-500/30 flex items-center justify-center text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.15)] hover:shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:border-yellow-400 hover:scale-110 active:scale-95 transition-all duration-300"
-          id="btn-service-client-floating"
-        >
-          {/* Active status pulse dot */}
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500 font-bold"></span>
-          </span>
-          <Headphones className="w-5 h-5 md:w-6 md:h-6 text-yellow-400 hover:rotate-12 transition-transform" />
-          
-          {/* Tooltip popping on the left */}
-          <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-black/95 text-white border border-yellow-500/20 px-3 py-2 rounded-xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 shadow-2xl flex items-center space-x-2 whitespace-nowrap translate-x-2 group-hover:translate-x-0 z-50">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <div className="text-left">
-              <span className="font-bold text-yellow-400 block text-[10px] uppercase font-mono tracking-wider">Assistance 24h/7</span>
-              <span className="text-[11px] text-slate-200">Service Client Support VIP</span>
-            </div>
-          </div>
-        </a>
 
-        {/* Support floating button 2 - WhatsApp Discussion Group */}
-        <a 
-          href="https://chat.whatsapp.com/G0ldInvestPremiumOfficialGroup"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group relative w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-black/90 border border-[#25D366]/30 flex items-center justify-center text-[#25D366] shadow-[0_0_15px_rgba(37,211,102,0.15)] hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] hover:border-[#25D366] hover:scale-110 active:scale-95 transition-all duration-300"
-          id="btn-whatsapp-group-floating"
-        >
-          {/* Active status pulse dot */}
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-[#25D366] font-bold"></span>
-          </span>
-          <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-[#25D366] hover:rotate-12 transition-transform" />
-          
-          {/* Tooltip popping on the left */}
-          <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-black/95 text-white border border-[#25D366]/20 px-3 py-2 rounded-xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 shadow-2xl flex items-center space-x-2 whitespace-nowrap translate-x-2 group-hover:translate-x-0 z-50">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <div className="text-left">
-              <span className="font-bold text-[#25D366] block text-[10px] uppercase font-mono tracking-wider">Discussions Membres</span>
-              <span className="text-[11px] text-slate-200">Groupe Officiel WhatsApp</span>
-            </div>
-          </div>
-        </a>
-
-        {/* Support floating button 3 - Telegram Channel */}
-        <a 
-          href="https://t.me/GoldInvestPremiumOfficial"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group relative w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-black/90 border border-[#0088cc]/30 flex items-center justify-center text-[#0088cc] shadow-[0_0_15px_rgba(0,136,204,0.15)] hover:shadow-[0_0_20px_rgba(0,136,204,0.4)] hover:border-[#0088cc] hover:scale-110 active:scale-95 transition-all duration-300"
-          id="btn-telegram-canal-floating"
-        >
-          <Send className="w-5 h-5 md:w-6 md:h-6 text-[#0088cc] hover:translate-x-0.5 hover:-translate-y-0.5 transition-transform" />
-          
-          {/* Tooltip popping on the left */}
-          <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-black/95 text-white border border-[#0088cc]/25 px-3 py-2 rounded-xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 shadow-2xl flex items-center space-x-2 whitespace-nowrap translate-x-2 group-hover:translate-x-0 z-50">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-            <div className="text-left">
-              <span className="font-bold text-[#0088cc] block text-[10px] uppercase font-mono tracking-wider">Alertes & Annonces</span>
-              <span className="text-[11px] text-slate-200">Canal Telegram Officiel</span>
-            </div>
-          </div>
-        </a>
-      </div>
     </div>
   );
 }

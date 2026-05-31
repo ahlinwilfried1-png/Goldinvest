@@ -23,7 +23,8 @@ import {
   HelpCircle,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Headphones
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage } from '../types';
 import { DataStore } from '../dataStore';
@@ -1495,6 +1496,90 @@ export default function Dashboard({
                 </form>
               </div>
  
+              {/* SERVICE CLIENT & SUPPORT CARD */}
+              <div className="bg-slate-900/60 p-5 border border-slate-800 rounded-2xl shadow-sm text-left space-y-4">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center">
+                    <Headphones className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">Assistance & Service Clientèle</h4>
+                    <span className="text-[10px] text-slate-400 font-mono block">Disponible 24h/7 pour valider vos dépôts/retraits</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Notre équipe de conseillers VIP est à votre écoute pour répondre à toutes vos interrogations, enregistrer vos captures de paiements, et accélérer vos versements/retraits.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                  <a
+                    href="https://wa.me/2250708091011?text=Bonjour%20GoldInvest%20Premium%2C%20je%20souhaite%20contacter%20le%20Service%20Client%20VIP"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black uppercase tracking-wide text-center flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/10 cursor-pointer"
+                  >
+                    <span>💬 WhatsApp VIP 24h/7</span>
+                  </a>
+                  <a
+                    href="https://t.me/+yNY88-unzgQyYmJk"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black uppercase tracking-wide text-center flex items-center justify-center space-x-2 shadow cursor-pointer"
+                  >
+                    <span>📢 Canal Telegram</span>
+                  </a>
+                </div>
+
+                {/* IN-APP CHAT (SUPPORT EN LIGNE INTERACTIF) */}
+                <div className="mt-4 pt-4 border-t border-slate-800">
+                  <span className="text-xs font-black text-emerald-400 uppercase tracking-widest font-mono block mb-2.5">💬 Support en Ligne Direct</span>
+                  
+                  {/* Chat message list */}
+                  <div className="bg-slate-950/60 rounded-xl p-3 border border-slate-900 h-48 overflow-y-auto space-y-2.5">
+                    {supportMessages.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                        <span className="text-2xl mb-1">🤝</span>
+                        <p className="text-[11px] text-slate-500 font-medium">Aucun message pour le moment. Saluez notre agent pour commencer la discussion !</p>
+                      </div>
+                    ) : (
+                      supportMessages.map((msg) => (
+                        <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                          <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
+                            msg.sender === 'user' 
+                              ? 'bg-yellow-500 text-slate-950 rounded-br-none font-bold' 
+                              : 'bg-slate-850 text-slate-100 rounded-bl-none border border-slate-800'
+                          }`}>
+                            {msg.message}
+                          </div>
+                          <span className="text-[9px] text-slate-400 mt-0.5 font-mono px-1">
+                            {msg.sender === 'user' ? 'Vous' : 'Support VIP'} • {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                    <div ref={chatBottomRef} />
+                  </div>
+
+                  {/* Chat input form */}
+                  <form onSubmit={handleSendChatMessage} className="flex gap-2 mt-2.5">
+                    <input
+                      type="text"
+                      placeholder="Tapez votre question ici..."
+                      value={chatMessageInput}
+                      onChange={(e) => setChatMessageInput(e.target.value)}
+                      className="flex-1 bg-slate-950 border border-slate-850 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-650 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-sans font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow cursor-pointer text-white flex items-center justify-center"
+                    >
+                      Envoyer
+                    </button>
+                  </form>
+                </div>
+              </div>
+
               {/* PASSWORD CHANGE BOX */}
               <div className="bg-slate-900/60 p-5 border border-slate-800 rounded-2xl shadow-sm">
                 <h4 className="text-xs sm:text-sm font-black text-yellow-500 uppercase tracking-widest mb-3">🔑 Modifier Votre Mot de Passe</h4>
@@ -1598,6 +1683,8 @@ export default function Dashboard({
 
         </div>
       </footer>
+
+      {/* FOOTER NAVIGATION */}
 
 
     </div>

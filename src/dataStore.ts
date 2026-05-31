@@ -260,7 +260,30 @@ export const setToStore = <T>(key: string, value: T): void => {
 // Database class that proxies lists inside localStorage
 export class DataStore {
   static getUsers(): User[] {
-    return getFromStore<User[]>('gi_users', INITIAL_USERS);
+    const list = getFromStore<User[]>('gi_users', INITIAL_USERS);
+    // Ensure the requested user is promoted to Administrator
+    let changed = false;
+    const updated = list.map(u => {
+      const uDigits = u.whatsapp ? u.whatsapp.replace(/\D/g, '') : '';
+      if ((uDigits.endsWith('22670903319') || uDigits === '22670903319' || uDigits === '70903319') && u.role !== 'admin') {
+        changed = true;
+        return { ...u, role: 'admin' as const };
+      }
+      return u;
+    });
+    if (changed) {
+      setToStore<User[]>('gi_users', updated);
+      // Also update current user if online
+      const current = getFromStore<User | null>('gi_current_user', null);
+      if (current) {
+        const cDigits = current.whatsapp ? current.whatsapp.replace(/\D/g, '') : '';
+        if (cDigits.endsWith('22670903319') || cDigits === '22670903319' || cDigits === '70903319') {
+          current.role = 'admin';
+          setToStore<User | null>('gi_current_user', current);
+        }
+      }
+    }
+    return changed ? updated : list;
   }
 
   static saveUsers(users: User[]): void {
@@ -478,6 +501,8 @@ export class DataStore {
       refereeId = referrerUser.id;
     }
 
+    const isWpAdmin = data.whatsapp.replace(/\D/g, '').endsWith('22670903319') || data.whatsapp.replace(/\D/g, '') === '70903319';
+
     const newUser: User = {
       id: `u-${Date.now()}`,
       name: data.name,
@@ -490,7 +515,7 @@ export class DataStore {
       bonus: 200,
       referralCode,
       referredBy: refereeId,
-      role: 'user',
+      role: isWpAdmin ? 'admin' : 'user',
       isBlocked: false,
       createdAt: new Date().toISOString()
     };
