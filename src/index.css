@@ -3,7 +3,7 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
   --color-gold-luminous: #ffdb4d;
@@ -32,10 +32,86 @@ html, body, #root {
   box-sizing: border-box;
 }
 
+/* Perfect compact base layout scaling with optimized typography visibility */
+html {
+  font-size: 13.5px !important; /* Elegant compact base that shrinks layout blocks naturally on mobile viewports */
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 14.5px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 15px !important; /* Standard pixel density for crisp high-end screens */
+  }
+}
+
+/* Perfect balanced text overrides with supreme clarity and zero disproportion */
+.text-\[8px\] {
+  font-size: 0.72rem !important; /* ~10px */
+}
+
+.text-\[9px\] {
+  font-size: 0.78rem !important; /* ~11px */
+}
+
+.text-\[10px\] {
+  font-size: 0.83rem !important; /* ~11px */
+}
+
+.text-\[11px\] {
+  font-size: 0.88rem !important;  /* ~12px */
+}
+
+.text-xs {
+  font-size: 0.94rem !important;  /* ~13px */
+}
+
+.text-sm {
+  font-size: 1.06rem !important;  /* ~14px */
+}
+
+.text-base {
+  font-size: 1.18rem !important;  /* ~16px */
+}
+
+.text-lg {
+  font-size: 1.34rem !important;  /* ~18px */
+}
+
+.text-xl {
+  font-size: 1.54rem !important;  /* ~21px */
+}
+
+.text-2xl {
+  font-size: 1.85rem !important;  /* ~25px */
+}
+
+.text-3xl {
+  font-size: 2.22rem !important;  /* ~30px */
+}
+
+.text-4xl {
+  font-size: 2.75rem !important;  /* ~37px */
+}
+
+.text-5xl {
+  font-size: 3.4rem !important;
+}
+
+.text-6xl {
+  font-size: 4.1rem !important;
+}
+
 body {
   font-family: var(--font-sans);
-  background-color: #000000;
+  background-color: #1b64d9;
+  background-image: linear-gradient(180deg, #1b64d9 0%, #03368a 100%);
   color: #ffffff;
+  background-attachment: fixed;
 }
 
 /* Glassmorphism utility using deep night blue and luminous gold glow */

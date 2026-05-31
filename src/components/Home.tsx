@@ -232,48 +232,44 @@ export default function Home({
 
         {/* LIVE PLATFORM METRICS */}
         <div className="mt-10 w-full max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4" id="about">
-          <div className="bg-[#070e24]/70 backdrop-blur-md rounded-xl p-4 border border-yellow-500/15 text-center relative overflow-hidden group hover:border-yellow-500/35 transition-all">
-            <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-tr from-yellow-500/5 to-transparent rounded-bl-full pointer-events-none" />
-            <div className="mx-auto w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400 mb-2 group-hover:scale-110 transition-transform">
-              <Users className="w-4 h-4" />
+          <div className="bg-[#eef3fc] border-2 border-slate-200/40 rounded-3xl p-5 shadow-lg text-center relative overflow-hidden group hover:border-[#1b64d9]/40 transition-all duration-300">
+            <div className="mx-auto w-10 h-10 rounded-xl bg-[#1b64d9]/10 flex items-center justify-center text-[#1b64d9] mb-3 group-hover:scale-110 transition-transform duration-300">
+              <Users className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div className="text-xl md:text-2xl font-display font-bold text-white tracking-tight">
+            <div className="text-xl md:text-3xl font-sans font-black text-slate-800 tracking-tight">
               45 820 +
             </div>
-            <div className="text-[10px] text-slate-300 mt-0.5 uppercase font-semibold">Investisseurs Actifs</div>
+            <div className="text-[10px] text-slate-500 mt-1 uppercase font-black tracking-wider">Investisseurs Actifs</div>
           </div>
 
-          <div className="bg-[#070e24]/70 backdrop-blur-md rounded-xl p-4 border border-yellow-500/15 text-center relative overflow-hidden group hover:border-yellow-500/35 transition-all">
-            <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-tr from-yellow-500/5 to-transparent rounded-bl-full pointer-events-none" />
-            <div className="mx-auto w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400 mb-2 group-hover:scale-110 transition-transform">
-              <Coins className="w-4 h-4" />
+          <div className="bg-[#eef3fc] border-2 border-slate-200/40 rounded-3xl p-5 shadow-lg text-center relative overflow-hidden group hover:border-[#1b64d9]/40 transition-all duration-300">
+            <div className="mx-auto w-10 h-10 rounded-xl bg-[#1b64d9]/10 flex items-center justify-center text-[#1b64d9] mb-3 group-hover:scale-110 transition-transform duration-300">
+              <Coins className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div className="text-xl md:text-2xl font-display font-bold text-white tracking-tight">
-              {totalDepositsSim.toLocaleString()} <span className="text-[10px] text-yellow-500">F</span>
+            <div className="text-xl md:text-3xl font-sans font-black text-slate-800 tracking-tight">
+              {totalDepositsSim.toLocaleString()} <span className="text-xs text-[#1b64d9] font-black">F</span>
             </div>
-            <div className="text-[10px] text-slate-300 mt-0.5 uppercase font-semibold">Volume Déposé</div>
+            <div className="text-[10px] text-slate-500 mt-1 uppercase font-black tracking-wider">Volume Déposé</div>
           </div>
 
-          <div className="bg-[#070e24]/70 backdrop-blur-md rounded-xl p-4 border border-yellow-500/15 text-center relative overflow-hidden group hover:border-yellow-500/35 transition-all">
-            <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-tr from-yellow-500/5 to-transparent rounded-bl-full pointer-events-none" />
-            <div className="mx-auto w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400 mb-2 group-hover:scale-110 transition-transform">
-              <CheckCircle2 className="w-4 h-4" />
+          <div className="bg-[#eef3fc] border-2 border-slate-200/40 rounded-3xl p-5 shadow-lg text-center relative overflow-hidden group hover:border-[#1b64d9]/40 transition-all duration-300">
+            <div className="mx-auto w-10 h-10 rounded-xl bg-[#1b64d9]/10 flex items-center justify-center text-[#1b64d9] mb-3 group-hover:scale-110 transition-transform duration-300">
+              <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div className="text-xl md:text-2xl font-display font-bold text-white tracking-tight">
-              {totalWithdrawalsSim.toLocaleString()} <span className="text-[10px] text-yellow-450">F</span>
+            <div className="text-xl md:text-3xl font-sans font-black text-slate-800 tracking-tight">
+              {totalWithdrawalsSim.toLocaleString()} <span className="text-xs text-[#1b64d9] font-black">F</span>
             </div>
-            <div className="text-[10px] text-slate-300 mt-0.5 uppercase font-semibold">Retraits Payés</div>
+            <div className="text-[10px] text-slate-500 mt-1 uppercase font-black tracking-wider">Retraits Payés</div>
           </div>
 
-          <div className="bg-[#070e24]/70 backdrop-blur-md rounded-xl p-4 border border-yellow-500/15 text-center relative overflow-hidden group hover:border-yellow-500/35 transition-all">
-            <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-tr from-yellow-500/5 to-transparent rounded-bl-full pointer-events-none" />
-            <div className="mx-auto w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400 mb-2 group-hover:scale-110 transition-transform">
-              <TrendingUp className="w-4 h-4" />
+          <div className="bg-[#eef3fc] border-2 border-slate-200/40 rounded-3xl p-5 shadow-lg text-center relative overflow-hidden group hover:border-[#1b64d9]/40 transition-all duration-300">
+            <div className="mx-auto w-10 h-10 rounded-xl bg-[#1b64d9]/10 flex items-center justify-center text-[#1b64d9] mb-3 group-hover:scale-110 transition-transform duration-300">
+              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div className="text-xl md:text-2xl font-display font-bold text-green-400 tracking-tight">
+            <div className="text-xl md:text-3xl font-sans font-black text-[#00d2c3] tracking-tight">
               99.85 %
             </div>
-            <div className="text-[10px] text-slate-300 mt-0.5 uppercase font-semibold">Taux Ponctualité</div>
+            <div className="text-[10px] text-slate-500 mt-1 uppercase font-black tracking-wider">Taux Ponctualité</div>
           </div>
         </div>
       </section>
@@ -287,37 +283,37 @@ export default function Home({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-[#070e24]/60 p-4 rounded-xl border border-yellow-500/15 flex space-x-3 hover:border-yellow-500/35 transition-all">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400">
-                <Shield className="w-5 h-5 animate-pulse" />
+            <div className="bg-[#eef3fc] border-2 border-slate-200/40 p-6 rounded-3xl flex space-x-4 hover:border-[#1b64d9]/40 transition-all duration-300 text-left shadow-lg">
+              <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-[#1b64d9]/10 flex items-center justify-center text-[#1b64d9]">
+                <Shield className="w-6 h-6 stroke-[2.5]" />
               </div>
               <div>
-                <h3 className="font-display font-bold text-base text-white">Gains Automatiques</h3>
-                <p className="text-xs text-slate-350 mt-1.5 leading-relaxed">
+                <h3 className="font-sans font-black text-slate-800 text-lg uppercase tracking-tight">Gains Automatiques</h3>
+                <p className="text-xs text-slate-600 font-bold mt-2 leading-relaxed">
                   Pas besoin de trading complexe ni d'expérience préalable. Vos gains sont calculés automatiquement et ajoutés quotidiennement à votre solde.
                 </p>
               </div>
             </div>
 
-            <div className="bg-[#070e24]/60 p-4 rounded-xl border border-yellow-500/15 flex space-x-3 hover:border-yellow-500/35 transition-all">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400">
-                <Briefcase className="w-5 h-5 animate-pulse" />
+            <div className="bg-[#eef3fc] border-2 border-slate-200/40 p-6 rounded-3xl flex space-x-4 hover:border-[#1b64d9]/40 transition-all duration-300 text-left shadow-lg">
+              <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-[#1b64d9]/10 flex items-center justify-center text-[#1b64d9]">
+                <Briefcase className="w-6 h-6 stroke-[2.5]" />
               </div>
               <div>
-                <h3 className="font-display font-bold text-base text-white">Portefeuilles Diversifiés</h3>
-                <p className="text-xs text-slate-350 mt-1.5 leading-relaxed">
+                <h3 className="font-sans font-black text-slate-800 text-lg uppercase tracking-tight">Portefeuibles Diversifiés</h3>
+                <p className="text-xs text-slate-600 font-bold mt-2 leading-relaxed">
                   Nous couvrons nos engagements financiers par des investissements sûrs dans des mines d'Or industrielles et des opérations d’arbitrage d'actifs.
                 </p>
               </div>
             </div>
 
-            <div className="bg-[#070e24]/60 p-4 rounded-xl border border-yellow-500/15 flex space-x-3 hover:border-yellow-500/35 transition-all">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400">
-                <Coins className="w-5 h-5 animate-pulse" />
+            <div className="bg-[#eef3fc] border-2 border-slate-200/40 p-6 rounded-3xl flex space-x-4 hover:border-[#1b64d9]/40 transition-all duration-300 text-left shadow-lg">
+              <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-[#1b64d9]/10 flex items-center justify-center text-[#1b64d9]">
+                <Coins className="w-6 h-6 stroke-[2.5]" />
               </div>
               <div>
-                <h3 className="font-display font-bold text-base text-white">Retraits instantanés</h3>
-                <p className="text-xs text-slate-350 mt-1.5 leading-relaxed">
+                <h3 className="font-sans font-black text-slate-800 text-lg uppercase tracking-tight">Retraits instantanés</h3>
+                <p className="text-xs text-slate-600 font-bold mt-2 leading-relaxed">
                   Fini l'attente pendant des jours. Soumettez votre demande et recevez vos fonds Mobile Money directement sur votre numéro personnel.
                 </p>
               </div>
@@ -335,58 +331,64 @@ export default function Home({
         </div>
 
         {/* VIP PRODUCTS GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <div 
-              key={product.id}
-              className="bg-[#070e24]/70 backdrop-blur-md border border-yellow-500/15 rounded-3xl overflow-hidden shadow-xl hover:shadow-yellow-500/10 hover:border-yellow-400 hover:-translate-y-1.5 transition-all text-left flex flex-col group relative"
-            >
-              {/* Product Header Highlight */}
-              <div className="p-5 border-b border-yellow-500/10 relative">
-                <div className="absolute top-4 right-4 bg-yellow-500/10 border border-yellow-500/30 text-yellow-450 text-[10px] font-bold px-2 py-1 rounded-md">
-                  {product.tag || 'Actif'}
-                </div>
-                <div className="text-[11px] text-yellow-400/80 font-bold uppercase tracking-wider mb-1">MODULE FINANCIER</div>
-                <h3 className="text-lg font-bold text-white group-hover:text-yellow-400 transition-colors uppercase">{product.name}</h3>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl mx-auto">
+          {products.map((p) => {
+            const isBlocked = p.isBlocked === true;
+            const totalReturnText = `${(p.dailyReturn * p.durationDays).toLocaleString()} FCFA`;
+            const dailyReturnText = `${p.dailyReturn.toLocaleString()} FCFA`;
+            const priceText = `${p.price.toLocaleString()} FCFA`;
 
-              {/* Product price big text */}
-              <div className="p-5 bg-[#030611]/60 text-center border-b border-yellow-500/10">
-                <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">Prix d'acquisition</div>
-                <div className="text-3xl font-extrabold text-white mt-1 group-hover:scale-105 transition-transform duration-300">
-                  {product.price.toLocaleString()} <span className="text-sm text-yellow-450 font-sans font-extrabold">FCFA</span>
+            return (
+              <div 
+                key={p.id}
+                className="w-full relative bg-[#eef3fc] border border-slate-250/60 rounded-3xl p-4 md:p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:scale-[1.01]"
+              >
+                {/* Orange Crown Tag aligned on top-left of the blue card box */}
+                <div className="absolute top-2.5 left-5 z-10 bg-[#f7b03b] hover:bg-amber-500 text-slate-900 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-amber-400">
+                  <span>👑</span> {p.name}
                 </div>
-              </div>
 
-              {/* Product Info */}
-              <div className="p-5 space-y-3 flex-1 text-slate-300">
-                <div className="flex justify-between text-xs py-1.5 border-b border-slate-900">
-                  <span className="text-slate-400">Revenus Quotidiens :</span>
-                  <span className="text-green-400 font-bold">+{product.dailyReturn.toLocaleString()} FCFA / jour</span>
-                </div>
-                <div className="flex justify-between text-xs py-1.5 border-b border-slate-900">
-                  <span className="text-slate-400">Durée du cycle :</span>
-                  <span className="text-yellow-400 font-bold">{product.durationDays} Jours</span>
-                </div>
-                <div className="flex justify-between text-xs py-1.5 font-bold">
-                  <span className="text-slate-200">Gain Total Garanti :</span>
-                  <span className="text-white bg-yellow-500/15 border border-yellow-500/20 px-2.5 py-1 rounded-lg text-[11px]">
-                    {product.totalReturn.toLocaleString()} FCFA
-                  </span>
-                </div>
-              </div>
+                <div className="flex gap-4 items-center mb-4 mt-3">
+                  {/* Inner blue card box with matching white text */}
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 bg-gradient-to-b from-[#1b64d9] to-[#044ab0] rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl shadow-inner relative overflow-hidden">
+                    <span className="relative z-10">{p.name}</span>
+                    {/* Subtle decorative glow */}
+                    <div className="absolute -bottom-6 -right-6 w-16 h-16 bg-white/10 rounded-full blur-xl" />
+                    <div className="absolute -top-6 -left-6 w-16 h-16 bg-white/15 rounded-full blur-xl" />
+                  </div>
 
-              {/* Invest CTA */}
-              <div className="p-5 pt-0">
+                  {/* List details on the right */}
+                  <div className="flex-1 space-y-1.5 text-xs text-slate-700 font-sans">
+                    <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
+                      <span className="text-slate-500 font-medium">Revenu quotidien</span>
+                      <span className="font-extrabold text-[#00bd74] text-xs sm:text-sm">{dailyReturnText}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
+                      <span className="text-slate-500 font-medium">Revenu total</span>
+                      <span className="font-bold text-slate-800 text-xs sm:text-sm">{totalReturnText}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5 border-b border-slate-200/60">
+                      <span className="text-slate-500 font-medium">Durée</span>
+                      <span className="font-bold text-slate-800 text-xs sm:text-sm">{p.durationDays} jours</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-slate-500 font-medium">Prix</span>
+                      <span className="font-bold text-slate-800 text-xs sm:text-sm">{priceText}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buy action button with beautiful vibrant teal gradient */}
                 <button
-                  onClick={() => onSelectProduct(product)}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-yellow-500/15 to-amber-600/15 border border-yellow-500/35 text-yellow-400 text-xs font-bold hover:from-yellow-400 hover:to-amber-500 hover:text-slate-950 transition-all uppercase tracking-widest shadow-md shine-gold group-hover:border-yellow-400"
+                  onClick={() => onSelectProduct(p)}
+                  className="w-full py-3 sm:py-3.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold text-white transition-all shadow-md active:scale-[0.98] flex items-center justify-center tracking-wide duration-150 relative overflow-hidden bg-gradient-to-r from-[#02bfa4] to-[#00bd74] hover:opacity-95"
                 >
-                  Activer ce Plan
+                  <span className="relative z-10 font-sans">{priceText} — Débloquer maintenant</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:animate-[shimmer_2s_infinite]" />
                 </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -401,27 +403,27 @@ export default function Home({
             </p>
 
             <div className="mt-5 space-y-3">
-              <div className="flex items-start space-x-3 bg-[#070e24]/80 p-3 rounded-lg border border-yellow-500/15">
-                <div className="w-8 h-8 rounded-lg gold-bg-gradient flex items-center justify-center text-slate-950 font-bold font-display text-xs flex-shrink-0">1</div>
+              <div className="flex items-start space-x-3 bg-[#eef3fc] border-2 border-slate-200/40 p-4 rounded-3xl shadow">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#1b64d9] to-[#046fff] text-white flex items-center justify-center font-black font-sans text-sm flex-shrink-0 shadow">L1</div>
                 <div>
-                  <h4 className="font-bold text-yellow-400 text-xs">Niveau 1 : 20 % de Commission Directe</h4>
-                  <p className="text-[11px] text-slate-300 mt-0.5">Vous touchez 20% du montant investi par vos filleuls directs.</p>
+                  <h4 className="font-black text-slate-800 text-sm">Niveau 1 : 20 % de Commission Directe</h4>
+                  <p className="text-xs text-slate-600 font-bold mt-0.5">Vous touchez 20% du montant investi par vos filleuls directs.</p>
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3 bg-[#070e24]/80 p-3 rounded-lg border border-yellow-500/15">
-                <div className="w-8 h-8 rounded-lg bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center text-yellow-100 font-bold font-display text-xs flex-shrink-0">2</div>
+              <div className="flex items-start space-x-3 bg-[#eef3fc] border-2 border-slate-200/40 p-4 rounded-3xl shadow">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00d2c3] to-[#1b64d9] text-white flex items-center justify-center font-black font-sans text-sm flex-shrink-0 shadow">L2</div>
                 <div>
-                  <h4 className="font-bold text-yellow-300 text-xs">Niveau 2 : 3 % de Commission Indirecte</h4>
-                  <p className="text-[11px] text-slate-300 mt-0.5">Vous touchez 3% sur les investissements de deuxième génération.</p>
+                  <h4 className="font-black text-slate-800 text-sm">Niveau 2 : 3 % de Commission Indirecte</h4>
+                  <p className="text-xs text-slate-600 font-bold mt-0.5">Vous touchez 3% sur les investissements de deuxième génération.</p>
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3 bg-[#070e24]/80 p-3 rounded-lg border border-yellow-500/15">
-                <div className="w-8 h-8 rounded-lg bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center text-yellow-100 font-bold font-display text-xs flex-shrink-0">3</div>
+              <div className="flex items-start space-x-3 bg-[#eef3fc] border-2 border-slate-200/40 p-4 rounded-3xl shadow">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#ff5a5f] to-[#ff9900] text-white flex items-center justify-center font-black font-sans text-sm flex-shrink-0 shadow">L3</div>
                 <div>
-                  <h4 className="font-bold text-yellow-300 text-xs">Niveau 3 : 1 % de Commission Indirecte</h4>
-                  <p className="text-[11px] text-slate-300 mt-0.5">Vous touchez 1% sur la troisième génération d'affiliés.</p>
+                  <h4 className="font-black text-slate-800 text-sm">Niveau 3 : 1 % de Commission Indirecte</h4>
+                  <p className="text-xs text-slate-600 font-bold mt-0.5">Vous touchez 1% sur la troisième génération d'affiliés.</p>
                 </div>
               </div>
             </div>
@@ -437,35 +439,35 @@ export default function Home({
           </div>
 
           {/* Visual simulation box for Referral Growth */}
-          <div className="bg-[#070e24]/95 p-5 rounded-xl border border-yellow-500/15 relative overflow-hidden">
-            <div className="mb-3 flex justify-between items-center border-b border-slate-900 pb-2">
-              <span className="text-[11px] font-mono text-slate-300">Exemple de gain MLM cumulé</span>
-              <span className="text-[11px] text-green-400 font-mono tracking-wider font-bold">Calculateur</span>
+          <div className="bg-[#eef3fc] border-2 border-slate-200/40 p-6 rounded-3xl shadow-xl text-left">
+            <div className="mb-4 flex justify-between items-center border-b border-slate-200 pb-2">
+              <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Simulation de gain réseau</span>
+              <span className="text-xs text-[#1b64d9] font-black tracking-widest uppercase">Calculateur</span>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-left text-xs">
-                <span className="text-slate-300">Si 5 filleuls achètent le <strong>VIP 3 (25k)</strong> (Niv. 1) :</span>
-                <span className="text-[11px] font-mono text-white bg-black px-2 py-0.5 rounded border border-yellow-500/10">25 000 F (20%)</span>
+            <div className="space-y-3 font-bold text-slate-700">
+              <div className="flex justify-between items-center text-xs">
+                <span>Si 5 filleuls parrainent direct (Niv. 1) :</span>
+                <span className="text-xs font-black text-slate-800 font-mono bg-white border border-slate-200 px-2 py-0.5 rounded">25 000 F (20%)</span>
               </div>
-              <div className="flex justify-between items-center text-left text-xs">
-                <span className="text-slate-300">Si ces filleuls invitent 15 personnes (Niv. 2) :</span>
-                <span className="text-[11px] font-mono text-white bg-black px-2 py-0.5 rounded border border-yellow-500/10">11 250 F (3%)</span>
+              <div className="flex justify-between items-center text-xs">
+                <span>Si ces filleuls invitent 15 personnes (Niv. 2) :</span>
+                <span className="text-xs font-black text-slate-800 font-mono bg-white border border-slate-200 px-2 py-0.5 rounded">11 250 F (3%)</span>
               </div>
-              <div className="flex justify-between items-center text-left text-xs">
-                <span className="text-slate-300">Si ces derniers invitent 30 personnes (Niv. 3) :</span>
-                <span className="text-[11px] font-mono text-white bg-black px-2 py-0.5 rounded border border-yellow-500/10">7 500 F (1%)</span>
+              <div className="flex justify-between items-center text-xs">
+                <span>Si ces parrains font 30 personnes (Niv. 3) :</span>
+                <span className="text-xs font-black text-slate-800 font-mono bg-white border border-slate-200 px-2 py-0.5 rounded">7 500 F (1%)</span>
               </div>
 
-              <div className="pt-3 border-t border-slate-900 flex justify-between items-center font-display">
-                <span className="text-sm text-white font-bold">Bonus Total de Réseau :</span>
-                <span className="text-base font-bold text-yellow-400">43 750 FCFA</span>
+              <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+                <span className="text-sm text-slate-800 font-black">Bonus Total Recevable :</span>
+                <span className="text-lg font-black text-[#1b64d9] font-sans">43 750 FCFA</span>
               </div>
             </div>
 
-            <div className="mt-4 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20 text-[10.5px] text-slate-350 flex items-center space-x-2">
-              <HelpCircle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-              <span>Crédité instantanément et retirable sans conditions !</span>
+            <div className="mt-4 p-3.5 rounded-2xl bg-white/80 border border-slate-200 text-xs text-slate-500 font-bold flex items-center space-x-2">
+              <HelpCircle className="w-5 h-5 text-[#1b64d9] flex-shrink-0" />
+              <span>Gains crédités en direct et retirables sans aucune condition !</span>
             </div>
           </div>
         </div>
@@ -479,23 +481,23 @@ export default function Home({
           <p className="text-xs text-slate-400 mt-1 max-w-lg mx-auto">Rejoignez une communauté grandissante d'investisseurs qui ont franchi le pas de la liberté financière.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((test, index) => (
-            <div key={index} className="bg-[#070e24]/70 p-4 rounded-xl border border-yellow-500/15 flex flex-col justify-between text-left group hover:border-yellow-500/35 transition-all">
+            <div key={index} className="bg-[#eef3fc] border-2 border-slate-200/40 p-6 rounded-3xl shadow-lg flex flex-col justify-between text-left hover:border-[#1b64d9]/30 transition-all duration-300">
               <div>
-                <div className="flex space-x-1 text-yellow-400 mb-2">
+                <div className="flex space-x-1 text-yellow-500 mb-3">
                   {Array.from({ length: test.stars }).map((_, i) => (
                     <span key={i} className="text-base">★</span>
                   ))}
                 </div>
-                <p className="text-slate-200 text-xs leading-relaxed italic">"{test.comment}"</p>
+                <p className="text-slate-700 font-bold text-xs leading-relaxed italic">"{test.comment}"</p>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-900 flex items-center justify-between">
+              <div className="mt-5 pt-3 border-t border-slate-200 flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-xs text-white">{test.name}</h4>
-                  <span className="text-[10px] text-slate-400">{test.country}</span>
+                  <h4 className="font-black text-xs text-slate-800">{test.name}</h4>
+                  <span className="text-[10px] text-slate-500 font-bold">{test.country}</span>
                 </div>
-                <span className="text-[9px] text-yellow-400 font-mono tracking-wider">{test.date}</span>
+                <span className="text-[10px] text-[#1b64d9] font-black">{test.date}</span>
               </div>
             </div>
           ))}
@@ -514,17 +516,17 @@ export default function Home({
             {faqs.map((faq, idx) => (
               <div 
                 key={idx}
-                className="bg-[#070e24]/75 rounded-xl border border-yellow-500/15 overflow-hidden transition-all duration-300"
+                className="bg-[#eef3fc] rounded-3xl border-2 border-slate-200/40 overflow-hidden transition-all duration-300 shadow"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full py-3 px-4 flex justify-between items-center text-left text-xs font-semibold text-white focus:outline-none hover:text-yellow-400 transition-colors"
+                  className="w-full py-4.5 px-6 flex justify-between items-center text-left text-xs font-black text-slate-800 focus:outline-none hover:text-[#1b64d9] transition-colors"
                 >
-                  <span className="font-display">{faq.q}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-yellow-500 transition-transform duration-300 ${openFaq === idx ? 'transform rotate-180' : ''}`} />
+                  <span className="font-sans uppercase tracking-tight">{faq.q}</span>
+                  <ChevronDown className={`w-4 h-4 text-[#1b64d9] transition-transform duration-300 ${openFaq === idx ? 'transform rotate-180' : ''}`} />
                 </button>
                 {openFaq === idx && (
-                  <div className="px-4 pb-4 pt-1 text-[11px] text-slate-350 leading-relaxed border-t border-yellow-500/10 bg-black/40">
+                  <div className="px-6 pb-5 pt-2 text-xs text-slate-600 font-bold leading-relaxed border-t border-slate-200 bg-white/70">
                     {faq.a}
                   </div>
                 )}

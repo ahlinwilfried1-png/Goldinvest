@@ -141,18 +141,18 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative bg-black">
+    <div className="min-h-screen flex items-center justify-center p-4 relative bg-slate-950">
       {/* Background gradients */}
-      <div className="absolute top-[20%] left-[20%] w-72 h-72 bg-yellow-500/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[20%] w-80 h-80 bg-night-blue-light/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[20%] left-[20%] w-72 h-72 bg-[#1b64d9]/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[20%] w-80 h-80 bg-[#1b64d9]/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Main card */}
-      <div className="w-full max-w-lg bg-[#070e24]/90 backdrop-blur-xl rounded-3xl border border-yellow-500/25 p-6 md:p-8 shadow-2xl relative">
+      <div className="w-full max-w-lg bg-[#eef3fc] border-2 border-slate-200/50 rounded-3xl p-6 md:p-8 shadow-2xl relative">
         
         {/* Header navigation */}
         <button 
           onClick={onBackToHome}
-          className="inline-flex items-center space-x-2 text-xs text-slate-400 hover:text-white transition-colors mb-6 group"
+          className="inline-flex items-center space-x-2 text-xs text-slate-500 hover:text-[#1b64d9] transition-colors mb-6 group font-black uppercase tracking-wider"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>Fermer et retourner au site</span>
@@ -160,32 +160,32 @@ export default function Auth({
 
         {/* Brand logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-500 to-amber-600 flex items-center justify-center mx-auto shadow-md shadow-yellow-500/10 mb-3">
-            <Lock className="w-5 h-5 text-slate-950 stroke-[2.5]" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1b64d9] to-[#046fff] flex items-center justify-center mx-auto shadow-md mb-3">
+            <Lock className="w-5 h-5 text-white stroke-[2.5]" />
           </div>
-          <h2 className="text-2xl font-display font-bold text-white">
-            {isRegister ? 'Ouvrir un Compte Premium' : 'Connexion Investisseur'}
+          <h2 className="text-2xl font-sans font-black text-slate-800 uppercase tracking-tight">
+            {isRegister ? 'Créer un Compte VIP' : 'Connexion Premium'}
           </h2>
-          <p className="text-xs text-slate-400 mt-1.5">
+          <p className="text-xs text-slate-500 font-bold mt-1.5 leading-relaxed">
             {isRegister 
-              ? 'Créez votre dossier d\'affiliation et offrez-vous 200 XAF gratuits' 
-              : 'Accédez de manière cryptée et sécurisée à votre tableau de bord financier'
+              ? 'Créez votre dossier d\'affiliation et recevez 200 XAF gratuit immédiatement' 
+              : 'Accédez de manière entièrement cryptée à vos investissements passifs'
             }
           </p>
         </div>
 
         {/* Error notification */}
         {errorMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-200 flex items-start space-x-2.5">
-            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border-2 border-red-200 text-xs text-red-700 font-bold flex items-start space-x-2.5">
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Success notification */}
         {successMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-xs text-green-200 flex items-start space-x-2.5">
-            <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 rounded-2xl bg-green-500/10 border-2 border-green-200 text-xs text-green-700 font-bold flex items-start space-x-2.5">
+            <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
             <span>{successMessage}</span>
           </div>
         )}
@@ -197,9 +197,9 @@ export default function Auth({
             /* REGISTRATION FIELDS */
             <>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Nom d'utilisateur</label>
+                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Nom d'utilisateur</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-3.5 text-slate-500">
+                  <span className="absolute left-3.5 top-3.5 text-slate-400">
                     <UserIcon className="w-4 h-4" />
                   </span>
                   <input
@@ -208,13 +208,13 @@ export default function Auth({
                     placeholder="Ex: alain225"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
+                    className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] focus:ring-1 focus:ring-[#1b64d9] rounded-2xl py-3 pl-10 pr-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Indicatif plus numéro du pays</label>
+                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">WhatsApp / Téléphone</label>
                 <div className="flex gap-2">
                   <select
                     value={selectedCode}
@@ -224,14 +224,14 @@ export default function Auth({
                       const found = eligibleCountries.find(c => c.code === code);
                       if (found) setCountry(found.name);
                     }}
-                    className="bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 px-3 text-xs md:text-sm text-white focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
+                    className="bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-3 text-xs md:text-sm text-slate-800 font-black focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
                   >
                     {eligibleCountries.map((c, i) => (
                       <option key={i} value={c.code}>{c.code} ({c.name})</option>
                     ))}
                   </select>
                   <div className="relative flex-1">
-                    <span className="absolute left-3.5 top-3.5 text-slate-500">
+                    <span className="absolute left-3.5 top-3.5 text-slate-400">
                       <Smartphone className="w-4 h-4" />
                     </span>
                     <input
@@ -240,7 +240,7 @@ export default function Auth({
                       placeholder="Ex: 0708091011"
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
+                      className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-10 pr-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -248,7 +248,7 @@ export default function Auth({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Mot de Passe</label>
+                  <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Mot de Passe</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -256,12 +256,12 @@ export default function Auth({
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 pl-4 pr-10 text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
+                      className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-4 pr-10 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-3.5 text-slate-500 hover:text-white"
+                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-[#1b64d9]"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -269,37 +269,37 @@ export default function Auth({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Confirmer le mot de passe</label>
+                  <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Confirmer le passe</label>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 px-4 text-sm text-white placeholder-slate-600 focus:outline-none transition-colors"
+                    className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Code de Parrainage (Optionnel)</label>
+                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Code de Parrainage (Optionnel)</label>
                 <input
                   type="text"
                   placeholder="Ex: GOLD777"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 px-4 text-sm text-yellow-300 font-mono focus:outline-none transition-colors"
+                  className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-[#1b64d9] font-black tracking-widest font-mono uppercase focus:outline-none transition-colors"
                 />
-                <span className="text-[10px] text-slate-400 mt-1 block">Renseignez le code d'un ami pour lui reverser des commissions d'affiliation.</span>
+                <span className="text-[10px] text-slate-500 font-bold mt-1 block">Renseignez le code d'un ami pour lui reverser des commissions d'affiliation de Niveau 1 (20%).</span>
               </div>
             </>
           ) : (
             /* LOGIN FIELDS */
             <>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Numéro WhatsApp ou Email</label>
+                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Numéro WhatsApp ou Email</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-3.5 text-slate-500">
+                  <span className="absolute left-3.5 top-3.5 text-slate-400">
                     <Smartphone className="w-4 h-4" />
                   </span>
                   <input
@@ -308,20 +308,20 @@ export default function Auth({
                     placeholder="Ex: +225 07 08 09 10 11"
                     value={loginWhatsapp}
                     onChange={(e) => setLoginWhatsapp(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 pl-10 pr-4 text-sm text-white focus:outline-none transition-colors"
+                    className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-10 pr-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Mot de Passe</label>
+                  <label className="block text-xs font-black text-slate-600 uppercase tracking-wider">Mot de Passe</label>
                   <button 
                     type="button"
                     onClick={() => {
                       alert("Pour réinitialiser votre mot de passe d'investisseur, veuillez contacter notre équipe d'assistance WhatsApp officielle ou utiliser le code de démonstration par défaut (user123).");
                     }}
-                    className="text-[10px] text-yellow-500 hover:underline"
+                    className="text-[10px] text-[#1b64d9] font-black hover:underline"
                   >
                     Mot de passe oublié ?
                   </button>
@@ -333,12 +333,12 @@ export default function Auth({
                     placeholder="••••••••"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 rounded-xl py-3.5 pl-4 pr-10 text-sm text-white focus:outline-none transition-colors"
+                    className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-4 pr-10 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-slate-500 hover:text-white"
+                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-[#1b64d9]"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -346,11 +346,11 @@ export default function Auth({
               </div>
 
               {/* Quick tip demo credentials */}
-              <div className="p-3 bg-yellow-500/5 border border-yellow-500/10 rounded-xl text-[11px] text-yellow-400/85">
-                <span className="font-semibold block mb-0.5">🔑 Identifiants d'essai (Démo) :</span>
+              <div className="p-3 bg-white border-2 border-slate-200 rounded-2xl text-[11px] font-bold text-slate-600 leading-relaxed">
+                <span className="font-black text-[#1b64d9] block mb-0.5">🔑 Identifiants de test (Démonstration) :</span>
                 <ul className="list-disc pl-4 space-y-0.5 font-mono">
-                  <li>Compte Admin: <strong className="text-white">+2250102030405</strong> / <strong className="text-white">admin</strong></li>
-                  <li>Compte Client: <strong className="text-white">+2250708091011</strong> / <strong className="text-white">user123</strong></li>
+                  <li>Compte Admin: <strong className="text-slate-800">+2250102030405</strong> / <strong className="text-slate-800">admin</strong></li>
+                  <li>Compte Client: <strong className="text-slate-800">+2250708091011</strong> / <strong className="text-slate-800">user123</strong></li>
                 </ul>
               </div>
             </>
@@ -360,22 +360,22 @@ export default function Auth({
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-xl text-slate-950 font-display font-medium text-sm flex items-center justify-center space-x-2 gold-bg-gradient hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer font-bold uppercase tracking-wider shadow-lg shadow-yellow-500/10 disabled:opacity-40"
+            className="w-full py-4 rounded-2xl text-white font-sans font-black text-xs flex items-center justify-center space-x-2 bg-gradient-to-r from-[#1b64d9] to-[#046fff] hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer uppercase tracking-widest shadow-lg disabled:opacity-40"
           >
             {loading ? (
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                <span>Cryptage en cours...</span>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Traitement sécurisé...</span>
               </div>
             ) : (
-              <span>{isRegister ? "Confirmer l'Inscription" : "Se Connecter en Sécurité"}</span>
+              <span>{isRegister ? "Créer mon Compte" : "Se Connecter Maintenant"}</span>
             )}
           </button>
         </form>
 
         {/* TOGGLE AUTH */}
-        <div className="mt-6 pt-4 border-t border-slate-800/60 text-center text-xs">
-          <span className="text-slate-400">
+        <div className="mt-6 pt-4 border-t border-slate-200 text-center text-xs">
+          <span className="text-slate-500 font-bold">
             {isRegister ? 'Déjà membre de GoldInvest ?' : 'Nouveau sur notre plateforme ?'}
           </span>{' '}
           <button
@@ -384,9 +384,9 @@ export default function Auth({
               setErrorMessage('');
               setSuccessMessage('');
             }}
-            className="text-yellow-400 font-bold hover:underline ml-1 focus:outline-none"
+            className="text-[#1b64d9] font-black hover:underline ml-1 focus:outline-none uppercase tracking-wider text-[11px]"
           >
-            {isRegister ? 'Connectez-vous ici' : 'Inscrivez-vous maintenant (+200F)'}
+            {isRegister ? 'Connectez-vous' : 'Inscrivez-vous (+200F)'}
           </button>
         </div>
       </div>

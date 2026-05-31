@@ -13,13 +13,13 @@ import {
 
 // Default mock configuration values
 export const DEFAULT_PRODUCTS: Product[] = [
-  { id: 'vip-1', vipLevel: 1, name: 'VIP Élixir 1', price: 3000, dailyReturn: 600, durationDays: 10, totalReturn: 6000, tag: 'Débutant' },
-  { id: 'vip-2', vipLevel: 2, name: 'VIP Emeraude 2', price: 10000, dailyReturn: 2500, durationDays: 10, totalReturn: 25000, tag: 'Populaire' },
-  { id: 'vip-3', vipLevel: 3, name: 'VIP Rubis 3', price: 25000, dailyReturn: 6500, durationDays: 10, totalReturn: 65000, tag: 'Recommandé' },
-  { id: 'vip-4', vipLevel: 4, name: 'VIP Diamant 4', price: 50000, dailyReturn: 14000, durationDays: 10, totalReturn: 140000, tag: 'Rendement Sûr' },
-  { id: 'vip-5', vipLevel: 5, name: 'VIP Platine 5', price: 100000, dailyReturn: 30000, durationDays: 10, totalReturn: 300000, tag: 'Haute Performance' },
-  { id: 'vip-6', vipLevel: 6, name: 'VIP Prestige 6', price: 250000, dailyReturn: 80000, durationDays: 10, totalReturn: 800000, tag: 'Investisseur Elite' },
-  { id: 'vip-7', vipLevel: 7, name: 'VIP Impérial 7', price: 500000, dailyReturn: 175000, durationDays: 10, totalReturn: 1750000, tag: 'Souverain Wealth' }
+  { id: 'vip-1', vipLevel: 1, name: 'P1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'P1' },
+  { id: 'vip-2', vipLevel: 2, name: 'P2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'P2' },
+  { id: 'vip-3', vipLevel: 3, name: 'P3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'P3' },
+  { id: 'vip-4', vipLevel: 4, name: 'P4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'P4' },
+  { id: 'vip-5', vipLevel: 5, name: 'P5', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'P5' },
+  { id: 'vip-6', vipLevel: 6, name: 'P6', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'P6' },
+  { id: 'vip-7', vipLevel: 7, name: 'P7', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'P7' }
 ];
 
 const INITIAL_USERS: User[] = [
@@ -49,7 +49,7 @@ const INITIAL_USERS: User[] = [
     totalEarnings: 4200,
     bonus: 500,
     referralCode: 'ALINE226',
-    referredBy: 'GOLD777',
+    referredBy: 'u-admin',
     role: 'user',
     isBlocked: false,
     createdAt: '2026-05-18T14:30:00Z'
@@ -65,7 +65,7 @@ const INITIAL_USERS: User[] = [
     totalEarnings: 15000,
     bonus: 1000,
     referralCode: 'KOFFI225',
-    referredBy: 'ALINE226',
+    referredBy: 'u-1',
     role: 'user',
     isBlocked: false,
     createdAt: '2026-05-20T09:15:00Z'
@@ -81,7 +81,7 @@ const INITIAL_USERS: User[] = [
     totalEarnings: 0,
     bonus: 500,
     referralCode: 'MOUSSA223',
-    referredBy: 'KOFFI225',
+    referredBy: 'u-2',
     role: 'user',
     isBlocked: false,
     createdAt: '2026-05-22T16:45:00Z'
@@ -268,7 +268,15 @@ export class DataStore {
   }
 
   static getProducts(): Product[] {
-    const list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
+    let list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
+    
+    // Auto-update to P1-P7 (365 days duration) if old database exists in visitor localstorage
+    const needsReset = list.length === 0 || !list.some(p => p.durationDays === 365) || list.some(p => p.name.includes('VIP Élixir') || p.name.includes('VIP Élixir 1'));
+    if (needsReset) {
+      list = DEFAULT_PRODUCTS;
+      this.saveProducts(list);
+    }
+
     let changed = false;
     const now = new Date();
     
@@ -349,7 +357,14 @@ export class DataStore {
 
   // Auth Operations
   static getCurrentUser(): User | null {
-    return getFromStore<User | null>('gi_current_user', null);
+    const cached = getFromStore<User | null>('gi_current_user', null);
+    if (!cached) return null;
+    const users = this.getUsers();
+    const fresh = users.find(u => u.id === cached.id);
+    if (fresh) {
+      return fresh;
+    }
+    return cached;
   }
 
   static saveCurrentUser(user: User | null): void {
@@ -415,8 +430,25 @@ export class DataStore {
     // Verify if referred by exists
     let refereeId: string | undefined = undefined;
     if (data.referredByCode.trim().length > 0) {
-      const codeClean = data.referredByCode.trim().toUpperCase();
-      let referrerUser = users.find(u => u.referralCode.toUpperCase() === codeClean);
+      const cleanInput = data.referredByCode.trim();
+      const codeClean = cleanInput.toUpperCase();
+      const digitsOnlyInput = cleanInput.replace(/\D/g, '');
+
+      let referrerUser = users.find(u => {
+        // Match 1: Referral Code
+        if (u.referralCode && u.referralCode.toUpperCase() === codeClean) return true;
+        // Match 2: User ID
+        if (u.id && u.id.toUpperCase() === codeClean) return true;
+        // Match 3: WhatsApp/Phone number
+        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
+          const uDigits = u.whatsapp.replace(/\D/g, '');
+          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) {
+            return true;
+          }
+        }
+        return false;
+      });
+
       if (!referrerUser) {
         // If the code is not found in the local storage database (common in private windows, cross-browser tests, or clean sessions),
         // we dynamically create a phantom sponsor user with this code on-the-fly. This prevents registration from being blocked
@@ -427,7 +459,7 @@ export class DataStore {
         const phantomUser: User = {
           id: phantomId,
           name: phantomName,
-          whatsapp: `+23769${Math.floor(1000000 + Math.random() * 9000000)}`,
+          whatsapp: digitsOnlyInput ? `+${digitsOnlyInput}` : `+23769${Math.floor(1000000 + Math.random() * 9000000)}`,
           password: 'user123',
           country: data.country,
           balance: 1000,
@@ -652,7 +684,19 @@ export class DataStore {
     // Level 2: 3%
     // Level 3: 1%
     if (user.referredBy) {
-      const parentUser = users.find(u => u.id === user.referredBy);
+      const cleanInput = user.referredBy.trim();
+      const refClean = cleanInput.toUpperCase();
+      const digitsOnlyInput = cleanInput.replace(/\D/g, '');
+
+      const parentUser = users.find(u => {
+        if (u.id.toUpperCase() === refClean) return true;
+        if (u.referralCode && u.referralCode.toUpperCase() === refClean) return true;
+        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
+          const uDigits = u.whatsapp.replace(/\D/g, '');
+          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
+        }
+        return false;
+      });
       if (parentUser) {
         const commAmtLvl1 = Math.round(targetProduct.price * 0.20); // 20%
         parentUser.balance += commAmtLvl1;
@@ -692,7 +736,19 @@ export class DataStore {
 
         // Level 2 MLM: 3%
         if (parentUser.referredBy) {
-          const grandParentUser = users.find(u => u.id === parentUser.referredBy);
+          const cleanInput2 = parentUser.referredBy.trim();
+          const refClean2 = cleanInput2.toUpperCase();
+          const digitsOnlyInput2 = cleanInput2.replace(/\D/g, '');
+
+          const grandParentUser = users.find(u => {
+            if (u.id.toUpperCase() === refClean2) return true;
+            if (u.referralCode && u.referralCode.toUpperCase() === refClean2) return true;
+            if (digitsOnlyInput2.length >= 6 && u.whatsapp) {
+              const uDigits = u.whatsapp.replace(/\D/g, '');
+              if (uDigits.endsWith(digitsOnlyInput2) || digitsOnlyInput2.endsWith(uDigits)) return true;
+            }
+            return false;
+          });
           if (grandParentUser) {
             const commAmtLvl2 = Math.round(targetProduct.price * 0.03); // 3%
             grandParentUser.balance += commAmtLvl2;
@@ -731,7 +787,19 @@ export class DataStore {
 
             // Level 3 MLM: 1%
             if (grandParentUser.referredBy) {
-              const greatGrandParentUser = users.find(u => u.id === grandParentUser.referredBy);
+              const cleanInput3 = grandParentUser.referredBy.trim();
+              const refClean3 = cleanInput3.toUpperCase();
+              const digitsOnlyInput3 = cleanInput3.replace(/\D/g, '');
+
+              const greatGrandParentUser = users.find(u => {
+                if (u.id.toUpperCase() === refClean3) return true;
+                if (u.referralCode && u.referralCode.toUpperCase() === refClean3) return true;
+                if (digitsOnlyInput3.length >= 6 && u.whatsapp) {
+                  const uDigits = u.whatsapp.replace(/\D/g, '');
+                  if (uDigits.endsWith(digitsOnlyInput3) || digitsOnlyInput3.endsWith(uDigits)) return true;
+                }
+                return false;
+              });
               if (greatGrandParentUser) {
                 const commAmtLvl3 = Math.round(targetProduct.price * 0.01); // 1%
                 greatGrandParentUser.balance += commAmtLvl3;
@@ -772,6 +840,9 @@ export class DataStore {
           }
         }
       }
+      
+      // CRITICAL: Save updated balances and bonuses for the sponsor chain in LocalStorage!
+      this.saveUsers(users);
     }
 
     // Create purchase notification for user
@@ -800,7 +871,7 @@ export class DataStore {
       return { success: false, message: 'Revenu journalier déjà réclamé pour aujourd\'hui. Revenez demain !', amount: 0 };
     }
 
-    const rewardAmt = 150; // Standard daily loyalty reward
+    const rewardAmt = 50; // Standard daily loyalty reward
     const users = this.getUsers();
     const user = users.find(u => u.id === userId);
     if (!user) {

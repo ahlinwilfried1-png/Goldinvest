@@ -799,8 +799,8 @@ export default function AdminPanel({
                     </tr>
                   ) : (
                     filteredUsers.map((user) => {
-                      const sponsor = users.find(u => u.id === user.referredBy);
-                      const directRefs = users.filter(u => u.referredBy === user.id);
+                      const sponsor = users.find(u => u.id === user.referredBy || (u.referralCode && u.referralCode === user.referredBy));
+                      const directRefs = users.filter(u => u.referredBy === user.id || (user.referralCode && u.referredBy === user.referralCode));
 
                       return (
                         <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
@@ -894,7 +894,7 @@ export default function AdminPanel({
                   </div>
                 ) : (
                   users.filter(u => u.referredBy).map((filleul) => {
-                    const parrain = users.find(u => u.id === filleul.referredBy);
+                    const parrain = users.find(u => u.id === filleul.referredBy || (u.referralCode && u.referralCode === filleul.referredBy));
                     return (
                       <div 
                         key={filleul.id} 
@@ -1296,7 +1296,7 @@ export default function AdminPanel({
           const query = affiliateSearchQuery.trim().toLowerCase();
           if (!query) return true;
           
-          const parrain = users.find(s => s.id === u.referredBy);
+          const parrain = users.find(s => s.id === u.referredBy || (s.referralCode && s.referralCode === u.referredBy));
           return (
             (u.name || '').toLowerCase().includes(query) ||
             (u.whatsapp || '').toLowerCase().includes(query) ||
@@ -1366,7 +1366,7 @@ export default function AdminPanel({
                   </div>
                 ) : (
                   filteredFilleuls.map((filleul) => {
-                    const parrain = users.find(u => u.id === filleul.referredBy);
+                    const parrain = users.find(u => u.id === filleul.referredBy || (u.referralCode && u.referralCode === filleul.referredBy));
                     return (
                       <div 
                         key={filleul.id} 
