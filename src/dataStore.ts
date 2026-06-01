@@ -334,6 +334,23 @@ export class DataStore {
     return changed ? updated : list;
   }
 
+  static getCurrencyForUser(user: any): string {
+    if (!user) return 'FCFA';
+    const whatsapp = user.whatsapp || '';
+    if (whatsapp.startsWith('+226')) {
+      return 'XOF';
+    } else if (whatsapp.startsWith('+237')) {
+      return 'XAF';
+    }
+    const country = (user.country || '').toLowerCase();
+    if (country.includes('burkina')) {
+      return 'XOF';
+    } else if (country.includes('cameroun') || country.includes('cameroon')) {
+      return 'XAF';
+    }
+    return 'FCFA';
+  }
+
   static saveUsers(users: User[]): void {
     setToStore<User[]>('gi_users', users);
   }

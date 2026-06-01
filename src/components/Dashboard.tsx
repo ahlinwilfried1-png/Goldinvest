@@ -187,6 +187,23 @@ export default function Dashboard({
     });
   };
 
+  const getCurrency = () => {
+    if (!userState) return 'FCFA';
+    const whatsapp = userState.whatsapp || '';
+    if (whatsapp.startsWith('+226')) {
+      return 'XOF';
+    } else if (whatsapp.startsWith('+237')) {
+      return 'XAF';
+    }
+    const countryStr = (userState.country || '').toLowerCase();
+    if (countryStr.includes('burkina')) {
+      return 'XOF';
+    } else if (countryStr.includes('cameroun') || countryStr.includes('cameroon')) {
+      return 'XAF';
+    }
+    return 'FCFA';
+  };
+
   const [customModal, setCustomModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -453,7 +470,7 @@ export default function Dashboard({
 
     const amt = parseInt(depositAmount);
     if (isNaN(amt) || amt < 3000) {
-      setDepositError('Le montant minimum pour un versement est de 3 000 FCFA.');
+      setDepositError(`Le montant minimum pour un versement est de 3 000 ${getCurrency()}.`);
       return;
     }
 
@@ -466,7 +483,7 @@ export default function Dashboard({
     setTimeout(() => {
       DataStore.createAutomaticDeposit(userState.id, amt, depositOperator);
       setPaymentProcessing(false);
-      setDepositSuccess(`Paiement de ${amt.toLocaleString()} FCFA reçu avec succès ! Votre compte a été automatiquement et instantanément crédité.`);
+      setDepositSuccess(`Paiement de ${amt.toLocaleString()} ${getCurrency()} reçu avec succès ! Votre compte a été automatiquement et instantanément crédité.`);
       syncDashboardData();
     }, 4500);
   };
@@ -487,12 +504,12 @@ export default function Dashboard({
     }
 
     const amt = parseInt(withdrawAmount);
-    if (isNaN(amt) || amt < 1500) {
-      setWithdrawError('Le montant minimum de retrait autorisé est de 1 500 FCFA.');
+    if (isNaN(amt) || amt < 1000) {
+      setWithdrawError(`Le montant minimum de retrait autorisé est de 1 000 ${getCurrency()}.`);
       return;
     }
     if (userState.balance < amt) {
-      setWithdrawError(`Solde insuffisant. Vous disposez uniquement de ${userState.balance.toLocaleString()} FCFA.`);
+      setWithdrawError(`Solde insuffisant. Vous disposez uniquement de ${userState.balance.toLocaleString()} ${getCurrency()}.`);
       return;
     }
     if (!withdrawNumber.trim() || withdrawNumber.length < 8) {
@@ -587,7 +604,7 @@ export default function Dashboard({
     if (userState.balance < product.price) {
       setProductErrors(prev => ({
         ...prev,
-        [product.id]: `Solde insuffisant ! Votre solde est de ${userState.balance.toLocaleString()} FCFA mais ce package requiert ${product.price.toLocaleString()} FCFA.`
+        [product.id]: `Solde insuffisant ! Votre solde est de ${userState.balance.toLocaleString()} ${getCurrency()} mais ce package requiert ${product.price.toLocaleString()} ${getCurrency()}.`
       }));
       // Auto-clear after 10 seconds
       setTimeout(() => {
@@ -601,7 +618,7 @@ export default function Dashboard({
 
     openConfirm(
       'Activer le Plan VIP',
-      `Voulez-vous activer le plan d'investissement "${product.name}" pour ${product.price.toLocaleString()} FCFA ? Ce montant sera débité.`,
+      `Voulez-vous activer le plan d'investissement "${product.name}" pour ${product.price.toLocaleString()} ${getCurrency()} ? Ce montant sera débité.`,
       () => {
         const res = DataStore.buyProduct(userState.id, product.id);
         if (res.success) {
@@ -706,7 +723,7 @@ export default function Dashboard({
                   <span className="text-sm select-none">🎁</span>
                   <div className="text-[11px]">
                     <span className="font-bold text-slate-400">Bonus d'inscription :</span>{' '}
-                    <span className="text-emerald-400 font-extrabold text-[12px] ml-0.5">200 FCFA</span>
+                    <span className="text-emerald-400 font-extrabold text-[12px] ml-0.5">200 {getCurrency()}</span>
                   </div>
                 </div>
 
@@ -714,7 +731,7 @@ export default function Dashboard({
                   <span className="text-sm select-none">📥</span>
                   <div className="text-[11px]">
                     <span className="font-bold text-slate-400">Dépôt minimum :</span>{' '}
-                    <span className="text-yellow-400 font-mono font-black text-[12px] ml-0.5">3 000 FCFA</span>
+                    <span className="text-yellow-400 font-mono font-black text-[12px] ml-0.5">3 000 {getCurrency()}</span>
                   </div>
                 </div>
 
@@ -722,7 +739,7 @@ export default function Dashboard({
                   <span className="text-sm select-none">💲</span>
                   <div className="text-[11px] flex items-center flex-wrap gap-1">
                     <span className="font-bold text-slate-400">Retrait minimum :</span>{' '}
-                    <span className="text-white font-mono font-black text-[12px]">1 000 FCFA</span>{' '}
+                    <span className="text-white font-mono font-black text-[12px]">1 000 {getCurrency()}</span>{' '}
                     <span className="text-[8px] text-red-400 font-sans font-black uppercase bg-red-950/40 px-1 py-0.5 rounded border border-red-900/30">(12% frais)</span>
                   </div>
                 </div>
@@ -731,7 +748,7 @@ export default function Dashboard({
                   <span className="text-sm select-none">🔥</span>
                   <div className="text-[11px]">
                     <span className="font-bold text-slate-400">Bonus quotidien de connexion :</span>{' '}
-                    <span className="text-[#00bd74] font-black text-[12px] ml-0.5">20 FCFA / jour</span>
+                    <span className="text-[#00bd74] font-black text-[12px] ml-0.5">20 {getCurrency()} / jour</span>
                   </div>
                 </div>
               </div>
@@ -967,7 +984,7 @@ export default function Dashboard({
                   <div className="my-6">
                     <span className="text-slate-200 text-xs font-medium block">FONDS DISPONIBLES</span>
                     <div className="text-4xl sm:text-5xl font-display font-black text-white tracking-tight mt-1">
-                      {userState.balance.toLocaleString()} <span className="text-amber-300 text-lg font-black uppercase font-sans">FCFA</span>
+                      {userState.balance.toLocaleString()} <span className="text-amber-300 text-lg font-black uppercase font-sans">{getCurrency()}</span>
                     </div>
                     <div className="text-[11px] text-slate-100/95 mt-2 font-mono flex items-center space-x-1 font-bold">
                       <Clock className="w-4.5 h-4.5 text-amber-300" />
@@ -1151,7 +1168,7 @@ export default function Dashboard({
                   </div>
                   <div className="min-w-0">
                     <span className="text-xs text-slate-500 block font-extrabold uppercase tracking-wide">Revenu Quotidien</span>
-                    <span className="text-xl font-display font-black text-[#00bd74] block mt-0.5 leading-none">+{userState.dailyEarnings.toLocaleString()} F</span>
+                    <span className="text-xl font-display font-black text-[#00bd74] block mt-0.5 leading-none">+{userState.dailyEarnings.toLocaleString()} {getCurrency()}</span>
                   </div>
                 </div>
               </div>
@@ -1164,9 +1181,9 @@ export default function Dashboard({
                     : null;
 
                   const cycleText = `${p.durationDays} jours`;
-                  const totalReturnText = `${(p.dailyReturn * p.durationDays).toLocaleString()} FCFA`;
-                  const dailyReturnText = `${p.dailyReturn.toLocaleString()} FCFA`;
-                  const priceText = `${p.price.toLocaleString()} FCFA`;
+                  const totalReturnText = `${(p.dailyReturn * p.durationDays).toLocaleString()} ${getCurrency()}`;
+                  const dailyReturnText = `${p.dailyReturn.toLocaleString()} ${getCurrency()}`;
+                  const priceText = `${p.price.toLocaleString()} ${getCurrency()}`;
 
                   return (
                     <div 
@@ -1275,7 +1292,7 @@ export default function Dashboard({
                   <div className="w-12 h-12 border-4 border-[#1b64d9] border-t-transparent rounded-full animate-spin mx-auto"></div>
                   <h4 className="font-display font-bold text-slate-800 text-sm">Paiement en cours de traitement via SoinaPay...</h4>
                   <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                    Veuillez finaliser votre opération sur le guichet de paiement SoinaPay sécurisé. Dès que le règlement est terminé, votre solde de <strong>{parseInt(depositAmount).toLocaleString()} FCFA</strong> sera crédité instantanément et automatiquement sur AgroCapital.
+                    Veuillez finaliser votre opération sur le guichet de paiement SoinaPay sécurisé. Dès que le règlement est terminé, votre solde de <strong>{parseInt(depositAmount).toLocaleString()} {getCurrency()}</strong> sera crédité instantanément et automatiquement sur AgroCapital.
                   </p>
                 </div>
               ) : (
@@ -1302,11 +1319,11 @@ export default function Dashboard({
 
                   {/* Amount */}
                   <div>
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">2. Montant du versement (FCFA)</label>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">2. Montant du versement ({getCurrency()})</label>
                     <input
                       type="number"
                       required
-                      placeholder="Minimum 3 000 FCFA"
+                      placeholder={`Minimum 3 000 ${getCurrency()}`}
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
                       className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
@@ -1349,11 +1366,11 @@ export default function Dashboard({
               <div className="mb-6 p-5 rounded-2xl bg-white border border-slate-200 text-xs flex justify-between items-center shadow-inner">
                 <div>
                   <span className="text-slate-400 font-extrabold uppercase text-[10px] block">Solde Actuel :</span>
-                  <div className="text-xl sm:text-2xl font-black text-[#00bd74] mt-0.5">{userState.balance.toLocaleString()} FCFA</div>
+                  <div className="text-xl sm:text-2xl font-black text-[#00bd74] mt-0.5">{userState.balance.toLocaleString()} {getCurrency()}</div>
                 </div>
                 <div className="text-right">
                   <span className="text-slate-400 font-extrabold uppercase text-[10px] block">Limite minimum :</span>
-                  <div className="text-xs sm:text-sm font-black text-slate-800 mt-0.5">1 500 FCFA</div>
+                  <div className="text-xs sm:text-sm font-black text-slate-800 mt-0.5">1 000 {getCurrency()}</div>
                 </div>
               </div>
 
@@ -1389,16 +1406,35 @@ export default function Dashboard({
 
                 {/* Withdraw value */}
                 <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Montant à extraire (FCFA)</label>
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Montant à extraire ({getCurrency()})</label>
                   <input
                     type="number"
                     required
-                    placeholder="Montant à retirer en FCFA"
+                    placeholder={`Montant à retirer en ${getCurrency()}`}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-[#1b64d9] font-black focus:outline-none font-mono shadow-sm"
                   />
                 </div>
+
+                {/* Real-time fee summary */}
+                {!isNaN(parseInt(withdrawAmount)) && parseInt(withdrawAmount) > 0 && (
+                  <div className="bg-slate-55 p-3.5 rounded-2xl border border-slate-200 text-xs font-bold text-slate-700 space-y-1.5 animate-fade-in shadow-inner">
+                    <span className="font-extrabold text-[#1b64d9] text-[10px] uppercase tracking-wider block">Calcul automatique (12% Frais de retrait) :</span>
+                    <div className="flex justify-between border-b border-slate-100/50 pb-1">
+                      <span className="text-slate-500 font-semibold">Montant brut demandé :</span>
+                      <span className="font-mono">{parseInt(withdrawAmount).toLocaleString()} {getCurrency()}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100/50 pb-1 text-red-500">
+                      <span className="font-semibold">Frais administratifs de retrait (12%) :</span>
+                      <span className="font-mono">-{Math.round(parseInt(withdrawAmount) * 0.12).toLocaleString()} {getCurrency()}</span>
+                    </div>
+                    <div className="pt-1 flex justify-between text-[#00bd74] text-xs font-black">
+                      <span>Montant net crédité sur votre compte :</span>
+                      <span className="text-[13px] font-mono">{Math.max(0, parseInt(withdrawAmount) - Math.round(parseInt(withdrawAmount) * 0.12)).toLocaleString()} {getCurrency()}</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-white/90 p-4 rounded-2xl border border-slate-200 text-xs text-slate-500 space-y-1 font-bold">
                   <span className="font-extrabold text-[#1b64d9] block">👮 Sécurité Comptable :</span>
@@ -1790,7 +1826,7 @@ export default function Dashboard({
                               {dep.refCode && <span className="text-[10px] text-[#1b64d9] font-mono block font-black uppercase">REF: {dep.refCode}</span>}
                             </div>
                             <div className="text-right space-y-1">
-                              <span className="text-emerald-400 font-black font-mono">+{dep.amount.toLocaleString()} FCFA</span>
+                              <span className="text-emerald-400 font-black font-mono">+{dep.amount.toLocaleString()} {getCurrency()}</span>
                               <div>
                                 {dep.status === 'approved' && (
                                   <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 text-[9px] font-black rounded font-mono">CONFORME</span>
@@ -1826,7 +1862,7 @@ export default function Dashboard({
                               <span className="text-[10px] text-slate-400 font-mono block font-bold">Dest: {wth.number}</span>
                             </div>
                             <div className="text-right space-y-1">
-                              <span className="text-red-400 font-black font-mono">-{wth.amount.toLocaleString()} FCFA</span>
+                              <span className="text-red-400 font-black font-mono">-{wth.amount.toLocaleString()} {getCurrency()}</span>
                               <div>
                                 {wth.status === 'approved' && (
                                   <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 text-[9px] font-black rounded font-mono">EXPÉDIÉ (2H)</span>
