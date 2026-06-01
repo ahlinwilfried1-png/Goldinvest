@@ -1624,7 +1624,7 @@ export default function Dashboard({
                             <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
                               <span className="text-slate-350 font-bold italic">{u.country}</span>
                               <a 
-                                href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
+                                href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
                                 className="text-green-400 font-black flex items-center space-x-1.5 hover:text-green-350 transition-colors"
@@ -1663,7 +1663,7 @@ export default function Dashboard({
                               <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
                                 <span className="text-slate-350 font-bold italic">{u.country}</span>
                                 <a 
-                                  href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
+                                  href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
                                   className="text-green-400 font-black flex items-center space-x-1.5 hover:text-green-350 transition-colors"
@@ -1703,7 +1703,7 @@ export default function Dashboard({
                               <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
                                 <span className="text-slate-350 font-bold italic">{u.country}</span>
                                 <a 
-                                  href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
+                                  href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
                                   className="text-green-400 font-black flex items-center space-x-1.5 hover:text-green-350 transition-colors"

@@ -863,8 +863,19 @@ export default function AdminPanel({
                     </tr>
                   ) : (
                     filteredUsers.map((user) => {
-                      const sponsor = users.find(u => u.id === user.referredBy || (u.referralCode && u.referralCode === user.referredBy));
-                      const directRefs = users.filter(u => u.referredBy === user.id || (user.referralCode && u.referredBy === user.referralCode));
+                      const cleanReferredBy = (user.referredBy || '').trim().toUpperCase();
+                      const sponsor = users.find(u => 
+                        (u.id && u.id.trim().toUpperCase() === cleanReferredBy) || 
+                        (u.referralCode && u.referralCode.trim().toUpperCase() === cleanReferredBy)
+                      );
+                      
+                      const directRefs = users.filter(u => {
+                        const uReferredBy = (u.referredBy || '').trim().toUpperCase();
+                        if (!uReferredBy) return false;
+                        const myId = (user.id || '').trim().toUpperCase();
+                        const myCode = (user.referralCode || '').trim().toUpperCase();
+                        return uReferredBy === myId || (myCode && uReferredBy === myCode);
+                      });
 
                       return (
                         <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
@@ -878,15 +889,19 @@ export default function AdminPanel({
                             <span className="text-[10px] text-slate-400 block">{user.country}</span>
                           </td>
                           <td className="p-3 font-mono text-slate-300">
-                            <a 
-                              href={`https://wa.me/${user.whatsapp.replace(/[^0-9]/g, '')}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-slate-300 hover:text-green-400 flex items-center gap-1 transition-colors"
-                            >
-                              <span>📱</span>
-                              <span>{user.whatsapp}</span>
-                            </a>
+                            {user.whatsapp ? (
+                              <a 
+                                href={`https://wa.me/${user.whatsapp.replace(/[^0-9]/g, '')}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-slate-300 hover:text-green-400 flex items-center gap-1 transition-colors"
+                              >
+                                <span>📱</span>
+                                <span>{user.whatsapp}</span>
+                              </a>
+                            ) : (
+                              <span className="text-slate-500 italic">N/A</span>
+                            )}
                           </td>
                           <td className="p-3">
                             {sponsor ? (
@@ -963,7 +978,11 @@ export default function AdminPanel({
                   </div>
                 ) : (
                   users.filter(u => u.referredBy).map((filleul) => {
-                    const parrain = users.find(u => u.id === filleul.referredBy || (u.referralCode && u.referralCode === filleul.referredBy));
+                    const cleanRef = (filleul.referredBy || '').trim().toUpperCase();
+                    const parrain = users.find(u => 
+                      (u.id && u.id.trim().toUpperCase() === cleanRef) || 
+                      (u.referralCode && u.referralCode.trim().toUpperCase() === cleanRef)
+                    );
                     return (
                       <div 
                         key={filleul.id} 
@@ -1363,9 +1382,14 @@ export default function AdminPanel({
         const filteredFilleuls = users.filter((u) => {
           if (!u.referredBy) return false;
           const query = affiliateSearchQuery.trim().toLowerCase();
-          if (!query) return true;
           
-          const parrain = users.find(s => s.id === u.referredBy || (s.referralCode && s.referralCode === u.referredBy));
+          const cleanRef = (u.referredBy || '').trim().toUpperCase();
+          const parrain = users.find(s => 
+            (s.id && s.id.trim().toUpperCase() === cleanRef) || 
+            (s.referralCode && s.referralCode.trim().toUpperCase() === cleanRef)
+          );
+
+          if (!query) return true;
           return (
             (u.name || '').toLowerCase().includes(query) ||
             (u.whatsapp || '').toLowerCase().includes(query) ||
