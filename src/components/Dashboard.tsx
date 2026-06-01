@@ -132,11 +132,98 @@ export default function Dashboard({
 
   const [productErrors, setProductErrors] = useState<Record<string, string>>({});
 
+  const [dismissedPermissionBanner, setDismissedPermissionBanner] = useState<boolean>(false);
+
+  const [chromeNotifPermission, setChromeNotifPermission] = useState<string>(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      return Notification.permission;
+    }
+    return 'unsupported';
+  });
+
+  const initialLoadedNotifIds = useRef<Set<string>>(new Set());
+
+  const triggerChromeNotification = (title: string, message: string) => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        try {
+          const cleanMessage = message.replace(/<[^>]*>/g, ''); // strip any html tags
+          // Native notification invocation
+          const notif = new Notification("Vous avez reçu une nouvelle notification", {
+            body: cleanMessage,
+            icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827379.png',
+            tag: 'agro-' + Date.now(),
+          });
+          notif.onclick = () => {
+            window.focus();
+          };
+        } catch (err) {
+          console.error('Browser blocked background notification instantiation:', err);
+        }
+      }
+    }
+  };
+
+  const requestChromeNotificationPermission = () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      openAlert('Unsupported', 'Votre navigateur Chrome ou appareil actuel ne supporte pas les notifications de bureau.', 'info');
+      return;
+    }
+    
+    Notification.requestPermission().then((permission) => {
+      setChromeNotifPermission(permission);
+      if (permission === 'granted') {
+        openAlert('Activé avec succès 🎉', 'Vous recevrez désormais des alertes instantanées dans Chrome à chaque fois qu\'un dépôt est approuvé, qu\'un gain tombe ou qu\'une annonce officielle de l\'administrateur est diffusée.', 'success');
+        try {
+          new Notification("Vous avez reçu une nouvelle notification", {
+            body: "Notifications de bureau Chrome activées sur AgroCapital ! 🔔"
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      } else if (permission === 'denied') {
+        openAlert('Notifications bloquées ⚠️', 'Vous avez bloqué les notifications. Veuillez réactiver les droits de notification dans les paramètres (icône de cadenas) de votre navigateur Chrome pour de futurs messages directs.', 'error');
+      }
+    });
+  };
+
+  const [customModal, setCustomModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'confirm' | 'success' | 'info' | 'error';
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
+
+  const openAlert = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setCustomModal({
+      isOpen: true,
+      title,
+      message,
+      type,
+    });
+  };
+
+  const openConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setCustomModal({
+      isOpen: true,
+      title,
+      message,
+      type: 'confirm',
+      onConfirm
+    });
+  };
+
   // Layout states
   const [simulationStatus, setSimulationStatus] = useState<string>('');
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showAnnouncementDismissible, setShowAnnouncementDismissible] = useState<boolean>(true);
-  const [profileHistoryTab, setProfileHistoryTab] = useState<'deposits' | 'withdrawals' | 'purchases'>('deposits');
+  const [profileHistoryTab, setProfileHistoryTab] = useState<'deposits' | 'withdrawals' | 'purchases' | 'notifications'>('deposits');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -225,6 +312,9 @@ export default function Dashboard({
 
     const notifs = DataStore.getNotifications().filter(n => n.userId === undefined || n.userId === currentUser.id);
     setNotifications(notifs);
+    if (initialLoadedNotifIds.current.size === 0 && notifs.length > 0) {
+      notifs.forEach(n => initialLoadedNotifIds.current.add(n.id));
+    }
 
     const msgs = DataStore.getSupportMessages().filter(m => m.userId === currentUser.id);
     setSupportMessages(msgs);
@@ -233,12 +323,42 @@ export default function Dashboard({
   useEffect(() => {
     syncDashboardData();
 
-    // Setup periodic check interval to automatically credit of earnings in real-time
+    // Auto request chrome notification permission right after login/registration (if status is default)
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      const timer = setTimeout(() => {
+        Notification.requestPermission().then((permission) => {
+          setChromeNotifPermission(permission);
+          if (permission === 'granted') {
+            try {
+              new Notification("Vous avez reçu une nouvelle notification", {
+                body: "Notifications de bureau Chrome activées sur AgroCapital ! 🔔"
+              });
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        });
+      }, 1500);
+    }
+
+    // Setup periodic check interval to automatically credit of earnings in real-time and check for new notifications in Chrome or app
     const interval = setInterval(() => {
       const oldBal = userState.balance;
       DataStore.processAutomaticDailyInstallments();
+      
       const fresh = DataStore.getCurrentUser();
-      if (fresh && fresh.balance !== oldBal) {
+      
+      // Pull real-time notifications
+      const freshNotifs = DataStore.getNotifications().filter(n => n.userId === undefined || n.userId === currentUser.id);
+      const brandNewNotifs = freshNotifs.filter(n => !initialLoadedNotifIds.current.has(n.id));
+      
+      if (brandNewNotifs.length > 0) {
+        brandNewNotifs.forEach(n => {
+          triggerChromeNotification(n.title || "Nouvelle Notification", n.message);
+          initialLoadedNotifIds.current.add(n.id);
+        });
+        syncDashboardData();
+      } else if (fresh && fresh.balance !== oldBal) {
         syncDashboardData();
       }
     }, 5000);
@@ -288,10 +408,10 @@ export default function Dashboard({
   const handleDailyCheckin = () => {
     const res = DataStore.claimDailyReward(userState.id);
     if (res.success) {
-      alert(res.message);
+      openAlert('Félicitations !', res.message, 'success');
       syncDashboardData();
     } else {
-      alert(res.message);
+      openAlert('Attention', res.message, 'info');
     }
   };
 
@@ -299,10 +419,10 @@ export default function Dashboard({
   const handleClaimReturn = (invId: string) => {
     const res = DataStore.claimInvestmentReturn(userState.id, invId);
     if (res.success) {
-      alert(res.message);
+      openAlert('Dividende Collecté', res.message, 'success');
       syncDashboardData();
     } else {
-      alert(res.message);
+      openAlert('Erreur', res.message, 'error');
     }
   };
 
@@ -460,7 +580,7 @@ export default function Dashboard({
   // Invest Product Purchase
   const handleBuyProduct = (product: Product) => {
     if (product.isBlocked) {
-      alert("Ce plan d'investissement VIP est actuellement bloqué ou suspendu temporairement par l'administration.");
+      openAlert('Plan Suspendu', "Ce plan d'investissement VIP est actuellement bloqué ou suspendu temporairement par l'administration.", 'error');
       return;
     }
 
@@ -479,12 +599,20 @@ export default function Dashboard({
       return;
     }
 
-    if (confirm(`Voulez-vous activer le plan d'investissement "${product.name}" pour ${product.price.toLocaleString()} FCFA ? Ce montant sera débité.`)) {
-      const res = DataStore.buyProduct(userState.id, product.id);
-      alert(res.message);
-      syncDashboardData();
-      setActiveTab('dashboard'); // Go back to inspect running projects
-    }
+    openConfirm(
+      'Activer le Plan VIP',
+      `Voulez-vous activer le plan d'investissement "${product.name}" pour ${product.price.toLocaleString()} FCFA ? Ce montant sera débité.`,
+      () => {
+        const res = DataStore.buyProduct(userState.id, product.id);
+        if (res.success) {
+          openAlert('Félicitations !', res.message, 'success');
+        } else {
+          openAlert('Achat Échoué', res.message, 'error');
+        }
+        syncDashboardData();
+        setActiveTab('dashboard'); // Go back to inspect running projects
+      }
+    );
   };
 
   // Send support message
@@ -511,7 +639,7 @@ export default function Dashboard({
         DataStore.saveCurrentUser(current);
       }
       syncDashboardData();
-      alert("Votre compte a été élevé au rôle d'ADMINISTRATEUR ! Vous pouvez désormais voir le bouton d'accès à la palette d'administration dans l'onglet Profil !");
+      openAlert("Compte Promu", "Votre compte a été élevé au rôle d'ADMINISTRATEUR ! Vous pouvez désormais voir le bouton d'accès à la palette d'administration dans l'onglet Profil !", "success");
     }
   };
 
@@ -533,124 +661,122 @@ export default function Dashboard({
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-slate-900 border-2 border-yellow-500/40 rounded-3xl p-6 text-left shadow-[0_0_50px_rgba(234,179,8,0.15)] relative max-w-2xl w-full overflow-hidden my-auto"
+            className="bg-slate-900 border border-yellow-500/30 rounded-3xl p-4.5 sm:p-5 text-left shadow-[0_0_40px_rgba(234,179,8,0.12)] relative max-w-md w-full overflow-hidden my-auto"
           >
             {/* Background glow decorator */}
-            <div className="absolute top-0 right-0 w-36 h-36 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-28 h-28 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
             
             {/* Close cross/button */}
             <button
               onClick={() => setShowAnnouncementDismissible(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition-colors cursor-pointer z-[101]"
+              className="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-slate-800 transition-colors cursor-pointer z-[101]"
               aria-label="Fermer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
             {/* Title */}
-            <div className="flex items-center space-x-3 mb-5 border-b border-slate-800 pb-4">
-              <div className="w-10 h-10 rounded-2xl bg-yellow-500/20 flex items-center justify-center text-yellow-500 text-xl shadow-lg shadow-yellow-500/10">
+            <div className="flex items-center space-x-2.5 mb-3.5 border-b border-slate-800 pb-3">
+              <div className="w-8 h-8 rounded-xl bg-yellow-500/20 flex items-center justify-center text-yellow-500 text-base shadow-md">
                 <span>🎉</span>
               </div>
               <div>
-                <h3 className="text-base font-sans font-black text-white uppercase tracking-wider">Inscription Réussie !</h3>
-                <p className="text-[10px] sm:text-xs text-slate-350 font-mono">Félicitations pour votre inscription ! Voici vos informations d'investissement :</p>
+                <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">Inscription Réussie !</h3>
+                <p className="text-[10px] text-slate-450 font-medium">Voici vos informations de départ :</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-              {/* Left stats pillar */}
-              <div className="space-y-4 bg-slate-950/70 p-4.5 border border-slate-800/80 rounded-2xl">
-                <div className="flex items-start sm:items-center space-x-2.5 text-slate-200">
-                  <span className="text-base select-none mt-0.5 sm:mt-0">🌍</span>
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                    <span className="font-bold text-slate-300">Pays éligibles :</span>
-                    <span className="bg-slate-850 px-2 py-0.5 rounded text-white font-extrabold text-[10px] flex items-center gap-1">
+            <div className="space-y-3.5 text-xs">
+              {/* Stats pillar (top horizontal list or tight block) */}
+              <div className="space-y-2 bg-slate-950/70 p-3 border border-slate-850 rounded-2xl">
+                <div className="flex items-start space-x-2 text-slate-200">
+                  <span className="text-sm select-none">🌍</span>
+                  <div className="flex flex-wrap items-center gap-1 text-[11px]">
+                    <span className="font-bold text-slate-400">Pays :</span>
+                    <span className="bg-slate-850 px-1.5 py-0.5 rounded text-white font-extrabold text-[9px]">
                       Cameroun 🇨🇲
                     </span>
-                    <span className="bg-slate-850 px-2 py-0.5 rounded text-white font-extrabold text-[10px] flex items-center gap-1">
+                    <span className="bg-slate-850 px-1.5 py-0.5 rounded text-white font-extrabold text-[9px]">
                       Burkina Faso 🇧🇫
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2.5 text-slate-200">
-                  <span className="text-base select-none">🎁</span>
-                  <div className="text-xs">
-                    <span className="font-bold text-slate-300">Bonus inscription :</span>{' '}
-                    <span className="text-emerald-400 font-extrabold text-sm ml-1">200 FCFA</span>
+                <div className="flex items-center space-x-2 text-slate-200">
+                  <span className="text-sm select-none">🎁</span>
+                  <div className="text-[11px]">
+                    <span className="font-bold text-slate-400">Bonus d'inscription :</span>{' '}
+                    <span className="text-emerald-400 font-extrabold text-[12px] ml-0.5">200 FCFA</span>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2.5 text-slate-200">
-                  <span className="text-base select-none">📥</span>
-                  <div className="text-xs">
-                    <span className="font-bold text-slate-300">Dépôt minimum :</span>{' '}
-                    <span className="text-yellow-400 font-mono font-black text-sm ml-1">3 000 FCFA</span>
+                <div className="flex items-center space-x-2 text-slate-200">
+                  <span className="text-sm select-none">📥</span>
+                  <div className="text-[11px]">
+                    <span className="font-bold text-slate-400">Dépôt minimum :</span>{' '}
+                    <span className="text-yellow-400 font-mono font-black text-[12px] ml-0.5">3 000 FCFA</span>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2.5 text-slate-200">
-                  <span className="text-base select-none">💲</span>
-                  <div className="text-xs">
-                    <span className="font-bold text-slate-300">Retrait minimum :</span>{' '}
-                    <span className="text-white font-mono font-black text-sm ml-1">1 000 FCFA</span>{' '}
-                    <span className="text-[9px] text-red-400 font-sans tracking-tight font-black uppercase bg-red-950/50 px-1.5 py-0.5 rounded border border-red-900/40 ml-1.5 inline-block">(12% frais)</span>
+                <div className="flex items-center space-x-2 text-slate-200">
+                  <span className="text-sm select-none">💲</span>
+                  <div className="text-[11px] flex items-center flex-wrap gap-1">
+                    <span className="font-bold text-slate-400">Retrait minimum :</span>{' '}
+                    <span className="text-white font-mono font-black text-[12px]">1 000 FCFA</span>{' '}
+                    <span className="text-[8px] text-red-400 font-sans font-black uppercase bg-red-950/40 px-1 py-0.5 rounded border border-red-900/30">(12% frais)</span>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2.5 text-slate-200">
-                  <span className="text-base select-none">🔥</span>
-                  <div className="text-xs">
-                    <span className="font-bold text-slate-300">Bonus quotidien :</span>{' '}
-                    <span className="text-[#00bd74] font-black text-sm ml-1">20 FCFA / jour</span>
+                <div className="flex items-center space-x-2 text-slate-200">
+                  <span className="text-sm select-none">🔥</span>
+                  <div className="text-[11px]">
+                    <span className="font-bold text-slate-400">Bonus quotidien de connexion :</span>{' '}
+                    <span className="text-[#00bd74] font-black text-[12px] ml-0.5">20 FCFA / jour</span>
                   </div>
                 </div>
               </div>
 
-              {/* Right referral + link action Pillar */}
-              <div className="flex flex-col justify-between space-y-4">
-                <div className="bg-slate-950/70 p-4.5 border border-slate-800/80 rounded-2xl space-y-3">
-                  <div className="flex items-center space-x-2 text-slate-200">
-                    <span className="text-base select-none">🤝</span>
-                    <span className="font-bold text-slate-300 text-xs">Programme Parrainage :</span>
-                  </div>
-                  <div className="flex flex-col gap-2 font-mono text-[10px] font-black">
-                    <span className="bg-yellow-500/10 text-yellow-500 px-3 py-1.5 rounded-xl border border-yellow-500/20 shadow-sm flex items-center justify-between">
-                      <span>🥇 1er niveau</span>
-                      <span className="font-extrabold text-sm text-yellow-400">20%</span>
-                    </span>
-                    <span className="bg-slate-800/50 text-slate-300 px-3 py-1.5 rounded-xl shadow-sm flex items-center justify-between">
-                      <span>🥈 2ème niveau</span>
-                      <span className="font-extrabold text-[#00bd74]">3%</span>
-                    </span>
-                    <span className="bg-amber-950/25 text-amber-400 px-3 py-1.5 rounded-xl border border-amber-950/30 flex items-center justify-between">
-                      <span>🥉 3ème niveau</span>
-                      <span className="font-extrabold text-amber-400">1%</span>
-                    </span>
-                  </div>
+              {/* Referral Pillar (Compact Grid Row) */}
+              <div className="bg-slate-950/70 p-3 border border-slate-850 rounded-2xl space-y-2">
+                <div className="flex items-center space-x-1.5 text-slate-200">
+                  <span className="text-sm select-none">🤝</span>
+                  <span className="font-bold text-slate-400 text-[11px]">Programme Parrainage :</span>
                 </div>
+                <div className="grid grid-cols-3 gap-1.5 font-mono text-[9px] font-black text-center text-slate-200">
+                  <span className="bg-yellow-500/5 text-yellow-500 p-1.5 rounded-xl border border-yellow-500/10 flex flex-col items-center justify-center">
+                    <span className="text-[8px] opacity-75 mb-0.5">🥇 Niv. 1</span>
+                    <span className="font-extrabold text-[12px] text-yellow-400">20%</span>
+                  </span>
+                  <span className="bg-slate-800/40 text-slate-300 p-1.5 rounded-xl border border-slate-700/10 flex flex-col items-center justify-center">
+                    <span className="text-[8px] opacity-75 mb-0.5">🥈 Niv. 2</span>
+                    <span className="font-extrabold text-[12px] text-[#00bd74]">3%</span>
+                  </span>
+                  <span className="bg-amber-950/15 text-amber-400 p-1.5 rounded-xl border border-amber-950/20 flex flex-col items-center justify-center">
+                    <span className="text-[8px] opacity-75 mb-0.5">🥉 Niv. 3</span>
+                    <span className="font-extrabold text-[12px] text-amber-400">1%</span>
+                  </span>
+                </div>
+              </div>
 
-                {/* Official Group Link Segment */}
-                <div className="bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-colors">
-                  <div className="space-y-1 text-left">
-                    <div className="flex items-center space-x-1.5 text-emerald-400 font-extrabold text-xs uppercase tracking-wider">
-                      <span>💬 Groupe officiel</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    </div>
-                    <p className="text-[10px] text-slate-400 select-all font-medium leading-normal">
-                      Rejoignez le groupe de discussion officiel AgroCapital.
-                    </p>
+              {/* Official Group Link Segment (Super Compact) */}
+              <div className="bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/15 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3.5 transition-colors">
+                <div className="space-y-0.5 text-left flex-1 min-w-0">
+                  <div className="flex items-center space-x-1 text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider">
+                    <span>💬 Groupe officiel</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
                   </div>
-                  <a 
-                    href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=gi_t"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 hover:scale-[1.01] active:scale-[0.99] font-sans font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-550/15 flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer text-center"
-                  >
-                    <span>Rejoindre le Groupe 👉</span>
-                  </a>
+                  <p className="text-[10px] text-slate-400 select-all font-medium leading-tight truncate">
+                    Rejoignez la discussion officielle AgroCapital.
+                  </p>
                 </div>
+                <a 
+                  href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=gi_t"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 hover:scale-[1.01] active:scale-[0.99] font-sans font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-1 shrink-0 cursor-pointer text-center"
+                >
+                  <span>Rejoindre 👉</span>
+                </a>
               </div>
             </div>
             
@@ -728,6 +854,90 @@ export default function Dashboard({
           {/* USER SUMMARY CARDS */}
           {activeTab === 'dashboard' && (
             <div className="space-y-4">
+
+              {!dismissedPermissionBanner && chromeNotifPermission === 'default' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-md relative"
+                >
+                  <button 
+                    onClick={() => setDismissedPermissionBanner(true)}
+                    className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-indigo-100 text-indigo-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                    title="Fermer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center space-x-3 pr-6">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 animate-pulse">
+                      <Bell className="w-5.5 h-5.5 stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-indigo-900 uppercase tracking-tight">🔔 Activer les notifications de bureau dans Chrome</h4>
+                      <p className="text-[10px] sm:text-xs text-indigo-700 font-bold mt-0.5 leading-tight">Recevez immédiatement une alerte Chrome quand vos gains journaliers tombent ou que l'administrateur publie une annonce !</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={requestChromeNotificationPermission}
+                    className="w-full sm:w-auto py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] uppercase font-black tracking-wider rounded-2xl transition-all shadow-md shrink-0 cursor-pointer active:scale-95 text-center font-sans"
+                  >
+                    🚀 Activer maintenant
+                  </button>
+                </motion.div>
+              )}
+
+              {!dismissedPermissionBanner && chromeNotifPermission === 'denied' && (
+                <div 
+                  onClick={() => setDismissedPermissionBanner(true)}
+                  className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-4 flex items-center justify-between space-x-3 text-left shadow-sm relative cursor-pointer hover:bg-amber-100/50 transition-colors"
+                  title="Cliquez pour masquer ce message"
+                >
+                  <div className="flex items-center space-x-3 pr-6">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+                      <AlertCircle className="w-5.5 h-5.5 stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-amber-900 uppercase tracking-tight">⚠️ Les notifications Chrome sont bloquées</h4>
+                      <p className="text-[10px] sm:text-xs text-amber-700 font-bold mt-0.5 leading-tight">Veuillez cliquer sur le petit cadenas de sécurité situé en haut à gauche de l'adresse de votre navigateur Chrome pour les autoriser.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDismissedPermissionBanner(true);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-amber-200 text-amber-400 hover:text-amber-800 transition-colors cursor-pointer"
+                    title="Fermer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {!dismissedPermissionBanner && chromeNotifPermission === 'granted' && (
+                <div 
+                  onClick={() => setDismissedPermissionBanner(true)}
+                  className="bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-3 px-4 flex items-center justify-between gap-3 text-left shadow-sm cursor-pointer hover:bg-emerald-100/50 transition-colors"
+                  title="Cliquez pour masquer ce message"
+                >
+                  <div className="flex items-center space-x-2.5 min-w-0">
+                    <div className="w-6.5 h-6.5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                    </div>
+                    <span className="text-[10px] sm:text-[11px] text-emerald-800 font-extrabold truncate">🎉 Vos notifications Chrome et de bureau sont entièrement actives en temps réel.</span>
+                  </div>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDismissedPermissionBanner(true);
+                    }}
+                    className="p-1 rounded-full hover:bg-emerald-200 text-emerald-400 hover:text-emerald-800 transition-colors cursor-pointer"
+                    title="Fermer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
 
               {/* PRIMARY GOLD CARD & STATS ROW */}
               <motion.div 
@@ -1516,39 +1726,49 @@ export default function Dashboard({
                   </div>
                 </div>
 
-                {/* Sub-tabs for Dépôt, Retrait, Achats */}
-                <div className="flex gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800/85">
-                  <button
-                    onClick={() => setProfileHistoryTab('deposits')}
-                    className={`flex-1 py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
-                      profileHistoryTab === 'deposits' 
-                        ? 'bg-yellow-500 text-slate-950 shadow-md' 
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
-                    }`}
-                  >
-                    📥 Dépôts ({allDeposits.length})
-                  </button>
-                  <button
-                    onClick={() => setProfileHistoryTab('withdrawals')}
-                    className={`flex-1 py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
-                      profileHistoryTab === 'withdrawals' 
-                        ? 'bg-yellow-500 text-slate-950 shadow-md' 
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
-                    }`}
-                  >
-                    📤 Retraits ({allWithdrawals.length})
-                  </button>
-                  <button
-                    onClick={() => setProfileHistoryTab('purchases')}
-                    className={`flex-1 py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
-                      profileHistoryTab === 'purchases' 
-                        ? 'bg-yellow-500 text-slate-950 shadow-md' 
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
-                    }`}
-                  >
-                    🛍️ Achats ({activeInvestments.length})
-                  </button>
-                </div>
+                 {/* Sub-tabs for Dépôt, Retrait, Achats et Notifications */}
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800/85">
+                   <button
+                     onClick={() => setProfileHistoryTab('deposits')}
+                     className={`py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                       profileHistoryTab === 'deposits' 
+                         ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                         : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                     }`}
+                   >
+                     📥 Dépôts ({allDeposits.length})
+                   </button>
+                   <button
+                     onClick={() => setProfileHistoryTab('withdrawals')}
+                     className={`py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                       profileHistoryTab === 'withdrawals' 
+                         ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                         : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                     }`}
+                   >
+                     📤 Retraits ({allWithdrawals.length})
+                   </button>
+                   <button
+                     onClick={() => setProfileHistoryTab('purchases')}
+                     className={`py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                       profileHistoryTab === 'purchases' 
+                         ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                         : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                     }`}
+                   >
+                     🛍️ VIP ({activeInvestments.length})
+                   </button>
+                   <button
+                     onClick={() => setProfileHistoryTab('notifications')}
+                     className={`py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                       profileHistoryTab === 'notifications' 
+                         ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                         : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                     }`}
+                   >
+                     🔔 Actu ({notifications.length})
+                   </button>
+                 </div>
 
                 {/* Tab content rendering */}
                 <div className="space-y-3 min-h-[160px] max-h-[350px] overflow-y-auto pr-1">
@@ -1679,6 +1899,34 @@ export default function Dashboard({
                                 </button>
                               )}
                             </div>
+                          </div>
+                        ))
+                      )}
+                    </>
+                  )}
+
+                  {/* NOTIFICATIONS & ANNOUNCEMENTS HISTORY */}
+                  {profileHistoryTab === 'notifications' && (
+                    <>
+                      {notifications.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500 text-xs font-bold leading-relaxed">
+                          Aucun message ou actualité.<br/>
+                          <span className="text-[10px] font-medium text-slate-600">Les notifications publiques et alertes s'afficheront ici.</span>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div key={n.id} className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-2xl flex flex-col gap-1.5 text-xs text-left animate-fade-in">
+                            <div className="flex justify-between items-center gap-2 border-b border-slate-800/60 pb-1.5">
+                              <span className="text-[10px] font-black text-[#1b64d9] uppercase tracking-tight font-sans flex items-center gap-1">
+                                📢 {n.title || "ANNONCE OFFICIELLE"}
+                              </span>
+                              <span className="text-[9px] text-slate-500 font-mono shrink-0">
+                                {new Date(n.createdAt).toLocaleDateString('fr-FR', {hour: '2-digit', minute:'2-digit'})}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-300 leading-relaxed font-bold whitespace-pre-line mt-1">
+                              {n.message}
+                            </p>
                           </div>
                         ))
                       )}
@@ -1902,6 +2150,84 @@ export default function Dashboard({
 
       {/* FOOTER NAVIGATION */}
 
+      {/* CUSTOM LUXURY ALERT/CONFIRM POPUP MODAL */}
+      {customModal.isOpen && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md z-50 animate-fade-in">
+          <div className="bg-[#eef3fc] border-2 border-slate-200/50 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl space-y-5 text-slate-800 text-center animate-scale-up">
+            
+            {/* Modal Icon Indicator based on type */}
+            <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center shadow-md">
+              {customModal.type === 'success' && (
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                  <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
+                </div>
+              )}
+              {customModal.type === 'error' && (
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                  <AlertCircle className="w-7 h-7 stroke-[2.5]" />
+                </div>
+              )}
+              {customModal.type === 'info' && (
+                <div className="w-12 h-12 rounded-full bg-[#1b64d9]/10 flex items-center justify-center text-[#1b64d9]">
+                  <HelpCircle className="w-7 h-7 stroke-[2.5]" />
+                </div>
+              )}
+              {customModal.type === 'confirm' && (
+                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                  <Gift className="w-7 h-7 stroke-[2.5] animate-bounce" />
+                </div>
+              )}
+            </div>
+
+            {/* Title & Message */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-black tracking-tight text-slate-800 uppercase font-sans">
+                {customModal.title}
+              </h3>
+              <p className="text-xs text-slate-600 font-bold leading-relaxed whitespace-pre-line text-center">
+                {customModal.message}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex gap-2.5">
+              {customModal.type === 'confirm' ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setCustomModal(prev => ({ ...prev, isOpen: false }));
+                    }}
+                    className="flex-1 py-3 text-slate-600 bg-slate-200 hover:bg-slate-300 active:scale-95 transition-all text-xs font-black uppercase tracking-widest rounded-2xl cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCustomModal(prev => ({ ...prev, isOpen: false }));
+                      if (customModal.onConfirm) {
+                        customModal.onConfirm();
+                      }
+                    }}
+                    className="flex-1 py-3 text-white bg-gradient-to-r from-[#1b64d9] to-[#046fff] hover:opacity-95 active:scale-95 transition-all text-xs font-black uppercase tracking-widest rounded-2xl cursor-pointer shadow-md"
+                  >
+                    OK / Confirmer
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    setCustomModal(prev => ({ ...prev, isOpen: false }));
+                  }}
+                  className="w-full py-3.5 text-white bg-gradient-to-r from-[#1b64d9] to-[#046fff] hover:opacity-95 active:scale-95 transition-all text-xs font-black uppercase tracking-widest rounded-2xl cursor-pointer shadow-md"
+                >
+                  OK
+                </button>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

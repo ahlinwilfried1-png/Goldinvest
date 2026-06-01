@@ -57,6 +57,7 @@ export default function Auth({
   const [loginSelectedCode, setLoginSelectedCode] = useState('+237');
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [resetTip, setResetTip] = useState(false);
 
   // Form submission dispatcher
   const handleSubmit = (e: React.FormEvent) => {
@@ -329,13 +330,19 @@ export default function Auth({
                   <button 
                     type="button"
                     onClick={() => {
-                      alert("Pour réinitialiser votre mot de passe d'investisseur, veuillez contacter notre équipe d'assistance WhatsApp officielle ou utiliser le code de démonstration par défaut (user123).");
+                      setResetTip(!resetTip);
                     }}
                     className="text-[10px] text-[#1b64d9] font-black hover:underline"
                   >
                     Mot de passe oublié ?
                   </button>
                 </div>
+
+                {resetTip && (
+                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] font-bold text-red-700 leading-normal animate-pulse text-left">
+                    Pour réinitialiser votre mot de passe d'investisseur, veuillez contacter notre groupe d'assistance WhatsApp officielle.
+                  </div>
+                )}
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
