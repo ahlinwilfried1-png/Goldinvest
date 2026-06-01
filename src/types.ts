@@ -11,6 +11,7 @@ export interface User {
   referralCode: string;
   referredBy?: string;
   isBlocked: boolean;
+  withdrawBlocked?: boolean;
   role: 'user' | 'admin';
   createdAt: string;
 }

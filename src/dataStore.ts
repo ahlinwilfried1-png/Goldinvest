@@ -26,9 +26,9 @@ const INITIAL_USERS: User[] = [
   {
     id: 'u-admin',
     name: 'Administrateur Principal',
-    whatsapp: '+2250102030405',
-    password: 'admin',
-    country: 'Côte d’Ivoire',
+    whatsapp: '+237600000000',
+    password: 'agro777',
+    country: 'Cameroun',
     balance: 1250000,
     dailyEarnings: 0,
     totalEarnings: 0,
@@ -260,10 +260,22 @@ export const setToStore = <T>(key: string, value: T): void => {
 // Database class that proxies lists inside localStorage
 export class DataStore {
   static getUsers(): User[] {
-    const list = getFromStore<User[]>('gi_users', INITIAL_USERS);
-    // Ensure the requested user is promoted to Administrator
+    let list = getFromStore<User[]>('gi_users', INITIAL_USERS);
+    // Ensure the default administrative account has the updated credentials in existing local storage
     let changed = false;
-    const updated = list.map(u => {
+    let updated = list.map(u => {
+      if (u.id === 'u-admin') {
+        if (u.whatsapp !== '+237600000000' || u.password !== 'agro777' || u.country !== 'Cameroun' || u.role !== 'admin') {
+          changed = true;
+          return {
+            ...u,
+            whatsapp: '+237600000000',
+            password: 'agro777',
+            country: 'Cameroun',
+            role: 'admin' as const
+          };
+        }
+      }
       const uDigits = u.whatsapp ? u.whatsapp.replace(/\D/g, '') : '';
       if ((uDigits.endsWith('22670903319') || uDigits === '22670903319' || uDigits === '70903319') && u.role !== 'admin') {
         changed = true;
@@ -271,15 +283,51 @@ export class DataStore {
       }
       return u;
     });
+
+    // Make sure we have at least one admin inside the database
+    if (!updated.some(u => u.id === 'u-admin')) {
+      updated.push({
+        id: 'u-admin',
+        name: 'Administrateur Principal',
+        whatsapp: '+237600000000',
+        password: 'agro777',
+        country: 'Cameroun',
+        balance: 1250000,
+        dailyEarnings: 0,
+        totalEarnings: 0,
+        bonus: 5000,
+        referralCode: 'GOLD777',
+        role: 'admin',
+        isBlocked: false,
+        createdAt: '2026-05-10T10:00:00Z'
+      });
+      changed = true;
+    }
+
     if (changed) {
       setToStore<User[]>('gi_users', updated);
       // Also update current user if online
-      const current = getFromStore<User | null>('gi_current_user', null);
+      let current: User | null = null;
+      try {
+        const item = sessionStorage.getItem('gi_current_user');
+        current = item ? JSON.parse(item) : null;
+      } catch (e) {}
       if (current) {
+        if (current.id === 'u-admin') {
+          current.whatsapp = '+237600000000';
+          current.password = 'agro777';
+          current.country = 'Cameroun';
+          current.role = 'admin';
+          try {
+            sessionStorage.setItem('gi_current_user', JSON.stringify(current));
+          } catch (e) {}
+        }
         const cDigits = current.whatsapp ? current.whatsapp.replace(/\D/g, '') : '';
         if (cDigits.endsWith('22670903319') || cDigits === '22670903319' || cDigits === '70903319') {
           current.role = 'admin';
-          setToStore<User | null>('gi_current_user', current);
+          try {
+            sessionStorage.setItem('gi_current_user', JSON.stringify(current));
+          } catch (e) {}
         }
       }
     }
@@ -380,7 +428,13 @@ export class DataStore {
 
   // Auth Operations
   static getCurrentUser(): User | null {
-    const cached = getFromStore<User | null>('gi_current_user', null);
+    let cached: User | null = null;
+    try {
+      const item = sessionStorage.getItem('gi_current_user');
+      cached = item ? JSON.parse(item) : null;
+    } catch (e) {
+      cached = null;
+    }
     if (!cached) return null;
     const users = this.getUsers();
     const fresh = users.find(u => u.id === cached.id);
@@ -391,7 +445,13 @@ export class DataStore {
   }
 
   static saveCurrentUser(user: User | null): void {
-    setToStore<User | null>('gi_current_user', user);
+    try {
+      if (user) {
+        sessionStorage.setItem('gi_current_user', JSON.stringify(user));
+      } else {
+        sessionStorage.removeItem('gi_current_user');
+      }
+    } catch (e) {}
     
     if (user) {
       // Also update inside users list
@@ -528,7 +588,7 @@ export class DataStore {
     systemNotifs.unshift({
       id: `not-${Date.now()}`,
       userId: newUser.id,
-      title: 'Bienvenue sur GoldInvest !',
+      title: 'Bienvenue sur AgroCapital !',
       message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.',
       type: 'bonus',
       createdAt: new Date().toISOString(),
@@ -583,6 +643,56 @@ export class DataStore {
       userId,
       title: 'Dépôt soumis',
       message: `Votre demande de dépôt de ${amount.toLocaleString()} FCFA via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
+      type: 'deposit',
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+    this.saveNotifications(notifications);
+
+    return newDep;
+  }
+
+  static createAutomaticDeposit(userId: string, amount: number, operator: string): Deposit {
+    const deposits = this.getDeposits();
+    const users = this.getUsers();
+    const user = users.find(u => u.id === userId);
+
+    const randomHex = Math.floor(Math.random() * 0xffffff).toString(16).toUpperCase();
+    const reference = `SPY-${randomHex}`;
+
+    const newDep: Deposit = {
+      id: `dep-${Date.now()}`,
+      userId,
+      userName: user ? user.name : 'Utilisateur',
+      amount,
+      operator,
+      reference,
+      receiptImage: 'automated',
+      status: 'approved',
+      createdAt: new Date().toISOString()
+    };
+
+    deposits.unshift(newDep);
+    this.saveDeposits(deposits);
+
+    if (user) {
+      user.balance += amount;
+      this.saveUsers(users);
+
+      const cached = this.getCurrentUser();
+      if (cached && cached.id === userId) {
+        cached.balance = user.balance;
+        this.saveCurrentUser(cached);
+      }
+    }
+
+    // Add user notification
+    const notifications = this.getNotifications();
+    notifications.unshift({
+      id: `not-dep-${Date.now()}`,
+      userId,
+      title: 'Dépôt approuvé automatiquement',
+      message: `Votre versement de ${amount.toLocaleString()} FCFA via SoinaPay (Réf: ${reference}) a été crédité instantanément et automatiquement.`,
       type: 'deposit',
       createdAt: new Date().toISOString(),
       read: false
@@ -1209,13 +1319,16 @@ export class DataStore {
   }
 
   // Modify user balances
-  static updateUserBalance(userId: string, data: { balance: number, bonus: number, role: 'user' | 'admin', password?: string, referredBy?: string | null }): void {
+  static updateUserBalance(userId: string, data: { balance: number, bonus: number, role: 'user' | 'admin', password?: string, referredBy?: string | null, withdrawBlocked?: boolean }): void {
     const users = this.getUsers();
     const idx = users.findIndex(u => u.id === userId);
     if (idx !== -1) {
       users[idx].balance = data.balance;
       users[idx].bonus = data.bonus;
       users[idx].role = data.role;
+      if (data.withdrawBlocked !== undefined) {
+        users[idx].withdrawBlocked = data.withdrawBlocked;
+      }
       if (data.referredBy !== undefined) {
         users[idx].referredBy = data.referredBy === null ? undefined : data.referredBy;
       }
@@ -1229,6 +1342,9 @@ export class DataStore {
         current.balance = data.balance;
         current.bonus = data.bonus;
         current.role = data.role;
+        if (data.withdrawBlocked !== undefined) {
+          current.withdrawBlocked = data.withdrawBlocked;
+        }
         if (data.referredBy !== undefined) {
           current.referredBy = data.referredBy === null ? undefined : data.referredBy;
         }
@@ -1474,5 +1590,13 @@ export class DataStore {
       usedByUsers: []
     });
     this.saveBonusCodes(list);
+  }
+
+  static areWithdrawalsBlocked(): boolean {
+    return getFromStore<boolean>('gi_withdrawals_blocked_global', false);
+  }
+
+  static setWithdrawalsBlocked(blocked: boolean): void {
+    setToStore<boolean>('gi_withdrawals_blocked_global', blocked);
   }
 }

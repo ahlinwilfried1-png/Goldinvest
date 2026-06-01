@@ -1,6 +1,6 @@
 {
-  "name": "GoldInvest Premium",
-  "description": "Plateforme d'investissement moderne, sécurisée et professionnelle avec tableau de bord premium, système de parrainage MLM et panneau d'administration.",
+  "name": "AgroCapital",
+  "description": "Plateforme d'investissement agro-industriel moderne, sécurisée et professionnelle avec tableau de bord premium, système de parrainage MLM et panneau d'administration.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

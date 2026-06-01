@@ -54,7 +54,8 @@ export default function Auth({
   const [referralCode, setReferralCode] = useState('');
 
   // Sign in fields
-  const [loginWhatsapp, setLoginWhatsapp] = useState('');
+  const [loginSelectedCode, setLoginSelectedCode] = useState('+237');
+  const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
   // Form submission dispatcher
@@ -114,8 +115,8 @@ export default function Auth({
 
       } else {
         // Login validations
-        if (!loginWhatsapp.trim()) {
-          setErrorMessage('Le numéro WhatsApp est requis.');
+        if (!loginPhone.trim()) {
+          setErrorMessage('Le numéro de téléphone est requis.');
           setLoading(false);
           return;
         }
@@ -125,7 +126,14 @@ export default function Auth({
           return;
         }
 
-        const result = DataStore.login(loginWhatsapp, loginPassword);
+        let finalLoginWhatsapp = loginPhone.trim().replace(/\s+/g, '');
+        // If it's a simple number and doesn't start with "+" or have "@" or equal 'admin', apply country prefix
+        if (!finalLoginWhatsapp.startsWith('+') && !finalLoginWhatsapp.includes('@') && finalLoginWhatsapp !== 'admin') {
+          const cleanPhone = finalLoginWhatsapp.replace(/^0+/, '');
+          finalLoginWhatsapp = `${loginSelectedCode}${cleanPhone}`;
+        }
+
+        const result = DataStore.login(finalLoginWhatsapp, loginPassword);
         if (result.success && result.user) {
           setSuccessMessage(result.message);
           setTimeout(() => {
@@ -149,26 +157,17 @@ export default function Auth({
       {/* Main card */}
       <div className="w-full max-w-lg bg-[#eef3fc] border-2 border-slate-200/50 rounded-3xl p-6 md:p-8 shadow-2xl relative">
         
-        {/* Header navigation */}
-        <button 
-          onClick={onBackToHome}
-          className="inline-flex items-center space-x-2 text-xs text-slate-500 hover:text-[#1b64d9] transition-colors mb-6 group font-black uppercase tracking-wider"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Fermer et retourner au site</span>
-        </button>
-
         {/* Brand logo */}
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1b64d9] to-[#046fff] flex items-center justify-center mx-auto shadow-md mb-3">
-            <Lock className="w-5 h-5 text-white stroke-[2.5]" />
+        <div className="text-center mb-6">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1b64d9] to-[#046fff] flex items-center justify-center mx-auto shadow-md mb-2">
+            <Lock className="w-4 h-4 text-white stroke-[2.5]" />
           </div>
-          <h2 className="text-2xl font-sans font-black text-slate-800 uppercase tracking-tight">
-            {isRegister ? 'Créer un Compte VIP' : 'Connexion Premium'}
+          <h2 className="text-xl font-sans font-black text-slate-800 uppercase tracking-tight">
+            {isRegister ? 'Inscription' : 'Connexion Premium'}
           </h2>
-          <p className="text-xs text-slate-500 font-bold mt-1.5 leading-relaxed">
+          <p className="text-[11px] text-slate-500 font-bold mt-1 leading-relaxed">
             {isRegister 
-              ? 'Créez votre dossier d\'affiliation et recevez 200 XAF gratuit immédiatement' 
+              ? 'Recevez 200 XAF gratuit immédiatement' 
               : 'Accédez de manière entièrement cryptée à vos investissements passifs'
             }
           </p>
@@ -290,26 +289,37 @@ export default function Auth({
                   onChange={(e) => setReferralCode(e.target.value)}
                   className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-[#1b64d9] font-black tracking-widest font-mono uppercase focus:outline-none transition-colors"
                 />
-                <span className="text-[10px] text-slate-500 font-bold mt-1 block">Renseignez le code d'un ami pour lui reverser des commissions d'affiliation de Niveau 1 (20%).</span>
+                <span className="text-[10px] text-slate-500 font-bold mt-1 block">Renseignez le code d'un parrain si vous en avez un.</span>
               </div>
             </>
           ) : (
             /* LOGIN FIELDS */
             <>
               <div>
-                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Numéro WhatsApp ou Email</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-3.5 text-slate-400">
-                    <Smartphone className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: +225 07 08 09 10 11"
-                    value={loginWhatsapp}
-                    onChange={(e) => setLoginWhatsapp(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-10 pr-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
-                  />
+                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Pays et Numéro de téléphone</label>
+                <div className="flex gap-2">
+                  <select
+                    value={loginSelectedCode}
+                    onChange={(e) => setLoginSelectedCode(e.target.value)}
+                    className="bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-3 text-xs md:text-sm text-slate-800 font-black focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
+                  >
+                    {eligibleCountries.map((c, i) => (
+                      <option key={i} value={c.code}>{c.code} ({c.name})</option>
+                    ))}
+                  </select>
+                  <div className="relative flex-1">
+                    <span className="absolute left-3.5 top-3.5 text-slate-400">
+                      <Smartphone className="w-4 h-4" />
+                    </span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: 0708091011 (ou email/admin)"
+                      value={loginPhone}
+                      onChange={(e) => setLoginPhone(e.target.value)}
+                      className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-10 pr-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -344,15 +354,6 @@ export default function Auth({
                   </button>
                 </div>
               </div>
-
-              {/* Quick tip demo credentials */}
-              <div className="p-3 bg-white border-2 border-slate-200 rounded-2xl text-[11px] font-bold text-slate-600 leading-relaxed">
-                <span className="font-black text-[#1b64d9] block mb-0.5">🔑 Identifiants de test (Démonstration) :</span>
-                <ul className="list-disc pl-4 space-y-0.5 font-mono">
-                  <li>Compte Admin: <strong className="text-slate-800">+2250102030405</strong> / <strong className="text-slate-800">admin</strong></li>
-                  <li>Compte Client: <strong className="text-slate-800">+2250708091011</strong> / <strong className="text-slate-800">user123</strong></li>
-                </ul>
-              </div>
             </>
           )}
 
@@ -376,7 +377,7 @@ export default function Auth({
         {/* TOGGLE AUTH */}
         <div className="mt-6 pt-4 border-t border-slate-200 text-center text-xs">
           <span className="text-slate-500 font-bold">
-            {isRegister ? 'Déjà membre de GoldInvest ?' : 'Nouveau sur notre plateforme ?'}
+            {isRegister ? 'Déjà membre de AgroCapital ?' : 'Nouveau sur notre plateforme ?'}
           </span>{' '}
           <button
             onClick={() => {

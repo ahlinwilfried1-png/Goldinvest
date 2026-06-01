@@ -56,6 +56,8 @@ export default function AdminPanel({
   const [editRole, setEditRole] = useState<'user' | 'admin'>('user');
   const [editPassword, setEditPassword] = useState<string>('');
   const [editReferredBy, setEditReferredBy] = useState<string>('');
+  const [editWithdrawBlocked, setEditWithdrawBlocked] = useState<boolean>(false);
+  const [globalWithdrawBlocked, setGlobalWithdrawBlocked] = useState<boolean>(() => DataStore.areWithdrawalsBlocked());
 
   // Edit product modal state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -135,6 +137,7 @@ export default function AdminPanel({
     setEditRole(user.role);
     setEditPassword(user.password || (user.role === 'admin' ? 'admin' : 'user123'));
     setEditReferredBy(user.referredBy || '');
+    setEditWithdrawBlocked(user.withdrawBlocked === true);
   };
 
   const handleSaveUser = () => {
@@ -144,7 +147,8 @@ export default function AdminPanel({
         bonus: editBonus,
         role: editRole,
         password: editPassword,
-        referredBy: editReferredBy === '' ? null : editReferredBy
+        referredBy: editReferredBy === '' ? null : editReferredBy,
+        withdrawBlocked: editWithdrawBlocked
       });
       setEditingUser(null);
       syncLocalStates();
@@ -350,6 +354,17 @@ export default function AdminPanel({
                   ))}
                 </select>
                 <p className="text-[10px] text-slate-500 mt-1">Vous pouvez associer l'investisseur à un parrain ou choisir "Aucun" pour supprimer son affiliation.</p>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Autorisation des retraits</label>
+                <select
+                  value={editWithdrawBlocked ? 'true' : 'false'}
+                  onChange={(e) => setEditWithdrawBlocked(e.target.value === 'true')}
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                >
+                  <option value="false">✔️ Autorisé (Peut effectuer des retraits)</option>
+                  <option value="true">❌ Bloqué (Interdit de retirer)</option>
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Mot de passe d'accès</label>
@@ -660,76 +675,125 @@ export default function AdminPanel({
 
       {/* 2. WITHDRAWALS QUEUE */}
       {activeAdminTab === 'withdrawals' && (
-        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Demandes de retraits passées</h3>
-            <span className="text-[11px] text-slate-400">Total : {withdrawals.length} demandes</span>
+        <div className="space-y-6">
+          {/* Global Toggle Settings Card */}
+          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 text-left">
+            <h4 className="font-display font-bold text-xs text-yellow-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+              <span>⚙️</span>
+              <span>Contrôle Système Global des Retraits</span>
+            </h4>
+            <p className="text-xs text-slate-400 leading-relaxed mb-4">
+              Ce commutateur permet de suspendre instantanément toutes les demandes de retrait sur la plateforme (par ex. pendant une période de maintenance). Lorsque les retraits sont bloqués, les membres reçoivent un avis poli s'ils tentent de retirer leurs fonds.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-slate-950 rounded-xl border border-slate-800">
+              <div className="space-y-0.5">
+                <span className="text-xs uppercase font-extrabold text-white block">Statut des retraits</span>
+                <span className="text-[10px] text-slate-500 font-mono block">État de l'interrupteur global de décaissement</span>
+              </div>
+
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    DataStore.setWithdrawalsBlocked(false);
+                    setGlobalWithdrawBlocked(false);
+                  }}
+                  className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    !globalWithdrawBlocked 
+                      ? 'bg-green-500 text-slate-950 shadow-md' 
+                      : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  🟢 Retraits Ouverts / Autorisés
+                </button>
+                <button
+                  onClick={() => {
+                    DataStore.setWithdrawalsBlocked(true);
+                    setGlobalWithdrawBlocked(true);
+                  }}
+                  className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    globalWithdrawBlocked 
+                      ? 'bg-red-500 text-white shadow-md' 
+                      : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400'
+                  }`}
+                >
+                  🔴 Bloquer Tous les Retraits (Global)
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300 border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
-                  <th className="p-3">Destinataire</th>
-                  <th className="p-3">Numéro Sollicité</th>
-                  <th className="p-3 font-mono text-yellow-400">Montant</th>
-                  <th className="p-3">Opérateur</th>
-                  <th className="p-3">Date de Réception</th>
-                  <th className="p-3">Statut</th>
-                  <th className="p-3 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {withdrawals.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-6 text-center text-slate-500">Aucun retrait en attente.</td>
+          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 overflow-hidden text-left">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Demandes de retraits passées</h3>
+              <span className="text-[11px] text-slate-400">Total : {withdrawals.length} demandes</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300 border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
+                    <th className="p-3">Destinataire</th>
+                    <th className="p-3">Numéro Sollicité</th>
+                    <th className="p-3 font-mono text-yellow-400">Montant</th>
+                    <th className="p-3">Opérateur</th>
+                    <th className="p-3">Date de Réception</th>
+                    <th className="p-3">Statut</th>
+                    <th className="p-3 text-center">Action</th>
                   </tr>
-                ) : (
-                  withdrawals.map((wth) => (
-                    <tr key={wth.id} className="hover:bg-slate-900/30">
-                      <td className="p-3 font-semibold text-white">{wth.userName}</td>
-                      <td className="p-3 font-mono font-bold text-emerald-400">{wth.number}</td>
-                      <td className="p-3 text-yellow-400 font-bold font-mono">-{wth.amount.toLocaleString()} FCFA</td>
-                      <td className="p-3">{wth.operator}</td>
-                      <td className="p-3 text-[10px] text-slate-400">{new Date(wth.createdAt).toLocaleString()}</td>
-                      <td className="p-3">
-                        {wth.status === 'approved' && (
-                          <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-bold font-mono">EXPÉDIÉ (2H)</span>
-                        )}
-                        {wth.status === 'rejected' && (
-                          <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded text-[9px] font-bold font-mono">REJETÉ</span>
-                        )}
-                        {wth.status === 'pending' && (
-                          <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 rounded text-[9px] font-bold font-mono animate-pulse">ATTENTE</span>
-                        )}
-                      </td>
-                      <td className="p-3 text-center">
-                        {wth.status === 'pending' ? (
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => handleApproveWithdrawal(wth.id)}
-                              className="w-7 h-7 bg-green-500 text-slate-950 flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
-                              title="Valider le retrait"
-                            >
-                              <Check className="w-4 h-4 text-slate-950 stroke-[3]" />
-                            </button>
-                            <button
-                              onClick={() => handleRejectWithdrawal(wth.id)}
-                              className="w-7 h-7 bg-red-500 text-white flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
-                              title="Rejeter et recréditer"
-                            >
-                              <X className="w-4 h-4 stroke-[3]" />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-slate-500 text-[11px] font-mono">Résolu</span>
-                        )}
-                      </td>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {withdrawals.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-6 text-center text-slate-500">Aucun retrait en attente.</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    withdrawals.map((wth) => (
+                      <tr key={wth.id} className="hover:bg-slate-900/30">
+                        <td className="p-3 font-semibold text-white">{wth.userName}</td>
+                        <td className="p-3 font-mono font-bold text-emerald-400">{wth.number}</td>
+                        <td className="p-3 text-yellow-400 font-bold font-mono">-{wth.amount.toLocaleString()} FCFA</td>
+                        <td className="p-3">{wth.operator}</td>
+                        <td className="p-3 text-[10px] text-slate-400">{new Date(wth.createdAt).toLocaleString()}</td>
+                        <td className="p-3">
+                          {wth.status === 'approved' && (
+                            <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-bold font-mono">EXPÉDIÉ (2H)</span>
+                          )}
+                          {wth.status === 'rejected' && (
+                            <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded text-[9px] font-bold font-mono">REJETÉ</span>
+                          )}
+                          {wth.status === 'pending' && (
+                            <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 rounded text-[9px] font-bold font-mono animate-pulse">ATTENTE</span>
+                          )}
+                        </td>
+                        <td className="p-3 text-center">
+                          {wth.status === 'pending' ? (
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handleApproveWithdrawal(wth.id)}
+                                className="w-7 h-7 bg-green-500 text-slate-950 flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
+                                title="Valider le retrait"
+                              >
+                                <Check className="w-4 h-4 text-slate-950 stroke-[3]" />
+                              </button>
+                              <button
+                                onClick={() => handleRejectWithdrawal(wth.id)}
+                                className="w-7 h-7 bg-red-500 text-white flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
+                                title="Rejeter et recréditer"
+                              >
+                                <X className="w-4 h-4 stroke-[3]" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-slate-500 text-[11px] font-mono">Résolu</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -805,7 +869,12 @@ export default function AdminPanel({
                       return (
                         <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
                           <td className="p-3">
-                            <span className="font-semibold text-white block">{user.name}</span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-white">{user.name}</span>
+                              {user.withdrawBlocked && (
+                                <span className="bg-red-550/10 text-red-500 border border-red-500/20 text-[8px] font-black px-1.5 py-0.5 rounded tracking-wider uppercase font-mono leading-none">🚫 Retrait Bloqué</span>
+                              )}
+                            </div>
                             <span className="text-[10px] text-slate-400 block">{user.country}</span>
                           </td>
                           <td className="p-3 font-mono text-slate-300">
@@ -1175,7 +1244,7 @@ export default function AdminPanel({
             </h3>
 
             <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur GoldInvest.
+              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur AgroCapital.
             </p>
 
             <form onSubmit={handleSendGlobalAlert} className="space-y-4">

@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import Home from './components/Home';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import { User, Product } from './types';
 import { DataStore } from './dataStore';
 
 export default function App() {
-  // Navigation: 'home' | 'auth' | 'dashboard'
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'auth' | 'dashboard'>('home');
-  const [isRegisterFlow, setIsRegisterFlow] = useState(false);
+  // Navigation: 'auth' | 'dashboard'
+  const [currentScreen, setCurrentScreen] = useState<'auth' | 'dashboard'>('auth');
+  const [isRegisterFlow, setIsRegisterFlow] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -36,6 +35,10 @@ export default function App() {
     } else if (active) {
       setUser(active);
       setCurrentScreen('dashboard');
+    } else {
+      // Force registration page on fresh visits by non-logged-in users
+      setIsRegisterFlow(true);
+      setCurrentScreen('auth');
     }
   }, []);
 
@@ -47,7 +50,8 @@ export default function App() {
   const handleLogout = () => {
     DataStore.saveCurrentUser(null);
     setUser(null);
-    setCurrentScreen('home');
+    setIsRegisterFlow(true);
+    setCurrentScreen('auth');
   };
 
   const navigateToAuth = (isRegister: boolean) => {
@@ -55,41 +59,19 @@ export default function App() {
     setCurrentScreen('auth');
   };
 
-  // Direct landing plan purchase fallback
-  const handleSelectProductFromHome = (product: Product) => {
-    if (user) {
-      // If already logged in, go straight to the products tab in the dashboard
-      setCurrentScreen('dashboard');
-    } else {
-      // Prompt register first
-      navigateToAuth(true);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-black font-sans tracking-tight leading-normal overflow-x-hidden select-none">
-      
-      {/* 1. MARKETING PORTAL LANDING */}
-      {currentScreen === 'home' && (
-        <Home 
-          products={products}
-          onNavigateToAuth={navigateToAuth}
-          onSelectProduct={handleSelectProductFromHome}
-          isLoggedIn={!!user}
-          onGoToDashboard={() => setCurrentScreen('dashboard')}
-        />
-      )}
 
-      {/* 2. AUTHENTICATION SCREENS */}
+      {/* 1. AUTHENTICATION SCREENS (REGISTRATION / LOGIN) */}
       {currentScreen === 'auth' && (
         <Auth 
           initialIsRegister={isRegisterFlow}
           onAuthSuccess={handleAuthSuccess}
-          onBackToHome={() => setCurrentScreen('home')}
+          onBackToHome={() => {}}
         />
       )}
 
-      {/* 3. INVESTOR DESKTOP & MOBILE DASHBOARD AREA */}
+      {/* 2. INVESTOR DESKTOP & MOBILE DASHBOARD AREA */}
       {currentScreen === 'dashboard' && user && (
         <Dashboard 
           currentUser={user}

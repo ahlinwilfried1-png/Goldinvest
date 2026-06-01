@@ -24,7 +24,8 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Headphones
+  Headphones,
+  X
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage } from '../types';
 import { DataStore } from '../dataStore';
@@ -107,7 +108,7 @@ export default function Dashboard({
   const [depositSuccess, setDepositSuccess] = useState<string>('');
 
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
-  const [withdrawOperator, setWithdrawOperator] = useState<string>('Orange Money');
+  const [withdrawOperator, setWithdrawOperator] = useState<string>('MTN Mobile Money (Cameroun)');
   const [withdrawNumber, setWithdrawNumber] = useState<string>('');
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [withdrawSuccess, setWithdrawSuccess] = useState<string>('');
@@ -129,16 +130,13 @@ export default function Dashboard({
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
 
+  const [productErrors, setProductErrors] = useState<Record<string, string>>({});
+
   // Layout states
   const [simulationStatus, setSimulationStatus] = useState<string>('');
   const [isAdminMode, setIsAdminMode] = useState(false);
-  const [showAnnouncementDismissible, setShowAnnouncementDismissible] = useState<boolean>(() => {
-    try {
-      return !sessionStorage.getItem('announcement_closed_goldinvest');
-    } catch {
-      return true;
-    }
-  });
+  const [showAnnouncementDismissible, setShowAnnouncementDismissible] = useState<boolean>(true);
+  const [profileHistoryTab, setProfileHistoryTab] = useState<'deposits' | 'withdrawals' | 'purchases'>('deposits');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -326,6 +324,8 @@ export default function Dashboard({
     }
   };
 
+  const [paymentProcessing, setPaymentProcessing] = useState<boolean>(false);
+
   const submitDeposit = (e: React.FormEvent) => {
     e.preventDefault();
     setDepositError('');
@@ -336,27 +336,19 @@ export default function Dashboard({
       setDepositError('Le montant minimum pour un versement est de 3 000 FCFA.');
       return;
     }
-    if (!depositRef.trim()) {
-      setDepositError('La référence de transaction Mobile Money est obligatoire.');
-      return;
-    }
-    if (!receiptBase64) {
-      setDepositError('Veuillez joindre la capture d\'écran de votre reçu de paiement pour vérification.');
-      return;
-    }
 
-    DataStore.createDeposit(userState.id, amt, depositOperator, depositRef, receiptBase64);
-    setDepositSuccess('Votre versement a été soumis ! Attendez la vérification de l\'administrateur ou connectez-vous comme admin pour l\'approuver.');
+    setPaymentProcessing(true);
     
-    // Clear inputs
-    setDepositRef('');
-    setReceiptBase64('');
-    syncDashboardData();
+    // Redirect to pay link
+    window.open("https://soinapay.com/pay/1bfvpznx", "_blank");
 
-    // Auto switch after 3 seconds
+    // Automatically approve and credit after 4 seconds to simulate automatic reconciliation upon payment completion
     setTimeout(() => {
-      setDepositSuccess('');
-    }, 5000);
+      DataStore.createAutomaticDeposit(userState.id, amt, depositOperator);
+      setPaymentProcessing(false);
+      setDepositSuccess(`Paiement de ${amt.toLocaleString()} FCFA reçu avec succès ! Votre compte a été automatiquement et instantanément crédité.`);
+      syncDashboardData();
+    }, 4500);
   };
 
   // Withdrawal event
@@ -364,6 +356,15 @@ export default function Dashboard({
     e.preventDefault();
     setWithdrawError('');
     setWithdrawSuccess('');
+
+    if (DataStore.areWithdrawalsBlocked()) {
+      setWithdrawError("Les retraits sont temporairement suspendus sur l'ensemble de la plateforme par la direction pour des raisons de maintenance technique.");
+      return;
+    }
+    if (userState.withdrawBlocked) {
+      setWithdrawError("Votre accès aux retraits a été suspendu pour non-conformité. Veuillez contacter le service client VIP pour régulariser votre situation.");
+      return;
+    }
 
     const amt = parseInt(withdrawAmount);
     if (isNaN(amt) || amt < 1500) {
@@ -464,8 +465,17 @@ export default function Dashboard({
     }
 
     if (userState.balance < product.price) {
-      alert(`Solde insuffisant ! Votre solde est de ${userState.balance.toLocaleString()} FCFA mais ce package requiert ${product.price.toLocaleString()} FCFA. Veuillez effectuer un dépôt pour recharger votre compte.`);
-      setActiveTab('deposit');
+      setProductErrors(prev => ({
+        ...prev,
+        [product.id]: `Solde insuffisant ! Votre solde est de ${userState.balance.toLocaleString()} FCFA mais ce package requiert ${product.price.toLocaleString()} FCFA.`
+      }));
+      // Auto-clear after 10 seconds
+      setTimeout(() => {
+        setProductErrors(prev => ({
+          ...prev,
+          [product.id]: ''
+        }));
+      }, 10000);
       return;
     }
 
@@ -517,6 +527,146 @@ export default function Dashboard({
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1b64d9] to-[#03368a] text-white flex flex-col font-sans w-full max-w-full relative overflow-x-hidden">
       
+      {/* POPUP MODAL OVERLAY: INSCRIPTION REUSSIE */}
+      {showAnnouncementDismissible && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-slate-900 border-2 border-yellow-500/40 rounded-3xl p-6 text-left shadow-[0_0_50px_rgba(234,179,8,0.15)] relative max-w-2xl w-full overflow-hidden my-auto"
+          >
+            {/* Background glow decorator */}
+            <div className="absolute top-0 right-0 w-36 h-36 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            {/* Close cross/button */}
+            <button
+              onClick={() => setShowAnnouncementDismissible(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition-colors cursor-pointer z-[101]"
+              aria-label="Fermer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Title */}
+            <div className="flex items-center space-x-3 mb-5 border-b border-slate-800 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-yellow-500/20 flex items-center justify-center text-yellow-500 text-xl shadow-lg shadow-yellow-500/10">
+                <span>🎉</span>
+              </div>
+              <div>
+                <h3 className="text-base font-sans font-black text-white uppercase tracking-wider">Inscription Réussie !</h3>
+                <p className="text-[10px] sm:text-xs text-slate-350 font-mono">Félicitations pour votre inscription ! Voici vos informations d'investissement :</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+              {/* Left stats pillar */}
+              <div className="space-y-4 bg-slate-950/70 p-4.5 border border-slate-800/80 rounded-2xl">
+                <div className="flex items-start sm:items-center space-x-2.5 text-slate-200">
+                  <span className="text-base select-none mt-0.5 sm:mt-0">🌍</span>
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    <span className="font-bold text-slate-300">Pays éligibles :</span>
+                    <span className="bg-slate-850 px-2 py-0.5 rounded text-white font-extrabold text-[10px] flex items-center gap-1">
+                      Cameroun 🇨🇲
+                    </span>
+                    <span className="bg-slate-850 px-2 py-0.5 rounded text-white font-extrabold text-[10px] flex items-center gap-1">
+                      Burkina Faso 🇧🇫
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2.5 text-slate-200">
+                  <span className="text-base select-none">🎁</span>
+                  <div className="text-xs">
+                    <span className="font-bold text-slate-300">Bonus inscription :</span>{' '}
+                    <span className="text-emerald-400 font-extrabold text-sm ml-1">200 FCFA</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2.5 text-slate-200">
+                  <span className="text-base select-none">📥</span>
+                  <div className="text-xs">
+                    <span className="font-bold text-slate-300">Dépôt minimum :</span>{' '}
+                    <span className="text-yellow-400 font-mono font-black text-sm ml-1">3 000 FCFA</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2.5 text-slate-200">
+                  <span className="text-base select-none">💲</span>
+                  <div className="text-xs">
+                    <span className="font-bold text-slate-300">Retrait minimum :</span>{' '}
+                    <span className="text-white font-mono font-black text-sm ml-1">1 000 FCFA</span>{' '}
+                    <span className="text-[9px] text-red-400 font-sans tracking-tight font-black uppercase bg-red-950/50 px-1.5 py-0.5 rounded border border-red-900/40 ml-1.5 inline-block">(12% frais)</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2.5 text-slate-200">
+                  <span className="text-base select-none">🔥</span>
+                  <div className="text-xs">
+                    <span className="font-bold text-slate-300">Bonus quotidien :</span>{' '}
+                    <span className="text-[#00bd74] font-black text-sm ml-1">20 FCFA / jour</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right referral + link action Pillar */}
+              <div className="flex flex-col justify-between space-y-4">
+                <div className="bg-slate-950/70 p-4.5 border border-slate-800/80 rounded-2xl space-y-3">
+                  <div className="flex items-center space-x-2 text-slate-200">
+                    <span className="text-base select-none">🤝</span>
+                    <span className="font-bold text-slate-300 text-xs">Programme Parrainage :</span>
+                  </div>
+                  <div className="flex flex-col gap-2 font-mono text-[10px] font-black">
+                    <span className="bg-yellow-500/10 text-yellow-500 px-3 py-1.5 rounded-xl border border-yellow-500/20 shadow-sm flex items-center justify-between">
+                      <span>🥇 1er niveau</span>
+                      <span className="font-extrabold text-sm text-yellow-400">20%</span>
+                    </span>
+                    <span className="bg-slate-800/50 text-slate-300 px-3 py-1.5 rounded-xl shadow-sm flex items-center justify-between">
+                      <span>🥈 2ème niveau</span>
+                      <span className="font-extrabold text-[#00bd74]">3%</span>
+                    </span>
+                    <span className="bg-amber-950/25 text-amber-400 px-3 py-1.5 rounded-xl border border-amber-950/30 flex items-center justify-between">
+                      <span>🥉 3ème niveau</span>
+                      <span className="font-extrabold text-amber-400">1%</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Official Group Link Segment */}
+                <div className="bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-colors">
+                  <div className="space-y-1 text-left">
+                    <div className="flex items-center space-x-1.5 text-emerald-400 font-extrabold text-xs uppercase tracking-wider">
+                      <span>💬 Groupe officiel</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 select-all font-medium leading-normal">
+                      Rejoignez le groupe de discussion officiel AgroCapital.
+                    </p>
+                  </div>
+                  <a 
+                    href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=gi_t"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 hover:scale-[1.01] active:scale-[0.99] font-sans font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-550/15 flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer text-center"
+                  >
+                    <span>Rejoindre le Groupe 👉</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer hint */}
+            <div className="mt-5 pt-3.5 border-t border-slate-800 text-center flex justify-center">
+              <button
+                onClick={() => setShowAnnouncementDismissible(false)}
+                className="text-xs text-yellow-500 hover:text-yellow-400 font-bold uppercase tracking-wider px-4 py-1.5 bg-yellow-500/10 hover:bg-yellow-500/15 rounded-xl cursor-pointer transition-all"
+              >
+                Accéder à mon tableau de bord
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+      
       {/* SHIMMER BACKGROUND DECORATIONS */}
       <div className="absolute top-0 left-0 w-full max-w-[800px] h-[500px] bg-white/5 blur-[150px] rounded-full pointer-events-none -z-10 animate-pulse" />
 
@@ -529,8 +679,8 @@ export default function Dashboard({
               <TrendingUp className="w-5.5 h-5.5 text-slate-900 stroke-[3]" />
             </div>
             <div>
-              <span className="font-display font-black text-lg md:text-xl tracking-wide text-white block uppercase">GOLDINVEST ROYAL</span>
-              <span className="text-[10px] text-amber-300 font-mono block tracking-widest uppercase font-bold">Finance Évolutive</span>
+              <span className="font-display font-black text-lg md:text-xl tracking-wide text-white block uppercase">AGROCAPITAL ROYAL</span>
+              <span className="text-[10px] text-amber-300 font-mono block tracking-widest uppercase font-bold">Investissement Durable</span>
             </div>
           </div>
 
@@ -578,8 +728,6 @@ export default function Dashboard({
           {/* USER SUMMARY CARDS */}
           {activeTab === 'dashboard' && (
             <div className="space-y-4">
-
-              {/* WELCOME AREA */}
 
               {/* PRIMARY GOLD CARD & STATS ROW */}
               <motion.div 
@@ -679,7 +827,7 @@ export default function Dashboard({
                    >
                     <div className="flex-1 space-y-1">
                       <span className="text-xs text-amber-500 block uppercase font-extrabold tracking-wider flex items-center gap-1">🎁 Cadeau Journalier</span>
-                      <span className="text-sm font-bold text-slate-700 block leading-tight">Bonus d'investisseur fidèle GoldInvest.</span>
+                      <span className="text-sm font-bold text-slate-700 block leading-tight">Bonus d'investisseur fidèle AgroCapital.</span>
                     </div>
                     <button
                       onClick={handleDailyCheckin}
@@ -692,98 +840,74 @@ export default function Dashboard({
                 </motion.div>
               </motion.div>
 
-              {/* COMPREHENSIVE DIRECT VIP SUGGESTIONS OR ACTIVE INVESTMENTS */}
+              {/* COMPREHENSIVE DIRECT VIP SUGGESTIONS */}
               <div className="mt-6 pt-3 border-t border-white/10">
-                {activeInvestments.length === 0 ? (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center px-1">
-                      <h4 className="text-sm font-black text-amber-300 uppercase tracking-widest">🔥 Packages VIP Recommandés</h4>
-                      <button 
-                        onClick={() => setActiveTab('products')}
-                        className="text-xs text-white underline font-extrabold hover:text-amber-300 transition-colors"
-                      >
-                        Voir tout →
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {products.slice(0, 2).map((p) => (
-                        <div 
-                          key={p.id}
-                          className="bg-[#eef3fc] border-2 border-slate-205/30 rounded-3xl p-5 flex flex-col justify-between text-left space-y-4 shadow-sm"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-[10px] text-white font-black uppercase bg-gradient-to-r from-amber-500 to-orange-500 px-2.5 py-1 rounded-full shadow-sm">Plan VIP {p.vipLevel}</span>
-                              <h5 className="font-sans font-black text-base text-slate-800 mt-2 leading-tight uppercase tracking-tight">{p.name}</h5>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[10px] text-slate-500 block uppercase font-black">Investissement</span>
-                              <strong className="text-lg text-[#1b64d9] font-black leading-tight font-sans">{p.price.toLocaleString()} F</strong>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3 bg-white/70 p-3 rounded-2xl text-xs border border-slate-100">
-                            <div>
-                              <span className="text-slate-500 text-[10px] block uppercase font-bold">Revenu / Jour</span>
-                              <span className="text-[#00bd74] font-black font-sans text-sm">+{p.dailyReturn.toLocaleString()} F</span>
-                            </div>
-                            <div>
-                              <span className="text-slate-500 text-[10px] block uppercase font-bold">Gains Totaux</span>
-                              <span className="text-slate-800 font-black font-sans text-sm">{(p.dailyReturn * p.durationDays).toLocaleString()} F</span>
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={() => handleBuyProduct(p)}
-                            className="w-full py-3.5 bg-gradient-to-r from-[#00d2c3] to-[#046fff] hover:opacity-95 text-white text-xs sm:text-xs uppercase font-black tracking-widest rounded-2xl transition-all shadow-md text-center font-sans active:scale-95"
-                          >
-                            Activer pour {p.price.toLocaleString()} F
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center px-1">
+                    <h4 className="text-sm font-black text-amber-300 uppercase tracking-widest">🔥 Packages VIP Recommandés</h4>
+                    <button 
+                      onClick={() => setActiveTab('products')}
+                      className="text-xs text-white underline font-extrabold hover:text-amber-300 transition-colors"
+                    >
+                      Voir tout →
+                    </button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center px-1">
-                      <h4 className="text-sm font-black text-amber-300 uppercase tracking-widest leading-none">💼 Vos Investissements Actifs ({activeInvestments.length})</h4>
-                      <button 
-                        onClick={() => setActiveTab('products')}
-                        className="text-xs text-white underline font-extrabold hover:text-amber-300 transition-colors"
-                      >
-                        Gérer →
-                      </button>
-                    </div>
 
-                    <div className="space-y-3">
-                      {activeInvestments.slice(0, 3).map((inv) => (
-                        <div 
-                          key={inv.id}
-                          className="bg-[#eef3fc] p-4 rounded-3xl border-2 border-slate-205/30 flex items-center justify-between gap-4 text-left shadow-sm animation-fade-in"
-                        >
-                          <div className="space-y-1">
-                            <span className="text-[9px] text-white font-black bg-gradient-to-r from-[#1b64d9] to-[#044ab0] px-2 py-0.5 rounded-full uppercase">Plan VIP {inv.productName}</span>
-                            <div className="text-xs sm:text-sm font-extrabold text-slate-800 font-sans">
-                              Investi : <span className="text-[#1b64d9] font-black">{inv.price.toLocaleString()} F</span> | Gain quotidien : <span className="text-[#00bd74] font-black">+{inv.dailyReturn.toLocaleString()} F</span>
-                            </div>
-                            <div className="text-[11px] text-slate-500 font-mono font-bold">
-                              Progression temporelle : {inv.daysPassed} / {inv.durationDays} Jours
-                            </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {products.slice(0, 2).map((p) => (
+                      <div 
+                        key={p.id}
+                        className="bg-[#eef3fc] border-2 border-slate-200/30 rounded-3xl p-5 flex flex-col justify-between text-left space-y-4 shadow-sm"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] text-white font-black uppercase bg-gradient-to-r from-amber-500 to-orange-500 px-2.5 py-1 rounded-full shadow-sm">Plan VIP {p.vipLevel}</span>
+                            <h5 className="font-sans font-black text-base text-slate-800 mt-2 leading-tight uppercase tracking-tight">{p.name}</h5>
                           </div>
-                          
-                          <button
-                            onClick={() => handleClaimReturn(inv.id)}
-                            disabled={inv.isClaimedToday || inv.status === 'completed'}
-                            className={`py-2.5 px-4 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 ${inv.isClaimedToday || inv.status === 'completed' ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-[#00bd74] hover:bg-[#00a867] text-white'}`}
-                          >
-                            {inv.isClaimedToday ? 'Récolté ✔' : 'Récolter'}
-                          </button>
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-500 block uppercase font-black">Investissement</span>
+                            <strong className="text-lg text-[#1b64d9] font-black leading-tight font-sans">{p.price.toLocaleString()} F</strong>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+
+                        <div className="grid grid-cols-2 gap-3 bg-white/70 p-3 rounded-2xl text-xs border border-slate-100">
+                          <div>
+                            <span className="text-slate-500 text-[10px] block uppercase font-bold">Revenu / Jour</span>
+                            <span className="text-[#00bd74] font-black font-sans text-sm">+{p.dailyReturn.toLocaleString()} F</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 text-[10px] block uppercase font-bold">Gains Totaux</span>
+                            <span className="text-slate-800 font-black font-sans text-sm">{(p.dailyReturn * p.durationDays).toLocaleString()} F</span>
+                          </div>
+                        </div>
+
+                        {productErrors[p.id] && (
+                          <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-600 leading-normal">
+                            <span className="text-red-700 block font-black mb-1">⚠️ SOLDE INSUFFISANT</span>
+                            <span>{productErrors[p.id]}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveTab('deposit');
+                              }}
+                              className="mt-2 block text-[#1b64d9] font-black underline uppercase tracking-wide cursor-pointer text-xs"
+                            >
+                              📥 Effectuer un dépôt maintenant
+                            </button>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => handleBuyProduct(p)}
+                          className="w-full py-3.5 bg-gradient-to-r from-[#00d2c3] to-[#046fff] hover:opacity-95 text-white text-xs sm:text-xs uppercase font-black tracking-widest rounded-2xl transition-all shadow-md text-center font-sans active:scale-95"
+                        >
+                          Activer pour {p.price.toLocaleString()} F
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
 
             </div>
@@ -821,52 +945,6 @@ export default function Dashboard({
                   </div>
                 </div>
               </div>
-
-              {/* ACTIVE INVESTMENTS REAPING IF ANY */}
-              {activeInvestments.length > 0 && (
-                <div className="max-w-4xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 rounded-3xl p-5 mb-3 text-left shadow-sm">
-                  <div className="mb-3">
-                    <h4 className="text-base font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                      <span>💰</span> Collecte active de vos dividendes
-                    </h4>
-                    <p className="text-xs text-slate-500 font-bold">Cliquez sur récolter pour verser vos gains disponibles dans votre solde principal.</p>
-                  </div>
-                  <div className="space-y-3.5">
-                    {activeInvestments.map((inv) => (
-                      <div 
-                        key={inv.id}
-                        className="bg-white p-4 rounded-2xl border border-slate-100 hover:border-slate-200 shadow-sm transition-all flex flex-col sm:flex-row justify-between sm:items-center gap-3"
-                      >
-                        <div className="space-y-1">
-                          <span className="text-[10px] text-white font-black bg-gradient-to-r from-[#1b64d9] to-[#044ab0] px-2.5 py-0.5 rounded-full uppercase tracking-wide">Module VIP {inv.productName}</span>
-                          <div className="text-xs sm:text-sm font-extrabold text-slate-800 font-sans">
-                            Investi : {inv.price.toLocaleString()} F | Gain/j : <span className="text-[#00bd74] font-black font-sans text-sm sm:text-base">+{inv.dailyReturn.toLocaleString()} F</span>
-                          </div>
-                          <div className="text-xs text-slate-400 font-mono font-bold">
-                            Progression temporelle : {inv.daysPassed} / {inv.durationDays} Jours
-                          </div>
-                        </div>
-
-                        <div>
-                          {inv.status === 'completed' ? (
-                            <span className="px-4 py-2 bg-slate-105 border border-slate-200 text-slate-400 text-xs font-black rounded-2xl block text-center uppercase tracking-wider">
-                              Cycle complété
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handleClaimReturn(inv.id)}
-                              className="px-4 py-2.5 bg-[#00bd74] hover:bg-[#00a867] text-white text-xs font-black rounded-2xl transition-all shadow-md flex items-center justify-center space-x-1.5 cursor-pointer uppercase tracking-wider active:scale-95"
-                            >
-                              <Coins className="w-4 h-4 stroke-[2.5]" />
-                              <span>Récolter ({inv.dailyReturn} F)</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {products.map((p) => {
@@ -920,6 +998,23 @@ export default function Dashboard({
                         </div>
                       </div>
 
+                      {productErrors[p.id] && (
+                        <div className="mb-3.5 p-3.5 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-600 leading-normal">
+                          <span className="text-red-700 block font-black mb-1">⚠️ SOLDE INSUFFISANT</span>
+                          <span>{productErrors[p.id]}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveTab('deposit');
+                            }}
+                            className="mt-2 block text-[#1b64d9] font-black underline uppercase tracking-wide cursor-pointer text-xs"
+                          >
+                            📥 Effectuer un dépôt maintenant
+                          </button>
+                        </div>
+                      )}
+
                       {/* Buy action button with beautiful vibrant teal gradient */}
                       <button
                         onClick={() => handleBuyProduct(p)}
@@ -953,9 +1048,9 @@ export default function Dashboard({
           {activeTab === 'deposit' && (
             <div className="max-w-xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800">
               <div className="text-center mb-6">
-                <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">DÉPÔT ROYAL SÉCURISÉ</span>
-                <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Versements de Recharge</h3>
-                <p className="text-xs text-slate-500 font-bold mt-1">Suivez les consignes pour recharger instantanément votre solde principal GoldInvest.</p>
+                <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">RECHARGE AUTOMATIQUE INSTANTANÉE</span>
+                <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Dépôt via SoinaPay</h3>
+                <p className="text-xs text-slate-500 font-bold mt-1">Créditez instantanément votre compte de façon 100% sécurisée et automatisée.</p>
               </div>
 
               {depositError && (
@@ -965,122 +1060,63 @@ export default function Dashboard({
                 <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold">{depositSuccess}</div>
               )}
 
-              <form onSubmit={submitDeposit} className="space-y-4 text-left">
-                
-                {/* 1. SECTOR OPERATOR */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">1. Choisissez l'opérateur Mobile Money</label>
-                  <select 
-                    value={depositOperator}
-                    onChange={(e) => setDepositOperator(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200/45 rounded-2xl py-3 px-4 text-sm text-slate-800 font-bold focus:border-[#1b64d9] focus:outline-none appearance-none cursor-pointer shadow-sm"
-                  >
-                    <option value="Orange Money (Ivory Coast)">Orange Money — Côte d’Ivoire (+225)</option>
-                    <option value="MTN Mobile Money (Ivory Coast)">MTN Momo — Côte d’Ivoire (+225)</option>
-                    <option value="Moov Money (Ivory Coast)">Moov Flooz — Côte d’Ivoire (+225)</option>
-                    <option value="Wave (Ivory Coast)">Wave Transfert — Côte d’Ivoire (+225)</option>
-                    <option value="Orange Money (Burkina)">Orange Money — Burkina Faso (+226)</option>
-                    <option value="Moov Money (Burkina)">Moov Flooz — Burkina Faso (+226)</option>
-                    <option value="Orange Money (Mali)">Orange Money — Mali (+223)</option>
-                    <option value="Moov Money (Bénin)">Moov Flooz — Bénin (+229)</option>
-                    <option value="Wave (Sénégal)">Wave Transfert — Sénégal (+221)</option>
-                  </select>
+              {paymentProcessing ? (
+                <div className="py-12 text-center space-y-4">
+                  <div className="w-12 h-12 border-4 border-[#1b64d9] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <h4 className="font-display font-bold text-slate-800 text-sm">Paiement en cours de traitement via SoinaPay...</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                    Veuillez finaliser votre opération sur le guichet de paiement SoinaPay sécurisé. Dès que le règlement est terminé, votre solde de <strong>{parseInt(depositAmount).toLocaleString()} FCFA</strong> sera crédité instantanément et automatiquement sur AgroCapital.
+                  </p>
                 </div>
-
-                {/* Amount */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">2. Montant à investir (FCFA)</label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="Minimum 3 000 FCFA"
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
-                  />
-                </div>
-
-                {/* TRANSFER CARD INSTRUCTIONS */}
-                <div className="bg-white/85 p-5 rounded-2xl border border-slate-200 shadow-inner space-y-2.5 text-xs text-slate-600">
-                  <span className="font-extrabold text-slate-800 block text-xs uppercase tracking-wide flex items-center gap-1">📞 Adresse de Paiement Officielle :</span>
-                  <p className="text-slate-600 font-bold">Veuillez envoyer votre transfert Mobile Money d'un montant exact de <strong className="text-[#1b64d9] font-black text-sm">{parseInt(depositAmount || '0').toLocaleString()} FCFA</strong> vers :</p>
-                  <div className="bg-[#eef3fc] p-3 rounded-xl border border-slate-200 flex justify-between items-center font-mono">
-                    <span className="text-[#1b64d9] font-black text-sm">+225 07 48 49 50 51</span>
-                    <span className="text-[10px] text-slate-500 block uppercase font-bold">Dest: GoldInvest Capital</span>
-                  </div>
-                  <span className="text-[10px] text-slate-500 block leading-relaxed font-semibold">Une fois l'envoi validé depuis votre téléphone, copiez l'ID / référence de l'opération reçue par SMS, collez-la ci-dessous et téléversez une image de confirmation.</span>
-                </div>
-
-                {/* REF */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">3. Référence d'opération Mobile Money</label>
-                    <button
-                      type="button"
-                      onClick={handleGenerateRef}
-                      className="text-xs text-[#1b64d9] hover:text-[#044ab0] font-black underline"
-                    >
-                      Générer une Réf. Démo
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="ID ou référence de transaction reçue par SMS"
-                    value={depositRef}
-                    onChange={(e) => setDepositRef(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-slate-800 focus:outline-none font-mono font-bold tracking-wider shadow-sm"
-                  />
-                </div>
-
-                {/* RECEIPT CAPTURE PROOF */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">4. Capture d'écran du reçu de paiement</label>
+              ) : (
+                <form onSubmit={submitDeposit} className="space-y-5 text-left">
                   
-                  {/* Custom upload browser */}
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-slate-200/60 hover:border-[#1b64d9]/50 rounded-2xl bg-white p-6 text-center cursor-pointer transition-colors shadow-sm"
-                  >
-                    {receiptBase64 ? (
-                      <div className="space-y-2">
-                        <span className="text-[#00bd74] font-black text-xs flex items-center justify-center space-x-1">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>IMAGE ATTACHÉE AVEC SUCCÈS !</span>
-                        </span>
-                        <img 
-                          src={receiptBase64} 
-                          alt="Invoice receipt preview" 
-                          className="w-24 h-24 object-cover rounded-xl mx-auto border border-slate-200 shadow"
-                        />
-                        <span className="text-[10px] text-slate-400 block font-bold">Cliquez ici pour remplacer la photo</span>
-                      </div>
-                    ) : (
-                      <div>
-                        <ArrowDownLeft className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                        <span className="text-xs text-slate-600 block font-black">Glissez ou sélectionnez la capture du reçu</span>
-                        <span className="text-[10px] text-slate-400 block mt-1 uppercase font-bold">JPG, PNG ACCEPTÉS</span>
-                      </div>
-                    )}
+                  {/* 1. SECTOR OPERATOR */}
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">1. Choisissez votre réseau de paiement</label>
+                    <select 
+                      value={depositOperator}
+                      onChange={(e) => setDepositOperator(e.target.value)}
+                      className="w-full bg-white border-2 border-slate-200/45 rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:border-[#1b64d9] focus:outline-none cursor-pointer shadow-sm"
+                    >
+                      <option value="Orange Money (Ivory Coast)">Orange Money — Côte d’Ivoire (+225)</option>
+                      <option value="MTN Mobile Money (Ivory Coast)">MTN Momo — Côte d’Ivoire (+225)</option>
+                      <option value="Moov Money (Ivory Coast)">Moov Flooz — Côte d’Ivoire (+225)</option>
+                      <option value="Wave (Ivory Coast)">Wave Transfert — Côte d’Ivoire (+225)</option>
+                      <option value="Orange Money (Burkina)">Orange Money — Burkina Faso (+226)</option>
+                      <option value="Moov Money (Burkina)">Moov Flooz — Burkina Faso (+226)</option>
+                      <option value="MTN Mobile Money (Cameroun)">MTN Momo — Cameroun (+237)</option>
+                      <option value="Orange Money (Cameroun)">Orange Money — Cameroun (+237)</option>
+                    </select>
                   </div>
 
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    onChange={handleReceiptChange}
-                    className="hidden"
-                  />
-                </div>
+                  {/* Amount */}
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">2. Montant du versement (FCFA)</label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="Minimum 3 000 FCFA"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
+                    />
+                  </div>
 
-                {/* Submitting button */}
-                <button
-                  type="submit"
-                  className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#00d2c3] to-[#046fff] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95"
-                >
-                  Soumettre la Preuve de Dépôt
-                </button>
-              </form>
+                  <div className="bg-[#e2ebf9] p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed font-semibold space-y-2">
+                    <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block">🔒 Sécurité Chiffrée :</span>
+                    Vous allez être redirigé vers la passerelle sécurisée <strong>SoinaPay</strong> agrée pour effectuer votre virement en toute confiance. Le crédit sur votre balance s'effectue de manière instantanée et automatique dès validation de la transaction.
+                  </div>
+
+                  {/* Submitting button */}
+                  <button
+                    type="submit"
+                    className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#1b64d9] to-[#046fff] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2"
+                  >
+                    <span>Procéder au paiement via SoinaPay</span>
+                  </button>
+                </form>
+              )}
             </div>
           )}
 
@@ -1120,14 +1156,10 @@ export default function Dashboard({
                     onChange={(e) => setWithdrawOperator(e.target.value)}
                     className="w-full bg-white border-2 border-slate-200/45 rounded-2xl py-3 px-4 text-sm text-slate-800 font-bold focus:border-[#1b64d9] focus:outline-none cursor-pointer shadow-sm"
                   >
-                    <option value="Orange Money">Orange Money — (+225)</option>
-                    <option value="MTN Mobile Money">MTN Momo — (+225)</option>
-                    <option value="Moov Money">Moov Flooz — (+225)</option>
-                    <option value="Wave">Wave Transfert — (+225)</option>
-                    <option value="Orange Money BF">Orange Money — Burkina Faso (+226)</option>
-                    <option value="Moov BF">Moov Flooz — Burkina Faso (+226)</option>
-                    <option value="Moov BJ">Moov Flooz — Bénin (+229)</option>
-                    <option value="Wave SN">Wave Transfert — Sénégal (+221)</option>
+                    <option value="MTN Mobile Money (Cameroun)">MTN Mobile Money — Cameroun (+237)</option>
+                    <option value="Orange Money (Cameroun)">Orange Money — Cameroun (+237)</option>
+                    <option value="Orange Money (Burkina Faso)">Orange Money — Burkina Faso (+226)</option>
+                    <option value="Moov Money (Burkina Faso)">Moov Money (Moov Flooz) — Burkina Faso (+226)</option>
                   </select>
                 </div>
 
@@ -1472,6 +1504,190 @@ export default function Dashboard({
                 </div>
               </div>
  
+              {/* HISTORIQUE DE TRANSACTION & ACHATS */}
+              <div className="bg-slate-900/60 p-5 border border-slate-800 rounded-2xl shadow-sm text-left space-y-4">
+                <div className="flex items-center space-x-2.5 mb-2">
+                  <div className="w-9 h-9 bg-yellow-500/10 text-yellow-500 rounded-xl flex items-center justify-center font-bold">
+                    📋
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-white uppercase tracking-wider">Historique de vos Opérations</h4>
+                    <span className="text-[10px] text-slate-400 font-mono block">Suivi en direct de vos flux et investissements</span>
+                  </div>
+                </div>
+
+                {/* Sub-tabs for Dépôt, Retrait, Achats */}
+                <div className="flex gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800/85">
+                  <button
+                    onClick={() => setProfileHistoryTab('deposits')}
+                    className={`flex-1 py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                      profileHistoryTab === 'deposits' 
+                        ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                        : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                    }`}
+                  >
+                    📥 Dépôts ({allDeposits.length})
+                  </button>
+                  <button
+                    onClick={() => setProfileHistoryTab('withdrawals')}
+                    className={`flex-1 py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                      profileHistoryTab === 'withdrawals' 
+                        ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                        : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                    }`}
+                  >
+                    📤 Retraits ({allWithdrawals.length})
+                  </button>
+                  <button
+                    onClick={() => setProfileHistoryTab('purchases')}
+                    className={`flex-1 py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                      profileHistoryTab === 'purchases' 
+                        ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                        : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                    }`}
+                  >
+                    🛍️ Achats ({activeInvestments.length})
+                  </button>
+                </div>
+
+                {/* Tab content rendering */}
+                <div className="space-y-3 min-h-[160px] max-h-[350px] overflow-y-auto pr-1">
+                  
+                  {/* DEPOTS */}
+                  {profileHistoryTab === 'deposits' && (
+                    <>
+                      {allDeposits.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500 text-xs font-bold leading-relaxed">
+                          Aucun dépôt enregistré.<br/>
+                          <span className="text-[10px] font-medium text-slate-600">Vos transferts initiés s'afficheront ici.</span>
+                        </div>
+                      ) : (
+                        allDeposits.map((dep) => (
+                          <div key={dep.id} className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs">
+                            <div className="space-y-0.5">
+                              <span className="text-[10px] text-slate-404 font-mono block">{new Date(dep.createdAt).toLocaleString()}</span>
+                              <div className="font-extrabold text-slate-250">{dep.operator}</div>
+                              {dep.refCode && <span className="text-[10px] text-[#1b64d9] font-mono block font-black uppercase">REF: {dep.refCode}</span>}
+                            </div>
+                            <div className="text-right space-y-1">
+                              <span className="text-emerald-400 font-black font-mono">+{dep.amount.toLocaleString()} FCFA</span>
+                              <div>
+                                {dep.status === 'approved' && (
+                                  <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 text-[9px] font-black rounded font-mono">CONFORME</span>
+                                )}
+                                {dep.status === 'rejected' && (
+                                  <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-black rounded font-mono">REJETÉ</span>
+                                )}
+                                {dep.status === 'pending' && (
+                                  <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-[9px] font-black rounded font-mono animate-pulse">ATTENTE</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </>
+                  )}
+
+                  {/* RETRAITS */}
+                  {profileHistoryTab === 'withdrawals' && (
+                    <>
+                      {allWithdrawals.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500 text-xs font-bold leading-relaxed">
+                          Aucun retrait enregistré.<br/>
+                          <span className="text-[10px] font-medium text-slate-650">Vos demandes de retraits s'afficheront ici.</span>
+                        </div>
+                      ) : (
+                        allWithdrawals.map((wth) => (
+                          <div key={wth.id} className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs">
+                            <div className="space-y-0.5">
+                              <span className="text-[10px] text-slate-400 font-mono block">{new Date(wth.createdAt).toLocaleString()}</span>
+                              <div className="font-extrabold text-slate-200">Mobile Money ({wth.operator})</div>
+                              <span className="text-[10px] text-slate-400 font-mono block font-bold">Dest: {wth.number}</span>
+                            </div>
+                            <div className="text-right space-y-1">
+                              <span className="text-red-400 font-black font-mono">-{wth.amount.toLocaleString()} FCFA</span>
+                              <div>
+                                {wth.status === 'approved' && (
+                                  <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 text-[9px] font-black rounded font-mono">EXPÉDIÉ (2H)</span>
+                                )}
+                                {wth.status === 'rejected' && (
+                                  <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-black rounded font-mono">REJETÉ</span>
+                                )}
+                                {wth.status === 'pending' && (
+                                  <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-[9px] font-black rounded font-mono animate-pulse">TRAITEMENT VIP</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </>
+                  )}
+
+                  {/* ACHATS */}
+                  {profileHistoryTab === 'purchases' && (
+                    <>
+                      {activeInvestments.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500 text-xs font-bold leading-relaxed">
+                          Aucun produit activé.<br/>
+                          <span className="text-[10px] font-medium text-slate-600">Achetez un pack VIP pour récolter des dividendes.</span>
+                        </div>
+                      ) : (
+                        activeInvestments.map((inv) => (
+                          <div key={inv.id} className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col gap-2.5 text-xs">
+                            <div className="flex justify-between items-start gap-3">
+                              <div className="space-y-0.5">
+                                <span className="text-[9px] text-white font-black bg-gradient-to-r from-yellow-500 to-amber-500 px-2 py-0.5 rounded uppercase tracking-wider font-mono">Plan VIP {inv.productName}</span>
+                                <div className="font-extrabold text-slate-200 mt-1">{inv.productName}</div>
+                                <span className="text-[10px] text-slate-400 font-mono block">Acquis le : {new Date(inv.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-slate-400 text-[10px] uppercase font-bold block">Investi</span>
+                                <span className="text-[#1b64d9] font-black font-mono">{inv.price.toLocaleString()} F</span>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 bg-slate-900/60 p-2 rounded-lg text-[11px] border border-slate-900/40">
+                              <div>
+                                <span className="text-slate-500 text-[9px] uppercase font-bold block">Revenu / Jour</span>
+                                <span className="text-[#00bd74] font-black font-mono">+{inv.dailyReturn.toLocaleString()} F</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 text-[9px] uppercase font-bold block">Progression</span>
+                                <span className="text-slate-300 font-bold font-mono">{inv.daysPassed} / {inv.durationDays} Jours</span>
+                              </div>
+                            </div>
+
+                            <div className="pt-1 flex items-center justify-between gap-3">
+                              <span className="text-[10px] text-slate-550 font-medium font-mono">Date de fin: {new Date(new Date(inv.createdAt).getTime() + (inv.durationDays * 24 * 60 * 60 * 1000)).toLocaleDateString()}</span>
+                              {inv.status === 'completed' ? (
+                                <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 text-slate-450 text-[10px] font-black rounded-xl uppercase tracking-wider">
+                                  Terminé ✔
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleClaimReturn(inv.id)}
+                                  disabled={inv.isClaimedToday}
+                                  className={`py-1.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center justify-center space-x-1 ${
+                                    inv.isClaimedToday 
+                                      ? 'bg-slate-900 border border-slate-800 text-slate-400 cursor-not-allowed' 
+                                      : 'bg-[#00bd74] hover:bg-[#00a867] text-white'
+                                  }`}
+                                >
+                                  {inv.isClaimedToday ? 'Récolté ✔' : 'Récolter'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </>
+                  )}
+
+                </div>
+              </div>
+ 
               {/* BONUS CODE USE BOX */}
               <div className="bg-slate-900/60 p-5 border border-slate-800 rounded-2xl shadow-sm">
                 <h4 className="text-xs sm:text-sm font-black text-yellow-500 uppercase tracking-widest mb-2.5">🎁 Saisir un Code Bonus</h4>
@@ -1514,12 +1730,12 @@ export default function Dashboard({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                   <a
-                    href="https://wa.me/2250708091011?text=Bonjour%20GoldInvest%20Premium%2C%20je%20souhaite%20contacter%20le%20Service%20Client%20VIP"
+                    href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=gi_t"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black uppercase tracking-wide text-center flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/10 cursor-pointer"
                   >
-                    <span>💬 WhatsApp VIP 24h/7</span>
+                    <span>💬 Groupe WhatsApp</span>
                   </a>
                   <a
                     href="https://t.me/+yNY88-unzgQyYmJk"
