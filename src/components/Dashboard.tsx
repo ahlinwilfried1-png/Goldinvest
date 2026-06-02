@@ -457,15 +457,20 @@ export default function Dashboard({
       }
     }, 5000);
 
-    // Listen to custom automated support response events
+    // Listen to custom automated support response events and global backend store updates
     const handleNewMessage = () => {
       syncDashboardData();
     };
+    const handleStoreUpdated = () => {
+      syncDashboardData();
+    };
     window.addEventListener('gi_new_message', handleNewMessage);
+    window.addEventListener('gi_store_updated', handleStoreUpdated);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('gi_new_message', handleNewMessage);
+      window.removeEventListener('gi_store_updated', handleStoreUpdated);
     };
   }, [currentUser.id, userState.balance, allUsers.length]);
 

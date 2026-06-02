@@ -252,9 +252,93 @@ export const getFromStore = <T>(key: string, defaultValue: T): T => {
 export const setToStore = <T>(key: string, value: T): void => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    // Asynchronously send update to central Express database
+    fetch('/api/save-store', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [key]: value })
+    }).catch(err => console.error('Failed to sync to central DB server:', err));
   } catch (error) {
     console.error(`Error writing localStorage key "${key}":`, error);
   }
+};
+
+export const syncWithBackend = async (): Promise<boolean> => {
+  try {
+    const resp = await fetch('/api/get-store');
+    if (!resp.ok) return false;
+    const data = await resp.json();
+    if (data && typeof data === 'object') {
+      const serverKeys = Object.keys(data);
+      if (serverKeys.length === 0) {
+        // Server database is empty! Upload our local storage data to initialize it
+        const currentLocalState: Record<string, any> = {};
+        const keysToSync = [
+          'gi_users',
+          'gi_deposits',
+          'gi_withdrawals',
+          'gi_investments',
+          'gi_commissions',
+          'gi_notifications',
+          'gi_bonus_codes',
+          'gi_support_messages',
+          'gi_products',
+          'gi_mlm_level1_rate',
+          'gi_mlm_level2_rate',
+          'gi_mlm_level3_rate',
+          'gi_withdrawals_blocked_global'
+        ];
+        
+        // Ensure standard keys are read with their default fallback if they are not in local storage yet
+        DataStore.getUsers();
+        DataStore.getDeposits();
+        DataStore.getWithdrawals();
+        DataStore.getInvestments();
+        DataStore.getCommissions();
+        DataStore.getNotifications();
+        DataStore.getBonusCodes();
+        DataStore.getSupportMessages();
+        DataStore.getProducts();
+        DataStore.getMLMRates();
+        DataStore.areWithdrawalsBlocked();
+
+        for (const key of keysToSync) {
+          const val = localStorage.getItem(key);
+          if (val) {
+            currentLocalState[key] = JSON.parse(val);
+          }
+        }
+
+        if (Object.keys(currentLocalState).length > 0) {
+          await fetch('/api/save-store', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentLocalState)
+          });
+        }
+        return false;
+      }
+
+      // If the server *does* have data, sync it down to the client!
+      let changed = false;
+      for (const key of serverKeys) {
+        const localVal = localStorage.getItem(key);
+        const remoteStr = JSON.stringify(data[key]);
+        if (localVal !== remoteStr) {
+          localStorage.setItem(key, remoteStr);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        window.dispatchEvent(new Event('gi_store_updated'));
+      }
+      return changed;
+    }
+  } catch (error) {
+    console.error('Failed background sync:', error);
+  }
+  return false;
 };
 
 // Database class that proxies lists inside localStorage
