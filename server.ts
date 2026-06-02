@@ -49,7 +49,51 @@ async function startServer() {
   app.post("/api/save-store", (req, res) => {
     const body = req.body;
     if (body && typeof body === "object") {
-      storeData = { ...storeData, ...body };
+      for (const key of Object.keys(body)) {
+        const newVal = body[key];
+        const oldVal = storeData[key];
+
+        if (Array.isArray(newVal) && Array.isArray(oldVal)) {
+          // Merge arrays by ID or Code and choose the item with the higher lastModified
+          const mergedMap = new Map<string, any>();
+          
+          // First populated with existing server data
+          for (const item of oldVal) {
+            if (item && typeof item === "object") {
+              const id = item.id || item.code;
+              if (id) {
+                mergedMap.set(String(id), item);
+              }
+            }
+          }
+
+          // Then merge incoming items
+          for (const item of newVal) {
+            if (item && typeof item === "object") {
+              const id = item.id || item.code;
+              if (id) {
+                const idStr = String(id);
+                if (!mergedMap.has(idStr)) {
+                  mergedMap.set(idStr, item);
+                } else {
+                  const existingItem = mergedMap.get(idStr);
+                  const existingTime = existingItem.lastModified || 0;
+                  const incomingTime = item.lastModified || 0;
+                  if (incomingTime >= existingTime) {
+                    mergedMap.set(idStr, item);
+                  }
+                }
+              }
+            }
+          }
+
+          storeData[key] = Array.from(mergedMap.values());
+        } else {
+          // Overwrite single primitives or single configs with the newest
+          storeData[key] = newVal;
+        }
+      }
+
       saveStore();
       res.json({ success: true });
     } else {

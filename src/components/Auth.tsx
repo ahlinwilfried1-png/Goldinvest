@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   RotateCw
 } from 'lucide-react';
-import { DataStore } from '../dataStore';
+import { DataStore, syncWithBackend } from '../dataStore';
 
 export const eligibleCountries = [
   { name: 'Cameroun', code: '+237' },
@@ -60,12 +60,19 @@ export default function Auth({
   const [resetTip, setResetTip] = useState(false);
 
   // Form submission dispatcher
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
 
     setLoading(true);
+
+    try {
+      // Force loading the latest data from server first
+      await syncWithBackend();
+    } catch (err) {
+      console.error('Failed to sync before login/register:', err);
+    }
 
     setTimeout(() => {
       if (isRegister) {

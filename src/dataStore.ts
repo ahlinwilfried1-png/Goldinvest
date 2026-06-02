@@ -251,12 +251,45 @@ export const getFromStore = <T>(key: string, defaultValue: T): T => {
 
 export const setToStore = <T>(key: string, value: T): void => {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    let newValue: any = value;
+    if (Array.isArray(value)) {
+      const oldStr = localStorage.getItem(key);
+      let oldArray: any[] = [];
+      try {
+        oldArray = oldStr ? JSON.parse(oldStr) : [];
+      } catch (e) {
+        oldArray = [];
+      }
+      if (!Array.isArray(oldArray)) oldArray = [];
+      const now = Date.now();
+      
+      newValue = value.map((item: any) => {
+        if (item && typeof item === 'object') {
+          const itemId = item.id || item.code;
+          const oldItem = oldArray.find((o: any) => o && (o.id === itemId || o.code === itemId));
+          
+          if (!oldItem) {
+            return { ...item, lastModified: now };
+          } else {
+            const { lastModified: _, ...itemClean } = item;
+            const { lastModified: __, ...oldClean } = oldItem;
+            if (JSON.stringify(itemClean) !== JSON.stringify(oldClean)) {
+              return { ...item, lastModified: now };
+            } else {
+              return { ...item, lastModified: oldItem.lastModified || now };
+            }
+          }
+        }
+        return item;
+      });
+    }
+
+    localStorage.setItem(key, JSON.stringify(newValue));
     // Asynchronously send update to central Express database
     fetch('/api/save-store', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [key]: value })
+      body: JSON.stringify({ [key]: newValue })
     }).catch(err => console.error('Failed to sync to central DB server:', err));
   } catch (error) {
     console.error(`Error writing localStorage key "${key}":`, error);
@@ -322,11 +355,62 @@ export const syncWithBackend = async (): Promise<boolean> => {
       // If the server *does* have data, sync it down to the client!
       let changed = false;
       for (const key of serverKeys) {
-        const localVal = localStorage.getItem(key);
-        const remoteStr = JSON.stringify(data[key]);
-        if (localVal !== remoteStr) {
-          localStorage.setItem(key, remoteStr);
-          changed = true;
+        const localValStr = localStorage.getItem(key);
+        const remoteData = data[key];
+        
+        if (Array.isArray(remoteData)) {
+          let localArray: any[] = [];
+          if (localValStr) {
+            try {
+              localArray = JSON.parse(localValStr);
+            } catch (e) {
+              localArray = [];
+            }
+          }
+          if (!Array.isArray(localArray)) localArray = [];
+
+          const mergedMap = new Map<string, any>();
+          
+          // Add local items
+          for (const item of localArray) {
+            if (item && typeof item === "object") {
+              const id = item.id || item.code;
+              if (id) mergedMap.set(String(id), item);
+            }
+          }
+
+          // Merge server items
+          for (const item of remoteData) {
+            if (item && typeof item === "object") {
+              const id = item.id || item.code;
+              if (id) {
+                const idStr = String(id);
+                if (!mergedMap.has(idStr)) {
+                  mergedMap.set(idStr, item);
+                } else {
+                  const existingItem = mergedMap.get(idStr);
+                  const existingTime = existingItem.lastModified || 0;
+                  const incomingTime = item.lastModified || 0;
+                  if (incomingTime >= existingTime) {
+                    mergedMap.set(idStr, item);
+                  }
+                }
+              }
+            }
+          }
+
+          const mergedArray = Array.from(mergedMap.values());
+          const mergedStr = JSON.stringify(mergedArray);
+          if (localValStr !== mergedStr) {
+            localStorage.setItem(key, mergedStr);
+            changed = true;
+          }
+        } else {
+          const remoteStr = JSON.stringify(remoteData);
+          if (localValStr !== remoteStr) {
+            localStorage.setItem(key, remoteStr);
+            changed = true;
+          }
         }
       }
 
