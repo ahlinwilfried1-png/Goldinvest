@@ -399,11 +399,31 @@ export const syncWithBackend = async (): Promise<boolean> => {
             }
           }
 
+          let localOnlyDetected = false;
+          const remoteIds = new Set(remoteData.map((item: any) => item && String(item.id || item.code)).filter(Boolean));
+          for (const item of localArray) {
+            if (item) {
+              const id = String(item.id || item.code);
+              if (id && !remoteIds.has(id)) {
+                localOnlyDetected = true;
+                break;
+              }
+            }
+          }
+
           const mergedArray = Array.from(mergedMap.values());
           const mergedStr = JSON.stringify(mergedArray);
           if (localValStr !== mergedStr) {
             localStorage.setItem(key, mergedStr);
             changed = true;
+            if (localOnlyDetected) {
+              // Bidirectional sync: notify backend of our newer/local-only items so it keeps in sync!
+              fetch('/api/save-store', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [key]: mergedArray })
+              }).catch(err => console.error('Failed to sync merged data back to server:', err));
+            }
           }
         } else {
           const remoteStr = JSON.stringify(remoteData);
