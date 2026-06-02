@@ -19,8 +19,36 @@ export default function App() {
     // 2. Fetch configured VIP levels
     setProducts(DataStore.getProducts());
 
-    // 3. Catch referral tags in URL parameters (supports ?ref=, ?code=, ?r=, ?parrain=, ?sponsor=)
+    // 3. WestPay automatic deposit verification from redirect query params
     const params = new URLSearchParams(window.location.search);
+    const wpStatus = params.get('status');
+    const wpAmount = params.get('amount');
+    const wpRef = params.get('ref');
+
+    if (wpStatus === 'success' && wpAmount && wpRef) {
+      const amt = parseInt(wpAmount);
+      if (!isNaN(amt)) {
+        if (active) {
+          const res = DataStore.createWestPayDeposit(active.id, amt, wpRef);
+          if (res) {
+            const updatedActive = DataStore.getCurrentUser();
+            if (updatedActive) {
+              setUser(updatedActive);
+            }
+            sessionStorage.setItem('gi_wp_success_notif', JSON.stringify({ amount: amt, ref: wpRef }));
+          }
+        } else {
+          // Store pending credit in localStorage to credit them immediately upon login/auth
+          localStorage.setItem('gi_pending_westpay_credit', JSON.stringify({ amount: amt, ref: wpRef }));
+        }
+
+        // Clean query parameters to prevent duplicate submission on refresh
+        const cleanUrl = window.location.origin + window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    }
+
+    // 4. Catch referral tags in URL parameters (supports ?ref=, ?code=, ?r=, ?parrain=, ?sponsor=)
     const refCode = params.get('ref') || params.get('code') || params.get('r') || params.get('parrain') || params.get('sponsor');
     if (refCode) {
       localStorage.setItem('gi_captured_ref', refCode.toUpperCase());
@@ -43,6 +71,27 @@ export default function App() {
   }, []);
 
   const handleAuthSuccess = (loggedInUser: User) => {
+    // Check if there is any pending WestPay credit waiting
+    const pendingStr = localStorage.getItem('gi_pending_westpay_credit');
+    if (pendingStr) {
+      try {
+        const pending = JSON.parse(pendingStr);
+        if (pending && pending.amount && pending.ref) {
+          const res = DataStore.createWestPayDeposit(loggedInUser.id, pending.amount, pending.ref);
+          if (res) {
+            const updated = DataStore.getCurrentUser();
+            if (updated) {
+              loggedInUser = updated;
+            }
+            sessionStorage.setItem('gi_wp_success_notif', JSON.stringify({ amount: pending.amount, ref: pending.ref }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to parse pending WestPay deposit:', err);
+      } finally {
+        localStorage.removeItem('gi_pending_westpay_credit');
+      }
+    }
     setUser(loggedInUser);
     setCurrentScreen('dashboard');
   };

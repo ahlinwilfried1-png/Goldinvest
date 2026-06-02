@@ -264,11 +264,94 @@ export default function AdminPanel({
     alert('Notification globale diffusée avec succès à tous les investisseurs !');
   };
 
+  const handleExportUsersToGoogle = () => {
+    let csvContent = "\uFEFF";
+    csvContent += "ID;Nom Complet;Numero WhatsApp;Pays;Solde Principal (FCFA);Bonus (FCFA);Total Gains (FCFA);Code Parrainage;Sponsor Direct;Role;Date d'Enregistrement\n";
+    
+    users.forEach((u) => {
+      const row = [
+        u.id,
+        u.name,
+        u.whatsapp,
+        u.country,
+        u.balance,
+        u.bonus,
+        u.totalEarnings,
+        u.referralCode,
+        u.referredBy || 'Aucun',
+        u.role === 'admin' ? 'Administrateur' : 'Utilisateur VIP',
+        new Date(u.createdAt).toLocaleString()
+      ].map(val => {
+        let s = String(val).replace(/"/g, '""');
+        if (s.includes(';') || s.includes('\n') || s.includes('"')) {
+          s = `"${s}"`;
+        }
+        return s;
+      }).join(';');
+      
+      csvContent += row + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `agrocapital_coordonnees_membres_google.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportWithdrawalsToGoogle = () => {
+    let csvContent = "\uFEFF";
+    csvContent += "ID Demande;Nom Utilisateur;Numero Mobile Money;Montant Brut (FCFA);Frais (12%);Montant Net a Envoyer (FCFA);Operateur;Statut;Date de Reception\n";
+    
+    withdrawals.forEach((w) => {
+      const fee = w.fee ?? Math.round(w.amount * 0.12);
+      const net = w.netAmount ?? (w.amount - fee);
+      const statusLabel = w.status === 'approved' ? 'AUTORISE & EXPEDIE' : w.status === 'rejected' ? 'REJETE / LIQUIDE' : 'EN ATTENTE';
+      
+      const row = [
+        w.id,
+        w.userName,
+        w.number,
+        w.amount,
+        fee,
+        net,
+        w.operator,
+        statusLabel,
+        new Date(w.createdAt).toLocaleString()
+      ].map(val => {
+        let s = String(val).replace(/"/g, '""');
+        if (s.includes(';') || s.includes('\n') || s.includes('"')) {
+          s = `"${s}"`;
+        }
+        return s;
+      }).join(';');
+      
+      csvContent += row + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `agrocapital_retraits_coordonnees_google.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Helper summaries
   const pendingDepositsCount = deposits.filter(d => d.status === 'pending').length;
   const pendingWithdrawCount = withdrawals.filter(w => w.status === 'pending').length;
   const totalVolumeApproved = deposits.filter(d => d.status === 'approved').reduce((acc, curr) => acc + curr.amount, 0);
   const totalPayoutApproved = withdrawals.filter(w => w.status === 'approved').reduce((acc, curr) => acc + curr.amount, 0);
+  const pendingWithdrawGross = withdrawals.filter(w => w.status === 'pending').reduce((acc, curr) => acc + curr.amount, 0);
+  const pendingWithdrawNetToPay = withdrawals.filter(w => w.status === 'pending').reduce((acc, curr) => {
+    const fee = curr.fee ?? Math.round(curr.amount * 0.12);
+    return acc + (curr.amount - fee);
+  }, 0);
 
   return (
     <div className="w-full relative pb-16">
@@ -508,7 +591,7 @@ export default function AdminPanel({
       </div>
 
       {/* STRATEGIC ADMIN STATS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
           <span className="text-[10px] text-slate-400 uppercase font-semibold">Inscriptions Totales</span>
           <div className="text-xl font-bold text-white mt-1">{users.length} Investisseurs</div>
@@ -523,8 +606,14 @@ export default function AdminPanel({
 
         <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
           <span className="text-[10px] text-slate-400 uppercase font-semibold">Retraits Traités (Factures)</span>
-          <div className="text-xl font-bold text-yellow-400 mt-1">{totalPayoutApproved.toLocaleString()} FCFA</div>
+          <div className="text-xl font-bold text-yellow-500 mt-1">{totalPayoutApproved.toLocaleString()} FCFA</div>
           <span className="text-[9px] text-slate-400 font-mono">Cashout finalisé</span>
+        </div>
+
+        <div className="bg-emerald-950/20 border border-emerald-500/25 p-4 rounded-xl relative ring-1 ring-emerald-500/10">
+          <span className="text-[10px] text-emerald-400 uppercase font-extrabold block">A Envoyer (Net retraits attendus)</span>
+          <div className="text-xl font-black text-emerald-400 mt-1">{pendingWithdrawNetToPay.toLocaleString()} FCFA</div>
+          <span className="text-[9px] text-slate-400 font-mono block mt-0.5">Frais plateforme deduits (12%)</span>
         </div>
 
         <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
@@ -724,9 +813,17 @@ export default function AdminPanel({
           </div>
 
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 overflow-hidden text-left">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Demandes de retraits passées</h3>
-              <span className="text-[11px] text-slate-400">Total : {withdrawals.length} demandes</span>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+              <div>
+                <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Demandes de retraits passées</h3>
+                <span className="text-[11px] text-slate-400">Total : {withdrawals.length} demandes</span>
+              </div>
+              <button
+                onClick={handleExportWithdrawalsToGoogle}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer active:scale-95"
+              >
+                <span>📊 Exporter Coordonnées Google Sheets</span>
+              </button>
             </div>
 
             <div className="overflow-x-auto">
@@ -735,7 +832,9 @@ export default function AdminPanel({
                   <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
                     <th className="p-3">Destinataire</th>
                     <th className="p-3">Numéro Sollicité</th>
-                    <th className="p-3 font-mono text-yellow-400">Montant</th>
+                    <th className="p-3 font-mono text-yellow-400">Brut demandé</th>
+                    <th className="p-3 font-mono text-red-400">Frais (12%)</th>
+                    <th className="p-3 font-mono text-emerald-450">À envoyer (Net)</th>
                     <th className="p-3">Opérateur</th>
                     <th className="p-3">Date de Réception</th>
                     <th className="p-3">Statut</th>
@@ -745,51 +844,57 @@ export default function AdminPanel({
                 <tbody className="divide-y divide-slate-800/60">
                   {withdrawals.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-6 text-center text-slate-500">Aucun retrait en attente.</td>
+                      <td colSpan={9} className="p-6 text-center text-slate-500">Aucun retrait en attente.</td>
                     </tr>
                   ) : (
-                    withdrawals.map((wth) => (
-                      <tr key={wth.id} className="hover:bg-slate-900/30">
-                        <td className="p-3 font-semibold text-white">{wth.userName}</td>
-                        <td className="p-3 font-mono font-bold text-emerald-400">{wth.number}</td>
-                        <td className="p-3 text-yellow-400 font-bold font-mono">-{wth.amount.toLocaleString()} FCFA</td>
-                        <td className="p-3">{wth.operator}</td>
-                        <td className="p-3 text-[10px] text-slate-400">{new Date(wth.createdAt).toLocaleString()}</td>
-                        <td className="p-3">
-                          {wth.status === 'approved' && (
-                            <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-bold font-mono">EXPÉDIÉ (2H)</span>
-                          )}
-                          {wth.status === 'rejected' && (
-                            <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded text-[9px] font-bold font-mono">REJETÉ</span>
-                          )}
-                          {wth.status === 'pending' && (
-                            <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 rounded text-[9px] font-bold font-mono animate-pulse">ATTENTE</span>
-                          )}
-                        </td>
-                        <td className="p-3 text-center">
-                          {wth.status === 'pending' ? (
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => handleApproveWithdrawal(wth.id)}
-                                className="w-7 h-7 bg-green-500 text-slate-950 flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
-                                title="Valider le retrait"
-                              >
-                                <Check className="w-4 h-4 text-slate-950 stroke-[3]" />
-                              </button>
-                              <button
-                                onClick={() => handleRejectWithdrawal(wth.id)}
-                                className="w-7 h-7 bg-red-500 text-white flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
-                                title="Rejeter et recréditer"
-                              >
-                                <X className="w-4 h-4 stroke-[3]" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-slate-500 text-[11px] font-mono">Résolu</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                    withdrawals.map((wth) => {
+                      const fee = wth.fee ?? Math.round(wth.amount * 0.12);
+                      const net = wth.netAmount ?? (wth.amount - fee);
+                      return (
+                        <tr key={wth.id} className="hover:bg-slate-900/30">
+                          <td className="p-3 font-semibold text-white">{wth.userName}</td>
+                          <td className="p-3 font-mono font-bold text-emerald-450">{wth.number}</td>
+                          <td className="p-3 text-slate-400 font-mono">-{wth.amount.toLocaleString()} F</td>
+                          <td className="p-3 text-red-400 font-mono">-{fee.toLocaleString()} F</td>
+                          <td className="p-3 text-emerald-400 font-bold font-mono bg-emerald-950/20">{net.toLocaleString()} F</td>
+                          <td className="p-3">{wth.operator}</td>
+                          <td className="p-3 text-[10px] text-slate-400">{new Date(wth.createdAt).toLocaleString()}</td>
+                          <td className="p-3">
+                            {wth.status === 'approved' && (
+                              <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-bold font-mono">EXPÉDIÉ (2H)</span>
+                            )}
+                            {wth.status === 'rejected' && (
+                              <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded text-[9px] font-bold font-mono">REJETÉ</span>
+                            )}
+                            {wth.status === 'pending' && (
+                              <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 rounded text-[9px] font-bold font-mono animate-pulse">ATTENTE</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-center">
+                            {wth.status === 'pending' ? (
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => handleApproveWithdrawal(wth.id)}
+                                  className="w-7 h-7 bg-green-500 text-slate-950 flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
+                                  title="Valider le retrait"
+                                >
+                                  <Check className="w-4 h-4 text-slate-950 stroke-[3]" />
+                                </button>
+                                <button
+                                  onClick={() => handleRejectWithdrawal(wth.id)}
+                                  className="w-7 h-7 bg-red-500 text-white flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
+                                  title="Rejeter et recréditer"
+                                >
+                                  <X className="w-4 h-4 stroke-[3]" />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-slate-500 text-[11px] font-mono">Résolu</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -826,18 +931,26 @@ export default function AdminPanel({
                 <span className="text-[10px] text-slate-400">Total : {users.length} comptes enregistrés</span>
               </div>
 
-              {/* Search user input */}
-              <div className="relative w-full md:w-72">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
-                  <Search className="w-4 h-4" />
-                </span>
-                <input
-                  type="text"
-                  placeholder="Rechercher un utilisateur (nom, WhatsApp...)"
-                  value={userSearchQuery}
-                  onChange={(e) => setUserSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 text-xs rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
-                />
+              {/* Search user & Export button */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                <button
+                  onClick={handleExportUsersToGoogle}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer active:scale-95"
+                >
+                  <span>📊 Exporter Contacts Google Sheets</span>
+                </button>
+                <div className="relative w-full md:w-72">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
+                    <Search className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Rechercher un utilisateur (nom, WhatsApp...)"
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 text-xs rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
+                  />
+                </div>
               </div>
             </div>
 

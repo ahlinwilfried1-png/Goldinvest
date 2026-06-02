@@ -719,6 +719,57 @@ export class DataStore {
     return newDep;
   }
 
+  static createWestPayDeposit(userId: string, amount: number, reference: string, operator: string = 'WestPay Direct'): Deposit | null {
+    const deposits = this.getDeposits();
+    if (deposits.some(d => d.reference === reference)) {
+      return null; // Already processed
+    }
+
+    const users = this.getUsers();
+    const user = users.find(u => u.id === userId);
+
+    const newDep: Deposit = {
+      id: `dep-${Date.now()}`,
+      userId,
+      userName: user ? user.name : 'Utilisateur',
+      amount,
+      operator,
+      reference,
+      receiptImage: 'automated_westpay',
+      status: 'approved',
+      createdAt: new Date().toISOString()
+    };
+
+    deposits.unshift(newDep);
+    this.saveDeposits(deposits);
+
+    if (user) {
+      user.balance += amount;
+      this.saveUsers(users);
+
+      const cached = this.getCurrentUser();
+      if (cached && cached.id === userId) {
+        cached.balance = user.balance;
+        this.saveCurrentUser(cached);
+      }
+    }
+
+    // Add user notification
+    const notifications = this.getNotifications();
+    notifications.unshift({
+      id: `not-dep-wp-${Date.now()}`,
+      userId,
+      title: 'Dépôt Automatique WestPay',
+      message: `Votre versement de ${amount.toLocaleString()} FCFA via WestPay (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
+      type: 'deposit',
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+    this.saveNotifications(notifications);
+
+    return newDep;
+  }
+
   // Withdrawal logic
   static createWithdrawal(userId: string, amount: number, operator: string, number: string): { success: boolean, error?: string, withdrawal?: Withdrawal } {
     const users = this.getUsers();
@@ -726,6 +777,10 @@ export class DataStore {
     
     if (userIdx === -1) {
       return { success: false, error: 'Utilisateur non trouvé.' };
+    }
+
+    if (amount < 1000) {
+      return { success: false, error: 'Le montant de retrait minimum est de 1 000 F.' };
     }
 
     const user = users[userIdx];
@@ -738,6 +793,9 @@ export class DataStore {
     user.balance -= amount;
     this.saveUsers(users);
 
+    const fee = Math.round(amount * 0.12);
+    const netAmount = amount - fee;
+
     const withdrawals = this.getWithdrawals();
     const newWth: Withdrawal = {
       id: `wth-${Date.now()}`,
@@ -747,7 +805,9 @@ export class DataStore {
       operator,
       number,
       status: 'pending',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      fee,
+      netAmount
     };
 
     withdrawals.unshift(newWth);
@@ -1346,9 +1406,35 @@ export class DataStore {
       if (data.withdrawBlocked !== undefined) {
         users[idx].withdrawBlocked = data.withdrawBlocked;
       }
+      
+      let finalReferredBy: string | undefined = undefined;
       if (data.referredBy !== undefined) {
-        users[idx].referredBy = data.referredBy === null ? undefined : data.referredBy;
+        if (data.referredBy === null || data.referredBy.trim() === '') {
+          finalReferredBy = undefined;
+        } else {
+          const cleanRef = data.referredBy.trim();
+          const cleanRefUpper = cleanRef.toUpperCase();
+          const refDigits = cleanRef.replace(/\D/g, '');
+          
+          const matchedSponsor = users.find(u => {
+            if (u.id.toUpperCase() === cleanRefUpper) return true;
+            if (u.referralCode && u.referralCode.toUpperCase() === cleanRefUpper) return true;
+            if (refDigits.length >= 6 && u.whatsapp) {
+              const uDigits = u.whatsapp.replace(/\D/g, '');
+              if (uDigits.endsWith(refDigits) || refDigits.endsWith(uDigits)) return true;
+            }
+            return false;
+          });
+          
+          if (matchedSponsor) {
+            finalReferredBy = matchedSponsor.id;
+          } else {
+            finalReferredBy = cleanRef;
+          }
+        }
+        users[idx].referredBy = finalReferredBy;
       }
+
       if (data.password !== undefined && data.password.trim() !== '') {
         users[idx].password = data.password;
       }
@@ -1363,7 +1449,7 @@ export class DataStore {
           current.withdrawBlocked = data.withdrawBlocked;
         }
         if (data.referredBy !== undefined) {
-          current.referredBy = data.referredBy === null ? undefined : data.referredBy;
+          current.referredBy = finalReferredBy;
         }
         if (data.password !== undefined && data.password.trim() !== '') {
           current.password = data.password;

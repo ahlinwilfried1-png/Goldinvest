@@ -101,7 +101,7 @@ export default function Dashboard({
 
   // Form states
   const [depositAmount, setDepositAmount] = useState<string>('5000');
-  const [depositOperator, setDepositOperator] = useState<string>('Orange Money');
+  const [depositOperator, setDepositOperator] = useState<string>('MTN Mobile Money (Cameroun)');
   const [depositRef, setDepositRef] = useState<string>('');
   const [receiptBase64, setReceiptBase64] = useState<string>('');
   const [depositError, setDepositError] = useState<string>('');
@@ -208,7 +208,7 @@ export default function Dashboard({
     isOpen: boolean;
     title: string;
     message: string;
-    type: 'confirm' | 'success' | 'info' | 'error';
+    type: 'confirm' | 'success' | 'info' | 'error' | 'purchase_success';
     onConfirm?: () => void;
   }>({
     isOpen: false,
@@ -217,12 +217,21 @@ export default function Dashboard({
     type: 'info'
   });
 
-  const openAlert = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  const openAlert = (title: string, message: string, type: 'success' | 'error' | 'info' | 'purchase_success' = 'info') => {
     setCustomModal({
       isOpen: true,
       title,
       message,
       type,
+    });
+  };
+
+  const openPurchaseSuccessAlert = (title: string, message: string) => {
+    setCustomModal({
+      isOpen: true,
+      title,
+      message,
+      type: 'purchase_success',
     });
   };
 
@@ -339,6 +348,26 @@ export default function Dashboard({
 
   useEffect(() => {
     syncDashboardData();
+
+    // Check if we just completed a WestPay transaction successfully
+    const wpNotif = sessionStorage.getItem('gi_wp_success_notif');
+    if (wpNotif) {
+      try {
+        const data = JSON.parse(wpNotif);
+        if (data && data.amount && data.ref) {
+          setTimeout(() => {
+            openPurchaseSuccessAlert(
+              'Dépôt Reçu ! 💳💰',
+              "Félicitations !\nVotre compte a été crédité automatiquement et instantanément de " + data.amount.toLocaleString() + " " + getCurrency() + " suite à votre paiement réussi sur WestPay.\n\nRéférence du paiement: " + data.ref
+            );
+          }, 800);
+        }
+      } catch (err) {
+        console.error('Failed to process WestPay welcome message in dashboard:', err);
+      } finally {
+        sessionStorage.removeItem('gi_wp_success_notif');
+      }
+    }
 
     // Auto request chrome notification permission right after login/registration (if status is default)
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
@@ -476,16 +505,22 @@ export default function Dashboard({
 
     setPaymentProcessing(true);
     
-    // Redirect to pay link
-    window.open("https://soinapay.com/pay/1bfvpznx", "_blank");
+    // Determine proper country parameter for WestPay
+    let queryCountry = 'Cameroun';
+    if (depositOperator.includes('Burkina')) {
+      queryCountry = 'Burkina Faso';
+    } else if (depositOperator.includes('Cameroun')) {
+      queryCountry = 'Cameroun';
+    } else if (userState.country) {
+      queryCountry = userState.country;
+    }
 
-    // Automatically approve and credit after 4 seconds to simulate automatic reconciliation upon payment completion
-    setTimeout(() => {
-      DataStore.createAutomaticDeposit(userState.id, amt, depositOperator);
-      setPaymentProcessing(false);
-      setDepositSuccess(`Paiement de ${amt.toLocaleString()} ${getCurrency()} reçu avec succès ! Votre compte a été automatiquement et instantanément crédité.`);
-      syncDashboardData();
-    }, 4500);
+    const baseUrl = window.location.origin + window.location.pathname;
+    const redirectUrl = encodeURIComponent(baseUrl);
+    const paymentUrl = `https://westpay.cfd/link/d6ofn953mpwaqb0n?amount=${amt}&redirect=${redirectUrl}`;
+
+    // Proceed with automatic redirect to WestPay in a new window/tab to prevent iframe blocking policies (X-Frame-Options)
+    window.open(paymentUrl, '_blank');
   };
 
   // Withdrawal event
@@ -495,11 +530,11 @@ export default function Dashboard({
     setWithdrawSuccess('');
 
     if (DataStore.areWithdrawalsBlocked()) {
-      setWithdrawError("Les retraits sont temporairement suspendus sur l'ensemble de la plateforme par la direction pour des raisons de maintenance technique.");
+      setWithdrawError("Les retraits sont autorisés uniquement à partir de 09h.");
       return;
     }
     if (userState.withdrawBlocked) {
-      setWithdrawError("Votre accès aux retraits a été suspendu pour non-conformité. Veuillez contacter le service client VIP pour régulariser votre situation.");
+      setWithdrawError("Les retraits sont autorisés uniquement à partir de 09h.");
       return;
     }
 
@@ -622,7 +657,7 @@ export default function Dashboard({
       () => {
         const res = DataStore.buyProduct(userState.id, product.id);
         if (res.success) {
-          openAlert('Félicitations !', res.message, 'success');
+          openPurchaseSuccessAlert('Félicitations ! 🎉', res.message);
         } else {
           openAlert('Achat Échoué', res.message, 'error');
         }
@@ -672,117 +707,117 @@ export default function Dashboard({
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1b64d9] to-[#03368a] text-white flex flex-col font-sans w-full max-w-full relative overflow-x-hidden">
       
-      {/* POPUP MODAL OVERLAY: INSCRIPTION REUSSIE */}
       {showAnnouncementDismissible && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
+        <div 
+          onClick={() => setShowAnnouncementDismissible(false)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto cursor-pointer"
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-slate-900 border border-yellow-500/30 rounded-3xl p-4.5 sm:p-5 text-left shadow-[0_0_40px_rgba(234,179,8,0.12)] relative max-w-md w-full overflow-hidden my-auto"
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-900 border border-yellow-500/30 rounded-3xl p-4 text-left shadow-[0_0_40px_rgba(234,179,8,0.12)] relative max-w-sm w-full overflow-hidden my-auto cursor-default"
           >
             {/* Background glow decorator */}
-            <div className="absolute top-0 right-0 w-28 h-28 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
             
             {/* Close cross/button */}
             <button
               onClick={() => setShowAnnouncementDismissible(false)}
-              className="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-slate-800 transition-colors cursor-pointer z-[101]"
+              className="absolute top-3 right-3 text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition-colors cursor-pointer z-[101]"
               aria-label="Fermer"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* Title */}
-            <div className="flex items-center space-x-2.5 mb-3.5 border-b border-slate-800 pb-3">
-              <div className="w-8 h-8 rounded-xl bg-yellow-500/20 flex items-center justify-center text-yellow-500 text-base shadow-md">
+            <div className="flex items-center space-x-2 mb-2.5 border-b border-slate-800 pb-2">
+              <div className="w-7 h-7 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-500 text-sm shadow-md">
                 <span>🎉</span>
               </div>
               <div>
-                <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">Inscription Réussie !</h3>
-                <p className="text-[10px] text-slate-450 font-medium">Voici vos informations de départ :</p>
+                <h3 className="text-xs font-sans font-black text-white uppercase tracking-wider">Inscription Réussie !</h3>
+                <p className="text-[9px] text-slate-400 font-medium">Vos informations de départ :</p>
               </div>
             </div>
 
-            <div className="space-y-3.5 text-xs">
-              {/* Stats pillar (top horizontal list or tight block) */}
-              <div className="space-y-2 bg-slate-950/70 p-3 border border-slate-850 rounded-2xl">
+            <div className="space-y-2 text-[11px]">
+              {/* Stats pillar */}
+              <div className="space-y-1.5 bg-slate-950/70 p-2.5 border border-slate-850 rounded-xl">
                 <div className="flex items-start space-x-2 text-slate-200">
-                  <span className="text-sm select-none">🌍</span>
-                  <div className="flex flex-wrap items-center gap-1 text-[11px]">
+                  <span className="text-xs select-none">🌍</span>
+                  <div className="flex flex-wrap items-center gap-1">
                     <span className="font-bold text-slate-400">Pays :</span>
-                    <span className="bg-slate-850 px-1.5 py-0.5 rounded text-white font-extrabold text-[9px]">
-                      Cameroun 🇨🇲
-                    </span>
-                    <span className="bg-slate-850 px-1.5 py-0.5 rounded text-white font-extrabold text-[9px]">
-                      Burkina Faso 🇧🇫
+                    <span className="bg-slate-850 px-1 py-0.2 rounded text-white font-extrabold text-[8px]">
+                      Burkina Faso 🇧🇫 / Cameroun 🇨🇲
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2 text-slate-200">
-                  <span className="text-sm select-none">🎁</span>
-                  <div className="text-[11px]">
+                  <span className="text-xs select-none">🎁</span>
+                  <div>
                     <span className="font-bold text-slate-400">Bonus d'inscription :</span>{' '}
-                    <span className="text-emerald-400 font-extrabold text-[12px] ml-0.5">200 {getCurrency()}</span>
+                    <span className="text-emerald-400 font-extrabold text-[11px] ml-0.5">200 {getCurrency()}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2 text-slate-200">
-                  <span className="text-sm select-none">📥</span>
-                  <div className="text-[11px]">
+                  <span className="text-xs select-none">📥</span>
+                  <div>
                     <span className="font-bold text-slate-400">Dépôt minimum :</span>{' '}
-                    <span className="text-yellow-400 font-mono font-black text-[12px] ml-0.5">3 000 {getCurrency()}</span>
+                    <span className="text-yellow-400 font-mono font-black text-[11px] ml-0.5">3 000 {getCurrency()}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 text-rose-450">
+                  <span className="text-xs select-none text-red-400">📥</span>
+                  <div className="flex items-center flex-wrap gap-1 text-red-400">
+                    <span className="font-bold">Retrait minimum :</span>{' '}
+                    <span className="font-mono font-black text-[11px]">1 000 {getCurrency()}</span>{' '}
+                    <span className="text-[7px] font-sans font-black uppercase bg-red-950/40 px-1 py-0.2 rounded border border-red-900/30">(12% frais)</span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2 text-slate-200">
-                  <span className="text-sm select-none">💲</span>
-                  <div className="text-[11px] flex items-center flex-wrap gap-1">
-                    <span className="font-bold text-slate-400">Retrait minimum :</span>{' '}
-                    <span className="text-white font-mono font-black text-[12px]">1 000 {getCurrency()}</span>{' '}
-                    <span className="text-[8px] text-red-400 font-sans font-black uppercase bg-red-950/40 px-1 py-0.5 rounded border border-red-900/30">(12% frais)</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2 text-slate-200">
-                  <span className="text-sm select-none">🔥</span>
-                  <div className="text-[11px]">
-                    <span className="font-bold text-slate-400">Bonus quotidien de connexion :</span>{' '}
-                    <span className="text-[#00bd74] font-black text-[12px] ml-0.5">20 {getCurrency()} / jour</span>
+                  <span className="text-xs select-none">🔥</span>
+                  <div>
+                    <span className="font-bold text-slate-400">Bonus de connexion :</span>{' '}
+                    <span className="text-[#00bd74] font-black text-[11px] ml-0.5">20 {getCurrency()} / jour</span>
                   </div>
                 </div>
               </div>
 
-              {/* Referral Pillar (Compact Grid Row) */}
-              <div className="bg-slate-950/70 p-3 border border-slate-850 rounded-2xl space-y-2">
+              {/* Referral Pillar */}
+              <div className="bg-slate-950/70 p-2.5 border border-slate-850 rounded-xl space-y-1.5">
                 <div className="flex items-center space-x-1.5 text-slate-200">
-                  <span className="text-sm select-none">🤝</span>
-                  <span className="font-bold text-slate-400 text-[11px]">Programme Parrainage :</span>
+                  <span className="text-xs select-none">🤝</span>
+                  <span className="font-bold text-slate-400">Parrainage MLM :</span>
                 </div>
-                <div className="grid grid-cols-3 gap-1.5 font-mono text-[9px] font-black text-center text-slate-200">
-                  <span className="bg-yellow-500/5 text-yellow-500 p-1.5 rounded-xl border border-yellow-500/10 flex flex-col items-center justify-center">
-                    <span className="text-[8px] opacity-75 mb-0.5">🥇 Niv. 1</span>
-                    <span className="font-extrabold text-[12px] text-yellow-400">20%</span>
+                <div className="grid grid-cols-3 gap-1.5 font-mono text-[8px] font-black text-center text-slate-200">
+                  <span className="bg-yellow-500/5 text-yellow-500 p-1 rounded-lg border border-yellow-500/10 flex flex-col items-center justify-center">
+                    <span className="opacity-75 mb-0.5">🥇 Niv. 1</span>
+                    <span className="font-extrabold text-[10px] text-yellow-400">20%</span>
                   </span>
-                  <span className="bg-slate-800/40 text-slate-300 p-1.5 rounded-xl border border-slate-700/10 flex flex-col items-center justify-center">
-                    <span className="text-[8px] opacity-75 mb-0.5">🥈 Niv. 2</span>
-                    <span className="font-extrabold text-[12px] text-[#00bd74]">3%</span>
+                  <span className="bg-slate-800/40 text-slate-300 p-1 rounded-lg border border-slate-700/10 flex flex-col items-center justify-center">
+                    <span className="opacity-75 mb-0.5">🥈 Niv. 2</span>
+                    <span className="font-extrabold text-[10px] text-[#00bd74]">3%</span>
                   </span>
-                  <span className="bg-amber-950/15 text-amber-400 p-1.5 rounded-xl border border-amber-950/20 flex flex-col items-center justify-center">
-                    <span className="text-[8px] opacity-75 mb-0.5">🥉 Niv. 3</span>
-                    <span className="font-extrabold text-[12px] text-amber-400">1%</span>
+                  <span className="bg-amber-950/15 text-amber-400 p-1 rounded-lg border border-amber-950/20 flex flex-col items-center justify-center">
+                    <span className="opacity-75 mb-0.5">🥉 Niv. 3</span>
+                    <span className="font-extrabold text-[10px] text-amber-400">1%</span>
                   </span>
                 </div>
               </div>
 
-              {/* Official Group Link Segment (Super Compact) */}
-              <div className="bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/15 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3.5 transition-colors">
+              {/* Official Group Link Segment */}
+              <div className="bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/15 rounded-xl p-2.5 flex items-center justify-between gap-2.5 transition-colors">
                 <div className="space-y-0.5 text-left flex-1 min-w-0">
-                  <div className="flex items-center space-x-1 text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider">
+                  <div className="flex items-center space-x-1 text-emerald-400 font-extrabold text-[9px] uppercase tracking-wider">
                     <span>💬 Groupe officiel</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
                   </div>
-                  <p className="text-[10px] text-slate-400 select-all font-medium leading-tight truncate">
+                  <p className="text-[9px] text-slate-400 select-all font-medium leading-tight truncate">
                     Rejoignez la discussion officielle AgroCapital.
                   </p>
                 </div>
@@ -790,7 +825,7 @@ export default function Dashboard({
                   href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=gi_t"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 hover:scale-[1.01] active:scale-[0.99] font-sans font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-1 shrink-0 cursor-pointer text-center"
+                  className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 hover:scale-[1.01] active:scale-[0.99] font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
                 >
                   <span>Rejoindre 👉</span>
                 </a>
@@ -798,10 +833,10 @@ export default function Dashboard({
             </div>
             
             {/* Footer hint */}
-            <div className="mt-5 pt-3.5 border-t border-slate-800 text-center flex justify-center">
+            <div className="mt-3.5 pt-2.5 border-t border-slate-800 text-center flex justify-center">
               <button
                 onClick={() => setShowAnnouncementDismissible(false)}
-                className="text-xs text-yellow-500 hover:text-yellow-400 font-bold uppercase tracking-wider px-4 py-1.5 bg-yellow-500/10 hover:bg-yellow-500/15 rounded-xl cursor-pointer transition-all"
+                className="text-[10px] text-yellow-500 hover:text-yellow-400 font-bold uppercase tracking-wider px-3.5 py-1.5 bg-yellow-500/10 hover:bg-yellow-500/15 rounded-lg cursor-pointer transition-all"
               >
                 Accéder à mon tableau de bord
               </button>
@@ -1276,7 +1311,7 @@ export default function Dashboard({
             <div className="max-w-xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800">
               <div className="text-center mb-6">
                 <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">RECHARGE AUTOMATIQUE INSTANTANÉE</span>
-                <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Dépôt via SoinaPay</h3>
+                <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Dépôt via WestPay</h3>
                 <p className="text-xs text-slate-500 font-bold mt-1">Créditez instantanément votre compte de façon 100% sécurisée et automatisée.</p>
               </div>
 
@@ -1288,12 +1323,44 @@ export default function Dashboard({
               )}
 
               {paymentProcessing ? (
-                <div className="py-12 text-center space-y-4">
+                <div className="py-8 text-center space-y-5">
                   <div className="w-12 h-12 border-4 border-[#1b64d9] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                  <h4 className="font-display font-bold text-slate-800 text-sm">Paiement en cours de traitement via SoinaPay...</h4>
+                  <h4 className="font-display font-bold text-slate-800 text-sm">Redirection vers WestPay...</h4>
                   <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                    Veuillez finaliser votre opération sur le guichet de paiement SoinaPay sécurisé. Dès que le règlement est terminé, votre solde de <strong>{parseInt(depositAmount).toLocaleString()} {getCurrency()}</strong> sera crédité instantanément et automatiquement sur AgroCapital.
+                    Veuillez finaliser votre opération de <strong>{parseInt(depositAmount).toLocaleString()} {getCurrency()}</strong> sur le guichet de paiement WestPay sécurisé.
                   </p>
+                  
+                  <div className="pt-2 border-t border-slate-200/60 max-w-xs mx-auto space-y-3">
+                    <span className="text-[10px] text-slate-400 block font-mono">Si la redirection automatique est bloquée par votre navigateur, utilisez les boutons ci-dessous :</span>
+                    
+                    <a 
+                      href={`https://westpay.cfd/link/d6ofn953mpwaqb0n?amount=${depositAmount}&redirect=${encodeURIComponent(window.location.origin + window.location.pathname)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex w-full justify-center items-center py-2.5 px-3 text-[10px] bg-[#1b64d9] hover:bg-[#1553b3] font-black tracking-wider text-white uppercase rounded-xl transition-all active:scale-[0.98]"
+                    >
+                      Ouvrir la page WestPay ↗
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        const randomRef = 'TST-WP-' + Math.floor(Math.random() * 900000 + 100000);
+                        const baseUrl = window.location.origin + window.location.pathname;
+                        window.location.href = `${baseUrl}?status=success&amount=${depositAmount}&ref=${randomRef}`;
+                      }}
+                      className="w-full py-2.5 px-3 text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-sans font-black uppercase tracking-wider rounded-xl cursor-pointer"
+                    >
+                      ⚡ Simuler validation de test (Sans payer)
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentProcessing(false)}
+                      className="w-full py-2 px-3 text-[10px] border border-slate-300 text-slate-500 font-sans font-bold uppercase tracking-wider rounded-xl hover:bg-slate-50 transition-all cursor-pointer"
+                    >
+                      Retourner au formulaire
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={submitDeposit} className="space-y-5 text-left">
@@ -1306,14 +1373,10 @@ export default function Dashboard({
                       onChange={(e) => setDepositOperator(e.target.value)}
                       className="w-full bg-white border-2 border-slate-200/45 rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:border-[#1b64d9] focus:outline-none cursor-pointer shadow-sm"
                     >
-                      <option value="Orange Money (Ivory Coast)">Orange Money — Côte d’Ivoire (+225)</option>
-                      <option value="MTN Mobile Money (Ivory Coast)">MTN Momo — Côte d’Ivoire (+225)</option>
-                      <option value="Moov Money (Ivory Coast)">Moov Flooz — Côte d’Ivoire (+225)</option>
-                      <option value="Wave (Ivory Coast)">Wave Transfert — Côte d’Ivoire (+225)</option>
-                      <option value="Orange Money (Burkina)">Orange Money — Burkina Faso (+226)</option>
-                      <option value="Moov Money (Burkina)">Moov Flooz — Burkina Faso (+226)</option>
                       <option value="MTN Mobile Money (Cameroun)">MTN Momo — Cameroun (+237)</option>
                       <option value="Orange Money (Cameroun)">Orange Money — Cameroun (+237)</option>
+                      <option value="Orange Money (Burkina)">Orange Money — Burkina Faso (+226)</option>
+                      <option value="Moov Money (Burkina)">Moov Flooz — Burkina Faso (+226)</option>
                     </select>
                   </div>
 
@@ -1331,8 +1394,8 @@ export default function Dashboard({
                   </div>
 
                   <div className="bg-[#e2ebf9] p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed font-semibold space-y-2">
-                    <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block">🔒 Sécurité Chiffrée :</span>
-                    Vous allez être redirigé vers la passerelle sécurisée <strong>SoinaPay</strong> agrée pour effectuer votre virement en toute confiance. Le crédit sur votre balance s'effectue de manière instantanée et automatique dès validation de la transaction.
+                    <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block">🔒 Sécurité Chiffrée WestPay :</span>
+                    Vous allez être redirigé vers la passerelle sécurisée <strong>WestPay</strong> pour effectuer votre virement en toute confiance. Le crédit sur votre balance s'effectue de manière instantanée et automatique dès validation de la transaction.
                   </div>
 
                   {/* Submitting button */}
@@ -1340,7 +1403,7 @@ export default function Dashboard({
                     type="submit"
                     className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#1b64d9] to-[#046fff] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2"
                   >
-                    <span>Procéder au paiement via SoinaPay</span>
+                    <span>Procéder au paiement via WestPay</span>
                   </button>
                 </form>
               )}
@@ -1355,6 +1418,13 @@ export default function Dashboard({
                 <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Demande de Retrait</h3>
                 <p className="text-xs text-slate-500 font-bold mt-1">Saisissez les paramètres de transfert de votre solde vers votre compte mobile.</p>
               </div>
+
+              {(DataStore.areWithdrawalsBlocked() || userState.withdrawBlocked) && (
+                <div className="mb-4 p-4 rounded-xl bg-orange-100 border border-orange-200 text-xs text-orange-850 font-black text-center uppercase tracking-wide flex flex-col gap-1 shadow-sm">
+                  <span>⚠️ RETRAITS BLOQUÉS TEMPORAIREMENT</span>
+                  <span>Les retraits sont autorisés uniquement à partir de 09h.</span>
+                </div>
+              )}
 
               {withdrawError && (
                 <div className="mb-4 p-3 rounded-xl bg-red-100 border border-red-200 text-xs text-red-700 font-bold">{withdrawError}</div>
@@ -1649,7 +1719,8 @@ export default function Dashboard({
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {level2Users.map(u => {
-                          const sponsor = allUsers.find(sp => sp.id === u.referredBy || sp.referralCode === u.referredBy);
+                          const cleanRef = (u.referredBy || '').trim().toUpperCase();
+                          const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
                           return (
                             <div key={u.id} className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-yellow-500/25 transition-all duration-200">
                               <div>
@@ -1689,7 +1760,8 @@ export default function Dashboard({
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {level3Users.map(u => {
-                          const sponsor = allUsers.find(sp => sp.id === u.referredBy || sp.referralCode === u.referredBy);
+                          const cleanRef = (u.referredBy || '').trim().toUpperCase();
+                          const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
                           return (
                             <div key={u.id} className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-blue-500/25 transition-all duration-200">
                               <div>
@@ -2189,10 +2261,19 @@ export default function Dashboard({
       {/* CUSTOM LUXURY ALERT/CONFIRM POPUP MODAL */}
       {customModal.isOpen && (
         <div className="fixed inset-0 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md z-50 animate-fade-in">
-          <div className="bg-[#eef3fc] border-2 border-slate-200/50 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl space-y-5 text-slate-800 text-center animate-scale-up">
+          <div className={`border-2 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl space-y-5 text-center animate-scale-up ${
+            customModal.type === 'purchase_success' 
+              ? 'bg-gradient-to-br from-[#00bd74] to-[#016e3c] border-emerald-400 text-white shadow-emerald-500/20' 
+              : 'bg-[#eef3fc] border-slate-200/50 text-slate-800'
+          }`}>
             
             {/* Modal Icon Indicator based on type */}
             <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center shadow-md">
+              {customModal.type === 'purchase_success' && (
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white ring-4 ring-white/10 animate-bounce">
+                  <CheckCircle2 className="w-7 h-7 stroke-[3]" />
+                </div>
+              )}
               {customModal.type === 'success' && (
                 <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                   <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
@@ -2214,13 +2295,17 @@ export default function Dashboard({
                 </div>
               )}
             </div>
-
+            
             {/* Title & Message */}
             <div className="space-y-2">
-              <h3 className="text-lg font-black tracking-tight text-slate-800 uppercase font-sans">
+              <h3 className={`text-lg font-black tracking-tight uppercase font-sans ${
+                customModal.type === 'purchase_success' ? 'text-white' : 'text-slate-800'
+              }`}>
                 {customModal.title}
               </h3>
-              <p className="text-xs text-slate-600 font-bold leading-relaxed whitespace-pre-line text-center">
+              <p className={`text-xs font-bold leading-relaxed whitespace-pre-line text-center ${
+                customModal.type === 'purchase_success' ? 'text-emerald-50' : 'text-slate-600'
+              }`}>
                 {customModal.message}
               </p>
             </div>
@@ -2254,9 +2339,13 @@ export default function Dashboard({
                   onClick={() => {
                     setCustomModal(prev => ({ ...prev, isOpen: false }));
                   }}
-                  className="w-full py-3.5 text-white bg-gradient-to-r from-[#1b64d9] to-[#046fff] hover:opacity-95 active:scale-95 transition-all text-xs font-black uppercase tracking-widest rounded-2xl cursor-pointer shadow-md"
+                  className={`w-full py-3.5 text-xs font-black uppercase tracking-widest rounded-2xl cursor-pointer shadow-md active:scale-95 transition-all ${
+                    customModal.type === 'purchase_success'
+                      ? 'bg-white text-emerald-950 hover:bg-emerald-50'
+                      : 'bg-gradient-to-r from-[#1b64d9] to-[#046fff] text-white hover:opacity-95'
+                  }`}
                 >
-                  OK
+                  {customModal.type === 'purchase_success' ? 'EXCELLENT ! 🎉' : 'OK'}
                 </button>
               )}
             </div>

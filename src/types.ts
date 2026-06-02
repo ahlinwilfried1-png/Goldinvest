@@ -37,6 +37,8 @@ export interface Withdrawal {
   number: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  fee?: number;
+  netAmount?: number;
 }
 
 export interface Product {
