@@ -49,6 +49,18 @@ export default function AdminPanel({
   // Search filter query for users tab
   const [userSearchQuery, setUserSearchQuery] = useState('');
 
+  // Synchronize state periodically and whenever the active admin tab is changed
+  React.useEffect(() => {
+    syncLocalStates();
+  }, [activeAdminTab]);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      syncLocalStates();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Edit user modal state
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editBalance, setEditBalance] = useState<number>(0);
@@ -1107,10 +1119,19 @@ export default function AdminPanel({
                 ) : (
                   users.filter(u => u.referredBy).map((filleul) => {
                     const cleanRef = (filleul.referredBy || '').trim().toUpperCase();
-                    const parrain = users.find(u => 
-                      (u.id && u.id.trim().toUpperCase() === cleanRef) || 
-                      (u.referralCode && u.referralCode.trim().toUpperCase() === cleanRef)
-                    );
+                    const refDigits = cleanRef.replace(/\D/g, '');
+                    const parrain = users.find(u => {
+                      const uIdUpper = u.id ? u.id.trim().toUpperCase() : '';
+                      const uCodeUpper = u.referralCode ? u.referralCode.trim().toUpperCase() : '';
+                      const uPhoneDigits = u.whatsapp ? u.whatsapp.replace(/\D/g, '') : '';
+                      
+                      if (uIdUpper === cleanRef) return true;
+                      if (uCodeUpper && uCodeUpper === cleanRef) return true;
+                      if (uPhoneDigits && refDigits && (uPhoneDigits.endsWith(refDigits) || refDigits.endsWith(uPhoneDigits))) {
+                        return true;
+                      }
+                      return false;
+                    });
                     return (
                       <div 
                         key={filleul.id} 
@@ -1577,10 +1598,19 @@ export default function AdminPanel({
           const query = affiliateSearchQuery.trim().toLowerCase();
           
           const cleanRef = (u.referredBy || '').trim().toUpperCase();
-          const parrain = users.find(s => 
-            (s.id && s.id.trim().toUpperCase() === cleanRef) || 
-            (s.referralCode && s.referralCode.trim().toUpperCase() === cleanRef)
-          );
+          const refDigits = cleanRef.replace(/\D/g, '');
+          const parrain = users.find(s => {
+            const sIdUpper = s.id ? s.id.trim().toUpperCase() : '';
+            const sCodeUpper = s.referralCode ? s.referralCode.trim().toUpperCase() : '';
+            const sPhoneDigits = s.whatsapp ? s.whatsapp.replace(/\D/g, '') : '';
+            
+            if (sIdUpper === cleanRef) return true;
+            if (sCodeUpper && sCodeUpper === cleanRef) return true;
+            if (sPhoneDigits && refDigits && (sPhoneDigits.endsWith(refDigits) || refDigits.endsWith(sPhoneDigits))) {
+              return true;
+            }
+            return false;
+          });
 
           if (!query) return true;
           return (
@@ -1652,7 +1682,20 @@ export default function AdminPanel({
                   </div>
                 ) : (
                   filteredFilleuls.map((filleul) => {
-                    const parrain = users.find(u => u.id === filleul.referredBy || (u.referralCode && u.referralCode === filleul.referredBy));
+                    const cleanRef = (filleul.referredBy || '').trim().toUpperCase();
+                    const refDigits = cleanRef.replace(/\D/g, '');
+                    const parrain = users.find(u => {
+                      const uIdUpper = u.id ? u.id.trim().toUpperCase() : '';
+                      const uCodeUpper = u.referralCode ? u.referralCode.trim().toUpperCase() : '';
+                      const uPhoneDigits = u.whatsapp ? u.whatsapp.replace(/\D/g, '') : '';
+                      
+                      if (uIdUpper === cleanRef) return true;
+                      if (uCodeUpper && uCodeUpper === cleanRef) return true;
+                      if (uPhoneDigits && refDigits && (uPhoneDigits.endsWith(refDigits) || refDigits.endsWith(uPhoneDigits))) {
+                        return true;
+                      }
+                      return false;
+                    });
                     return (
                       <div 
                         key={filleul.id} 

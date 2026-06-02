@@ -285,7 +285,7 @@ export default function Auth({
                 <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Code de Parrainage (Optionnel)</label>
                 <input
                   type="text"
-                  placeholder="Ex: GOLD777"
+                  placeholder="Ex: AGRO777"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value)}
                   className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-[#1b64d9] font-black tracking-widest font-mono uppercase focus:outline-none transition-colors"

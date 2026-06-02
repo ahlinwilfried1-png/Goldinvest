@@ -254,7 +254,7 @@ export default function Dashboard({
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // MLM sponsorship dynamic calculation based on real user registration tree
-  const allUsers = DataStore.getUsers();
+  const [allUsers, setAllUsers] = useState<User[]>(() => DataStore.getUsers());
   const mlmRates = DataStore.getMLMRates();
   
   const myIdUpper = userState.id.toUpperCase();
@@ -266,11 +266,33 @@ export default function Dashboard({
     const refClean = u.referredBy.trim().toUpperCase();
     const refDigits = refClean.replace(/\D/g, '');
 
+    // 1. Direct match by User ID
     if (refClean === myIdUpper) return true;
+    
+    // 2. Direct match by Referral Code
     if (myCodeUpper && refClean === myCodeUpper) return true;
+    
+    // 3. Direct match by Phone number
     if (myPhoneDigits && refDigits && (myPhoneDigits.endsWith(refDigits) || refDigits.endsWith(myPhoneDigits))) {
       return true;
     }
+
+    // 4. Resolve phantom/indirect sponsor matchups across disparate browser sessions/windows
+    // If the sponsor ID in u.referredBy points to a phantom user record, check if that phantom's referralCode matches our referral code
+    const sponsor = allUsers.find(sp => sp.id.toUpperCase() === refClean);
+    if (sponsor) {
+      const spCodeUpper = sponsor.referralCode ? sponsor.referralCode.trim().toUpperCase() : '';
+      if (myCodeUpper && spCodeUpper && spCodeUpper === myCodeUpper) return true;
+
+      const spIdUpper = sponsor.id.toUpperCase();
+      if (spIdUpper === myIdUpper) return true;
+
+      const spPhoneDigits = sponsor.whatsapp ? sponsor.whatsapp.replace(/\D/g, '') : '';
+      if (myPhoneDigits && spPhoneDigits && (myPhoneDigits.endsWith(spPhoneDigits) || spPhoneDigits.endsWith(myPhoneDigits))) {
+        return true;
+      }
+    }
+
     return false;
   });
 
@@ -285,6 +307,17 @@ export default function Dashboard({
         const refDigits = refClean.replace(/\D/g, '');
 
         if (level1IdsUpper.includes(refClean) || level1CodesUpper.includes(refClean)) return true;
+
+        // Resolve indirect/phantom sponsors
+        const sponsor = allUsers.find(sp => sp.id.toUpperCase() === refClean);
+        if (sponsor) {
+          const spIdUpper = sponsor.id.toUpperCase();
+          const spCodeUpper = sponsor.referralCode ? sponsor.referralCode.trim().toUpperCase() : '';
+          if (level1IdsUpper.includes(spIdUpper) || (spCodeUpper && level1CodesUpper.includes(spCodeUpper))) {
+            return true;
+          }
+        }
+
         if (refDigits && level1WhatsAppDigits.some(d => d.endsWith(refDigits) || refDigits.endsWith(d))) {
           return true;
         }
@@ -303,6 +336,17 @@ export default function Dashboard({
         const refDigits = refClean.replace(/\D/g, '');
 
         if (level2IdsUpper.includes(refClean) || level2CodesUpper.includes(refClean)) return true;
+
+        // Resolve indirect/phantom sponsors
+        const sponsor = allUsers.find(sp => sp.id.toUpperCase() === refClean);
+        if (sponsor) {
+          const spIdUpper = sponsor.id.toUpperCase();
+          const spCodeUpper = sponsor.referralCode ? sponsor.referralCode.trim().toUpperCase() : '';
+          if (level2IdsUpper.includes(spIdUpper) || (spCodeUpper && level2CodesUpper.includes(spCodeUpper))) {
+            return true;
+          }
+        }
+
         if (refDigits && level2WhatsAppDigits.some(d => d.endsWith(refDigits) || refDigits.endsWith(d))) {
           return true;
         }
@@ -322,6 +366,7 @@ export default function Dashboard({
       setUserState(cur);
       onRefreshUser(cur);
     }
+    setAllUsers(DataStore.getUsers());
     setProducts(DataStore.getProducts());
     
     // Sort investments, commissions and operations by recent
@@ -391,9 +436,11 @@ export default function Dashboard({
     // Setup periodic check interval to automatically credit of earnings in real-time and check for new notifications in Chrome or app
     const interval = setInterval(() => {
       const oldBal = userState.balance;
+      const oldUsersLen = allUsers.length;
       DataStore.processAutomaticDailyInstallments();
       
       const fresh = DataStore.getCurrentUser();
+      const freshUsers = DataStore.getUsers();
       
       // Pull real-time notifications
       const freshNotifs = DataStore.getNotifications().filter(n => n.userId === undefined || n.userId === currentUser.id);
@@ -405,7 +452,7 @@ export default function Dashboard({
           initialLoadedNotifIds.current.add(n.id);
         });
         syncDashboardData();
-      } else if (fresh && fresh.balance !== oldBal) {
+      } else if ((fresh && fresh.balance !== oldBal) || freshUsers.length !== oldUsersLen) {
         syncDashboardData();
       }
     }, 5000);
@@ -420,7 +467,7 @@ export default function Dashboard({
       clearInterval(interval);
       window.removeEventListener('gi_new_message', handleNewMessage);
     };
-  }, [currentUser.id, userState.balance]);
+  }, [currentUser.id, userState.balance, allUsers.length]);
 
   useEffect(() => {
     // Scroll to bottom of support chat when opened or new messages spawn
@@ -823,7 +870,7 @@ export default function Dashboard({
                   </p>
                 </div>
                 <a 
-                  href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=gi_t"
+                  href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=agro_t"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 hover:scale-[1.01] active:scale-[0.99] font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
@@ -2055,7 +2102,7 @@ export default function Dashboard({
                 <form onSubmit={submitBonusCode} className="flex gap-2.5">
                   <input
                     type="text"
-                    placeholder="Ex: GOLD777, WELCOME500"
+                    placeholder="Ex: AGRO777, WELCOME500"
                     value={bonusCodeInput}
                     onChange={(e) => setBonusCodeInput(e.target.value)}
                     className="flex-1 bg-slate-950 border border-slate-800 focus:border-yellow-500 rounded-xl py-3 px-4 text-xs sm:text-sm text-white placeholder-slate-600 font-mono font-black tracking-wider focus:outline-none uppercase"
@@ -2087,7 +2134,7 @@ export default function Dashboard({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                   <a
-                    href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=gi_t"
+                    href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=agro_t"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black uppercase tracking-wide text-center flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/10 cursor-pointer"
@@ -2095,7 +2142,7 @@ export default function Dashboard({
                     <span>💬 Groupe WhatsApp</span>
                   </a>
                   <a
-                    href="https://t.me/+yNY88-unzgQyYmJk"
+                    href="https://t.me/+Jz0uOco8K_NiNjI0"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black uppercase tracking-wide text-center flex items-center justify-center space-x-2 shadow cursor-pointer"

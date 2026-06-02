@@ -33,7 +33,7 @@ const INITIAL_USERS: User[] = [
     dailyEarnings: 0,
     totalEarnings: 0,
     bonus: 5000,
-    referralCode: 'GOLD777',
+    referralCode: 'AGRO777',
     role: 'admin',
     isBlocked: false,
     createdAt: '2026-05-10T10:00:00Z'
@@ -228,7 +228,7 @@ const INITIAL_NOTIFICATIONS: SystemNotification[] = [
 ];
 
 const INITIAL_BONUS_CODES: BonusCode[] = [
-  { code: 'GOLD777', amount: 1000, maxUses: 100, usedCount: 3, usedByUsers: ['u-1', 'u-2', 'u-3'] },
+  { code: 'AGRO777', amount: 1000, maxUses: 100, usedCount: 3, usedByUsers: ['u-1', 'u-2', 'u-3'] },
   { code: 'WELCOME500', amount: 500, maxUses: 500, usedCount: 0, usedByUsers: [] },
   { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
 ];
@@ -296,7 +296,7 @@ export class DataStore {
         dailyEarnings: 0,
         totalEarnings: 0,
         bonus: 5000,
-        referralCode: 'GOLD777',
+        referralCode: 'AGRO777',
         role: 'admin',
         isBlocked: false,
         createdAt: '2026-05-10T10:00:00Z'
@@ -539,7 +539,7 @@ export class DataStore {
     // Generate custom referral code for this user
     const usernameClean = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
     const randomSuffix = Math.floor(100 + Math.random() * 900);
-    const referralCode = `${usernameClean || 'GOLD'}${randomSuffix}`;
+    const referralCode = `${usernameClean || 'AGRO'}${randomSuffix}`;
 
     // Verify if referred by exists
     let refereeId: string | undefined = undefined;
@@ -581,7 +581,7 @@ export class DataStore {
           totalEarnings: 0,
           bonus: 200,
           referralCode: codeClean,
-          referredBy: 'GOLD777',
+          referredBy: 'AGRO777',
           role: 'user',
           isBlocked: false,
           createdAt: new Date().toISOString()
