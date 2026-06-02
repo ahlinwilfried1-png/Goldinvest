@@ -255,6 +255,7 @@ export default function Dashboard({
 
   // MLM sponsorship dynamic calculation based on real user registration tree
   const allUsers = DataStore.getUsers();
+  const mlmRates = DataStore.getMLMRates();
   
   const myIdUpper = userState.id.toUpperCase();
   const myCodeUpper = userState.referralCode ? userState.referralCode.trim().toUpperCase() : '';
@@ -1530,7 +1531,7 @@ export default function Dashboard({
                 <div className="md:col-span-2 space-y-2 flex flex-col justify-center">
                   <span className="text-xs font-black text-yellow-500 font-mono tracking-widest uppercase block">PROFIL PARRAIN</span>
                   <h3 className="text-lg font-sans font-black text-white uppercase tracking-tight">Encouragez vos Équipes MLM</h3>
-                  <p className="text-xs text-slate-200 leading-relaxed">Distribuez votre lien personnel et gagnez Niveau 1 : 20%, Niveau 2 : 3% et Niveau 3 : 1% sur les investissements de votre réseau.</p>
+                  <p className="text-xs text-slate-200 leading-relaxed">Distribuez votre lien personnel et gagnez Niveau 1 : {mlmRates.level1}%, Niveau 2 : {mlmRates.level2}% et Niveau 3 : {mlmRates.level3}% sur les investissements de votre réseau.</p>
                 </div>
  
                 {/* Copy blocks */}
@@ -1576,7 +1577,7 @@ export default function Dashboard({
                 </div>
  
                 <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
-                  <span className="text-xs text-green-400 uppercase tracking-wider font-extrabold block">Niveau 1 (20%)</span>
+                  <span className="text-xs text-green-400 uppercase tracking-wider font-extrabold block">Niveau 1 ({mlmRates.level1}%)</span>
                   <div className="text-base sm:text-lg font-black font-mono text-green-400 mt-1">
                     {commissions.filter(c => c.level === 1).reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} F
                   </div>
@@ -1584,7 +1585,7 @@ export default function Dashboard({
                 </div>
  
                 <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
-                  <span className="text-xs text-yellow-500 uppercase tracking-wider font-extrabold block">Niveau 2 (3%)</span>
+                  <span className="text-xs text-yellow-500 uppercase tracking-wider font-extrabold block">Niveau 2 ({mlmRates.level2}%)</span>
                   <div className="text-base sm:text-lg font-black font-mono text-white mt-1">
                     {commissions.filter(c => c.level === 2).reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} F
                   </div>
@@ -1592,7 +1593,7 @@ export default function Dashboard({
                 </div>
  
                 <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
-                  <span className="text-xs text-blue-400 uppercase tracking-wider font-extrabold block">Niveau 3 (1%)</span>
+                  <span className="text-xs text-blue-400 uppercase tracking-wider font-extrabold block">Niveau 3 ({mlmRates.level3}%)</span>
                   <div className="text-base sm:text-lg font-black font-mono text-white mt-1">
                     {commissions.filter(c => c.level === 3).reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} F
                   </div>
@@ -1714,7 +1715,7 @@ export default function Dashboard({
                   <>
                     {level2Users.length === 0 ? (
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-center py-6 bg-slate-950/20 rounded-xl font-medium">
-                        Aucun filleul de Niveau 2 pour le moment. Lorsque vos filleuls directs parraineront d'autres membres, ils apparaîtront ici et vous toucherez 3% de bonus.
+                        Aucun filleul de Niveau 2 pour le moment. Lorsque vos filleuls directs parraineront d'autres membres, ils apparaîtront ici et vous toucherez {mlmRates.level2}% de bonus.
                       </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -1755,7 +1756,7 @@ export default function Dashboard({
                   <>
                     {level3Users.length === 0 ? (
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-center py-6 bg-slate-950/20 rounded-xl font-medium">
-                        Aucun filleul de Niveau 3 pour le moment. Lorsque votre réseau de Niveau 2 parrainera leurs propres amis, ils s'afficheront ici et vous toucherez 1% de bonus.
+                        Aucun filleul de Niveau 3 pour le moment. Lorsque votre réseau de Niveau 2 parrainera leurs propres amis, ils s'afficheront ici et vous toucherez {mlmRates.level3}% de bonus.
                       </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

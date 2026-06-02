@@ -355,6 +355,20 @@ export class DataStore {
     setToStore<User[]>('gi_users', users);
   }
 
+  static getMLMRates(): { level1: number, level2: number, level3: number } {
+    return {
+      level1: getFromStore<number>('gi_mlm_level1_rate', 20),
+      level2: getFromStore<number>('gi_mlm_level2_rate', 3),
+      level3: getFromStore<number>('gi_mlm_level3_rate', 1),
+    };
+  }
+
+  static saveMLMRates(rates: { level1: number, level2: number, level3: number }): void {
+    setToStore<number>('gi_mlm_level1_rate', rates.level1);
+    setToStore<number>('gi_mlm_level2_rate', rates.level2);
+    setToStore<number>('gi_mlm_level3_rate', rates.level3);
+  }
+
   static getProducts(): Product[] {
     let list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
     
@@ -892,9 +906,8 @@ export class DataStore {
     this.saveInvestments(investments);
 
     // Process MLM Commission split!
-    // Level 1: 20%
-    // Level 2: 3%
-    // Level 3: 1%
+    // Level 1, 2, and 3 Rates are loaded dynamically
+    const mlmRates = this.getMLMRates();
     if (user.referredBy) {
       const cleanInput = user.referredBy.trim();
       const refClean = cleanInput.toUpperCase();
@@ -910,7 +923,7 @@ export class DataStore {
         return false;
       });
       if (parentUser) {
-        const commAmtLvl1 = Math.round(targetProduct.price * 0.20); // 20%
+        const commAmtLvl1 = Math.round(targetProduct.price * (mlmRates.level1 / 100)); // Dynamic %
         parentUser.balance += commAmtLvl1;
         parentUser.bonus += commAmtLvl1;
         
@@ -932,7 +945,7 @@ export class DataStore {
           id: `not-com1-${Date.now()}`,
           userId: parentUser.id,
           title: 'Commission MLM reçue !',
-          message: `Félicitations, vous avez perçu ${commAmtLvl1} FCFA (Niveau 1 : 20%) car votre affilié ${user.name} a investi de l'argent dans le plan ${targetProduct.name}.`,
+          message: `Félicitations, vous avez perçu ${commAmtLvl1} FCFA (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi de l'argent dans le plan ${targetProduct.name}.`,
           type: 'bonus',
           createdAt: new Date().toISOString(),
           read: false
@@ -946,7 +959,7 @@ export class DataStore {
           this.saveCurrentUser(currentUser);
         }
 
-        // Level 2 MLM: 3%
+        // Level 2 MLM
         if (parentUser.referredBy) {
           const cleanInput2 = parentUser.referredBy.trim();
           const refClean2 = cleanInput2.toUpperCase();
@@ -962,7 +975,7 @@ export class DataStore {
             return false;
           });
           if (grandParentUser) {
-            const commAmtLvl2 = Math.round(targetProduct.price * 0.03); // 3%
+            const commAmtLvl2 = Math.round(targetProduct.price * (mlmRates.level2 / 100)); // Dynamic %
             grandParentUser.balance += commAmtLvl2;
             grandParentUser.bonus += commAmtLvl2;
 
@@ -984,7 +997,7 @@ export class DataStore {
               id: `not-com2-${Date.now()}`,
               userId: grandParentUser.id,
               title: 'Commission MLM Niveau 2 !',
-              message: `Vous avez perçu ${commAmtLvl2} FCFA (Niveau 2 : 3%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
+              message: `Vous avez perçu ${commAmtLvl2} FCFA (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
               type: 'bonus',
               createdAt: new Date().toISOString(),
               read: false
@@ -997,7 +1010,7 @@ export class DataStore {
               this.saveCurrentUser(currentUser);
             }
 
-            // Level 3 MLM: 1%
+            // Level 3 MLM
             if (grandParentUser.referredBy) {
               const cleanInput3 = grandParentUser.referredBy.trim();
               const refClean3 = cleanInput3.toUpperCase();
@@ -1013,7 +1026,7 @@ export class DataStore {
                 return false;
               });
               if (greatGrandParentUser) {
-                const commAmtLvl3 = Math.round(targetProduct.price * 0.01); // 1%
+                const commAmtLvl3 = Math.round(targetProduct.price * (mlmRates.level3 / 100)); // Dynamic %
                 greatGrandParentUser.balance += commAmtLvl3;
                 greatGrandParentUser.bonus += commAmtLvl3;
 
@@ -1035,7 +1048,7 @@ export class DataStore {
                   id: `not-com3-${Date.now()}`,
                   userId: greatGrandParentUser.id,
                   title: 'Commission MLM Niveau 3 !',
-                  message: `Vous avez perçu ${commAmtLvl3} FCFA (Niveau 3 : 1%) suite à l'investissement de ${user.name} (parrainé indirectement par un membre de votre réseau).`,
+                  message: `Vous avez perçu ${commAmtLvl3} FCFA (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name} (parrainé indirectement par un membre de votre réseau).`,
                   type: 'bonus',
                   createdAt: new Date().toISOString(),
                   read: false

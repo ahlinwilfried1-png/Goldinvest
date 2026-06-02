@@ -85,6 +85,21 @@ export default function AdminPanel({
   const [newCodeAmount, setNewCodeAmount] = useState(500);
   const [newCodeMax, setNewCodeMax] = useState(100);
 
+  // MLM Rates state
+  const [mlmRate1, setMlmRate1] = useState<number>(() => DataStore.getMLMRates().level1);
+  const [mlmRate2, setMlmRate2] = useState<number>(() => DataStore.getMLMRates().level2);
+  const [mlmRate3, setMlmRate3] = useState<number>(() => DataStore.getMLMRates().level3);
+
+  const handleSaveMlmRates = (e: React.FormEvent) => {
+    e.preventDefault();
+    DataStore.saveMLMRates({
+      level1: mlmRate1,
+      level2: mlmRate2,
+      level3: mlmRate3
+    });
+    alert('Pourcentages de commission MLM (Parrainage) regulés avec succès !');
+  };
+
   // Picture receipt lightbox state
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
@@ -643,11 +658,11 @@ export default function AdminPanel({
             <span className="bg-red-500 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-full animate-pulse">{pendingWithdrawCount}</span>
           )}
         </button>
-        <button
+         <button
           onClick={() => setActiveAdminTab('users')}
           className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors ${activeAdminTab === 'users' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
         >
-          <span>Clients MLM ({users.length})</span>
+          <span>Utilisateurs ({users.length})</span>
         </button>
         <button
           onClick={() => setActiveAdminTab('affiliations')}
@@ -1486,6 +1501,71 @@ export default function AdminPanel({
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* MLM Rate Configuration Section */}
+          <div className="bg-[#0f172a]/60 border border-slate-800 rounded-2xl p-5 col-span-1 lg:col-span-2 shadow-xl">
+            <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className="text-yellow-500">🎯</span>
+              <span>Régler les Commissions MLM (Niveaux Parrainage)</span>
+            </h3>
+
+            <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
+              Définissez les pourcentages de bonus de commission à distribuer automatiquement aux parrains lors de l'achat de forfaits VIP.
+            </p>
+
+            <form onSubmit={handleSaveMlmRates} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau 1 (%)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    required
+                    value={mlmRate1}
+                    onChange={(e) => setMlmRate1(parseInt(e.target.value) || 0)}
+                    className="w-full bg-slate-900 border border-slate-700/60 focus:border-yellow-500/40 rounded-xl py-2 px-3 text-sm text-green-400 font-mono focus:outline-none font-bold text-center"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block text-center">Filleuls directs</span>
+                </div>
+
+                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau 2 (%)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    required
+                    value={mlmRate2}
+                    onChange={(e) => setMlmRate2(parseInt(e.target.value) || 0)}
+                    className="w-full bg-slate-900 border border-slate-700/60 focus:border-yellow-500/40 rounded-xl py-2 px-3 text-sm text-yellow-500 font-mono focus:outline-none font-bold text-center"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block text-center">Niveau direct + 1</span>
+                </div>
+
+                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau 3 (%)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    required
+                    value={mlmRate3}
+                    onChange={(e) => setMlmRate3(parseInt(e.target.value) || 0)}
+                    className="w-full bg-slate-900 border border-slate-700/60 focus:border-yellow-500/40 rounded-xl py-2 px-3 text-sm text-blue-400 font-mono focus:outline-none font-bold text-center"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block text-center">Niveau direct + 2</span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+              >
+                💾 Enregistrer les pourcentages de commission
+              </button>
+            </form>
           </div>
         </div>
       )}
