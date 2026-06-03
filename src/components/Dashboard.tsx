@@ -707,8 +707,8 @@ export default function Dashboard({
     openConfirm(
       'Activer le Plan VIP',
       `Voulez-vous activer le plan d'investissement "${product.name}" pour ${product.price.toLocaleString()} ${getCurrency()} ? Ce montant sera débité.`,
-      () => {
-        const res = DataStore.buyProduct(userState.id, product.id);
+      async () => {
+        const res = await DataStore.buyProduct(userState.id, product.id);
         if (res.success) {
           openPurchaseSuccessAlert('Félicitations ! 🎉', res.message);
         } else {

@@ -74,86 +74,86 @@ export default function Auth({
       console.error('Failed to sync before login/register:', err);
     }
 
-    setTimeout(() => {
-      if (isRegister) {
-        // Registration validations
-        if (name.trim().length < 3) {
-          setErrorMessage("Veuillez entrer un nom d'utilisateur valide (au moins 3 caractères).");
-          setLoading(false);
-          return;
-        }
-        if (!whatsapp.trim()) {
-          setErrorMessage('Le numéro de téléphone est requis.');
-          setLoading(false);
-          return;
-        }
-        if (password.length < 5) {
-          setErrorMessage('Le mot de passe doit contenir au moins 5 caractères pour garantir la sécurité de votre capital.');
-          setLoading(false);
-          return;
-        }
-        if (password !== confirmPassword) {
-          setErrorMessage('Les mots de passe saisis ne correspondent pas.');
-          setLoading(false);
-          return;
-        }
+    await new Promise(resolve => setTimeout(resolve, 1200));
 
-        const cleanPhone = whatsapp.trim().replace(/^0+/, '');
-        const fullWhatsapp = `${selectedCode}${cleanPhone}`;
-
-        // Call database
-        const result = DataStore.register({
-          name: name.trim(),
-          whatsapp: fullWhatsapp,
-          country,
-          password,
-          referredByCode: referralCode
-        });
-
-        if (result.success && result.user) {
-          setSuccessMessage(result.message);
-          setTimeout(() => {
-            onAuthSuccess(result.user);
-            setLoading(false);
-          }, 1500);
-        } else {
-          setErrorMessage(result.message || "Une erreur s'est produite lors de la création de votre compte d'investissement.");
-          setLoading(false);
-        }
-
-      } else {
-        // Login validations
-        if (!loginPhone.trim()) {
-          setErrorMessage('Le numéro de téléphone est requis.');
-          setLoading(false);
-          return;
-        }
-        if (!loginPassword.trim()) {
-          setErrorMessage('Le mot de passe de connexion est requis.');
-          setLoading(false);
-          return;
-        }
-
-        let finalLoginWhatsapp = loginPhone.trim().replace(/\s+/g, '');
-        // If it's a simple number and doesn't start with "+" or have "@" or equal 'admin', apply country prefix
-        if (!finalLoginWhatsapp.startsWith('+') && !finalLoginWhatsapp.includes('@') && finalLoginWhatsapp !== 'admin') {
-          const cleanPhone = finalLoginWhatsapp.replace(/^0+/, '');
-          finalLoginWhatsapp = `${loginSelectedCode}${cleanPhone}`;
-        }
-
-        const result = DataStore.login(finalLoginWhatsapp, loginPassword);
-        if (result.success && result.user) {
-          setSuccessMessage(result.message);
-          setTimeout(() => {
-            onAuthSuccess(result.user);
-            setLoading(false);
-          }, 1500);
-        } else {
-          setErrorMessage(result.message);
-          setLoading(false);
-        }
+    if (isRegister) {
+      // Registration validations
+      if (name.trim().length < 3) {
+        setErrorMessage("Veuillez entrer un nom d'utilisateur valide (au moins 3 caractères).");
+        setLoading(false);
+        return;
       }
-    }, 1200);
+      if (!whatsapp.trim()) {
+        setErrorMessage('Le numéro de téléphone est requis.');
+        setLoading(false);
+        return;
+      }
+      if (password.length < 5) {
+        setErrorMessage('Le mot de passe doit contenir au moins 5 caractères pour garantir la sécurité de votre capital.');
+        setLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setErrorMessage('Les mots de passe saisis ne correspondent pas.');
+        setLoading(false);
+        return;
+      }
+
+      const cleanPhone = whatsapp.trim().replace(/^0+/, '');
+      const fullWhatsapp = `${selectedCode}${cleanPhone}`;
+
+      // Call database
+      const result = await DataStore.register({
+        name: name.trim(),
+        whatsapp: fullWhatsapp,
+        country,
+        password,
+        referredByCode: referralCode
+      });
+
+      if (result.success && result.user) {
+        setSuccessMessage(result.message);
+        setTimeout(() => {
+          onAuthSuccess(result.user!);
+          setLoading(false);
+        }, 1500);
+      } else {
+        setErrorMessage(result.message || "Une erreur s'est produite lors de la création de votre compte d'investissement.");
+        setLoading(false);
+      }
+
+    } else {
+      // Login validations
+      if (!loginPhone.trim()) {
+        setErrorMessage('Le numéro de téléphone est requis.');
+        setLoading(false);
+        return;
+      }
+      if (!loginPassword.trim()) {
+        setErrorMessage('Le mot de passe de connexion est requis.');
+        setLoading(false);
+        return;
+      }
+
+      let finalLoginWhatsapp = loginPhone.trim().replace(/\s+/g, '');
+      // If it's a simple number and doesn't start with "+" or have "@" or equal 'admin', apply country prefix
+      if (!finalLoginWhatsapp.startsWith('+') && !finalLoginWhatsapp.includes('@') && finalLoginWhatsapp !== 'admin') {
+        const cleanPhone = finalLoginWhatsapp.replace(/^0+/, '');
+        finalLoginWhatsapp = `${loginSelectedCode}${cleanPhone}`;
+      }
+
+      const result = await DataStore.login(finalLoginWhatsapp, loginPassword);
+      if (result.success && result.user) {
+        setSuccessMessage(result.message);
+        setTimeout(() => {
+          onAuthSuccess(result.user!);
+          setLoading(false);
+        }, 1500);
+      } else {
+        setErrorMessage(result.message);
+        setLoading(false);
+      }
+    }
   };
 
   return (

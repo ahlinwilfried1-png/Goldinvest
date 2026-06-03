@@ -684,154 +684,49 @@ export class DataStore {
   }
 
   // Log in specific helper
-  static login(whatsapp: string, passwordString: string): { success: boolean, user?: User, message: string } {
-    const users = this.getUsers();
-    const user = users.find(u => u.whatsapp === whatsapp);
-    if (!user) {
-      return { success: false, message: 'Aucun utilisateur trouvé avec ce numéro WhatsApp.' };
+  static async login(whatsapp: string, passwordString: string): Promise<{ success: boolean, user?: User, message: string }> {
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whatsapp, password: passwordString })
+      });
+      const res = await response.json();
+      if (res.success && res.user) {
+        this.saveCurrentUser(res.user);
+        await syncWithBackend();
+      }
+      return res;
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, message: 'Erreur réseau lors de la connexion.' };
     }
-    if (user.isBlocked) {
-      return { success: false, message: 'Ce compte a été bloqué par l\'administrateur. Veuillez contacter le support.' };
-    }
-    
-    if (passwordString.trim() === '') {
-      return { success: false, message: 'Mot de passe requis.' };
-    }
-    
-    // Check specific user set password or fallback to defaults
-    const expectedPassword = user.password || (user.role === 'admin' ? 'admin' : 'user123');
-    if (passwordString === expectedPassword) {
-      this.saveCurrentUser(user);
-      return { success: true, user, message: 'Connexion réussie.' };
-    }
-
-    return { success: false, message: 'Mot de passe incorrect.' };
   }
 
   // Register modern form
-  static register(data: {
+  static async register(data: {
     name: string;
     whatsapp: string;
     country: string;
     password?: string;
     referredByCode: string;
-  }): { success: boolean, user?: User, message: string } {
-    const users = this.getUsers();
-    
-    // Duplicate check
-    const existing = users.find(u => u.whatsapp === data.whatsapp);
-    if (existing) {
-      return { success: false, message: 'Ce numéro WhatsApp est déjà enregistré sur notre plateforme.' };
-    }
-
-    // Generate custom referral code for this user
-    const usernameClean = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
-    const randomSuffix = Math.floor(100 + Math.random() * 900);
-    const referralCode = `${usernameClean || 'AGRO'}${randomSuffix}`;
-
-    // Verify if referred by exists
-    let refereeId: string | undefined = undefined;
-    if (data.referredByCode.trim().length > 0) {
-      const cleanInput = data.referredByCode.trim();
-      const codeClean = cleanInput.toUpperCase();
-      const digitsOnlyInput = cleanInput.replace(/\D/g, '');
-
-      let referrerUser = users.find(u => {
-        // Match 1: Referral Code
-        if (u.referralCode && u.referralCode.toUpperCase() === codeClean) return true;
-        // Match 2: User ID
-        if (u.id && u.id.toUpperCase() === codeClean) return true;
-        // Match 3: WhatsApp/Phone number
-        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
-          const uDigits = u.whatsapp.replace(/\D/g, '');
-          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) {
-            return true;
-          }
-        }
-        return false;
+  }): Promise<{ success: boolean, user?: User, message: string }> {
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       });
-
-      if (!referrerUser) {
-        // If the code is not found in the local storage database (common in private windows, cross-browser tests, or clean sessions),
-        // we dynamically create a phantom sponsor user with this code on-the-fly. This prevents registration from being blocked
-        // and enables transparent MLM simulation across disparate sessions.
-        const phantomId = `u-ref-${Math.floor(100000 + Math.random() * 900000)}`;
-        const codePrefix = codeClean.replace(/[0-9]/g, '');
-        const phantomName = codePrefix ? (codePrefix.charAt(0) + codePrefix.slice(1).toLowerCase() + ' (Parrain)') : 'Sponsor VIP';
-        const phantomUser: User = {
-          id: phantomId,
-          name: phantomName,
-          whatsapp: digitsOnlyInput ? `+${digitsOnlyInput}` : `+23769${Math.floor(1000000 + Math.random() * 9000000)}`,
-          password: 'user123',
-          country: data.country,
-          balance: 1000,
-          dailyEarnings: 0,
-          totalEarnings: 0,
-          bonus: 200,
-          referralCode: codeClean,
-          referredBy: 'AGRO777',
-          role: 'user',
-          isBlocked: false,
-          createdAt: new Date().toISOString()
-        };
-        users.push(phantomUser);
-        referrerUser = phantomUser;
+      const res = await response.json();
+      if (res.success && res.user) {
+        this.saveCurrentUser(res.user);
+        await syncWithBackend();
       }
-      refereeId = referrerUser.id;
+      return res;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { success: false, message: 'Erreur réseau lors de l\'inscription.' };
     }
-
-    const isWpAdmin = data.whatsapp.replace(/\D/g, '').endsWith('22670903319') || data.whatsapp.replace(/\D/g, '') === '70903319';
-
-    const newUser: User = {
-      id: `u-${Date.now()}`,
-      name: data.name,
-      whatsapp: data.whatsapp,
-      password: data.password || 'user123',
-      country: data.country,
-      balance: 200, // 200 FCFA Welcome Signup Bonus as requested
-      dailyEarnings: 0,
-      totalEarnings: 0,
-      bonus: 200,
-      referralCode,
-      referredBy: refereeId,
-      role: isWpAdmin ? 'admin' : 'user',
-      isBlocked: false,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedUsers = [...users, newUser];
-    this.saveUsers(updatedUsers);
-
-    // Create system notification for signing up
-    const systemNotifs = this.getNotifications();
-    systemNotifs.unshift({
-      id: `not-${Date.now()}`,
-      userId: newUser.id,
-      title: 'Bienvenue sur AgroCapital !',
-      message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.',
-      type: 'bonus',
-      createdAt: new Date().toISOString(),
-      read: false
-    });
-    this.saveNotifications(systemNotifs);
-
-    // If referred by someone, increment their "invités" count under MLM, write notification
-    if (refereeId) {
-      const parentNotifs = this.getNotifications();
-      parentNotifs.unshift({
-        id: `not-ref-${Date.now()}`,
-        userId: refereeId,
-        title: 'Nouveau parrainage',
-        message: `${newUser.name} s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !`,
-        type: 'info',
-        createdAt: new Date().toISOString(),
-        read: false
-      });
-      this.saveNotifications(parentNotifs);
-    }
-
-    this.saveCurrentUser(newUser);
-    return { success: true, user: newUser, message: 'Inscription réussie.' };
   }
 
   // Deposit logic
@@ -1039,239 +934,23 @@ export class DataStore {
   }
 
   // Invest Product logic
-  static buyProduct(userId: string, productId: string): { success: boolean, message: string } {
-    const products = this.getProducts();
-    const targetProduct = products.find(p => p.id === productId);
-    if (!targetProduct) {
-      return { success: false, message: 'Le produit d\'investissement sélectionné est introuvable.' };
-    }
-
-    if (targetProduct.isBlocked) {
-      return { success: false, message: 'Ce plan d\'investissement VIP est temporairement bloqué ou suspendu par l\'administration.' };
-    }
-
-    const users = this.getUsers();
-    const userIdx = users.findIndex(u => u.id === userId);
-    if (userIdx === -1) {
-      return { success: false, message: 'Utilisateur non trouvé.' };
-    }
-
-    const user = users[userIdx];
-    if (user.balance < targetProduct.price) {
-      return { success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} FCFA.` };
-    }
-
-    // Deduct price from balance
-    user.balance -= targetProduct.price;
-    user.dailyEarnings += targetProduct.dailyReturn;
-    this.saveUsers(users);
-
-    // Save current user sync
-    const currentUser = this.getCurrentUser();
-    if (currentUser && currentUser.id === userId) {
-      currentUser.balance = user.balance;
-      currentUser.dailyEarnings = user.dailyEarnings;
-      this.saveCurrentUser(currentUser);
-    }
-
-    // Record new active investment
-    const investments = this.getInvestments();
-    const newInvestment: Investment = {
-      id: `inv-${Date.now()}`,
-      userId,
-      productId: targetProduct.id,
-      productName: targetProduct.name,
-      price: targetProduct.price,
-      dailyReturn: targetProduct.dailyReturn,
-      daysPassed: 0,
-      durationDays: targetProduct.durationDays,
-      totalReturnClaimed: 0,
-      lastClaimDate: new Date().toISOString(), // Newly bought
-      status: 'active',
-      createdAt: new Date().toISOString()
-    };
-    investments.unshift(newInvestment);
-    this.saveInvestments(investments);
-
-    // Process MLM Commission split!
-    // Level 1, 2, and 3 Rates are loaded dynamically
-    const mlmRates = this.getMLMRates();
-    if (user.referredBy) {
-      const cleanInput = user.referredBy.trim();
-      const refClean = cleanInput.toUpperCase();
-      const digitsOnlyInput = cleanInput.replace(/\D/g, '');
-
-      const parentUser = users.find(u => {
-        if (u.id.toUpperCase() === refClean) return true;
-        if (u.referralCode && u.referralCode.toUpperCase() === refClean) return true;
-        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
-          const uDigits = u.whatsapp.replace(/\D/g, '');
-          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
-        }
-        return false;
+  static async buyProduct(userId: string, productId: string): Promise<{ success: boolean, message: string }> {
+    try {
+      const response = await fetch('/api/buy-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, productId })
       });
-      if (parentUser) {
-        const commAmtLvl1 = Math.round(targetProduct.price * (mlmRates.level1 / 100)); // Dynamic %
-        parentUser.balance += commAmtLvl1;
-        parentUser.bonus += commAmtLvl1;
-        
-        const commissions = this.getCommissions();
-        const newCommLvl1: Commission = {
-          id: `com-${Date.now()}-1`,
-          userId: parentUser.id,
-          fromUserName: user.name,
-          level: 1,
-          amount: commAmtLvl1,
-          createdAt: new Date().toISOString()
-        };
-        commissions.unshift(newCommLvl1);
-        this.saveCommissions(commissions);
-
-        // Notify parent
-        const parentNotifs = this.getNotifications();
-        parentNotifs.unshift({
-          id: `not-com1-${Date.now()}`,
-          userId: parentUser.id,
-          title: 'Commission MLM reçue !',
-          message: `Félicitations, vous avez perçu ${commAmtLvl1} FCFA (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi de l'argent dans le plan ${targetProduct.name}.`,
-          type: 'bonus',
-          createdAt: new Date().toISOString(),
-          read: false
-        });
-        this.saveNotifications(parentNotifs);
-
-        // Sync if parent user is current logged in
-        if (currentUser && currentUser.id === parentUser.id) {
-          currentUser.balance = parentUser.balance;
-          currentUser.bonus = parentUser.bonus;
-          this.saveCurrentUser(currentUser);
-        }
-
-        // Level 2 MLM
-        if (parentUser.referredBy) {
-          const cleanInput2 = parentUser.referredBy.trim();
-          const refClean2 = cleanInput2.toUpperCase();
-          const digitsOnlyInput2 = cleanInput2.replace(/\D/g, '');
-
-          const grandParentUser = users.find(u => {
-            if (u.id.toUpperCase() === refClean2) return true;
-            if (u.referralCode && u.referralCode.toUpperCase() === refClean2) return true;
-            if (digitsOnlyInput2.length >= 6 && u.whatsapp) {
-              const uDigits = u.whatsapp.replace(/\D/g, '');
-              if (uDigits.endsWith(digitsOnlyInput2) || digitsOnlyInput2.endsWith(uDigits)) return true;
-            }
-            return false;
-          });
-          if (grandParentUser) {
-            const commAmtLvl2 = Math.round(targetProduct.price * (mlmRates.level2 / 100)); // Dynamic %
-            grandParentUser.balance += commAmtLvl2;
-            grandParentUser.bonus += commAmtLvl2;
-
-            const newCommLvl2: Commission = {
-              id: `com-${Date.now()}-2`,
-              userId: grandParentUser.id,
-              fromUserName: user.name,
-              level: 2,
-              amount: commAmtLvl2,
-              createdAt: new Date().toISOString()
-            };
-            const currentComms = this.getCommissions();
-            currentComms.unshift(newCommLvl2);
-            this.saveCommissions(currentComms);
-
-            // Notify grandparent
-            const gpNotifs = this.getNotifications();
-            gpNotifs.unshift({
-              id: `not-com2-${Date.now()}`,
-              userId: grandParentUser.id,
-              title: 'Commission MLM Niveau 2 !',
-              message: `Vous avez perçu ${commAmtLvl2} FCFA (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
-              type: 'bonus',
-              createdAt: new Date().toISOString(),
-              read: false
-            });
-            this.saveNotifications(gpNotifs);
-
-            if (currentUser && currentUser.id === grandParentUser.id) {
-              currentUser.balance = grandParentUser.balance;
-              currentUser.bonus = grandParentUser.bonus;
-              this.saveCurrentUser(currentUser);
-            }
-
-            // Level 3 MLM
-            if (grandParentUser.referredBy) {
-              const cleanInput3 = grandParentUser.referredBy.trim();
-              const refClean3 = cleanInput3.toUpperCase();
-              const digitsOnlyInput3 = cleanInput3.replace(/\D/g, '');
-
-              const greatGrandParentUser = users.find(u => {
-                if (u.id.toUpperCase() === refClean3) return true;
-                if (u.referralCode && u.referralCode.toUpperCase() === refClean3) return true;
-                if (digitsOnlyInput3.length >= 6 && u.whatsapp) {
-                  const uDigits = u.whatsapp.replace(/\D/g, '');
-                  if (uDigits.endsWith(digitsOnlyInput3) || digitsOnlyInput3.endsWith(uDigits)) return true;
-                }
-                return false;
-              });
-              if (greatGrandParentUser) {
-                const commAmtLvl3 = Math.round(targetProduct.price * (mlmRates.level3 / 100)); // Dynamic %
-                greatGrandParentUser.balance += commAmtLvl3;
-                greatGrandParentUser.bonus += commAmtLvl3;
-
-                const newCommLvl3: Commission = {
-                  id: `com-${Date.now()}-3`,
-                  userId: greatGrandParentUser.id,
-                  fromUserName: user.name,
-                  level: 3,
-                  amount: commAmtLvl3,
-                  createdAt: new Date().toISOString()
-                };
-                const currentComms3 = this.getCommissions();
-                currentComms3.unshift(newCommLvl3);
-                this.saveCommissions(currentComms3);
-
-                // Notify great-grandparent
-                const ggpNotifs = this.getNotifications();
-                ggpNotifs.unshift({
-                  id: `not-com3-${Date.now()}`,
-                  userId: greatGrandParentUser.id,
-                  title: 'Commission MLM Niveau 3 !',
-                  message: `Vous avez perçu ${commAmtLvl3} FCFA (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name} (parrainé indirectement par un membre de votre réseau).`,
-                  type: 'bonus',
-                  createdAt: new Date().toISOString(),
-                  read: false
-                });
-                this.saveNotifications(ggpNotifs);
-
-                if (currentUser && currentUser.id === greatGrandParentUser.id) {
-                  currentUser.balance = greatGrandParentUser.balance;
-                  currentUser.bonus = greatGrandParentUser.bonus;
-                  this.saveCurrentUser(currentUser);
-                }
-              }
-            }
-          }
-        }
+      const res = await response.json();
+      if (res.success && res.user) {
+        this.saveCurrentUser(res.user);
+        await syncWithBackend();
       }
-      
-      // CRITICAL: Save updated balances and bonuses for the sponsor chain in LocalStorage!
-      this.saveUsers(users);
+      return res;
+    } catch (error) {
+      console.error('Buy product error:', error);
+      return { success: false, message: 'Erreur réseau lors de la souscription au plan.' };
     }
-
-    // Create purchase notification for user
-    const notifications = this.getNotifications();
-    notifications.unshift({
-      id: `not-plan-${Date.now()}`,
-      userId,
-      title: 'Plan activé avec succès !',
-      message: `Votre investissement de ${targetProduct.price.toLocaleString()} FCFA dans le plan ${targetProduct.name} a bien été pris en compte. Vous gagnerez ${targetProduct.dailyReturn.toLocaleString()} FCFA chaque jour pendant ${targetProduct.durationDays} jours.`,
-      type: 'plan',
-      createdAt: new Date().toISOString(),
-      read: false
-    });
-    this.saveNotifications(notifications);
-
-    return { success: true, message: `Vous avez investi avec succès dans le plan ${targetProduct.name} !` };
   }
 
   // Claim Daily Rewards Code
