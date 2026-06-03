@@ -55,10 +55,21 @@ export default function AdminPanel({
   }, [activeAdminTab]);
 
   React.useEffect(() => {
+    const handleStoreUpdated = () => {
+      syncLocalStates();
+    };
+    
+    // Register event listener for background synchronizer updates
+    window.addEventListener('gi_store_updated', handleStoreUpdated);
+    
     const interval = setInterval(() => {
       syncLocalStates();
     }, 3000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      window.removeEventListener('gi_store_updated', handleStoreUpdated);
+      clearInterval(interval);
+    };
   }, []);
 
   // Edit user modal state

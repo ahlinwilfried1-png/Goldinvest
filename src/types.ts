@@ -14,6 +14,7 @@ export interface User {
   withdrawBlocked?: boolean;
   role: 'user' | 'admin';
   createdAt: string;
+  lastModified?: number;
 }
 
 export interface Deposit {
@@ -26,6 +27,7 @@ export interface Deposit {
   receiptImage: string; // Base64 or standard asset url
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  lastModified?: number;
 }
 
 export interface Withdrawal {
@@ -39,6 +41,7 @@ export interface Withdrawal {
   createdAt: string;
   fee?: number;
   netAmount?: number;
+  lastModified?: number;
 }
 
 export interface Product {
@@ -52,6 +55,7 @@ export interface Product {
   tag?: string;
   isBlocked?: boolean;
   reopenDateTime?: string;
+  lastModified?: number;
 }
 
 export interface Investment {
@@ -67,6 +71,7 @@ export interface Investment {
   lastClaimDate: string; // ISO string or short date
   status: 'active' | 'completed';
   createdAt: string;
+  lastModified?: number;
 }
 
 export interface Commission {
@@ -76,6 +81,7 @@ export interface Commission {
   level: 1 | 2 | 3;
   amount: number;
   createdAt: string;
+  lastModified?: number;
 }
 
 export interface SystemNotification {
@@ -86,6 +92,7 @@ export interface SystemNotification {
   type: 'deposit' | 'withdraw' | 'bonus' | 'plan' | 'info';
   createdAt: string;
   read: boolean;
+  lastModified?: number;
 }
 
 export interface SupportMessage {
@@ -94,6 +101,7 @@ export interface SupportMessage {
   sender: 'user' | 'admin';
   message: string;
   createdAt: string;
+  lastModified?: number;
 }
 
 export interface BonusCode {
@@ -102,6 +110,7 @@ export interface BonusCode {
   maxUses: number;
   usedCount: number;
   usedByUsers: string[]; // User IDs
+  lastModified?: number;
 }
 
 export interface ChatSession {

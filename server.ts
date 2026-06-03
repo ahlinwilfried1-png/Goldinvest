@@ -99,6 +99,9 @@ async function startServer() {
 
   // API endpoints to synchronize state
   app.get("/api/get-store", (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.json(storeData);
   });
 
