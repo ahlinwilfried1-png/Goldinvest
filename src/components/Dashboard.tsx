@@ -1519,7 +1519,7 @@ export default function Dashboard({
                   <input
                     type="tel"
                     required
-                    placeholder="Ex: +225 07 11 22 33 44"
+                    placeholder="Ex: +237 65874855 ou +226 70903319"
                     value={withdrawNumber}
                     onChange={(e) => setWithdrawNumber(e.target.value)}
                     className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-slate-800 font-mono font-bold tracking-wider shadow-sm"

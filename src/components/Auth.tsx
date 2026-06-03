@@ -16,7 +16,7 @@ import { DataStore, syncWithBackend } from '../dataStore';
 
 export const eligibleCountries = [
   { name: 'Cameroun', code: '+237' },
-  { name: 'Burkina Faso', code: '+226' },
+  { name: 'Burkina Faso', code: '+226' }
 ];
 
 interface AuthProps {
@@ -59,12 +59,25 @@ export default function Auth({
   const [loginPassword, setLoginPassword] = useState('');
   const [resetTip, setResetTip] = useState(false);
 
+  // Helper to extract clean WhatsApp number with country code, removing spaces, duplicate prefixes, leading zeros
+  const getCleanWhatsappNumber = (rawNumber: string, prefixCode: string) => {
+    let clean = rawNumber.replace(/[\s\-\(\)\+]/g, '');
+    if (clean.startsWith('00')) {
+      clean = clean.slice(2);
+    }
+    const prefixDigits = prefixCode.replace(/\D/g, '');
+    if (clean.startsWith(prefixDigits)) {
+      clean = clean.slice(prefixDigits.length);
+    }
+    clean = clean.replace(/^0+/, '');
+    return `${prefixCode}${clean}`;
+  };
+
   // Form submission dispatcher
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
-
     setLoading(true);
 
     try {
@@ -99,8 +112,7 @@ export default function Auth({
         return;
       }
 
-      const cleanPhone = whatsapp.trim().replace(/^0+/, '');
-      const fullWhatsapp = `${selectedCode}${cleanPhone}`;
+      const fullWhatsapp = getCleanWhatsappNumber(whatsapp, selectedCode);
 
       // Call database
       const result = await DataStore.register({
@@ -135,11 +147,9 @@ export default function Auth({
         return;
       }
 
-      let finalLoginWhatsapp = loginPhone.trim().replace(/\s+/g, '');
-      // If it's a simple number and doesn't start with "+" or have "@" or equal 'admin', apply country prefix
-      if (!finalLoginWhatsapp.startsWith('+') && !finalLoginWhatsapp.includes('@') && finalLoginWhatsapp !== 'admin') {
-        const cleanPhone = finalLoginWhatsapp.replace(/^0+/, '');
-        finalLoginWhatsapp = `${loginSelectedCode}${cleanPhone}`;
+      let finalLoginWhatsapp = loginPhone.trim();
+      if (finalLoginWhatsapp !== 'admin' && !finalLoginWhatsapp.includes('@')) {
+        finalLoginWhatsapp = getCleanWhatsappNumber(finalLoginWhatsapp, loginSelectedCode);
       }
 
       const result = await DataStore.login(finalLoginWhatsapp, loginPassword);
