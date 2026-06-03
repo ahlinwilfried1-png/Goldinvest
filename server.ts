@@ -110,7 +110,8 @@ async function startServer() {
         const newVal = body[key];
         const oldVal = storeData[key];
 
-        if (Array.isArray(newVal) && Array.isArray(oldVal)) {
+        const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes";
+        if (shouldMerge) {
           // Merge arrays by ID or Code and choose the item with the higher lastModified
           const mergedMap = new Map<string, any>();
           
@@ -163,115 +164,124 @@ async function startServer() {
 
   // Centralized Registration API
   app.post("/api/register", (req, res) => {
-    const data = req.body;
-    let users = storeData["gi_users"] || [];
-    
-    // Check duplication
-    const existing = users.find((u: any) => u.whatsapp === data.whatsapp);
-    if (existing) {
-      return res.json({ success: false, message: 'Ce numéro WhatsApp est déjà enregistré sur notre plateforme.' });
-    }
-
-    // Generate unique referral code
-    const usernameClean = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
-    const randomSuffix = Math.floor(100 + Math.random() * 900);
-    const referralCode = `${usernameClean || 'AGRO'}${randomSuffix}`;
-
-    let refereeId: string | undefined = undefined;
-    if (data.referredByCode && data.referredByCode.trim().length > 0) {
-      const cleanInput = data.referredByCode.trim();
-      const codeClean = cleanInput.toUpperCase();
-      const digitsOnlyInput = cleanInput.replace(/\D/g, '');
-
-      let referrerUser = users.find((u: any) => {
-        if (u.referralCode && u.referralCode.toUpperCase() === codeClean) return true;
-        if (u.id && u.id.toUpperCase() === codeClean) return true;
-        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
-          const uDigits = u.whatsapp.replace(/\D/g, '');
-          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
-        }
-        return false;
-      });
-
-      // If sponsor not found, create a placeholder/phantom sponsor directly on the central DB to ensure MLM tree alignment!
-      if (!referrerUser) {
-        const phantomId = `u-ref-${Math.floor(100000 + Math.random() * 900000)}`;
-        const codePrefix = codeClean.replace(/[0-9]/g, '');
-        const phantomName = codePrefix ? (codePrefix.charAt(0) + codePrefix.slice(1).toLowerCase() + ' (Parrain)') : 'Sponsor VIP';
-        referrerUser = {
-          id: phantomId,
-          name: phantomName,
-          whatsapp: digitsOnlyInput ? `+${digitsOnlyInput}` : `+23769${Math.floor(1000000 + Math.random() * 9000000)}`,
-          password: 'user123',
-          country: data.country,
-          balance: 1000,
-          dailyEarnings: 0,
-          totalEarnings: 0,
-          bonus: 200,
-          referralCode: codeClean,
-          referredBy: 'AGRO777',
-          role: 'user',
-          isBlocked: false,
-          lastModified: Date.now(),
-          createdAt: new Date().toISOString()
-        };
-        users.push(referrerUser);
+    try {
+      const data = req.body;
+      if (!data || !data.name || !data.whatsapp) {
+        return res.json({ success: false, message: 'Le nom et le numéro de téléphone WhatsApp sont requis.' });
       }
-      refereeId = referrerUser.id;
-    }
 
-    const isWpAdmin = data.whatsapp.replace(/\D/g, '').endsWith('22670903319') || data.whatsapp.replace(/\D/g, '') === '70903319';
+      let users = storeData["gi_users"] || [];
+      
+      // Check duplication
+      const existing = users.find((u: any) => u.whatsapp === data.whatsapp);
+      if (existing) {
+        return res.json({ success: false, message: 'Ce numéro WhatsApp est déjà enregistré sur notre plateforme.' });
+      }
 
-    const newUser = {
-      id: `u-${Date.now()}`,
-      name: data.name,
-      whatsapp: data.whatsapp,
-      password: data.password || 'user123',
-      country: data.country,
-      balance: 200, // 200 FCFA Welcome Signup bonus
-      dailyEarnings: 0,
-      totalEarnings: 0,
-      bonus: 200,
-      referralCode,
-      referredBy: refereeId,
-      role: isWpAdmin ? 'admin' : 'user',
-      isBlocked: false,
-      lastModified: Date.now(),
-      createdAt: new Date().toISOString()
-    };
+      // Generate unique referral code
+      const usernameClean = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
+      const randomSuffix = Math.floor(100 + Math.random() * 900);
+      const referralCode = `${usernameClean || 'AGRO'}${randomSuffix}`;
 
-    users.push(newUser);
-    storeData["gi_users"] = users;
+      let refereeId: string | undefined = undefined;
+      if (data.referredByCode && data.referredByCode.trim().length > 0) {
+        const cleanInput = data.referredByCode.trim();
+        const codeClean = cleanInput.toUpperCase();
+        const digitsOnlyInput = cleanInput.replace(/\D/g, '');
 
-    // Standard welcome notification
-    let notifications = storeData["gi_notifications"] || [];
-    notifications.unshift({
-      id: `not-${Date.now()}`,
-      userId: newUser.id,
-      title: 'Bienvenue sur AgroCapital !',
-      message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.',
-      type: 'bonus',
-      createdAt: new Date().toISOString(),
-      lastModified: Date.now(),
-      read: false
-    });
+        let referrerUser = users.find((u: any) => {
+          if (u.referralCode && u.referralCode.toUpperCase() === codeClean) return true;
+          if (u.id && u.id.toUpperCase() === codeClean) return true;
+          if (digitsOnlyInput.length >= 6 && u.whatsapp) {
+            const uDigits = u.whatsapp.replace(/\D/g, '');
+            if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
+          }
+          return false;
+        });
 
-    if (refereeId) {
+        // If sponsor not found, create a placeholder/phantom sponsor directly on the central DB to ensure MLM tree alignment!
+        if (!referrerUser) {
+          const phantomId = `u-ref-${Math.floor(100000 + Math.random() * 900000)}`;
+          const codePrefix = codeClean.replace(/[0-9]/g, '');
+          const phantomName = codePrefix ? (codePrefix.charAt(0) + codePrefix.slice(1).toLowerCase() + ' (Parrain)') : 'Sponsor VIP';
+          referrerUser = {
+            id: phantomId,
+            name: phantomName,
+            whatsapp: digitsOnlyInput ? `+${digitsOnlyInput}` : `+23769${Math.floor(1000000 + Math.random() * 9000000)}`,
+            password: 'user123',
+            country: data.country || 'Cameroun',
+            balance: 1000,
+            dailyEarnings: 0,
+            totalEarnings: 0,
+            bonus: 200,
+            referralCode: codeClean,
+            referredBy: 'AGRO777',
+            role: 'user',
+            isBlocked: false,
+            lastModified: Date.now(),
+            createdAt: new Date().toISOString()
+          };
+          users.push(referrerUser);
+        }
+        refereeId = referrerUser.id;
+      }
+
+      const isWpAdmin = data.whatsapp.replace(/\D/g, '').endsWith('22670903319') || data.whatsapp.replace(/\D/g, '') === '70903319';
+
+      const newUser = {
+        id: `u-${Date.now()}`,
+        name: data.name,
+        whatsapp: data.whatsapp,
+        password: data.password || 'user123',
+        country: data.country || 'Cameroun',
+        balance: 200, // 200 FCFA Welcome Signup bonus
+        dailyEarnings: 0,
+        totalEarnings: 0,
+        bonus: 200,
+        referralCode,
+        referredBy: refereeId,
+        role: isWpAdmin ? 'admin' : 'user',
+        isBlocked: false,
+        lastModified: Date.now(),
+        createdAt: new Date().toISOString()
+      };
+
+      users.push(newUser);
+      storeData["gi_users"] = users;
+
+      // Standard welcome notification
+      let notifications = storeData["gi_notifications"] || [];
       notifications.unshift({
-        id: `not-ref-${Date.now()}`,
-        userId: refereeId,
-        title: 'Nouveau parrainage',
-        message: `${newUser.name} s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !`,
-        type: 'info',
+        id: `not-${Date.now()}`,
+        userId: newUser.id,
+        title: 'Bienvenue sur AgroCapital !',
+        message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.',
+        type: 'bonus',
         createdAt: new Date().toISOString(),
         lastModified: Date.now(),
         read: false
       });
-    }
-    storeData["gi_notifications"] = notifications;
 
-    saveStore();
-    res.json({ success: true, user: newUser, message: 'Inscription réussie.' });
+      if (refereeId) {
+        notifications.unshift({
+          id: `not-ref-${Date.now()}`,
+          userId: refereeId,
+          title: 'Nouveau parrainage',
+          message: `${newUser.name} s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !`,
+          type: 'info',
+          createdAt: new Date().toISOString(),
+          lastModified: Date.now(),
+          read: false
+        });
+      }
+      storeData["gi_notifications"] = notifications;
+
+      saveStore();
+      res.json({ success: true, user: newUser, message: 'Inscription réussie.' });
+    } catch (error: any) {
+      console.error('Registration server error:', error);
+      res.json({ success: false, message: 'Erreur interne lors de l\'inscription: ' + error.message });
+    }
   });
 
   // Centralized Login API

@@ -298,7 +298,7 @@ export const setToStore = <T>(key: string, value: T): void => {
 
 export const syncWithBackend = async (): Promise<boolean> => {
   try {
-    const resp = await fetch('/api/get-store');
+    const resp = await fetch('/api/get-store?t=' + Date.now());
     if (!resp.ok) return false;
     const data = await resp.json();
     if (data && typeof data === 'object') {
