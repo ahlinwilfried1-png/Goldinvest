@@ -399,14 +399,33 @@ export const syncWithBackend = async (): Promise<boolean> => {
             }
           }
 
-          let localOnlyDetected = false;
-          const remoteIds = new Set(remoteData.map((item: any) => item && String(item.id || item.code)).filter(Boolean));
+          let needsSyncBackToServer = false;
+          const remoteMap = new Map<string, any>();
+          for (const item of remoteData) {
+            if (item && typeof item === "object") {
+              const id = item.id || item.code;
+              if (id) remoteMap.set(String(id), item);
+            }
+          }
+
           for (const item of localArray) {
             if (item) {
               const id = String(item.id || item.code);
-              if (id && !remoteIds.has(id)) {
-                localOnlyDetected = true;
-                break;
+              if (id) {
+                if (!remoteMap.has(id)) {
+                  // Local-only detected: it doesn't exist on the server
+                  needsSyncBackToServer = true;
+                  break;
+                } else {
+                  // Exists in both: compare lastModified timestamps to see if local is NEWER
+                  const remoteItem = remoteMap.get(id);
+                  const localTime = item.lastModified || 0;
+                  const remoteTime = (remoteItem && remoteItem.lastModified) || 0;
+                  if (localTime > remoteTime) {
+                    needsSyncBackToServer = true;
+                    break;
+                  }
+                }
               }
             }
           }
@@ -416,14 +435,14 @@ export const syncWithBackend = async (): Promise<boolean> => {
           if (localValStr !== mergedStr) {
             localStorage.setItem(key, mergedStr);
             changed = true;
-            if (localOnlyDetected) {
-              // Bidirectional sync: notify backend of our newer/local-only items so it keeps in sync!
-              fetch('/api/save-store', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ [key]: mergedArray })
-              }).catch(err => console.error('Failed to sync merged data back to server:', err));
-            }
+          }
+          if (needsSyncBackToServer) {
+            // Bidirectional sync: notify backend of our newer/local-only items so it keeps in sync!
+            fetch('/api/save-store', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ [key]: mergedArray })
+            }).catch(err => console.error('Failed to sync merged data back to server:', err));
           }
         } else {
           const remoteStr = JSON.stringify(remoteData);
@@ -727,6 +746,7 @@ export class DataStore {
     country: string;
     password?: string;
     referredByCode: string;
+    device?: string;
   }): Promise<{ success: boolean, user?: User, message: string }> {
     try {
       const response = await fetch('/api/register', {
@@ -818,6 +838,7 @@ export class DataStore {
       referredBy: refereeId,
       role: isWpAdmin ? 'admin' : 'user',
       isBlocked: false,
+      device: data.device || 'Ordinateur',
       createdAt: new Date().toISOString()
     };
 

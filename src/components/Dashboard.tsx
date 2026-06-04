@@ -1743,6 +1743,11 @@ export default function Dashboard({
                                 <span className="text-[10px] font-black font-mono text-[#00bd74] uppercase tracking-wider bg-[#00bd74]/10 px-1.5 py-0.5 rounded border border-[#00bd74]/20">NIVEAU 1</span>
                               </div>
                               <span className="text-xs text-slate-400 block mt-1.5 font-medium">Sponsorisé le : {new Date(u.createdAt).toLocaleDateString()}</span>
+                              
+                              <div className="mt-2.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
+                                <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Compte WA</span>
+                                <span className="text-[#00bd74] text-[11px] font-bold font-mono">{u.whatsapp || 'Aucun'}</span>
+                              </div>
                             </div>
                             <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
                               <span className="text-slate-350 font-bold italic">{u.country}</span>
@@ -1783,6 +1788,11 @@ export default function Dashboard({
                                 </div>
                                 <span className="text-xs text-slate-400 block mt-1.5 font-medium">Sponsorisé par : <strong className="text-slate-200">{sponsor ? sponsor.name : 'Un membre L1'}</strong></span>
                                 <span className="text-xs text-slate-500 block mt-0.5">Le : {new Date(u.createdAt).toLocaleDateString()}</span>
+
+                                <div className="mt-2.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
+                                  <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Compte WA</span>
+                                  <span className="text-yellow-500 text-[11px] font-bold font-mono">{u.whatsapp || 'Aucun'}</span>
+                                </div>
                               </div>
                               <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
                                 <span className="text-slate-350 font-bold italic">{u.country}</span>
@@ -1824,6 +1834,11 @@ export default function Dashboard({
                                 </div>
                                 <span className="text-xs text-slate-400 block mt-1.5 font-medium">Sponsorisé par : <strong className="text-slate-200">{sponsor ? sponsor.name : 'Un membre L2'}</strong></span>
                                 <span className="text-xs text-slate-500 block mt-0.5">Le : {new Date(u.createdAt).toLocaleDateString()}</span>
+
+                                <div className="mt-2.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
+                                  <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Compte WA</span>
+                                  <span className="text-blue-400 text-[11px] font-bold font-mono">{u.whatsapp || 'Aucun'}</span>
+                                </div>
                               </div>
                               <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
                                 <span className="text-slate-350 font-bold italic">{u.country}</span>

@@ -18,10 +18,11 @@ import {
   Sparkles,
   ArrowRight,
   ChevronRight,
-  Search
+  Search,
+  RefreshCw
 } from 'lucide-react';
-import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification } from '../types';
-import { DataStore, DEFAULT_PRODUCTS } from '../dataStore';
+import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment } from '../types';
+import { DataStore, DEFAULT_PRODUCTS, syncWithBackend } from '../dataStore';
 
 interface AdminPanelProps {
   currentUser: User;
@@ -40,14 +41,24 @@ export default function AdminPanel({
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>(() => DataStore.getWithdrawals());
   const [products, setProducts] = useState<Product[]>(() => DataStore.getProducts());
   const [bonusCodes, setBonusCodes] = useState<BonusCode[]>(() => DataStore.getBonusCodes());
+  const [investments, setInvestments] = useState<Investment[]>(() => DataStore.getInvestments());
+
+  // Manual synchronizing state feedback 
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'checking'>('idle');
 
   // Navigation tab
-  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'affiliations'>('deposits');
+  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'affiliations' | 'transactions'>('deposits');
   const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
   const [affiliateSearchQuery, setAffiliateSearchQuery] = useState('');
 
   // Search filter query for users tab
   const [userSearchQuery, setUserSearchQuery] = useState('');
+
+  // Consolidated transactions filters
+  const [txSearch, setTxSearch] = useState('');
+  const [txTypeFilter, setTxTypeFilter] = useState<'all' | 'Dépôt' | 'Retrait' | 'Commission'>('all');
+  const [txStatusFilter, setTxStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
   // Synchronize state periodically and whenever the active admin tab is changed
   React.useEffect(() => {
@@ -159,7 +170,25 @@ export default function AdminPanel({
     setProducts(DataStore.getProducts());
     setBonusCodes(DataStore.getBonusCodes());
     setCommissions(DataStore.getCommissions());
+    setInvestments(DataStore.getInvestments());
     onRefreshData();
+  };
+
+  // Manual Trigger to fully retrieve all consolidated platform data of the backend
+  const handleGlobalSync = async () => {
+    setIsSyncing(true);
+    setSyncStatus('checking');
+    try {
+      await syncWithBackend();
+      syncLocalStates();
+      setSyncStatus('success');
+    } catch (error) {
+      console.error("Error manual sync from console:", error);
+      setSyncStatus('idle');
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    }
   };
 
   // User events
@@ -382,14 +411,28 @@ export default function AdminPanel({
 
   // Helper summaries
   const pendingDepositsCount = deposits.filter(d => d.status === 'pending').length;
+  const pendingDepositsSum = deposits.filter(d => d.status === 'pending').reduce((acc, curr) => acc + curr.amount, 0);
+
   const pendingWithdrawCount = withdrawals.filter(w => w.status === 'pending').length;
-  const totalVolumeApproved = deposits.filter(d => d.status === 'approved').reduce((acc, curr) => acc + curr.amount, 0);
-  const totalPayoutApproved = withdrawals.filter(w => w.status === 'approved').reduce((acc, curr) => acc + curr.amount, 0);
   const pendingWithdrawGross = withdrawals.filter(w => w.status === 'pending').reduce((acc, curr) => acc + curr.amount, 0);
   const pendingWithdrawNetToPay = withdrawals.filter(w => w.status === 'pending').reduce((acc, curr) => {
     const fee = curr.fee ?? Math.round(curr.amount * 0.12);
     return acc + (curr.amount - fee);
   }, 0);
+
+  const totalVolumeApproved = deposits.filter(d => d.status === 'approved').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalPayoutApproved = withdrawals.filter(w => w.status === 'approved').reduce((acc, curr) => acc + curr.amount, 0);
+
+  // Active VIP Plan metrics
+  const activeInvestments = investments.filter(i => i.status === 'active');
+  const activeInvestmentsCount = activeInvestments.length;
+  const activeInvestmentsVolume = activeInvestments.reduce((sum, inv) => sum + inv.price, 0);
+  const totalReturnsClaimedSum = investments.reduce((sum, inv) => sum + inv.totalReturnClaimed, 0);
+
+  // Users balance assets
+  const totalUserBalances = users.reduce((sum, u) => sum + (u.balance || 0), 0);
+  const totalUserBonuses = users.reduce((sum, u) => sum + (u.bonus || 0), 0);
+  const totalUserAssets = totalUserBalances + totalUserBonuses;
 
   return (
     <div className="w-full relative pb-16">
@@ -620,44 +663,106 @@ export default function AdminPanel({
           </div>
           <h2 className="text-xl font-display font-medium text-white">Console d'Administration Globale</h2>
         </div>
-        <button
-          onClick={onCloseAdmin}
-          className="px-5 py-2.5 bg-slate-950 hover:bg-slate-900 border border-yellow-500/20 text-yellow-500 hover:text-yellow-400 text-xs font-bold rounded-xl transition-all"
-        >
-          Retourner au Tableau de Bord
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleGlobalSync}
+            disabled={isSyncing}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold font-mono tracking-wide transition-all border flex items-center space-x-2 ${
+              isSyncing
+                ? 'bg-slate-900 text-slate-500 border-slate-800 cursor-not-allowed'
+                : syncStatus === 'success'
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                : 'bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border-yellow-500/20 hover:border-yellow-500/40'
+            }`}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>
+              {isSyncing 
+                ? 'Synchronisation...' 
+                : syncStatus === 'success' 
+                ? 'Données Synchronisées !' 
+                : 'Synchroniser de force'
+              }
+            </span>
+          </button>
+          
+          <button
+            onClick={onCloseAdmin}
+            className="px-5 py-2.5 bg-slate-950 hover:bg-slate-900 border border-yellow-500/20 text-yellow-500 hover:text-yellow-400 text-xs font-bold rounded-xl transition-all"
+          >
+            Retourner au Tableau de Bord
+          </button>
+        </div>
       </div>
 
       {/* STRATEGIC ADMIN STATS */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
-          <span className="text-[10px] text-slate-400 uppercase font-semibold">Inscriptions Totales</span>
-          <div className="text-xl font-bold text-white mt-1">{users.length} Investisseurs</div>
-          <div className="text-[9px] text-green-400 font-mono mt-1">● Base de données consolidée</div>
-        </div>
-        
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
-          <span className="text-[10px] text-slate-400 uppercase font-semibold">Volume des Dépôts validés</span>
-          <div className="text-xl font-bold text-green-400 mt-1">{totalVolumeApproved.toLocaleString()} FCFA</div>
-          <span className="text-[9px] text-slate-400 font-mono">Rechargement effectif</span>
+      <div className="space-y-6 mb-8">
+        <div>
+          <h3 className="text-xs font-mono font-bold uppercase text-slate-400 tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            SOLDES & BILAN FINANCIER DE LA PLATEFORME (GLOBAL)
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Volume des Dépôts Validés</span>
+              <div className="text-xl font-bold text-green-400 mt-1">{totalVolumeApproved.toLocaleString()} FCFA</div>
+              <span className="text-[9px] text-slate-400 font-mono block mt-1">Rechargements effectifs d'investisseurs</span>
+            </div>
+
+            <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Total des Retraits Validés</span>
+              <div className="text-xl font-bold text-red-400 mt-1">{totalPayoutApproved.toLocaleString()} FCFA</div>
+              <span className="text-[9px] text-slate-400 font-mono block mt-1">Cashout total liquidé</span>
+            </div>
+
+            <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Encaissement Plateforme</span>
+              <div className="text-xl font-bold text-white mt-1">{(totalVolumeApproved - totalPayoutApproved).toLocaleString()} FCFA</div>
+              <span className="text-[9px] text-green-400 font-mono block mt-1">Marge d'excédent de trésorerie net</span>
+            </div>
+
+            <div className="bg-indigo-950/20 border border-indigo-500/20 p-4 rounded-xl relative">
+              <span className="text-[10px] text-indigo-400 uppercase font-bold">Masse Monétaire en Circulation</span>
+              <div className="text-xl font-black text-indigo-400 mt-1">{totalUserAssets.toLocaleString()} FCFA</div>
+              <span className="text-[9px] text-slate-400 font-mono block mt-1">Dû total aux investisseurs (Solde + Bonus)</span>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
-          <span className="text-[10px] text-slate-400 uppercase font-semibold">Retraits Traités (Factures)</span>
-          <div className="text-xl font-bold text-yellow-500 mt-1">{totalPayoutApproved.toLocaleString()} FCFA</div>
-          <span className="text-[9px] text-slate-400 font-mono">Cashout finalisé</span>
-        </div>
+        <div>
+          <h3 className="text-xs font-mono font-bold uppercase text-slate-400 tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+            OPÉRATIONS, FILIATIONS & PLANS D'INVESTISSEMENT (ENGAGEMENTS)
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Inscriptions Totales</span>
+              <div className="text-xl font-bold text-white mt-1">{users.length} Investisseurs</div>
+              <span className="text-[9px] text-green-500 font-mono block mt-1">★ Comptes d'investisseurs enregistrés</span>
+            </div>
 
-        <div className="bg-emerald-950/20 border border-emerald-500/25 p-4 rounded-xl relative ring-1 ring-emerald-500/10">
-          <span className="text-[10px] text-emerald-400 uppercase font-extrabold block">A Envoyer (Net retraits attendus)</span>
-          <div className="text-xl font-black text-emerald-400 mt-1">{pendingWithdrawNetToPay.toLocaleString()} FCFA</div>
-          <span className="text-[9px] text-slate-400 font-mono block mt-0.5">Frais plateforme deduits (12%)</span>
-        </div>
+            <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Plans d'Investissement Actifs</span>
+              <div className="text-xl font-bold text-yellow-500 mt-1">{activeInvestmentsCount} Forfaits Actifs</div>
+              <span className="text-[9px] text-slate-400 font-mono block mt-1">Capital sous gestion : {activeInvestmentsVolume.toLocaleString()} F</span>
+            </div>
 
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
-          <span className="text-[10px] text-slate-400 uppercase font-semibold">Encaissement Plateforme</span>
-          <div className="text-xl font-bold text-white mt-1">{(totalVolumeApproved - totalPayoutApproved).toLocaleString()} FCFA</div>
-          <div className="text-[9px] text-green-400 font-mono mt-1">Solde liquide net</div>
+            <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Gains VIP versés aux investisseurs</span>
+              <div className="text-xl font-bold text-green-400 mt-1">{totalReturnsClaimedSum.toLocaleString()} FCFA</div>
+              <span className="text-[9px] text-slate-400 font-mono block mt-1">Total des rentes quotidiennes réclamées</span>
+            </div>
+
+            <div className="bg-amber-950/20 border border-amber-500/25 p-4 rounded-xl relative ring-1 ring-amber-500/10">
+              <span className="text-[10px] text-amber-400 uppercase font-extrabold block">Flux en Attente (Encours des queues)</span>
+              <div className="text-sm font-bold text-white mt-1">
+                📥 Dépôts: <span className="text-green-400">{pendingDepositsCount}</span> ({pendingDepositsSum.toLocaleString()} F)
+              </div>
+              <div className="text-sm font-bold text-white mt-1.5">
+                📤 Retraits: <span className="text-yellow-500">{pendingWithdrawCount}</span> (Net: {pendingWithdrawNetToPay.toLocaleString()} F)
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -704,6 +809,12 @@ export default function AdminPanel({
           className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors ${activeAdminTab === 'platform' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
         >
           <span>Option Système & Codes</span>
+        </button>
+        <button
+          onClick={() => setActiveAdminTab('transactions')}
+          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors ${activeAdminTab === 'transactions' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <span>💼 Transactions Récentes</span>
         </button>
       </div>
 
@@ -1037,7 +1148,12 @@ export default function AdminPanel({
                                 <span className="bg-red-550/10 text-red-500 border border-red-500/20 text-[8px] font-black px-1.5 py-0.5 rounded tracking-wider uppercase font-mono leading-none">🚫 Retrait Bloqué</span>
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-400 block">{user.country}</span>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-slate-400">{user.country}</span>
+                              <span className="px-1.5 py-0.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[8px] font-extrabold uppercase rounded font-mono leading-none tracking-wider" title="Appareil d'inscription">
+                                📱 {user.device || 'Ordinateur'}
+                              </span>
+                            </div>
                           </td>
                           <td className="p-3 font-mono text-slate-300">
                             {user.whatsapp ? (
@@ -1812,6 +1928,179 @@ export default function AdminPanel({
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 7. RECENT TRANSACTIONS CONSOLIDATED FLOW */}
+      {activeAdminTab === 'transactions' && (() => {
+        const allTx = [
+          ...deposits.map(d => ({
+            id: d.id,
+            userId: d.userId,
+            userName: d.userName,
+            type: 'Dépôt',
+            amount: d.amount,
+            operator: d.operator,
+            reference: d.reference || 'N/A',
+            status: d.status,
+            createdAt: d.createdAt
+          })),
+          ...withdrawals.map(w => ({
+            id: w.id,
+            userId: w.userId,
+            userName: w.userName,
+            type: 'Retrait',
+            amount: -w.amount,
+            operator: w.operator,
+            reference: w.number || 'N/A',
+            status: w.status,
+            createdAt: w.createdAt
+          })),
+          ...commissions.map(c => {
+            const beneficiary = users.find(u => u.id === c.userId);
+            return {
+              id: c.id,
+              userId: c.userId,
+              userName: beneficiary ? beneficiary.name : 'Membre inconnu',
+              type: 'Commission' as const,
+              amount: c.amount,
+              operator: `MLM Niveau ${c.level}`,
+              reference: `De: ${c.fromUserName}`,
+              status: 'approved' as const,
+              createdAt: c.createdAt
+            };
+          })
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        const filteredTx = allTx.filter(t => {
+          const query = txSearch.toLowerCase();
+          const matchText = (t.userName || '').toLowerCase().includes(query) || 
+                            (t.id || '').toLowerCase().includes(query) ||
+                            (t.operator || '').toLowerCase().includes(query) ||
+                            (t.reference || '').toLowerCase().includes(query);
+          const matchType = txTypeFilter === 'all' || t.type === txTypeFilter;
+          const matchStatus = txStatusFilter === 'all' || t.status === txStatusFilter;
+          return matchText && matchType && matchStatus;
+        });
+
+        return (
+          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 overflow-hidden">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+              <div>
+                <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">🔒 Registre Général des Transactions Récentes</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Vue unifiée en temps réel de tous les flux financiers de la plateforme (dépôts, retraits et commissions parrainages).
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+                {/* Search field */}
+                <div className="relative flex-1 sm:flex-initial min-w-[180px]">
+                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher nom, réf, ID..."
+                    value={txSearch}
+                    onChange={(e) => setTxSearch(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-1.5 pl-9 pr-3 text-xs text-white focus:outline-none"
+                  />
+                </div>
+
+                {/* Filter Type */}
+                <select
+                  value={txTypeFilter}
+                  onChange={(e: any) => setTxTypeFilter(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 text-xs text-slate-300 py-1.5 px-3 rounded-xl focus:outline-none focus:border-yellow-500/40 font-mono"
+                >
+                  <option value="all">Tous types</option>
+                  <option value="Dépôt">📥 Dépôts uniquement</option>
+                  <option value="Retrait">📤 Retraits uniquement</option>
+                  <option value="Commission">💰 Commissions uniquement</option>
+                </select>
+
+                {/* Filter Status */}
+                <select
+                  value={txStatusFilter}
+                  onChange={(e: any) => setTxStatusFilter(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 text-xs text-slate-300 py-1.5 px-3 rounded-xl focus:outline-none focus:border-yellow-500/40 font-mono"
+                >
+                  <option value="all">Tous statuts</option>
+                  <option value="pending">⏳ En attente</option>
+                  <option value="approved">✅ Approuvé / Complété</option>
+                  <option value="rejected">❌ Rejeté / Bloqué</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto text-[11px] md:text-xs">
+              <table className="w-full text-left text-slate-300 border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
+                    <th className="p-3">ID Transaction</th>
+                    <th className="p-3">Utilisateur</th>
+                    <th className="p-3">Type</th>
+                    <th className="p-3">Operateur / Détail</th>
+                    <th className="p-3">Référence / Infos</th>
+                    <th className="p-3">Montant (FCFA)</th>
+                    <th className="p-3 text-center">Date</th>
+                    <th className="p-3 text-center">Statut</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {filteredTx.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-slate-500 font-mono">
+                        Aucune transaction ne correspond aux filtres sélectionnés.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTx.slice(0, 100).map((tx) => (
+                      <tr key={tx.id} className="hover:bg-slate-900/10">
+                        <td className="p-3 font-mono text-[10px] text-slate-400">{tx.id}</td>
+                        <td className="p-3">
+                          <span className="font-semibold text-white block">{tx.userName}</span>
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 text-[8px] font-black uppercase rounded ${
+                            tx.type === 'Dépôt'
+                              ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                              : tx.type === 'Retrait'
+                              ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                              : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                          }`}>
+                            {tx.type}
+                          </span>
+                        </td>
+                        <td className="p-3 font-medium text-slate-200">
+                          {tx.operator}
+                        </td>
+                        <td className="p-3 font-mono text-[10px] text-slate-400">
+                          {tx.reference}
+                        </td>
+                        <td className={`p-3 font-mono font-bold ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString()} F
+                        </td>
+                        <td className="p-3 text-[10px] text-slate-400 font-mono text-center">
+                          {new Date(tx.createdAt).toLocaleString('fr-FR')}
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full ${
+                            tx.status === 'approved'
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : tx.status === 'pending'
+                              ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                              : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                          }`}>
+                            {tx.status === 'approved' ? 'Succès' : tx.status === 'pending' ? 'Attente' : 'Rejeté'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         );

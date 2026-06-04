@@ -14,6 +14,7 @@ export interface User {
   withdrawBlocked?: boolean;
   role: 'user' | 'admin';
   createdAt: string;
+  device?: string;
   lastModified?: number;
 }
 

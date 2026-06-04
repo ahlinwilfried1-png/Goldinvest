@@ -245,6 +245,7 @@ async function startServer() {
         referredBy: refereeId,
         role: isWpAdmin ? 'admin' : 'user',
         isBlocked: false,
+        device: data.device || 'Ordinateur',
         lastModified: Date.now(),
         createdAt: new Date().toISOString()
       };

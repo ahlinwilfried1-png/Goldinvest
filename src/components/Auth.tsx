@@ -114,13 +114,22 @@ export default function Auth({
 
       const fullWhatsapp = getCleanWhatsappNumber(whatsapp, selectedCode);
 
+      // Detect current device type
+      const ua = navigator.userAgent;
+      let detectedDevice = 'Ordinateur';
+      if (/android/i.test(ua)) detectedDevice = 'Android';
+      else if (/iPad|iPhone|iPod/.test(ua)) detectedDevice = 'iPhone';
+      else if (/tablet/i.test(ua)) detectedDevice = 'Tablette';
+      else if (/mobile/i.test(ua)) detectedDevice = 'Mobile';
+
       // Call database
       const result = await DataStore.register({
         name: name.trim(),
         whatsapp: fullWhatsapp,
         country,
         password,
-        referredByCode: referralCode
+        referredByCode: referralCode,
+        device: detectedDevice
       });
 
       if (result.success && result.user) {
