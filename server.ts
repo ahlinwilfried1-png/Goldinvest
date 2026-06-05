@@ -35,7 +35,8 @@ async function startServer() {
         { id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGRO777', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' },
         { id: 'u-1', name: 'Aline Ouédraogo', whatsapp: '+22670717273', password: 'user123', country: 'Burkina Faso', balance: 14200, dailyEarnings: 600, totalEarnings: 4200, bonus: 500, referralCode: 'ALINE226', referredBy: 'u-admin', role: 'user', isBlocked: false, createdAt: '2026-05-18T14:30:00Z' },
         { id: 'u-2', name: 'Koffi Kouamé', whatsapp: '+2250708091011', password: 'user123', country: 'Côte d’Ivoire', balance: 38000, dailyEarnings: 2500, totalEarnings: 15000, bonus: 1000, referralCode: 'KOFFI225', referredBy: 'u-1', role: 'user', isBlocked: false, createdAt: '2026-05-20T09:15:00Z' },
-        { id: 'u-3', name: 'Moussa Diarra', whatsapp: '+22360616263', password: 'user123', country: 'Mali', balance: 2400, dailyEarnings: 0, totalEarnings: 0, bonus: 500, referralCode: 'MOUSSA223', referredBy: 'u-2', role: 'user', isBlocked: false, createdAt: '2026-05-22T16:45:00Z' }
+        { id: 'u-3', name: 'Moussa Diarra', whatsapp: '+22360616263', password: 'user123', country: 'Mali', balance: 2400, dailyEarnings: 0, totalEarnings: 0, bonus: 500, referralCode: 'MOUSSA223', referredBy: 'u-2', role: 'user', isBlocked: false, createdAt: '2026-05-22T16:45:00Z' },
+        { id: 'u-1780484438134', name: 'Wilfried', whatsapp: '+23770903318', password: 'user123', country: 'Cameroun', balance: 200, dailyEarnings: 0, totalEarnings: 0, bonus: 200, referralCode: 'WIL818', referredBy: 'u-admin', role: 'user', isBlocked: false, createdAt: '2026-06-05T12:20:00.134Z', lastModified: 1780484438134 }
       ],
       "gi_deposits": [
         { id: 'dep-101', userId: 'u-2', userName: 'Koffi Kouamé', amount: 10000, operator: 'Orange Money (Ivory Coast)', reference: 'TXN-OM-293847293', receiptImage: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop', status: 'approved', createdAt: '2026-05-20T09:30:00Z' },
@@ -97,11 +98,86 @@ async function startServer() {
   // Load store on startup
   loadStore();
 
+  function normalizePhoneNumber(whatsapp: string, countryName?: string): string {
+    let clean = (whatsapp || '').replace(/\D/g, '');
+    if (clean.length === 0) return '';
+    
+    const codes: Record<string, string> = {
+      'cameroun': '237',
+      'burkina': '226',
+      'cote': '225',
+      'côte': '225',
+      'mali': '223',
+      'togo': '228',
+      'benin': '229',
+      'bénin': '229',
+    };
+
+    const lookupCountry = (countryName || '').toLowerCase();
+    let prefix = '';
+    for (const key of Object.keys(codes)) {
+      if (lookupCountry.includes(key)) {
+        prefix = codes[key];
+        break;
+      }
+    }
+
+    const knownPrefixes = Object.values(codes);
+    const startsWithKnownPrefix = knownPrefixes.some(p => clean.startsWith(p));
+
+    if (startsWithKnownPrefix) {
+      return clean;
+    }
+
+    if (prefix) {
+      return prefix + clean;
+    }
+
+    return clean;
+  }
+
   // API endpoints to synchronize state
+  app.get("/api/admin-diagnostics", (req, res) => {
+    try {
+      const usersInMem = storeData["gi_users"] || [];
+      let usersInFile: any[] = [];
+      const exists = fs.existsSync(dbPath);
+      if (exists) {
+        const fileContent = fs.readFileSync(dbPath, "utf-8");
+        const parsed = JSON.parse(fileContent);
+        usersInFile = parsed["gi_users"] || [];
+      }
+      res.json({
+        success: true,
+        totalUsersInMem: usersInMem.length,
+        totalUsersInFile: usersInFile.length,
+        timestamp: Date.now(),
+        dbPath,
+        dbExists: exists
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.get("/api/get-store", (req, res) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
+
+    const users = storeData["gi_users"] || [];
+    console.log(`[DEBUG GET-STORE] Requesting entire store. Total users in DB: ${users.length}`);
+
+    const targetAccounts = users.filter((u: any) => u.whatsapp && (u.whatsapp.includes('70903319') || u.whatsapp.includes('70903318')));
+    if (targetAccounts.length > 0) {
+      console.log(`[DEBUG GET-STORE] Found ${targetAccounts.length} user(s) matching target phone numbers:`);
+      targetAccounts.forEach((u: any) => {
+        console.log(` -> ID: ${u.id}, Name: ${u.name}, WhatsApp: ${u.whatsapp}, Country: ${u.country}, Role: ${u.role}, Device: ${u.device || 'Inconnu'}`);
+      });
+    } else {
+      console.log(`[DEBUG GET-STORE] No user with '70903319' or '70903318' exists in server memory yet.`);
+    }
+
     res.json(storeData);
   });
 
@@ -112,6 +188,19 @@ async function startServer() {
       for (const key of Object.keys(body)) {
         const newVal = body[key];
         const oldVal = storeData[key];
+
+        console.log(`[DEBUG SAVE-STORE] Client requested update for key: "${key}". Incoming value duration/type: ${Array.isArray(newVal) ? `Array of length ${newVal.length}` : typeof newVal}. Existing server value: ${Array.isArray(oldVal) ? `Array of length ${oldVal.length}` : typeof oldVal}.`);
+
+        // Check if target accounts are in the incoming payload
+        if (Array.isArray(newVal)) {
+          const targetsInPayload = newVal.filter((u: any) => u && u.whatsapp && (u.whatsapp.includes('70903319') || u.whatsapp.includes('70903318')));
+          if (targetsInPayload.length > 0) {
+            console.log(`[DEBUG SAVE-STORE] WARNING: Incoming payload for "${key}" contains target phone accounts:`);
+            targetsInPayload.forEach((u: any) => {
+              console.log(` -> Payload User - ID: ${u.id}, Name: ${u.name}, WhatsApp: ${u.whatsapp}, LastModified: ${u.lastModified}`);
+            });
+          }
+        }
 
         const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes";
         if (shouldMerge) {
@@ -140,7 +229,12 @@ async function startServer() {
                   const existingItem = mergedMap.get(idStr);
                   const existingTime = existingItem.lastModified || 0;
                   const incomingTime = item.lastModified || 0;
-                  if (incomingTime >= existingTime) {
+                  
+                  const { lastModified: _, ...cleanExisting } = existingItem;
+                  const { lastModified: __, ...cleanIncoming } = item;
+                  const isModified = JSON.stringify(cleanExisting) !== JSON.stringify(cleanIncoming);
+                  
+                  if (incomingTime > existingTime) {
                     mergedMap.set(idStr, item);
                   }
                 }
@@ -149,6 +243,19 @@ async function startServer() {
           }
 
           const mergedArray = Array.from(mergedMap.values());
+          console.log(`[DEBUG SAVE-STORE] Merged key "${key}". Resulting length: ${mergedArray.length}`);
+          
+          // Double check if any target user got lost or kept in the merge
+          const targetsInMerged = mergedArray.filter((u: any) => u && u.whatsapp && (u.whatsapp.includes('70903319') || u.whatsapp.includes('70903318')));
+          if (targetsInMerged.length > 0) {
+            console.log(`[DEBUG SAVE-STORE] Target users present in merged store output:`);
+            targetsInMerged.forEach((u: any) => {
+              console.log(` -> Merged User - ID: ${u.id}, Name: ${u.name}, WhatsApp: ${u.whatsapp}`);
+            });
+          } else if (key === 'gi_users') {
+            console.log(`[DEBUG SAVE-STORE] No target users are present in the final merged array for "gi_users".`);
+          }
+
           storeData[key] = mergedArray;
           modified = true;
         } else {
@@ -170,14 +277,35 @@ async function startServer() {
     try {
       const data = req.body;
       if (!data || !data.name || !data.whatsapp) {
+        console.log(`[DEBUG REGISTER] Rejected incoming request - name or whatsapp missing:`, data);
         return res.json({ success: false, message: 'Le nom et le numéro de téléphone WhatsApp sont requis.' });
       }
 
+      console.log(`[DEBUG REGISTER] Incoming signup request. Name: "${data.name}", Phone: "${data.whatsapp}", Country: "${data.country || 'Cameroun'}", Sponsor: "${data.referredByCode || 'Aucun'}", Device: "${data.device || 'Inconnu'}"`);
+
       let users = storeData["gi_users"] || [];
       
-      // Check duplication
-      const existing = users.find((u: any) => u.whatsapp === data.whatsapp);
+      // Check duplication with normalized phone number matching
+      const dataNorm = normalizePhoneNumber(data.whatsapp, data.country);
+      const existing = users.find((u: any) => {
+        if (u.whatsapp === data.whatsapp) return true;
+        const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
+        if (dataNorm && uNorm && dataNorm === uNorm) {
+          return true;
+        }
+        return false;
+      });
+
+      const isTargetNumber = data.whatsapp.includes('70903318') || data.whatsapp.includes('70903319') || (dataNorm && (dataNorm.includes('70903318') || dataNorm.includes('70903319')));
+      if (isTargetNumber) {
+        console.log(`[DEBUG REGISTER] Processing TARGET phone number: ${data.whatsapp} (Normalized: ${dataNorm}). Collision registered with existing user?: ${!!existing}`);
+        if (existing) {
+          console.log(`[DEBUG REGISTER] Collision detail is: ID: ${existing.id}, Name: ${existing.name}, WhatsApp: ${existing.whatsapp}, Country: ${existing.country}`);
+        }
+      }
+
       if (existing) {
+        console.log(`[DEBUG REGISTER] Registration failed for ${data.whatsapp} - user already exists.`);
         return res.json({ success: false, message: 'Ce numéro WhatsApp est déjà enregistré sur notre plateforme.' });
       }
 
@@ -195,10 +323,9 @@ async function startServer() {
         let referrerUser = users.find((u: any) => {
           if (u.referralCode && u.referralCode.toUpperCase() === codeClean) return true;
           if (u.id && u.id.toUpperCase() === codeClean) return true;
-          if (digitsOnlyInput.length >= 6 && u.whatsapp) {
-            const uDigits = u.whatsapp.replace(/\D/g, '');
-            if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
-          }
+          const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
+          const sponsorNorm = normalizePhoneNumber(cleanInput, u.country);
+          if (uNorm && sponsorNorm && uNorm === sponsorNorm) return true;
           return false;
         });
 
@@ -292,7 +419,24 @@ async function startServer() {
   app.post("/api/login", (req, res) => {
     const { whatsapp, password } = req.body;
     let users = storeData["gi_users"] || [];
-    const user = users.find((u: any) => u.whatsapp === whatsapp);
+    
+    const user = users.find((u: any) => {
+      if (u.whatsapp === whatsapp) return true;
+      const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
+      const inputNorm = normalizePhoneNumber(whatsapp, u.country);
+      if (uNorm && inputNorm && uNorm === inputNorm) {
+        return true;
+      }
+      return false;
+    });
+
+    if (whatsapp && whatsapp.includes('70903319')) {
+      console.log(`[DEBUG LOGIN] Attempting login for phone: ${whatsapp}. Match found?: ${!!user}`);
+      if (user) {
+        console.log(`[DEBUG LOGIN] Matched user ID: ${user.id}, Name: ${user.name}, WhatsApp: ${user.whatsapp}, Country: ${user.country}`);
+      }
+    }
+
     if (!user) {
       return res.json({ success: false, message: 'Aucun utilisateur trouvé avec ce numéro WhatsApp.' });
     }

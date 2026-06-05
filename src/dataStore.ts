@@ -238,14 +238,41 @@ const INITIAL_CHATS: SupportMessage[] = [
   { id: 'm-2', userId: 'u-2', sender: 'admin', message: 'Bonjour ! Allez simplement dans l\'onglet "Retrait" de votre tableau de bord, entrez votre numéro de Mobile Money, sélectionnez votre opérateur et soumettez la demande. C\'est rapide et traité sous 2 heures !', createdAt: '2026-05-24T10:05:00Z' }
 ];
 
-// LocalStorage Helper functions
+// Robust, frame-safe in-memory cache to guarantee full compatibility when running inside sandboxed environments
+// (like an iframe on iOS, Safari, or tablets) where localStorage or sessionStorage access is strictly restricted or blocked.
+const inMemoryStore: Record<string, string> = {};
+const inMemorySessionStore: Record<string, string> = {};
+
+export const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      return localStorage.getItem(key) || inMemoryStore[key] || null;
+    } catch (e) {
+      return inMemoryStore[key] || null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    inMemoryStore[key] = value;
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {}
+  },
+  removeItem: (key: string): void => {
+    delete inMemoryStore[key];
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
+  }
+};
+
+// LocalStorage Helper functions with automatic in-memory fallback
 export const getFromStore = <T>(key: string, defaultValue: T): T => {
   try {
-    const item = localStorage.getItem(key);
+    const item = localStorage.getItem(key) || inMemoryStore[key];
     return item ? JSON.parse(item) : defaultValue;
   } catch (error) {
-    console.warn(`Error reading localStorage key "${key}":`, error);
-    return defaultValue;
+    const item = inMemoryStore[key];
+    return item ? JSON.parse(item) : defaultValue;
   }
 };
 
@@ -253,7 +280,13 @@ export const setToStore = <T>(key: string, value: T): void => {
   try {
     let newValue: any = value;
     if (Array.isArray(value)) {
-      const oldStr = localStorage.getItem(key);
+      let oldStr: string | null = null;
+      try {
+        oldStr = localStorage.getItem(key) || inMemoryStore[key] || null;
+      } catch (e) {
+        oldStr = inMemoryStore[key] || null;
+      }
+      
       let oldArray: any[] = [];
       try {
         oldArray = oldStr ? JSON.parse(oldStr) : [];
@@ -284,7 +317,15 @@ export const setToStore = <T>(key: string, value: T): void => {
       });
     }
 
-    localStorage.setItem(key, JSON.stringify(newValue));
+    const strValue = JSON.stringify(newValue);
+    inMemoryStore[key] = strValue;
+    
+    try {
+      localStorage.setItem(key, strValue);
+    } catch (e) {
+      // Silently fall back to inMemoryStore if sandboxed context rejects write
+    }
+
     // Asynchronously send update to central Express database
     fetch('/api/save-store', {
       method: 'POST',
@@ -292,9 +333,47 @@ export const setToStore = <T>(key: string, value: T): void => {
       body: JSON.stringify({ [key]: newValue })
     }).catch(err => console.error('Failed to sync to central DB server:', err));
   } catch (error) {
-    console.error(`Error writing localStorage key "${key}":`, error);
+    console.error(`Error writing to fallback store for key "${key}":`, error);
   }
 };
+
+export function normalizePhoneNumber(whatsapp: string, countryName?: string): string {
+  let clean = (whatsapp || '').replace(/\D/g, '');
+  if (clean.length === 0) return '';
+  
+  const codes: Record<string, string> = {
+    'cameroun': '237',
+    'burkina': '226',
+    'cote': '225',
+    'côte': '225',
+    'mali': '223',
+    'togo': '228',
+    'benin': '229',
+    'bénin': '229',
+  };
+
+  const lookupCountry = (countryName || '').toLowerCase();
+  let prefix = '';
+  for (const key of Object.keys(codes)) {
+    if (lookupCountry.includes(key)) {
+      prefix = codes[key];
+      break;
+    }
+  }
+
+  const knownPrefixes = Object.values(codes);
+  const startsWithKnownPrefix = knownPrefixes.some(p => clean.startsWith(p));
+
+  if (startsWithKnownPrefix) {
+    return clean;
+  }
+
+  if (prefix) {
+    return prefix + clean;
+  }
+
+  return clean;
+}
 
 export const syncWithBackend = async (): Promise<boolean> => {
   try {
@@ -336,9 +415,16 @@ export const syncWithBackend = async (): Promise<boolean> => {
         DataStore.areWithdrawalsBlocked();
 
         for (const key of keysToSync) {
-          const val = localStorage.getItem(key);
-          if (val) {
-            currentLocalState[key] = JSON.parse(val);
+          try {
+            const val = localStorage.getItem(key) || inMemoryStore[key];
+            if (val) {
+              currentLocalState[key] = JSON.parse(val);
+            }
+          } catch (e) {
+            const val = inMemoryStore[key];
+            if (val) {
+              currentLocalState[key] = JSON.parse(val);
+            }
           }
         }
 
@@ -355,99 +441,24 @@ export const syncWithBackend = async (): Promise<boolean> => {
       // If the server *does* have data, sync it down to the client!
       let changed = false;
       for (const key of serverKeys) {
-        const localValStr = localStorage.getItem(key);
+        let localValStr: string | null = null;
+        try {
+          localValStr = localStorage.getItem(key) || inMemoryStore[key] || null;
+        } catch (e) {
+          localValStr = inMemoryStore[key] || null;
+        }
+
         const remoteData = data[key];
         
-        if (Array.isArray(remoteData)) {
-          let localArray: any[] = [];
-          if (localValStr) {
-            try {
-              localArray = JSON.parse(localValStr);
-            } catch (e) {
-              localArray = [];
-            }
-          }
-          if (!Array.isArray(localArray)) localArray = [];
-
-          const mergedMap = new Map<string, any>();
-          
-          // Add local items
-          for (const item of localArray) {
-            if (item && typeof item === "object") {
-              const id = item.id || item.code;
-              if (id) mergedMap.set(String(id), item);
-            }
-          }
-
-          // Merge server items
-          for (const item of remoteData) {
-            if (item && typeof item === "object") {
-              const id = item.id || item.code;
-              if (id) {
-                const idStr = String(id);
-                if (!mergedMap.has(idStr)) {
-                  mergedMap.set(idStr, item);
-                } else {
-                  const existingItem = mergedMap.get(idStr);
-                  const existingTime = existingItem.lastModified || 0;
-                  const incomingTime = item.lastModified || 0;
-                  if (incomingTime >= existingTime) {
-                    mergedMap.set(idStr, item);
-                  }
-                }
-              }
-            }
-          }
-
-          let needsSyncBackToServer = false;
-          const remoteMap = new Map<string, any>();
-          for (const item of remoteData) {
-            if (item && typeof item === "object") {
-              const id = item.id || item.code;
-              if (id) remoteMap.set(String(id), item);
-            }
-          }
-
-          for (const item of localArray) {
-            if (item) {
-              const id = String(item.id || item.code);
-              if (id) {
-                if (!remoteMap.has(id)) {
-                  // Local-only detected: it doesn't exist on the server
-                  needsSyncBackToServer = true;
-                  break;
-                } else {
-                  // Exists in both: compare lastModified timestamps to see if local is NEWER
-                  const remoteItem = remoteMap.get(id);
-                  const localTime = item.lastModified || 0;
-                  const remoteTime = (remoteItem && remoteItem.lastModified) || 0;
-                  if (localTime > remoteTime) {
-                    needsSyncBackToServer = true;
-                    break;
-                  }
-                }
-              }
-            }
-          }
-
-          const mergedArray = Array.from(mergedMap.values());
-          const mergedStr = JSON.stringify(mergedArray);
-          if (localValStr !== mergedStr) {
-            localStorage.setItem(key, mergedStr);
-            changed = true;
-          }
-          if (needsSyncBackToServer) {
-            // Bidirectional sync: notify backend of our newer/local-only items so it keeps in sync!
-            fetch('/api/save-store', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ [key]: mergedArray })
-            }).catch(err => console.error('Failed to sync merged data back to server:', err));
-          }
-        } else {
+        if (remoteData !== undefined && remoteData !== null) {
           const remoteStr = JSON.stringify(remoteData);
           if (localValStr !== remoteStr) {
-            localStorage.setItem(key, remoteStr);
+            inMemoryStore[key] = remoteStr;
+            try {
+              localStorage.setItem(key, remoteStr);
+            } catch (e) {
+              // Ignore blocked localStorage on sandboxed browsers
+            }
             changed = true;
           }
         }
@@ -668,10 +679,11 @@ export class DataStore {
   static getCurrentUser(): User | null {
     let cached: User | null = null;
     try {
-      const item = sessionStorage.getItem('gi_current_user');
+      const item = sessionStorage.getItem('gi_current_user') || inMemorySessionStore['gi_current_user'];
       cached = item ? JSON.parse(item) : null;
     } catch (e) {
-      cached = null;
+      const item = inMemorySessionStore['gi_current_user'];
+      cached = item ? JSON.parse(item) : null;
     }
     if (!cached) return null;
     const users = this.getUsers();
@@ -685,9 +697,16 @@ export class DataStore {
   static saveCurrentUser(user: User | null): void {
     try {
       if (user) {
-        sessionStorage.setItem('gi_current_user', JSON.stringify(user));
+        const str = JSON.stringify(user);
+        inMemorySessionStore['gi_current_user'] = str;
+        try {
+          sessionStorage.setItem('gi_current_user', str);
+        } catch (e) {}
       } else {
-        sessionStorage.removeItem('gi_current_user');
+        delete inMemorySessionStore['gi_current_user'];
+        try {
+          sessionStorage.removeItem('gi_current_user');
+        } catch (e) {}
       }
     } catch (e) {}
     
@@ -724,7 +743,15 @@ export class DataStore {
 
     // Local login fallback
     const users = this.getUsers();
-    const user = users.find(u => u.whatsapp === whatsapp);
+    const user = users.find(u => {
+      if (u.whatsapp === whatsapp) return true;
+      const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
+      const inputNorm = normalizePhoneNumber(whatsapp, u.country);
+      if (uNorm && inputNorm && uNorm === inputNorm) {
+        return true;
+      }
+      return false;
+    });
     if (!user) {
       return { success: false, message: 'Aucun utilisateur trouvé avec ce numéro WhatsApp.' };
     }
@@ -749,6 +776,7 @@ export class DataStore {
     device?: string;
   }): Promise<{ success: boolean, user?: User, message: string }> {
     try {
+      console.log(`[CLIENT REGISTER] Attempting signup for ${data.whatsapp} with central backend...`);
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -756,21 +784,32 @@ export class DataStore {
       });
       if (response.ok) {
         const res = await response.json();
+        console.log(`[CLIENT REGISTER] Backend response received:`, res);
         if (res.success && res.user) {
           this.saveCurrentUser(res.user);
           await syncWithBackend();
         }
         return res;
+      } else {
+        console.warn(`[CLIENT REGISTER] Backend returned non-OK status: ${response.status}`);
       }
     } catch (error) {
-      console.warn('Registration backend error, executing fallback locally:', error);
+      console.warn('[CLIENT REGISTER] Registration backend fetch failed! Executing local fallback:', error);
     }
 
     // Local registration implementation
     const users = this.getUsers();
     
-    // Check duplication
-    const existing = users.find((u: any) => u.whatsapp === data.whatsapp);
+    // Check duplication with normalized phone number matching
+    const dataNorm = normalizePhoneNumber(data.whatsapp, data.country);
+    const existing = users.find((u: any) => {
+      if (u.whatsapp === data.whatsapp) return true;
+      const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
+      if (dataNorm && uNorm && dataNorm === uNorm) {
+        return true;
+      }
+      return false;
+    });
     if (existing) {
       return { success: false, message: 'Ce numéro WhatsApp est déjà enregistré sur notre plateforme.' };
     }
@@ -789,10 +828,9 @@ export class DataStore {
       let referrerUser = users.find((u: any) => {
         if (u.referralCode && u.referralCode.toUpperCase() === codeClean) return true;
         if (u.id && u.id.toUpperCase() === codeClean) return true;
-        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
-          const uDigits = u.whatsapp.replace(/\D/g, '');
-          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
-        }
+        const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
+        const sponsorNorm = normalizePhoneNumber(cleanInput, u.country);
+        if (uNorm && sponsorNorm && uNorm === sponsorNorm) return true;
         return false;
       });
 

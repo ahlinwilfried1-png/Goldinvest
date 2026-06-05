@@ -12,11 +12,15 @@ import {
   AlertTriangle,
   RotateCw
 } from 'lucide-react';
-import { DataStore, syncWithBackend } from '../dataStore';
+import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
   { name: 'Cameroun', code: '+237' },
-  { name: 'Burkina Faso', code: '+226' }
+  { name: 'Burkina Faso', code: '+226' },
+  { name: "Côte d'Ivoire", code: '+225' },
+  { name: 'Mali', code: '+223' },
+  { name: 'Togo', code: '+228' },
+  { name: 'Benin', code: '+229' }
 ];
 
 interface AuthProps {
@@ -38,7 +42,7 @@ export default function Auth({
 
   // Pre-fill sponsor referral code if captured from a direct web link
   React.useEffect(() => {
-    const captured = localStorage.getItem('gi_captured_ref');
+    const captured = safeLocalStorage.getItem('gi_captured_ref');
     if (captured) {
       setReferralCode(captured);
     }

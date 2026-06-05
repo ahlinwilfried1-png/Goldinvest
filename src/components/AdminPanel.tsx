@@ -46,11 +46,18 @@ export default function AdminPanel({
   // Manual synchronizing state feedback 
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'checking'>('idle');
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [serverDiag, setServerDiag] = useState<{
+    totalUsersInMem: number;
+    totalUsersInFile: number;
+    timestamp: number;
+    dbPath: string;
+    dbExists: boolean;
+  } | null>(null);
 
   // Navigation tab
-  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'affiliations' | 'transactions'>('deposits');
+  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions'>('deposits');
   const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
-  const [affiliateSearchQuery, setAffiliateSearchQuery] = useState('');
 
   // Search filter query for users tab
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -60,28 +67,80 @@ export default function AdminPanel({
   const [txTypeFilter, setTxTypeFilter] = useState<'all' | 'Dépôt' | 'Retrait' | 'Commission'>('all');
   const [txStatusFilter, setTxStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
-  // Synchronize state periodically and whenever the active admin tab is changed
-  React.useEffect(() => {
-    syncLocalStates();
-  }, [activeAdminTab]);
+  // Real-time synchronization directly with the central Express database server.
+  // Bypasses any client integration bottlenecks, ensures 100% of registrations on standard,
+  // mobile, and tablet devices appear instantly without exclusion, pagination boundaries, or filter caching.
+  const executeDirectCentralSync = async () => {
+    try {
+      setSyncStatus('checking');
+      const resp = await fetch('/api/get-store?t=' + Date.now());
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && typeof data === 'object') {
+          // 1. Force real-time updates directly to local React states for 100% server authority (Run this first to ensure UI works)
+          if (Array.isArray(data['gi_users'])) setUsers(data['gi_users']);
+          if (Array.isArray(data['gi_deposits'])) setDeposits(data['gi_deposits']);
+          if (Array.isArray(data['gi_withdrawals'])) setWithdrawals(data['gi_withdrawals']);
+          if (Array.isArray(data['gi_products'])) setProducts(data['gi_products']);
+          if (Array.isArray(data['gi_bonus_codes'])) setBonusCodes(data['gi_bonus_codes']);
+          if (Array.isArray(data['gi_commissions'])) setCommissions(data['gi_commissions']);
+          if (Array.isArray(data['gi_investments'])) setInvestments(data['gi_investments']);
+          
+          // 2. Keep local storage safe inside a try-catch to prevent iframe/sandboxed crashes
+          try {
+            for (const key of Object.keys(data)) {
+              if (data[key] !== undefined && data[key] !== null) {
+                localStorage.setItem(key, JSON.stringify(data[key]));
+              }
+            }
+          } catch (storageErr) {
+            console.warn("[ADMIN SYNC] Local storage write rejected in this browser sandbox:", storageErr);
+          }
+          
+          onRefreshData();
+          setSyncStatus('success');
+          setSyncError(null);
+        }
+      } else {
+        setSyncError(`Server responded with key status ${resp.status}`);
+      }
+
+      // Fetch diagnostics directly
+      const diagResp = await fetch('/api/admin-diagnostics?t=' + Date.now());
+      if (diagResp.ok) {
+        const diagData = await diagResp.json();
+        if (diagData.success) {
+          setServerDiag(diagData);
+        }
+      }
+    } catch (err) {
+      console.error("[ADMIN SYNC] Failed direct central DB refresh:", err);
+      setSyncError(err instanceof Error ? err.message : String(err));
+    }
+  };
 
   React.useEffect(() => {
+    // Fast initial database load on mounts
+    executeDirectCentralSync();
+
+    // Constant real-time active synchronization (poll every 4 seconds for instant updates across terminals!)
+    const interval = setInterval(executeDirectCentralSync, 4000);
+    
     const handleStoreUpdated = () => {
-      syncLocalStates();
+      executeDirectCentralSync();
     };
-    
-    // Register event listener for background synchronizer updates
     window.addEventListener('gi_store_updated', handleStoreUpdated);
-    
-    const interval = setInterval(() => {
-      syncLocalStates();
-    }, 3000);
-    
+
     return () => {
-      window.removeEventListener('gi_store_updated', handleStoreUpdated);
       clearInterval(interval);
+      window.removeEventListener('gi_store_updated', handleStoreUpdated);
     };
   }, []);
+
+  // Force direct sync on admin tab switch too
+  React.useEffect(() => {
+    executeDirectCentralSync();
+  }, [activeAdminTab]);
 
   // Edit user modal state
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -179,8 +238,7 @@ export default function AdminPanel({
     setIsSyncing(true);
     setSyncStatus('checking');
     try {
-      await syncWithBackend();
-      syncLocalStates();
+      await executeDirectCentralSync();
       setSyncStatus('success');
     } catch (error) {
       console.error("Error manual sync from console:", error);
@@ -793,12 +851,6 @@ export default function AdminPanel({
           <span>Utilisateurs ({users.length})</span>
         </button>
         <button
-          onClick={() => setActiveAdminTab('affiliations')}
-          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors ${activeAdminTab === 'affiliations' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
-        >
-          <span>📈 Filiations ({users.filter(u => u.referredBy).length})</span>
-        </button>
-        <button
           onClick={() => setActiveAdminTab('products')}
           className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors ${activeAdminTab === 'products' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
         >
@@ -816,6 +868,58 @@ export default function AdminPanel({
         >
           <span>💼 Transactions Récentes</span>
         </button>
+      </div>
+
+      {/* SYSTEM DIAGNOSTICS & SYNC MONITOR */}
+      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 mb-6 text-xs space-y-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800/60 pb-3">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 rounded-full h-2 bg-emerald-500 animate-ping"></span>
+            <span className="font-display font-medium text-xs text-slate-200 uppercase tracking-widest">Moniteur de Diagnostics & Synthèse Centrale</span>
+          </div>
+          <button 
+            onClick={executeDirectCentralSync}
+            className="px-2.5 py-1.5 bg-yellow-500 hover:bg-yellow-600 transition-colors text-slate-950 font-bold font-mono rounded-lg text-[10px] uppercase shadow-md flex items-center space-x-1"
+          >
+            <span>🔄 Forcer Sync Centrale</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+          <div className="bg-slate-950/40 p-3 border border-slate-800/60 rounded-xl space-y-1">
+            <span className="text-slate-500 block uppercase text-[8px] tracking-wider font-semibold">Localisation Base Active</span>
+            <span className="text-slate-200 font-mono text-[10px] font-semibold break-all">📁 Server: "/db.json" (Centralized)</span>
+          </div>
+          <div className="bg-slate-950/40 p-3 border border-slate-800/60 rounded-xl space-y-1">
+            <span className="text-yellow-500 block uppercase text-[8px] tracking-wider font-semibold font-bold">Inscriptions Centrales (db.json/File System)</span>
+            <span className="text-emerald-400 font-mono text-xs font-bold leading-none">
+              {serverDiag ? `${serverDiag.totalUsersInFile} utilisateur(s)` : 'Chargement...'}
+            </span>
+          </div>
+          <div className="bg-slate-950/40 p-3 border border-slate-800/60 rounded-xl space-y-1">
+            <span className="text-slate-500 block uppercase text-[8px] tracking-wider font-semibold">Utilisateurs Récupérés par API</span>
+            <span className="text-slate-200 font-mono text-xs font-semibold leading-none">
+              {serverDiag ? `${serverDiag.totalUsersInMem} utilisateur(s) (en mémoire)` : 'Récupération...'}
+            </span>
+          </div>
+          <div className="bg-slate-950/40 p-3 border border-slate-800/60 rounded-xl space-y-1">
+            <span className="text-blue-400 block uppercase text-[8px] tracking-wider font-semibold font-bold">Affichés dans l'Admin Panel</span>
+            <span className="text-blue-400 font-mono text-xs font-bold leading-none">
+              {users.length} comptes visualisés
+            </span>
+          </div>
+        </div>
+
+        {syncError && (
+          <div className="bg-red-950/30 border border-red-500/20 text-red-400 p-2 text-center rounded-lg font-mono text-[10px]">
+            ⚠️ Erreur de synchronisation : {syncError}
+          </div>
+        )}
+
+        <div className="flex flex-wrap justify-between items-center text-[9px] text-slate-500 gap-2 pt-1 border-t border-slate-800/40">
+          <span>Mode d'accès : Requêtes Directes Autorité Serveur à 100% (Aucun stockage local prioritaire)</span>
+          <span>Dernière synchro : {serverDiag ? new Date(serverDiag.timestamp).toLocaleTimeString() : 'En attente...'}</span>
+        </div>
       </div>
 
       {/* TAB CONTENTS */}
@@ -1057,10 +1161,16 @@ export default function AdminPanel({
         const filteredUsers = users.filter((u) => {
           const query = userSearchQuery.trim().toLowerCase();
           if (!query) return true;
+          
+          const uDigits = (u.whatsapp || '').replace(/\D/g, '');
+          const qDigits = query.replace(/\D/g, '');
+          const isPhoneMatch = qDigits.length >= 4 && uDigits.length >= 4 && (uDigits.includes(qDigits) || qDigits.includes(uDigits));
+
           return (
             (u.name || '').toLowerCase().includes(query) ||
             (u.whatsapp || '').toLowerCase().includes(query) ||
-            (u.country || '').toLowerCase().includes(query)
+            (u.country || '').toLowerCase().includes(query) ||
+            isPhoneMatch
           );
         });
 
@@ -1107,19 +1217,20 @@ export default function AdminPanel({
               <table className="w-full text-left text-xs text-slate-300 border-collapse">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
-                    <th className="p-3">Nom Complet</th>
-                    <th className="p-3 font-mono">WhatsApp</th>
-                    <th className="p-3">Parrain (Sponsor)</th>
+                    <th className="p-3">Utilisateur / Inscription</th>
+                    <th className="p-3 font-mono">WhatsApp & Pays</th>
+                    <th className="p-3">Parrain / Sponsor</th>
                     <th className="p-3 text-center">Filleuls Directs</th>
-                    <th className="p-3">Solde (FCFA)</th>
-                    <th className="p-3 text-center">Rôle</th>
+                    <th className="p-3 text-right">Mouvements Financiers (FCFA)</th>
+                    <th className="p-3 text-center">VIP Actifs</th>
+                    <th className="p-3 text-center">Rôle & Statut</th>
                     <th className="p-3 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-500 font-mono">
+                      <td colSpan={8} className="p-8 text-center text-slate-500 font-mono">
                         Aucun utilisateur trouvé correspondant à votre recherche
                       </td>
                     </tr>
@@ -1139,33 +1250,52 @@ export default function AdminPanel({
                         return uReferredBy === myId || (myCode && uReferredBy === myCode);
                       });
 
+                      // Compute deposit and withdrawal aggregates
+                      const userApprovedDepositsNum = deposits
+                        .filter(d => d.userId === user.id && d.status === 'approved')
+                        .reduce((sum, d) => sum + d.amount, 0);
+
+                      const userApprovedWithdrawalsNum = withdrawals
+                        .filter(w => w.userId === user.id && w.status === 'approved')
+                        .reduce((sum, w) => sum + w.amount, 0);
+
+                      // Get active VIP investment details
+                      const activeUserPlans = investments.filter(i => i.userId === user.id && i.status === 'active');
+                      const activeUserPlansValue = activeUserPlans.reduce((sum, i) => sum + i.price, 0);
+
                       return (
                         <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
                           <td className="p-3">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-semibold text-white">{user.name}</span>
+                              <span className="font-semibold text-white text-[13px]">{user.name}</span>
                               {user.withdrawBlocked && (
-                                <span className="bg-red-550/10 text-red-500 border border-red-500/20 text-[8px] font-black px-1.5 py-0.5 rounded tracking-wider uppercase font-mono leading-none">🚫 Retrait Bloqué</span>
+                                <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] font-black px-1.5 py-0.5 rounded tracking-wider uppercase font-mono leading-none">🚫 Retrait Bloqué</span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] text-slate-400">{user.country}</span>
-                              <span className="px-1.5 py-0.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[8px] font-extrabold uppercase rounded font-mono leading-none tracking-wider" title="Appareil d'inscription">
-                                📱 {user.device || 'Ordinateur'}
-                              </span>
+                            <div className="flex flex-col gap-1 mt-1 text-[10px] text-slate-400">
+                              <span className="font-mono">Inscrit le : {user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'N/A'}</span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="px-1.5 py-0.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[8px] font-extrabold uppercase rounded font-mono leading-none tracking-wider" title="Appareil d'inscription">
+                                  📱 {user.device || 'Ordinateur'}
+                                </span>
+                                <span className="text-slate-500 text-[8px] font-mono select-all">ID: {user.id}</span>
+                              </div>
                             </div>
                           </td>
                           <td className="p-3 font-mono text-slate-300">
                             {user.whatsapp ? (
-                              <a 
-                                href={`https://wa.me/${user.whatsapp.replace(/[^0-9]/g, '')}`} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="text-slate-300 hover:text-green-400 flex items-center gap-1 transition-colors"
-                              >
-                                <span>📱</span>
-                                <span>{user.whatsapp}</span>
-                              </a>
+                              <div className="space-y-1">
+                                <a 
+                                  href={`https://wa.me/${user.whatsapp.replace(/[^0-9]/g, '')}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-slate-300 hover:text-green-400 font-bold flex items-center gap-1 transition-colors text-[11px]"
+                                >
+                                  <span>📱</span>
+                                  <span>{user.whatsapp}</span>
+                                </a>
+                                <span className="text-[10px] text-slate-400 font-sans block">🚩 {user.country || 'N/A'}</span>
+                              </div>
                             ) : (
                               <span className="text-slate-500 italic">N/A</span>
                             )}
@@ -1194,11 +1324,42 @@ export default function AdminPanel({
                               <span className="text-slate-600 text-[10px] italic">0 filleul</span>
                             )}
                           </td>
-                          <td className="p-3 font-bold font-mono text-yellow-400">{user.balance.toLocaleString()} F</td>
+                          <td className="p-3 text-right space-y-1">
+                            <div>
+                              <span className="text-[9px] text-slate-400 block font-semibold uppercase">Solde :</span>
+                              <span className="font-bold font-mono text-yellow-405 text-xs">{user.balance.toLocaleString()} F</span>
+                            </div>
+                            <div className="flex items-center justify-end gap-1.5 text-[9px] font-mono">
+                              <span className="text-green-400" title="Total Dépôts Approuvés">📥 +{userApprovedDepositsNum.toLocaleString()} F</span>
+                              <span className="text-slate-700">|</span>
+                              <span className="text-red-400" title="Total Retraits Approuvés">📤 -{userApprovedWithdrawalsNum.toLocaleString()} F</span>
+                            </div>
+                          </td>
                           <td className="p-3 text-center">
-                            <span className={`px-2 py-0.5 text-[10px] font-semibold font-mono rounded-full ${user.role === 'admin' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30' : 'bg-slate-800 text-slate-400'}`}>
-                              {user.role.toUpperCase()}
-                            </span>
+                            {activeUserPlans.length > 0 ? (
+                              <div className="inline-flex flex-col items-center">
+                                <span className="px-1.5 py-0.5 bg-blue-500/15 text-blue-400 border border-blue-500/25 text-[10px] font-extrabold rounded-md">
+                                  {activeUserPlans.length} VIP
+                                </span>
+                                <span className="text-[9px] text-slate-450 font-mono mt-0.5 block">
+                                  {activeUserPlansValue.toLocaleString()} F
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-600 text-[10px] italic font-mono">Aucun</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-center space-y-1">
+                            <div>
+                              <span className={`px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded ${user.role === 'admin' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/30' : 'bg-slate-800 text-slate-400'}`}>
+                                {user.role === 'admin' ? 'SYS ADMIN 👑' : 'INVESTISSEUR 💼'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className={`px-1.5 py-0.5 text-[9px] font-bold uppercase rounded ${user.isBlocked ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                                {user.isBlocked ? 'Bloqué 🚫' : 'Actif ✅'}
+                              </span>
+                            </div>
                           </td>
                           <td className="p-3 text-center">
                             <div className="flex items-center justify-center gap-1.5">
@@ -1717,221 +1878,6 @@ export default function AdminPanel({
           </div>
         </div>
       )}
-
-      {/* 6. AFFILIATIONS & PARRAINAGES */}
-      {activeAdminTab === 'affiliations' && (() => {
-        const filteredFilleuls = users.filter((u) => {
-          if (!u.referredBy) return false;
-          const query = affiliateSearchQuery.trim().toLowerCase();
-          
-          const cleanRef = (u.referredBy || '').trim().toUpperCase();
-          const refDigits = cleanRef.replace(/\D/g, '');
-          const parrain = users.find(s => {
-            const sIdUpper = s.id ? s.id.trim().toUpperCase() : '';
-            const sCodeUpper = s.referralCode ? s.referralCode.trim().toUpperCase() : '';
-            const sPhoneDigits = s.whatsapp ? s.whatsapp.replace(/\D/g, '') : '';
-            
-            if (sIdUpper === cleanRef) return true;
-            if (sCodeUpper && sCodeUpper === cleanRef) return true;
-            if (sPhoneDigits && refDigits && (sPhoneDigits.endsWith(refDigits) || refDigits.endsWith(sPhoneDigits))) {
-              return true;
-            }
-            return false;
-          });
-
-          if (!query) return true;
-          return (
-            (u.name || '').toLowerCase().includes(query) ||
-            (u.whatsapp || '').toLowerCase().includes(query) ||
-            (u.country || '').toLowerCase().includes(query) ||
-            (parrain?.name || '').toLowerCase().includes(query) ||
-            (parrain?.referralCode || '').toLowerCase().includes(query)
-          );
-        });
-
-        const totalCommissionsAmount = commissions.reduce((acc, c) => acc + c.amount, 0);
-
-        return (
-          <div className="space-y-6 animate-fade-in text-left">
-            {/* STATS DE PARRAINAGE */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Filleuls Enregistrés via Lien</span>
-                <div className="text-xl font-bold text-white mt-1">
-                  {users.filter(u => u.referredBy).length} Membres
-                </div>
-                <p className="text-[9px] text-yellow-500/80 font-mono mt-1">Associés à un parrain actif</p>
-              </div>
-              <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Total Commissions MLM Versées</span>
-                <div className="text-xl font-bold text-green-400 mt-1">
-                  {totalCommissionsAmount.toLocaleString()} FCFA
-                </div>
-                <p className="text-[9px] text-slate-400 font-mono mt-1">Niveaux 1 (20%), 2 (3%), et 3 (1%)</p>
-              </div>
-              <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold">Commissions MLM Payées</span>
-                <div className="text-xl font-bold text-white mt-1">
-                  {commissions.length} Transactions
-                </div>
-                <p className="text-[9px] text-green-450 font-mono mt-1">Dispersées automatiquement</p>
-              </div>
-            </div>
-
-            {/* BARRE DE RECHERCHE FILTRÉE */}
-            <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                <div>
-                  <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Suivi en Temps Réel des Liens de Parrainage</h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    Ci-dessous s'affiche la liste de tous les filleuls qui se sont inscrits en utilisant un lien de parrainage ou code d'affiliation de nos membres.
-                  </p>
-                </div>
-                <div className="relative max-w-sm w-full">
-                  <span className="absolute left-3.5 top-3 text-slate-500">
-                    <Search className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Rechercher un filleul, parrain ou code..."
-                    value={affiliateSearchQuery}
-                    onChange={(e) => setAffiliateSearchQuery(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2 pl-10 pr-4 text-xs text-white focus:outline-none placeholder-slate-600 font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* LISTE DES FILIATIONS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredFilleuls.length === 0 ? (
-                  <div className="col-span-2 p-8 rounded-2xl bg-slate-950/20 border border-dashed border-slate-800 text-center text-slate-500 text-xs">
-                    Aucun filleul actif correspondant aux critères de recherche n'est enregistré.
-                  </div>
-                ) : (
-                  filteredFilleuls.map((filleul) => {
-                    const cleanRef = (filleul.referredBy || '').trim().toUpperCase();
-                    const refDigits = cleanRef.replace(/\D/g, '');
-                    const parrain = users.find(u => {
-                      const uIdUpper = u.id ? u.id.trim().toUpperCase() : '';
-                      const uCodeUpper = u.referralCode ? u.referralCode.trim().toUpperCase() : '';
-                      const uPhoneDigits = u.whatsapp ? u.whatsapp.replace(/\D/g, '') : '';
-                      
-                      if (uIdUpper === cleanRef) return true;
-                      if (uCodeUpper && uCodeUpper === cleanRef) return true;
-                      if (uPhoneDigits && refDigits && (uPhoneDigits.endsWith(refDigits) || refDigits.endsWith(uPhoneDigits))) {
-                        return true;
-                      }
-                      return false;
-                    });
-                    return (
-                      <div 
-                        key={filleul.id} 
-                        className="p-4 rounded-xl bg-slate-950/60 border border-yellow-500/5 hover:border-yellow-500/20 flex items-center justify-between gap-4 transition-all text-left"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-xs font-bold text-white block">{filleul.name}</span>
-                            <span className="text-[8px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded font-mono uppercase font-semibold">Filleul</span>
-                          </div>
-                          <p className="text-[10px] text-slate-400">
-                            WhatsApp: <span className="font-mono text-slate-200">{filleul.whatsapp}</span> | Pays: <span className="text-slate-300">{filleul.country}</span>
-                          </p>
-                          <span className="text-[9px] text-slate-500 block">
-                            Inscrit le : {new Date(filleul.createdAt).toLocaleString('fr-FR')}
-                          </span>
-                        </div>
-
-                        <div className="text-right border-l border-slate-800 pl-4 space-y-1.5 flex flex-col items-end justify-center min-w-[120px]">
-                          <div>
-                            <span className="text-[8px] text-slate-500 block uppercase tracking-wider font-bold">Parrain / Sponsor</span>
-                            <span className="text-xs font-bold text-yellow-500 block truncate max-w-[140px]">
-                              {parrain ? parrain.name : "Code inconnu"}
-                            </span>
-                            <span className="text-[9px] text-slate-400 font-mono block">
-                              WA: {parrain ? parrain.whatsapp : "N/A"}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => handleDeleteSponsor(filleul.id)}
-                            className="text-[8px] font-bold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 border border-red-500/30 rounded px-2 py-0.5 duration-100 flex items-center gap-1 cursor-pointer"
-                            title="Supprimer ce lien d'affiliation"
-                          >
-                            <Trash2 className="w-2.5 h-2.5" />
-                            <span>Supprimer</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* COMMISSION MLM TRANSACTIONS DETAIL */}
-            <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
-              <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span>💰</span>
-                <span>Historique des Commissions Affiliation MLM versées</span>
-              </h3>
-              
-              <div className="overflow-x-auto text-[11px] md:text-xs">
-                <table className="w-full text-left text-slate-300 border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/30">
-                      <th className="p-3">Bénéficiaire (Parrain)</th>
-                      <th className="p-3">Initié par (Filleul)</th>
-                      <th className="p-3">Niveau d'Affiliation</th>
-                      <th className="p-3">Montant Reçu</th>
-                      <th className="p-3">Date du versement</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {commissions.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="p-8 text-center text-slate-500 font-mono">
-                          Aucune commission de parrainage n'a encore été payée sur la plateforme.
-                        </td>
-                      </tr>
-                    ) : (
-                      commissions.map((comm) => {
-                        const beneficiary = users.find(u => u.id === comm.userId);
-                        return (
-                          <tr key={comm.id} className="hover:bg-slate-900/10">
-                            <td className="p-3 text-left">
-                              <span className="font-semibold text-white block">{beneficiary ? beneficiary.name : 'Membre Inconnu'}</span>
-                              <span className="text-[10px] text-slate-400 block font-mono">{beneficiary ? beneficiary.whatsapp : ''}</span>
-                            </td>
-                            <td className="p-3 font-medium text-slate-200 text-left">
-                              {comm.fromUserName}
-                            </td>
-                            <td className="p-3 text-left">
-                              <span className={`px-2 py-0.5 text-[9px] font-bold rounded ${
-                                comm.level === 1 
-                                  ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' 
-                                  : comm.level === 2
-                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                  : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                              }`}>
-                                Niveau {comm.level} {comm.level === 1 ? '(20%)' : comm.level === 2 ? '(3%)' : '(1%)'}
-                              </span>
-                            </td>
-                            <td className="p-3 font-mono font-bold text-green-400 text-left">
-                              +{comm.amount.toLocaleString()} FCFA
-                            </td>
-                            <td className="p-3 text-slate-400 text-[10px] font-mono text-left">
-                              {new Date(comm.createdAt).toLocaleString('fr-FR')}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* 7. RECENT TRANSACTIONS CONSOLIDATED FLOW */}
       {activeAdminTab === 'transactions' && (() => {

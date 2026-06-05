@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import { User, Product } from './types';
-import { DataStore, syncWithBackend } from './dataStore';
+import { DataStore, syncWithBackend, safeLocalStorage } from './dataStore';
 
 export default function App() {
   // Navigation: 'auth' | 'dashboard'
@@ -76,7 +76,7 @@ export default function App() {
             }
           } else {
             // Store pending credit in localStorage to credit them immediately upon login/auth
-            localStorage.setItem('gi_pending_westpay_credit', JSON.stringify({ amount: amt, ref: wpRef }));
+            safeLocalStorage.setItem('gi_pending_westpay_credit', JSON.stringify({ amount: amt, ref: wpRef }));
           }
   
           // Clean query parameters to prevent duplicate submission on refresh
@@ -88,7 +88,7 @@ export default function App() {
       // 4. Catch referral tags in URL parameters (supports ?ref=, ?code=, ?r=, ?parrain=, ?sponsor=)
       const refCode = params.get('ref') || params.get('code') || params.get('r') || params.get('parrain') || params.get('sponsor');
       if (refCode) {
-        localStorage.setItem('gi_captured_ref', refCode.toUpperCase());
+        safeLocalStorage.setItem('gi_captured_ref', refCode.toUpperCase());
         if (active) {
           setUser(active);
           setCurrentScreen('dashboard');
@@ -112,7 +112,7 @@ export default function App() {
 
   const handleAuthSuccess = (loggedInUser: User) => {
     // Check if there is any pending WestPay credit waiting
-    const pendingStr = localStorage.getItem('gi_pending_westpay_credit');
+    const pendingStr = safeLocalStorage.getItem('gi_pending_westpay_credit');
     if (pendingStr) {
       try {
         const pending = JSON.parse(pendingStr);
@@ -129,7 +129,7 @@ export default function App() {
       } catch (err) {
         console.error('Failed to parse pending WestPay deposit:', err);
       } finally {
-        localStorage.removeItem('gi_pending_westpay_credit');
+        safeLocalStorage.removeItem('gi_pending_westpay_credit');
       }
     }
     setUser(loggedInUser);

@@ -396,7 +396,12 @@ export default function Dashboard({
     syncDashboardData();
 
     // Check if we just completed a WestPay transaction successfully
-    const wpNotif = sessionStorage.getItem('gi_wp_success_notif');
+    let wpNotif: string | null = null;
+    try {
+      wpNotif = sessionStorage.getItem('gi_wp_success_notif');
+    } catch (e) {
+      // Ignore sandbox sessionStorage block
+    }
     if (wpNotif) {
       try {
         const data = JSON.parse(wpNotif);
@@ -411,7 +416,9 @@ export default function Dashboard({
       } catch (err) {
         console.error('Failed to process WestPay welcome message in dashboard:', err);
       } finally {
-        sessionStorage.removeItem('gi_wp_success_notif');
+        try {
+          sessionStorage.removeItem('gi_wp_success_notif');
+        } catch (e) {}
       }
     }
 
