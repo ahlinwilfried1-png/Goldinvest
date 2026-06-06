@@ -16,11 +16,7 @@ import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
   { name: 'Cameroun', code: '+237' },
-  { name: 'Burkina Faso', code: '+226' },
-  { name: "Côte d'Ivoire", code: '+225' },
-  { name: 'Mali', code: '+223' },
-  { name: 'Togo', code: '+228' },
-  { name: 'Benin', code: '+229' }
+  { name: 'Burkina Faso', code: '+226' }
 ];
 
 interface AuthProps {
@@ -198,7 +194,7 @@ export default function Auth({
           </h2>
           <p className="text-[11px] text-slate-500 font-bold mt-1 leading-relaxed">
             {isRegister 
-              ? 'Recevez 200 XAF gratuit immédiatement' 
+              ? `Recevez 200 ${selectedCode === '+237' ? 'CAF' : 'XOF'} gratuit immédiatement` 
               : 'Accédez de manière entièrement cryptée à vos investissements passifs'
             }
           </p>
@@ -257,7 +253,7 @@ export default function Auth({
                     className="bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-3 text-xs md:text-sm text-slate-800 font-black focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
                   >
                     {eligibleCountries.map((c, i) => (
-                      <option key={i} value={c.code}>{c.code} ({c.name})</option>
+                      <option key={i} value={c.code}>{c.code} ({c.name === 'Cameroun' ? 'CAF' : 'XOF'})</option>
                     ))}
                   </select>
                   <div className="relative flex-1">
@@ -335,7 +331,7 @@ export default function Auth({
                     className="bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-3 text-xs md:text-sm text-slate-800 font-black focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
                   >
                     {eligibleCountries.map((c, i) => (
-                      <option key={i} value={c.code}>{c.code} ({c.name})</option>
+                      <option key={i} value={c.code}>{c.code} ({c.name === 'Cameroun' ? 'CAF' : 'XOF'})</option>
                     ))}
                   </select>
                   <div className="relative flex-1">

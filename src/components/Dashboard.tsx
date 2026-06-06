@@ -193,13 +193,13 @@ export default function Dashboard({
     if (whatsapp.startsWith('+226')) {
       return 'XOF';
     } else if (whatsapp.startsWith('+237')) {
-      return 'XAF';
+      return 'CAF';
     }
     const countryStr = (userState.country || '').toLowerCase();
     if (countryStr.includes('burkina')) {
       return 'XOF';
     } else if (countryStr.includes('cameroun') || countryStr.includes('cameroon')) {
-      return 'XAF';
+      return 'CAF';
     }
     return 'FCFA';
   };
@@ -577,7 +577,7 @@ export default function Dashboard({
 
     const baseUrl = window.location.origin + window.location.pathname;
     const redirectUrl = encodeURIComponent(baseUrl);
-    const paymentUrl = `https://westpay.cfd/link/d6ofn953mpwaqb0n?amount=${amt}&redirect=${redirectUrl}`;
+    const paymentUrl = `https://westpay.cfd/link/c25ukanomq2agyq6?amount=${amt}&redirect=${redirectUrl}`;
 
     // Proceed with automatic redirect to WestPay in a new window/tab to prevent iframe blocking policies (X-Frame-Options)
     window.open(paymentUrl, '_blank');
@@ -882,7 +882,7 @@ export default function Dashboard({
                   </p>
                 </div>
                 <a 
-                  href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=agro_t"
+                  href="https://chat.whatsapp.com/JJ4ewxWrtc56p3kiEZCTdx?s=cl&p=a&mlu=3"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 hover:scale-[1.01] active:scale-[0.99] font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
@@ -1394,7 +1394,7 @@ export default function Dashboard({
                     <span className="text-[10px] text-slate-400 block font-mono">Si la redirection automatique est bloquée par votre navigateur, utilisez les boutons ci-dessous :</span>
                     
                     <a 
-                      href={`https://westpay.cfd/link/d6ofn953mpwaqb0n?amount=${depositAmount}&redirect=${encodeURIComponent(window.location.origin + window.location.pathname)}`}
+                      href={`https://westpay.cfd/link/c25ukanomq2agyq6?amount=${depositAmount}&redirect=${encodeURIComponent(window.location.origin + window.location.pathname)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex w-full justify-center items-center py-2.5 px-3 text-[10px] bg-[#1b64d9] hover:bg-[#1553b3] font-black tracking-wider text-white uppercase rounded-xl transition-all active:scale-[0.98]"
@@ -2037,53 +2037,81 @@ export default function Dashboard({
                           <span className="text-[10px] font-medium text-slate-600">Achetez un pack VIP pour récolter des dividendes.</span>
                         </div>
                       ) : (
-                        activeInvestments.map((inv) => (
-                          <div key={inv.id} className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col gap-2.5 text-xs">
-                            <div className="flex justify-between items-start gap-3">
-                              <div className="space-y-0.5">
-                                <span className="text-[9px] text-white font-black bg-gradient-to-r from-yellow-500 to-amber-500 px-2 py-0.5 rounded uppercase tracking-wider font-mono">Plan VIP {inv.productName}</span>
-                                <div className="font-extrabold text-slate-200 mt-1">{inv.productName}</div>
-                                <span className="text-[10px] text-slate-400 font-mono block">Acquis le : {new Date(inv.createdAt).toLocaleDateString()}</span>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-slate-400 text-[10px] uppercase font-bold block">Investi</span>
-                                <span className="text-[#1b64d9] font-black font-mono">{inv.price.toLocaleString()} F</span>
-                              </div>
-                            </div>
+                        activeInvestments.map((inv) => {
+                          const now = Date.now();
+                          const createdTime = new Date(inv.createdAt).getTime();
+                          const msDiff = now - createdTime;
+                          const oneDayMs = 24 * 60 * 60 * 1000;
+                          
+                          // How many 24-hr periods should be claimed by now based on exact hours of purchase
+                          let expectedDays = Math.floor(msDiff / oneDayMs);
+                          if (expectedDays > inv.durationDays) {
+                            expectedDays = inv.durationDays;
+                          }
+                          
+                          // Has user already claimed or been automatically credited for all eligible days so far?
+                          const isClaimedToday = inv.daysPassed >= expectedDays;
+                          
+                          const nextClaimDayIndex = inv.daysPassed;
+                          const nextClaimTime = createdTime + (nextClaimDayIndex + 1) * oneDayMs;
+                          const timeRemainingMs = nextClaimTime - now;
+                          const isBtnDisabled = isClaimedToday || inv.status === 'completed';
 
-                            <div className="grid grid-cols-2 gap-2 bg-slate-900/60 p-2 rounded-lg text-[11px] border border-slate-900/40">
-                              <div>
-                                <span className="text-slate-500 text-[9px] uppercase font-bold block">Revenu / Jour</span>
-                                <span className="text-[#00bd74] font-black font-mono">+{inv.dailyReturn.toLocaleString()} F</span>
+                          return (
+                            <div key={inv.id} className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col gap-2.5 text-xs">
+                              <div className="flex justify-between items-start gap-3">
+                                <div className="space-y-0.5">
+                                  <span className="text-[9px] text-white font-black bg-gradient-to-r from-yellow-500 to-amber-500 px-2 py-0.5 rounded uppercase tracking-wider font-mono">Plan VIP {inv.productName}</span>
+                                  <div className="font-extrabold text-slate-200 mt-1">{inv.productName}</div>
+                                  <span className="text-[10px] text-slate-400 font-mono block">Acquis le : {new Date(inv.createdAt).toLocaleDateString()} à {new Date(inv.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-slate-400 text-[10px] uppercase font-bold block">Investi</span>
+                                  <span className="text-[#1b64d9] font-black font-mono">{inv.price.toLocaleString()} F</span>
+                                </div>
                               </div>
-                              <div>
-                                <span className="text-slate-500 text-[9px] uppercase font-bold block">Progression</span>
-                                <span className="text-slate-300 font-bold font-mono">{inv.daysPassed} / {inv.durationDays} Jours</span>
-                              </div>
-                            </div>
 
-                            <div className="pt-1 flex items-center justify-between gap-3">
-                              <span className="text-[10px] text-slate-550 font-medium font-mono">Date de fin: {new Date(new Date(inv.createdAt).getTime() + (inv.durationDays * 24 * 60 * 60 * 1000)).toLocaleDateString()}</span>
-                              {inv.status === 'completed' ? (
-                                <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 text-slate-450 text-[10px] font-black rounded-xl uppercase tracking-wider">
-                                  Terminé ✔
-                                </span>
-                              ) : (
-                                <button
-                                  onClick={() => handleClaimReturn(inv.id)}
-                                  disabled={inv.isClaimedToday}
-                                  className={`py-1.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center justify-center space-x-1 ${
-                                    inv.isClaimedToday 
-                                      ? 'bg-slate-900 border border-slate-800 text-slate-400 cursor-not-allowed' 
-                                      : 'bg-[#00bd74] hover:bg-[#00a867] text-white'
-                                  }`}
-                                >
-                                  {inv.isClaimedToday ? 'Récolté ✔' : 'Récolter'}
-                                </button>
-                              )}
+                              <div className="grid grid-cols-2 gap-2 bg-slate-900/60 p-2 rounded-lg text-[11px] border border-slate-900/40">
+                                <div>
+                                  <span className="text-slate-500 text-[9px] uppercase font-bold block">Revenu / Jour</span>
+                                  <span className="text-[#00bd74] font-black font-mono">+{inv.dailyReturn.toLocaleString()} F</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 text-[9px] uppercase font-bold block">Progression</span>
+                                  <span className="text-slate-300 font-bold font-mono">{inv.daysPassed} / {inv.durationDays} Jours</span>
+                                </div>
+                              </div>
+
+                              <div className="pt-1 flex items-center justify-between gap-3">
+                                <span className="text-[10px] text-slate-550 font-medium font-mono">Date de fin: {new Date(createdTime + (inv.durationDays * 24 * 60 * 60 * 1000)).toLocaleDateString()}</span>
+                                {inv.status === 'completed' ? (
+                                  <span className="px-2.5 py-1 bg-slate-800 border border-slate-700 text-slate-450 text-[10px] font-black rounded-xl uppercase tracking-wider">
+                                    Terminé ✔
+                                  </span>
+                                ) : (
+                                  <div className="flex flex-col items-end gap-1">
+                                    <button
+                                      onClick={() => handleClaimReturn(inv.id)}
+                                      disabled={isBtnDisabled}
+                                      className={`py-1.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center justify-center space-x-1 ${
+                                        isBtnDisabled 
+                                          ? 'bg-slate-900 border border-slate-800 text-slate-400 cursor-not-allowed' 
+                                          : 'bg-[#00bd74] hover:bg-[#00a867] text-white'
+                                      }`}
+                                    >
+                                      {isClaimedToday ? 'Crédité' : 'Récolter'}
+                                    </button>
+                                    {isClaimedToday && timeRemainingMs > 0 && (
+                                      <span className="text-[8px] text-slate-500 font-mono scale-95 origin-right">
+                                        Suivant : {new Date(nextClaimTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} ({Math.floor(timeRemainingMs / (60 * 60 * 1000))}h{String(Math.floor((timeRemainingMs % (60 * 1000 * 60)) / (60 * 1000))).padStart(2, '0')}m)
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </>
                   )}
@@ -2161,7 +2189,7 @@ export default function Dashboard({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                   <a
-                    href="https://chat.whatsapp.com/HGbxRR3tozf3N5N8GR9yLz?mode=agro_t"
+                    href="https://chat.whatsapp.com/JJ4ewxWrtc56p3kiEZCTdx?s=cl&p=a&mlu=3"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black uppercase tracking-wide text-center flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/10 cursor-pointer"

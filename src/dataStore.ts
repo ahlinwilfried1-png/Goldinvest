@@ -832,13 +832,13 @@ export class DataStore {
     if (whatsapp.startsWith('+226')) {
       return 'XOF';
     } else if (whatsapp.startsWith('+237')) {
-      return 'XAF';
+      return 'CAF';
     }
     const country = (user.country || '').toLowerCase();
     if (country.includes('burkina')) {
       return 'XOF';
     } else if (country.includes('cameroun') || country.includes('cameroon')) {
-      return 'XAF';
+      return 'CAF';
     }
     return 'FCFA';
   }
@@ -1690,6 +1690,29 @@ export class DataStore {
     const inv = investments[invIdx];
     if (inv.status === 'completed') {
       return { success: false, message: 'Cet investissement est déjà arrivé à terme.', amount: 0 };
+    }
+
+    const now = Date.now();
+    const createdTime = new Date(inv.createdAt).getTime();
+    const msDiff = now - createdTime;
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    
+    // Calculate how many 24-hour periods should have fully passed since purchase
+    let expectedDays = Math.floor(msDiff / oneDayMs);
+    if (expectedDays > inv.durationDays) {
+      expectedDays = inv.durationDays;
+    }
+
+    if (inv.daysPassed >= expectedDays) {
+      const nextClaimTime = createdTime + (inv.daysPassed + 1) * oneDayMs;
+      const nextDateObj = new Date(nextClaimTime);
+      const hourStr = nextDateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = nextDateObj.toLocaleDateString('fr-FR');
+      return { 
+        success: false, 
+        message: `Le prochain versement pour ce plan sera disponible le ${dateStr} à ${hourStr} (exactement 24 heures après la dernière récolte ou activation).`, 
+        amount: 0 
+      };
     }
 
     if (inv.daysPassed >= inv.durationDays) {

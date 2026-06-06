@@ -348,6 +348,71 @@ async function startServer() {
     });
   }
 
+  function processAutomaticDailyInstallmentsServer(): void {
+    const now = Date.now();
+    let users = storeData["gi_users"] || [];
+    let investments = storeData["gi_investments"] || [];
+    let notifications = storeData["gi_notifications"] || [];
+    let changed = false;
+
+    investments = investments.map((inv: any) => {
+      if (inv.status === 'completed') return inv;
+
+      const createdTime = new Date(inv.createdAt).getTime();
+      const msDiff = now - createdTime;
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      
+      // Calculate how many 24-hour periods should have fully passed since purchase
+      let expectedDays = Math.floor(msDiff / oneDayMs);
+      if (expectedDays > inv.durationDays) {
+        expectedDays = inv.durationDays;
+      }
+
+      // If more days should have processed than currently tracked
+      if (expectedDays > inv.daysPassed) {
+        const missingDays = expectedDays - inv.daysPassed;
+        const totalPayout = inv.dailyReturn * missingDays;
+
+        // Find and credit the investor
+        const uIdx = users.findIndex((u: any) => u.id === inv.userId);
+        if (uIdx !== -1) {
+          users[uIdx].balance += totalPayout;
+          users[uIdx].totalEarnings += totalPayout;
+          
+          // Add a notifications alert to show the automatic payout
+          notifications.unshift({
+            id: `not-autodrop-srv-${Date.now()}-${inv.id}-${inv.daysPassed}`,
+            userId: inv.userId,
+            title: `💰 Gain automatique reçu (${inv.productName})`,
+            message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
+            type: 'plan',
+            lastModified: Date.now(),
+            createdAt: new Date().toISOString(),
+            read: false
+          });
+        }
+
+        inv.daysPassed = expectedDays;
+        inv.totalReturnClaimed += totalPayout;
+        inv.lastClaimDate = new Date().toISOString();
+        inv.lastModified = Date.now();
+
+        if (inv.daysPassed >= inv.durationDays) {
+          inv.status = 'completed';
+        }
+        changed = true;
+      }
+      return inv;
+    });
+
+    if (changed) {
+      storeData["gi_users"] = users;
+      storeData["gi_investments"] = investments;
+      storeData["gi_notifications"] = notifications;
+      saveStore();
+    }
+  }
+
   // Load store on startup
   loadStore();
 
@@ -414,6 +479,13 @@ async function startServer() {
   });
 
   app.get("/api/get-store", async (req, res) => {
+    // Process automatic daily earnings on the server to stay fully up-to-date
+    try {
+      processAutomaticDailyInstallmentsServer();
+    } catch (e) {
+      console.error("[SERVER GET-STORE] Error processing automatic payouts:", e);
+    }
+
     // Intercept and merge the latest records from Supabase to stay continuously synchronized real-time across devices
     if (supabase) {
       try {
@@ -999,6 +1071,29 @@ async function startServer() {
     const inv = investments[invIdx];
     if (inv.status === 'completed') {
       return res.json({ success: false, message: 'Cet investissement est déjà arrivé à terme.', amount: 0 });
+    }
+
+    const now = Date.now();
+    const createdTime = new Date(inv.createdAt).getTime();
+    const msDiff = now - createdTime;
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    
+    // Calculate how many 24-hour periods should have fully passed since purchase
+    let expectedDays = Math.floor(msDiff / oneDayMs);
+    if (expectedDays > inv.durationDays) {
+      expectedDays = inv.durationDays;
+    }
+
+    if (inv.daysPassed >= expectedDays) {
+      const nextClaimTime = createdTime + (inv.daysPassed + 1) * oneDayMs;
+      const nextDateObj = new Date(nextClaimTime);
+      const hourStr = nextDateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = nextDateObj.toLocaleDateString('fr-FR');
+      return res.json({ 
+        success: false, 
+        message: `Le prochain versement pour ce plan sera disponible le ${dateStr} à ${hourStr} (exactement 24 heures après la dernière récolte ou activation).`, 
+        amount: 0 
+      });
     }
 
     if (inv.daysPassed >= inv.durationDays) {
