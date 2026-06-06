@@ -2,10 +2,27 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  const supabaseUrl = process.env.SUPABASE_URL || "https://gepdalprxhdjiuxwxidv.supabase.co";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTk2MDIxMSwiZXhwIjoyMDk1NTM2MjExfQ.9_yn5Vn_bi45VGDFFQOU3RZTD3NsIUz_IvDDkQFYjCM";
+  
+  let supabase: any = null;
+  if (supabaseUrl && supabaseKey) {
+    try {
+      supabase = createClient(supabaseUrl, supabaseKey);
+      console.log("[SUPABASE] Connected successfully to direct cloud database.");
+    } catch (e) {
+      console.error("[SUPABASE ERROR] Connection initialization failed:", e);
+    }
+  }
 
   // Set higher limits for payload transfers (e.g., receipt images)
   app.use(express.json({ limit: "50mb" }));
@@ -181,26 +198,44 @@ async function startServer() {
       saveStoreLocal();
     }
 
-    // Run active cloud sync relay in background
+    // Run active cloud sync relay in background using Supabase
     Promise.resolve().then(async () => {
+      if (!supabase) return;
       try {
-        console.log("[SERVER STARTUP] Fetching state from KVdb cloud relay...");
-        const kvResp = await fetch("https://kvdb.io/STvN6KghTscA9qRscLSmhF/db");
-        if (kvResp.ok) {
-          const text = await kvResp.text();
-          if (text && text.trim() !== "" && text !== "null") {
-            const kvData = JSON.parse(text);
-            if (kvData && typeof kvData === "object" && Object.keys(kvData).length > 0) {
-              console.log("[SERVER STARTUP] Successfully downloaded cloud state from KVdb. Merging...");
-              const didMerge = mergeData(kvData);
-              if (didMerge) {
-                saveStore();
-              }
+        console.log("[SERVER STARTUP] Fetching state from Supabase 'store' table...");
+        const { data, error } = await supabase.from('store').select('*');
+        if (error) {
+          if (error.message && error.message.includes('relation "store" does not exist')) {
+            console.warn("\n======================================================================");
+            console.warn("[SUPABASE NOTICE] La table 'store' n'existe pas encore dans votre base de données Supabase !");
+            console.warn("Veuillez vous rendre dans le Dashboard Supabase (onglet SQL Editor) et exécuter le script SQL suivant :");
+            console.warn("\nCREATE TABLE store (\n  key TEXT PRIMARY KEY,\n  value JSONB NOT NULL,\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL\n);\n");
+            console.warn("L'application utilise actuellement la copie de sauvegarde locale db.json tant que la table n'est pas configurée.");
+            console.warn("======================================================================\n");
+          } else {
+            console.error("[SUPABASE ERROR] Failed to fetch startup state:", error);
+          }
+        } else if (data && Array.isArray(data)) {
+          console.log(`[SERVER STARTUP] Successfully fetched ${data.length} keys from Supabase.`);
+          const kvData: Record<string, any> = {};
+          for (const item of data) {
+            kvData[item.key] = item.value;
+          }
+          if (Object.keys(kvData).length > 0) {
+            console.log("[SERVER STARTUP] Merging Supabase cloud database keys into local runtime...");
+            const didMerge = mergeData(kvData);
+            if (didMerge) {
+              saveStoreLocal();
+              console.log("[SERVER STARTUP] Local copy successfully synchronized with Supabase.");
             }
+          } else {
+            // State in Supabase is empty; let's upload our prefilled default entries right away to populate the cloud!
+            console.log("[SERVER STARTUP] Supabase is empty. Populating default state directly to Supabase...");
+            saveStore();
           }
         }
       } catch (e) {
-        console.error("[SERVER STARTUP] KVdb pull failed (offline or first run):", e);
+        console.error("[SERVER STARTUP] Supabase initial pull failed:", e);
       }
     });
   }
@@ -215,11 +250,101 @@ async function startServer() {
 
   function saveStore() {
     saveStoreLocal();
-    fetch("https://kvdb.io/STvN6KghTscA9qRscLSmhF/db", {
-      method: "POST",
-      body: JSON.stringify(storeData)
-    }).catch(err => {
-      console.error("Failed to sync storeData to cloud relay KVdb:", err);
+    if (!supabase) return;
+    
+    // Asynchronously upsert modified state keys to Supabase 'store' table in background
+    Promise.resolve().then(async () => {
+      try {
+        const keys = Object.keys(storeData);
+        for (const key of keys) {
+          const localVal = storeData[key];
+          if (localVal === undefined) continue;
+          
+          let valToSave = localVal;
+          const isMergeableArray = Array.isArray(localVal) && key !== "gi_products" && key !== "gi_bonus_codes";
+          
+          if (isMergeableArray) {
+            try {
+              const { data: remoteRow, error: fetchErr } = await supabase
+                .from('store')
+                .select('value')
+                .eq('key', key)
+                .maybeSingle();
+                
+              if (!fetchErr && remoteRow && remoteRow.value) {
+                const remoteVal = remoteRow.value;
+                if (Array.isArray(remoteVal)) {
+                  // Merge remote array and local array to avoid losing any items from other phones
+                  const mergedMap = new Map<string, any>();
+                  for (const item of remoteVal) {
+                    if (item && typeof item === "object") {
+                      const id = item.id || item.code;
+                      if (id) mergedMap.set(String(id), item);
+                    }
+                  }
+                  
+                  for (const item of localVal) {
+                    if (item && typeof item === "object") {
+                      const id = item.id || item.code;
+                      if (id) {
+                        const idStr = String(id);
+                        if (!mergedMap.has(idStr)) {
+                          mergedMap.set(idStr, item);
+                        } else {
+                          const existingItem = mergedMap.get(idStr);
+                          const existingTime = existingItem.lastModified || 0;
+                          const incomingTime = item.lastModified || 0;
+                          
+                          if (key === "gi_users") {
+                            const mergedUser = {
+                              ...existingItem,
+                              ...item,
+                              balance: Math.max(existingItem.balance || 0, item.balance || 0),
+                              bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
+                              totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
+                              dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
+                              role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
+                              isBlocked: existingItem.isBlocked || item.isBlocked,
+                              lastModified: Math.max(existingTime, incomingTime)
+                            };
+                            mergedMap.set(idStr, mergedUser);
+                          } else {
+                            if (incomingTime >= existingTime) {
+                              mergedMap.set(idStr, item);
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                  valToSave = Array.from(mergedMap.values());
+                  storeData[key] = valToSave; // Keep server runtime cache completely unified!
+                }
+              }
+            } catch (e) {
+              console.error(`[SUPABASE MERGE ERROR] Failed to fetch and merge existing remote key "${key}":`, e);
+            }
+          }
+          
+          const { error } = await supabase.from('store').upsert({
+            key: key,
+            value: valToSave,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'key' });
+
+          if (error) {
+            // Quietly abort loop if the store table doesn't exist to prevent terminal noise
+            if (error.message && error.message.includes('relation "store" does not exist')) {
+              break;
+            }
+            console.error(`[SUPABASE ERROR] Failed to upsert key "${key}":`, error);
+          }
+        }
+        console.log("[SUPABASE] Cloud database synced with local modifications.");
+        saveStoreLocal(); // Reflux changes back to disk
+      } catch (e) {
+        console.error("[SUPABASE ERROR] Failed to upsert store changes to database table:", e);
+      }
     });
   }
 
@@ -289,21 +414,27 @@ async function startServer() {
   });
 
   app.get("/api/get-store", async (req, res) => {
-    // Intercept and merge the latest records from the cloud relay to find Vercel/mobile registrations immediately
-    try {
-      const kvResp = await fetch("https://kvdb.io/STvN6KghTscA9qRscLSmhF/db");
-      if (kvResp.ok) {
-        const text = await kvResp.text();
-        if (text && text.trim() !== "" && text !== "null") {
-          const kvData = JSON.parse(text);
-          if (kvData && typeof kvData === "object" && Object.keys(kvData).length > 0) {
+    // Intercept and merge the latest records from Supabase to stay continuously synchronized real-time across devices
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from('store').select('*');
+        if (error) {
+          if (!error.message || !error.message.includes('relation "store" does not exist')) {
+            console.error("[SERVER GET-STORE] Supabase error:", error);
+          }
+        } else if (data && Array.isArray(data)) {
+          const kvData: Record<string, any> = {};
+          for (const item of data) {
+            kvData[item.key] = item.value;
+          }
+          if (Object.keys(kvData).length > 0) {
             mergeData(kvData);
             saveStoreLocal();
           }
         }
+      } catch (e) {
+        console.error("[SERVER GET-STORE] Failed to pull latest state from Supabase:", e);
       }
-    } catch (e) {
-      console.error("[SERVER GET-STORE] Failed to pull prior KVdb relay state:", e);
     }
 
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

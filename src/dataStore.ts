@@ -293,7 +293,8 @@ export function getApiUrl(endpoint: string): string {
   return endpoint;
 }
 
-export const CLOUD_RELAY_URL = "https://kvdb.io/STvN6KghTscA9qRscLSmhF/db";
+export const SUPABASE_URL = "https://gepdalprxhdjiuxwxidv.supabase.co";
+export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTk2MDIxMSwiZXhwIjoyMDk1NTM2MjExfQ.9_yn5Vn_bi45VGDFFQOU3RZTD3NsIUz_IvDDkQFYjCM";
 
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   // Try to use the standard backend first (getApiUrl)
@@ -305,33 +306,43 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
     if (response.ok && !response.redirected) {
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('text/html') && url.includes('/api/')) {
-        console.warn(`[apiFetch] Received HTML from API call, likely Google Login redirect proxy. Falling back to public KVdb cloud sync for URL: ${url}`);
+        console.warn(`[apiFetch] Received HTML from API call, likely Google Login redirect proxy. Falling back to direct Supabase cloud sync for URL: ${url}`);
       } else {
         return response;
       }
     } else {
-      console.warn(`[apiFetch] API call returned non-OK status: ${response.status} for URL: ${url}. Triggering public KVdb cloud sync fallback.`);
+      console.warn(`[apiFetch] API call returned non-OK status: ${response.status} for URL: ${url}. Triggering direct Supabase cloud sync fallback.`);
     }
   } catch (error) {
-    console.warn(`[apiFetch] API fetch threw error: ${error instanceof Error ? error.message : String(error)} for URL: ${url}. Triggering public KVdb cloud sync fallback.`);
+    console.warn(`[apiFetch] API fetch threw error: ${error instanceof Error ? error.message : String(error)} for URL: ${url}. Triggering direct Supabase cloud sync fallback.`);
   }
 
-  // --- PUBLIC KVDB Sync RELAY FALLBACK ---
-  console.log(`[apiFetch Fallback] Connecting to public Cloud Sync Relay: ${CLOUD_RELAY_URL}`);
+  // --- DIRECT SUPABASE Sync FALLBACK ---
+  console.log(`[apiFetch Fallback] Connecting directly to Supabase cloud storage: ${SUPABASE_URL}`);
   
   if (url.includes('/api/get-store')) {
     try {
-      const resp = await fetch(CLOUD_RELAY_URL);
-      if (resp.ok) {
-        const text = await resp.text();
-         // If KVdb is empty, we initialize it
-        if (!text || text.trim() === "" || text === "null") {
-          return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/store?select=*`, {
+        headers: {
+          'apikey': SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          'Accept': 'application/json'
         }
-        return new Response(text, { status: 200, headers: { 'Content-Type': 'application/json' } });
+      });
+      if (resp.ok) {
+        const rows = await resp.json();
+        const storeObj: Record<string, any> = {};
+        if (Array.isArray(rows)) {
+          for (const r of rows) {
+            storeObj[r.key] = r.value;
+          }
+        }
+        return new Response(JSON.stringify(storeObj), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      } else {
+        console.warn(`[apiFetch Fallback] Supabase direct get-store returned status ${resp.status}`);
       }
     } catch (e) {
-      console.error('[apiFetch Fallback] KVdb get-store failed:', e);
+      console.error('[apiFetch Fallback] Supabase direct get-store failed:', e);
     }
     // Return empty state or what's in local memory
     return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -341,89 +352,100 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
     try {
       const bodyData = init?.body ? JSON.parse(init.body as string) : null;
       if (bodyData && typeof bodyData === 'object') {
-        // Get current KVdb state to merge
-        let currentState: Record<string, any> = {};
-        try {
-          const resp = await fetch(CLOUD_RELAY_URL);
-          if (resp.ok) {
-            const text = await resp.text();
-            if (text && text.trim() !== "" && text !== "null") {
-              currentState = JSON.parse(text);
-            }
-          }
-        } catch (e) {
-          console.warn('[apiFetch Fallback] Fetch current state failed, initializing empty:', e);
-        }
-
-        // Merge incoming payload into current KVdb state
         for (const key of Object.keys(bodyData)) {
-          const newVal = bodyData[key];
-          const oldVal = currentState[key];
-
-          if (oldVal === undefined) {
-             currentState[key] = newVal;
-             continue;
-          }
-
-          const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes";
-          if (shouldMerge) {
-            const mergedMap = new Map<string, any>();
-            for (const item of oldVal) {
-              if (item && typeof item === "object") {
-                const id = item.id || item.code;
-                if (id) mergedMap.set(String(id), item);
-              }
-            }
-
-            for (const item of newVal) {
-              if (item && typeof item === "object") {
-                const id = item.id || item.code;
-                if (id) {
-                  const idStr = String(id);
-                  if (!mergedMap.has(idStr)) {
-                    mergedMap.set(idStr, item);
-                  } else {
-                    const existingItem = mergedMap.get(idStr);
-                    const existingTime = existingItem.lastModified || 0;
-                    const incomingTime = item.lastModified || 0;
-                    
-                    if (key === "gi_users") {
-                      const mergedUser = {
-                        ...existingItem,
-                        ...item,
-                        balance: Math.max(existingItem.balance || 0, item.balance || 0),
-                        bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
-                        totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
-                        dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
-                        role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
-                        isBlocked: existingItem.isBlocked || item.isBlocked,
-                        lastModified: Math.max(existingTime, incomingTime)
-                      };
-                      mergedMap.set(idStr, mergedUser);
-                    } else {
-                      if (incomingTime > existingTime) {
-                        mergedMap.set(idStr, item);
+          const localVal = bodyData[key];
+          let valToSave = localVal;
+          
+          const isMergeableArray = Array.isArray(localVal) && key !== "gi_products" && key !== "gi_bonus_codes";
+          if (isMergeableArray) {
+            try {
+              const fetchResp = await fetch(`${SUPABASE_URL}/rest/v1/store?key=eq.${key}&select=value`, {
+                headers: {
+                  'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                  'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                  'Accept': 'application/json'
+                }
+              });
+              if (fetchResp.ok) {
+                const rows = await fetchResp.json();
+                if (Array.isArray(rows) && rows.length > 0 && rows[0].value) {
+                  const remoteVal = rows[0].value;
+                  if (Array.isArray(remoteVal)) {
+                    const mergedMap = new Map<string, any>();
+                    for (const item of remoteVal) {
+                      if (item && typeof item === 'object') {
+                        const id = item.id || item.code;
+                        if (id) mergedMap.set(String(id), item);
                       }
                     }
+                    for (const item of localVal) {
+                      if (item && typeof item === 'object') {
+                        const id = item.id || item.code;
+                        if (id) {
+                          const idStr = String(id);
+                          if (!mergedMap.has(idStr)) {
+                            mergedMap.set(idStr, item);
+                          } else {
+                            const existingItem = mergedMap.get(idStr);
+                            const existingTime = existingItem.lastModified || 0;
+                            const incomingTime = item.lastModified || 0;
+                            
+                            if (key === "gi_users") {
+                              const mergedUser = {
+                                ...existingItem,
+                                ...item,
+                                balance: Math.max(existingItem.balance || 0, item.balance || 0),
+                                bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
+                                totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
+                                dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
+                                role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
+                                isBlocked: existingItem.isBlocked || item.isBlocked,
+                                lastModified: Math.max(existingTime, incomingTime)
+                              };
+                              mergedMap.set(idStr, mergedUser);
+                            } else {
+                              if (incomingTime >= existingTime) {
+                                mergedMap.set(idStr, item);
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    valToSave = Array.from(mergedMap.values());
+                    
+                    // Keep safeLocalStorage updated
+                    inMemoryStore[key] = JSON.stringify(valToSave);
+                    try {
+                      localStorage.setItem(key, JSON.stringify(valToSave));
+                    } catch (e) {}
                   }
                 }
               }
+            } catch (e) {
+              console.warn('[apiFetch Fallback] Direct merge fetch failed:', e);
             }
-            currentState[key] = Array.from(mergedMap.values());
-          } else {
-            currentState[key] = newVal;
           }
+          
+          await fetch(`${SUPABASE_URL}/rest/v1/store`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_SERVICE_ROLE_KEY,
+              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify([{
+              key: key,
+              value: valToSave,
+              updated_at: new Date().toISOString()
+            }])
+          });
         }
-
-        // Push state back to KVdb
-        await fetch(CLOUD_RELAY_URL, {
-          method: 'POST',
-          body: JSON.stringify(currentState)
-        });
       }
       return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } catch (e) {
-      console.error('[apiFetch Fallback] KVdb save-store failed:', e);
+      console.error('[apiFetch Fallback] Supabase direct save-store failed:', e);
     }
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
@@ -435,7 +457,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
       totalUsersInMem: list.length,
       totalUsersInFile: list.length,
       timestamp: Date.now(),
-      dbPath: '/db.json (Public Cloud Sync Relay)',
+      dbPath: 'Supabase Direct Table "store"',
       dbExists: true
     }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
@@ -619,18 +641,92 @@ export const syncWithBackend = async (): Promise<boolean> => {
       // If the server *does* have data, sync it down to the client!
       let changed = false;
       for (const key of serverKeys) {
-        let localValStr: string | null = null;
+        let localData: any = null;
         try {
-          localValStr = localStorage.getItem(key) || inMemoryStore[key] || null;
+          const localValStr = localStorage.getItem(key) || inMemoryStore[key] || null;
+          localData = localValStr ? JSON.parse(localValStr) : null;
         } catch (e) {
-          localValStr = inMemoryStore[key] || null;
+          localData = null;
         }
 
         const remoteData = data[key];
         
         if (remoteData !== undefined && remoteData !== null) {
-          const remoteStr = JSON.stringify(remoteData);
-          if (localValStr !== remoteStr) {
+          let mergedVal = remoteData;
+          
+          const isMergeableArray = Array.isArray(remoteData) && Array.isArray(localData) && key !== "gi_products" && key !== "gi_bonus_codes";
+          if (isMergeableArray) {
+            // Merge remote array and local array to avoid losing any offline changes or registrations!
+            const mergedMap = new Map<string, any>();
+            for (const item of remoteData) {
+              if (item && typeof item === 'object') {
+                const id = item.id || item.code;
+                if (id) mergedMap.set(String(id), item);
+              }
+            }
+            
+            let localHasNewItems = false;
+            for (const item of localData) {
+              if (item && typeof item === 'object') {
+                const id = item.id || item.code;
+                if (id) {
+                  const idStr = String(id);
+                  if (!mergedMap.has(idStr)) {
+                    mergedMap.set(idStr, item);
+                    localHasNewItems = true;
+                  } else {
+                    const existingItem = mergedMap.get(idStr);
+                    const existingTime = existingItem.lastModified || 0;
+                    const incomingTime = item.lastModified || 0;
+                    
+                    if (key === "gi_users") {
+                      const mergedUser = {
+                        ...existingItem,
+                        ...item,
+                        balance: Math.max(existingItem.balance || 0, item.balance || 0),
+                        bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
+                        totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
+                        dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
+                        role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
+                        isBlocked: existingItem.isBlocked || item.isBlocked,
+                        lastModified: Math.max(existingTime, incomingTime)
+                      };
+                      if (JSON.stringify(existingItem) !== JSON.stringify(mergedUser)) {
+                        mergedMap.set(idStr, mergedUser);
+                        localHasNewItems = true;
+                      }
+                    } else {
+                      if (incomingTime >= existingTime) {
+                        if (JSON.stringify(existingItem) !== JSON.stringify(item)) {
+                          mergedMap.set(idStr, item);
+                          localHasNewItems = true;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            mergedVal = Array.from(mergedMap.values());
+            
+            // If local storage had newer items that the server didn't have, push merged updates to server asynchronously
+            if (localHasNewItems) {
+              console.log(`[CLIENT SYNC] Client has newer local changes for key "${key}". Pushing merged changes to server...`);
+              apiFetch(getApiUrl('/api/save-store'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [key]: mergedVal })
+              }).catch(err => console.error(`Failed to push key "${key}" merge updates:`, err));
+            }
+          }
+          
+          const remoteStr = JSON.stringify(mergedVal);
+          let currentLocalStr = null;
+          try {
+            currentLocalStr = localStorage.getItem(key) || inMemoryStore[key] || null;
+          } catch(e) {}
+          
+          if (currentLocalStr !== remoteStr) {
             inMemoryStore[key] = remoteStr;
             try {
               localStorage.setItem(key, remoteStr);
