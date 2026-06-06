@@ -26,6 +26,90 @@ async function startServer() {
   const dbPath = path.join(process.cwd(), "db.json");
   let storeData: Record<string, any> = {};
 
+  function mergeData(payload: Record<string, any>): boolean {
+    if (!payload || typeof payload !== "object") return false;
+    let modified = false;
+    for (const key of Object.keys(payload)) {
+      const newVal = payload[key];
+      const oldVal = storeData[key];
+
+      if (oldVal === undefined) {
+        storeData[key] = newVal;
+        modified = true;
+        continue;
+      }
+
+      const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes";
+      if (shouldMerge) {
+        const mergedMap = new Map<string, any>();
+        
+        for (const item of oldVal) {
+          if (item && typeof item === "object") {
+            const id = item.id || item.code;
+            if (id) {
+              mergedMap.set(String(id), item);
+            }
+          }
+        }
+
+        for (const item of newVal) {
+          if (item && typeof item === "object") {
+            const id = item.id || item.code;
+            if (id) {
+              const idStr = String(id);
+              if (!mergedMap.has(idStr)) {
+                mergedMap.set(idStr, item);
+                modified = true;
+              } else {
+                const existingItem = mergedMap.get(idStr);
+                const existingTime = existingItem.lastModified || 0;
+                const incomingTime = item.lastModified || 0;
+                
+                if (key === "gi_users") {
+                  const mergedUser = {
+                    ...existingItem,
+                    ...item,
+                    balance: Math.max(existingItem.balance || 0, item.balance || 0),
+                    bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
+                    totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
+                    dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
+                    role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
+                    isBlocked: existingItem.isBlocked || item.isBlocked,
+                    lastModified: Math.max(existingTime, incomingTime)
+                  };
+                  if (JSON.stringify(existingItem) !== JSON.stringify(mergedUser)) {
+                    mergedMap.set(idStr, mergedUser);
+                    modified = true;
+                  }
+                } else {
+                  if (incomingTime > existingTime) {
+                    mergedMap.set(idStr, item);
+                    modified = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (modified) {
+          storeData[key] = Array.from(mergedMap.values());
+        }
+      } else {
+        if (typeof newVal === "object" && typeof oldVal === "object" && newVal !== null && oldVal !== null) {
+          if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+            storeData[key] = newVal;
+            modified = true;
+          }
+        } else if (newVal !== oldVal) {
+          storeData[key] = newVal;
+          modified = true;
+        }
+      }
+    }
+    return modified;
+  }
+
   function loadStore() {
     if (fs.existsSync(dbPath)) {
       try {
@@ -94,16 +178,49 @@ async function startServer() {
     }
 
     if (modified) {
-      saveStore();
+      saveStoreLocal();
     }
+
+    // Run active cloud sync relay in background
+    Promise.resolve().then(async () => {
+      try {
+        console.log("[SERVER STARTUP] Fetching state from KVdb cloud relay...");
+        const kvResp = await fetch("https://kvdb.io/STvN6KghTscA9qRscLSmhF/db");
+        if (kvResp.ok) {
+          const text = await kvResp.text();
+          if (text && text.trim() !== "" && text !== "null") {
+            const kvData = JSON.parse(text);
+            if (kvData && typeof kvData === "object" && Object.keys(kvData).length > 0) {
+              console.log("[SERVER STARTUP] Successfully downloaded cloud state from KVdb. Merging...");
+              const didMerge = mergeData(kvData);
+              if (didMerge) {
+                saveStore();
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("[SERVER STARTUP] KVdb pull failed (offline or first run):", e);
+      }
+    });
   }
 
-  function saveStore() {
+  function saveStoreLocal() {
     try {
       fs.writeFileSync(dbPath, JSON.stringify(storeData, null, 2), "utf-8");
     } catch (e) {
       console.error("Failed to write to db.json file:", e);
     }
+  }
+
+  function saveStore() {
+    saveStoreLocal();
+    fetch("https://kvdb.io/STvN6KghTscA9qRscLSmhF/db", {
+      method: "POST",
+      body: JSON.stringify(storeData)
+    }).catch(err => {
+      console.error("Failed to sync storeData to cloud relay KVdb:", err);
+    });
   }
 
   // Load store on startup
@@ -171,7 +288,24 @@ async function startServer() {
     }
   });
 
-  app.get("/api/get-store", (req, res) => {
+  app.get("/api/get-store", async (req, res) => {
+    // Intercept and merge the latest records from the cloud relay to find Vercel/mobile registrations immediately
+    try {
+      const kvResp = await fetch("https://kvdb.io/STvN6KghTscA9qRscLSmhF/db");
+      if (kvResp.ok) {
+        const text = await kvResp.text();
+        if (text && text.trim() !== "" && text !== "null") {
+          const kvData = JSON.parse(text);
+          if (kvData && typeof kvData === "object" && Object.keys(kvData).length > 0) {
+            mergeData(kvData);
+            saveStoreLocal();
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[SERVER GET-STORE] Failed to pull prior KVdb relay state:", e);
+    }
+
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');

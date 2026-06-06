@@ -22,7 +22,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment } from '../types';
-import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl } from '../dataStore';
+import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl, apiFetch } from '../dataStore';
 
 interface AdminPanelProps {
   currentUser: User;
@@ -82,7 +82,7 @@ export default function AdminPanel({
   const executeDirectCentralSync = async () => {
     try {
       setSyncStatus('checking');
-      const resp = await fetch(getApiUrl('/api/get-store?t=' + Date.now()));
+      const resp = await apiFetch(getApiUrl('/api/get-store?t=' + Date.now()));
       if (resp.ok) {
         const data = await resp.json();
         if (data && typeof data === 'object') {
@@ -115,7 +115,7 @@ export default function AdminPanel({
       }
 
       // Fetch diagnostics directly
-      const diagResp = await fetch(getApiUrl('/api/admin-diagnostics?t=' + Date.now()));
+      const diagResp = await apiFetch(getApiUrl('/api/admin-diagnostics?t=' + Date.now()));
       if (diagResp.ok) {
         const diagData = await diagResp.json();
         if (diagData.success) {

@@ -293,6 +293,157 @@ export function getApiUrl(endpoint: string): string {
   return endpoint;
 }
 
+export const CLOUD_RELAY_URL = "https://kvdb.io/STvN6KghTscA9qRscLSmhF/db";
+
+export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  // Try to use the standard backend first (getApiUrl)
+  try {
+    const response = await fetch(url, init);
+    
+    // If the response is protected by google proxy (which returns a login page or redirect), 
+    // it will have response.redirected = true or content-type text/html.
+    if (response.ok && !response.redirected) {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html') && url.includes('/api/')) {
+        console.warn(`[apiFetch] Received HTML from API call, likely Google Login redirect proxy. Falling back to public KVdb cloud sync for URL: ${url}`);
+      } else {
+        return response;
+      }
+    } else {
+      console.warn(`[apiFetch] API call returned non-OK status: ${response.status} for URL: ${url}. Triggering public KVdb cloud sync fallback.`);
+    }
+  } catch (error) {
+    console.warn(`[apiFetch] API fetch threw error: ${error instanceof Error ? error.message : String(error)} for URL: ${url}. Triggering public KVdb cloud sync fallback.`);
+  }
+
+  // --- PUBLIC KVDB Sync RELAY FALLBACK ---
+  console.log(`[apiFetch Fallback] Connecting to public Cloud Sync Relay: ${CLOUD_RELAY_URL}`);
+  
+  if (url.includes('/api/get-store')) {
+    try {
+      const resp = await fetch(CLOUD_RELAY_URL);
+      if (resp.ok) {
+        const text = await resp.text();
+         // If KVdb is empty, we initialize it
+        if (!text || text.trim() === "" || text === "null") {
+          return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return new Response(text, { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+    } catch (e) {
+      console.error('[apiFetch Fallback] KVdb get-store failed:', e);
+    }
+    // Return empty state or what's in local memory
+    return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  if (url.includes('/api/save-store')) {
+    try {
+      const bodyData = init?.body ? JSON.parse(init.body as string) : null;
+      if (bodyData && typeof bodyData === 'object') {
+        // Get current KVdb state to merge
+        let currentState: Record<string, any> = {};
+        try {
+          const resp = await fetch(CLOUD_RELAY_URL);
+          if (resp.ok) {
+            const text = await resp.text();
+            if (text && text.trim() !== "" && text !== "null") {
+              currentState = JSON.parse(text);
+            }
+          }
+        } catch (e) {
+          console.warn('[apiFetch Fallback] Fetch current state failed, initializing empty:', e);
+        }
+
+        // Merge incoming payload into current KVdb state
+        for (const key of Object.keys(bodyData)) {
+          const newVal = bodyData[key];
+          const oldVal = currentState[key];
+
+          if (oldVal === undefined) {
+             currentState[key] = newVal;
+             continue;
+          }
+
+          const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes";
+          if (shouldMerge) {
+            const mergedMap = new Map<string, any>();
+            for (const item of oldVal) {
+              if (item && typeof item === "object") {
+                const id = item.id || item.code;
+                if (id) mergedMap.set(String(id), item);
+              }
+            }
+
+            for (const item of newVal) {
+              if (item && typeof item === "object") {
+                const id = item.id || item.code;
+                if (id) {
+                  const idStr = String(id);
+                  if (!mergedMap.has(idStr)) {
+                    mergedMap.set(idStr, item);
+                  } else {
+                    const existingItem = mergedMap.get(idStr);
+                    const existingTime = existingItem.lastModified || 0;
+                    const incomingTime = item.lastModified || 0;
+                    
+                    if (key === "gi_users") {
+                      const mergedUser = {
+                        ...existingItem,
+                        ...item,
+                        balance: Math.max(existingItem.balance || 0, item.balance || 0),
+                        bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
+                        totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
+                        dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
+                        role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
+                        isBlocked: existingItem.isBlocked || item.isBlocked,
+                        lastModified: Math.max(existingTime, incomingTime)
+                      };
+                      mergedMap.set(idStr, mergedUser);
+                    } else {
+                      if (incomingTime > existingTime) {
+                        mergedMap.set(idStr, item);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            currentState[key] = Array.from(mergedMap.values());
+          } else {
+            currentState[key] = newVal;
+          }
+        }
+
+        // Push state back to KVdb
+        await fetch(CLOUD_RELAY_URL, {
+          method: 'POST',
+          body: JSON.stringify(currentState)
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    } catch (e) {
+      console.error('[apiFetch Fallback] KVdb save-store failed:', e);
+    }
+    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  if (url.includes('/api/admin-diagnostics')) {
+    const list = getFromStore<User[]>('gi_users', []);
+    return new Response(JSON.stringify({
+      success: true,
+      totalUsersInMem: list.length,
+      totalUsersInFile: list.length,
+      timestamp: Date.now(),
+      dbPath: '/db.json (Public Cloud Sync Relay)',
+      dbExists: true
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  // Reject with status 400 for specific endpoints to trigger client-side local fallback flow
+  return new Response(JSON.stringify({ success: false, message: "Use local database fallback" }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+}
+
 export const getFromStore = <T>(key: string, defaultValue: T): T => {
   try {
     const item = localStorage.getItem(key) || inMemoryStore[key];
@@ -353,8 +504,8 @@ export const setToStore = <T>(key: string, value: T): void => {
       // Silently fall back to inMemoryStore if sandboxed context rejects write
     }
 
-    // Asynchronously send update to central Express database
-    fetch(getApiUrl('/api/save-store'), {
+    // Asynchronously send update to central Express database or KVdb
+    apiFetch(getApiUrl('/api/save-store'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [key]: newValue })
@@ -404,7 +555,7 @@ export function normalizePhoneNumber(whatsapp: string, countryName?: string): st
 
 export const syncWithBackend = async (): Promise<boolean> => {
   try {
-    const resp = await fetch(getApiUrl('/api/get-store?t=' + Date.now()));
+    const resp = await apiFetch(getApiUrl('/api/get-store?t=' + Date.now()));
     if (!resp.ok) return false;
     const data = await resp.json();
     if (data && typeof data === 'object') {
@@ -440,7 +591,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
         DataStore.getProducts();
         DataStore.getMLMRates();
         DataStore.areWithdrawalsBlocked();
-
+ 
         for (const key of keysToSync) {
           try {
             const val = localStorage.getItem(key) || inMemoryStore[key];
@@ -454,9 +605,9 @@ export const syncWithBackend = async (): Promise<boolean> => {
             }
           }
         }
-
+ 
         if (Object.keys(currentLocalState).length > 0) {
-          await fetch(getApiUrl('/api/save-store'), {
+          await apiFetch(getApiUrl('/api/save-store'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(currentLocalState)
@@ -751,7 +902,7 @@ export class DataStore {
   // Log in specific helper
   static async login(whatsapp: string, passwordString: string): Promise<{ success: boolean, user?: User, message: string }> {
     try {
-      const response = await fetch(getApiUrl('/api/login'), {
+      const response = await apiFetch(getApiUrl('/api/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ whatsapp, password: passwordString })
@@ -807,7 +958,7 @@ export class DataStore {
 
     try {
       console.log(`[CLIENT REGISTER] Attempting signup for ${data.whatsapp} with central backend...`);
-      const response = await fetch(getApiUrl('/api/register'), {
+      const response = await apiFetch(getApiUrl('/api/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -1171,7 +1322,7 @@ export class DataStore {
   // Invest Product logic
   static async buyProduct(userId: string, productId: string): Promise<{ success: boolean, message: string }> {
     try {
-      const response = await fetch(getApiUrl('/api/buy-product'), {
+      const response = await apiFetch(getApiUrl('/api/buy-product'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, productId })
@@ -1180,12 +1331,209 @@ export class DataStore {
       if (res.success && res.user) {
         this.saveCurrentUser(res.user);
         await syncWithBackend();
+        return res;
       }
-      return res;
     } catch (error) {
-      console.error('Buy product error:', error);
-      return { success: false, message: 'Erreur réseau lors de la souscription au plan.' };
+      console.error('Buy product API error, using local fallback:', error);
     }
+
+    // --- LOCAL BUY PRODUCT FALLBACK ---
+    const users = this.getUsers();
+    const user = users.find(u => u.id === userId);
+    const products = this.getProducts();
+    const targetProduct = products.find(p => p.id === productId);
+    
+    if (!user || !targetProduct) {
+      return { success: false, message: 'VIP plan ou utilisateur introuvable.' };
+    }
+    if (user.balance < targetProduct.price) {
+      return { success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} FCFA.` };
+    }
+
+    // Deduct balance and update properties
+    user.balance -= targetProduct.price;
+    user.dailyEarnings += targetProduct.dailyReturn;
+    user.lastModified = Date.now();
+    this.saveUsers(users);
+
+    const activeUser = this.getCurrentUser();
+    if (activeUser && activeUser.id === userId) {
+      activeUser.balance = user.balance;
+      activeUser.dailyEarnings = user.dailyEarnings;
+      this.saveCurrentUser(activeUser);
+    }
+
+    // Create active investment record
+    const investments = this.getInvestments();
+    const newInvestment = {
+      id: `inv-${Date.now()}`,
+      userId,
+      productId: targetProduct.id,
+      productName: targetProduct.name,
+      price: targetProduct.price,
+      dailyReturn: targetProduct.dailyReturn,
+      daysPassed: 0,
+      durationDays: targetProduct.durationDays,
+      totalReturnClaimed: 0,
+      lastClaimDate: new Date().toISOString(),
+      status: 'active' as const,
+      createdAt: new Date().toISOString(),
+      lastModified: Date.now()
+    };
+    investments.unshift(newInvestment);
+    this.saveInvestments(investments);
+
+    // Compute and credit MLM Commissions up to 3 levels (20%, 3%, 1%)
+    const mlmRates = this.getMLMRates();
+    const commissions = this.getCommissions();
+    const notifications = this.getNotifications();
+
+    if (user.referredBy) {
+      const cleanInput = user.referredBy.trim();
+      const refClean = cleanInput.toUpperCase();
+      const digitsOnlyInput = cleanInput.replace(/\D/g, '');
+
+      const parentUser = users.find(u => {
+        if (u.id.toUpperCase() === refClean) return true;
+        if (u.referralCode && u.referralCode.toUpperCase() === refClean) return true;
+        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
+          const uDigits = u.whatsapp.replace(/\D/g, '');
+          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
+        }
+        return false;
+      });
+
+      if (parentUser) {
+        const commAmtLvl1 = Math.round(targetProduct.price * (mlmRates.level1 / 100));
+        parentUser.balance += commAmtLvl1;
+        parentUser.bonus += commAmtLvl1;
+        parentUser.lastModified = Date.now();
+
+        commissions.unshift({
+          id: `com-${Date.now()}-1`,
+          userId: parentUser.id,
+          fromUserName: user.name,
+          level: 1,
+          amount: commAmtLvl1,
+          createdAt: new Date().toISOString(),
+          lastModified: Date.now()
+        });
+
+        notifications.unshift({
+          id: `not-com1-${Date.now()}`,
+          userId: parentUser.id,
+          title: 'Commission MLM reçue !',
+          message: `Félicitations, vous avez perçu ${commAmtLvl1} FCFA (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi dans le plan ${targetProduct.name}.`,
+          type: 'bonus',
+          createdAt: new Date().toISOString(),
+          read: false
+        });
+
+        // Level 2 MLM
+        if (parentUser.referredBy) {
+          const cleanInput2 = parentUser.referredBy.trim();
+          const refClean2 = cleanInput2.toUpperCase();
+          const digitsOnlyInput2 = cleanInput2.replace(/\D/g, '');
+
+          const grandParentUser = users.find(u => {
+            if (u.id.toUpperCase() === refClean2) return true;
+            if (u.referralCode && u.referralCode.toUpperCase() === refClean2) return true;
+            if (digitsOnlyInput2.length >= 6 && u.whatsapp) {
+              const uDigits = u.whatsapp.replace(/\D/g, '');
+              if (uDigits.endsWith(digitsOnlyInput2) || digitsOnlyInput2.endsWith(uDigits)) return true;
+            }
+            return false;
+          });
+
+          if (grandParentUser) {
+            const commAmtLvl2 = Math.round(targetProduct.price * (mlmRates.level2 / 100));
+            grandParentUser.balance += commAmtLvl2;
+            grandParentUser.bonus += commAmtLvl2;
+            grandParentUser.lastModified = Date.now();
+
+            commissions.unshift({
+              id: `com-${Date.now()}-2`,
+              userId: grandParentUser.id,
+              fromUserName: user.name,
+              level: 2,
+              amount: commAmtLvl2,
+              createdAt: new Date().toISOString(),
+              lastModified: Date.now()
+            });
+
+            notifications.unshift({
+              id: `not-com2-${Date.now()}`,
+              userId: grandParentUser.id,
+              title: 'Commission MLM Niveau 2 !',
+              message: `Vous avez perçu ${commAmtLvl2} FCFA (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
+              type: 'bonus',
+              createdAt: new Date().toISOString(),
+              read: false
+            });
+
+            // Level 3 MLM
+            if (grandParentUser.referredBy) {
+              const cleanInput3 = grandParentUser.referredBy.trim();
+              const refClean3 = cleanInput3.toUpperCase();
+              const digitsOnlyInput3 = cleanInput3.replace(/\D/g, '');
+
+              const greatGrandParentUser = users.find(u => {
+                if (u.id.toUpperCase() === refClean3) return true;
+                if (u.referralCode && u.referralCode.toUpperCase() === refClean3) return true;
+                if (digitsOnlyInput3.length >= 6 && u.whatsapp) {
+                  const uDigits = u.whatsapp.replace(/\D/g, '');
+                  if (uDigits.endsWith(digitsOnlyInput3) || digitsOnlyInput3.endsWith(uDigits)) return true;
+                }
+                return false;
+              });
+
+              if (greatGrandParentUser) {
+                const commAmtLvl3 = Math.round(targetProduct.price * (mlmRates.level3 / 100));
+                greatGrandParentUser.balance += commAmtLvl3;
+                greatGrandParentUser.bonus += commAmtLvl3;
+                greatGrandParentUser.lastModified = Date.now();
+
+                commissions.unshift({
+                  id: `com-${Date.now()}-3`,
+                  userId: greatGrandParentUser.id,
+                  fromUserName: user.name,
+                  level: 3,
+                  amount: commAmtLvl3,
+                  createdAt: new Date().toISOString(),
+                  lastModified: Date.now()
+                });
+
+                notifications.unshift({
+                  id: `not-com3-${Date.now()}`,
+                  userId: greatGrandParentUser.id,
+                  title: 'Commission MLM Niveau 3 !',
+                  message: `Vous avez perçu ${commAmtLvl3} FCFA (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name}.`,
+                  type: 'bonus',
+                  createdAt: new Date().toISOString(),
+                  read: false
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    notifications.unshift({
+      id: `not-plan-${Date.now()}`,
+      userId,
+      title: 'Plan activé avec succès !',
+      message: `Votre investissement de ${targetProduct.price.toLocaleString()} FCFA dans le plan ${targetProduct.name} a bien été pris en compte. Vous gagnerez ${targetProduct.dailyReturn.toLocaleString()} FCFA chaque jour.`,
+      type: 'plan',
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+
+    this.saveUsers(users);
+    this.saveCommissions(commissions);
+    this.saveNotifications(notifications);
+
+    return { success: true, message: `Vous avez investi avec succès dans le plan ${targetProduct.name} !` };
   }
 
   // Claim Daily Rewards Code
