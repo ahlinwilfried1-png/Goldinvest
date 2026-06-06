@@ -11,6 +11,17 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+  // Enable absolute CORS handles so that direct API requests made from external static hosts (like Vercel) are successfully authorized and handled
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
   // Central Database file inside the container
   const dbPath = path.join(process.cwd(), "db.json");
   let storeData: Record<string, any> = {};

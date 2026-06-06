@@ -22,7 +22,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment } from '../types';
-import { DataStore, DEFAULT_PRODUCTS, syncWithBackend } from '../dataStore';
+import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl } from '../dataStore';
 
 interface AdminPanelProps {
   currentUser: User;
@@ -62,6 +62,15 @@ export default function AdminPanel({
   // Search filter query for users tab
   const [userSearchQuery, setUserSearchQuery] = useState('');
 
+  // Custom backend input state for Vercel CORS synchronization
+  const [customBackendInput, setCustomBackendInput] = useState(() => {
+    try {
+      return localStorage.getItem('gi_custom_backend_url') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+
   // Consolidated transactions filters
   const [txSearch, setTxSearch] = useState('');
   const [txTypeFilter, setTxTypeFilter] = useState<'all' | 'Dépôt' | 'Retrait' | 'Commission'>('all');
@@ -73,7 +82,7 @@ export default function AdminPanel({
   const executeDirectCentralSync = async () => {
     try {
       setSyncStatus('checking');
-      const resp = await fetch('/api/get-store?t=' + Date.now());
+      const resp = await fetch(getApiUrl('/api/get-store?t=' + Date.now()));
       if (resp.ok) {
         const data = await resp.json();
         if (data && typeof data === 'object') {
@@ -106,7 +115,7 @@ export default function AdminPanel({
       }
 
       // Fetch diagnostics directly
-      const diagResp = await fetch('/api/admin-diagnostics?t=' + Date.now());
+      const diagResp = await fetch(getApiUrl('/api/admin-diagnostics?t=' + Date.now()));
       if (diagResp.ok) {
         const diagData = await diagResp.json();
         if (diagData.success) {
@@ -915,6 +924,58 @@ export default function AdminPanel({
             ⚠️ Erreur de synchronisation : {syncError}
           </div>
         )}
+
+        {/* Dual Mode central configuration form for Vercel/external static deployments */}
+        <div className="bg-slate-950/40 p-4 border border-slate-800/60 rounded-xl space-y-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <span className="text-yellow-500 font-bold block uppercase text-[8px] tracking-wider font-mono">Hébergement Externe Statique (ex: Vercel)</span>
+              <p className="text-slate-400 text-[10px] leading-relaxed mt-0.5">
+                Si vous hébergez sur Vercel, l'application s'exécute de manière statique. Renseignez l'URL de votre serveur central Cloud Run pour synchroniser les inscriptions, dépôts, et données en temps réel !
+              </p>
+            </div>
+            {window.location.hostname !== 'localhost' && !window.location.hostname.includes('run.app') && (
+              <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 font-bold text-[8px] rounded uppercase tracking-wider">
+                Mode Statique Détecté
+              </span>
+            )}
+          </div>
+
+          <div className="flex gap-2 items-center mt-1">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Ex. https://votre-app-cloudrun.run.app"
+                value={customBackendInput}
+                onChange={(e) => setCustomBackendInput(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-200 font-mono text-xs focus:outline-none focus:border-yellow-500 transition-colors placeholder-slate-600"
+              />
+            </div>
+            <button
+              onClick={() => {
+                try {
+                  const cleaned = customBackendInput.trim();
+                  if (cleaned) {
+                    localStorage.setItem('gi_custom_backend_url', cleaned);
+                  } else {
+                    localStorage.removeItem('gi_custom_backend_url');
+                  }
+                  executeDirectCentralSync();
+                  alert('Configuration du serveur central sauvegardée avec succès ! Les données vont se synchroniser.');
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 transition-colors text-slate-950 font-bold rounded-lg text-xs uppercase cursor-pointer"
+            >
+              Enregistrer
+            </button>
+          </div>
+          <div className="text-[9px] text-slate-500 flex flex-col sm:flex-row justify-between gap-1 mt-1">
+            <span>Laisser vide pour utiliser le serveur par défaut de l'hébergeur actuel de ce navigateur.</span>
+            <span className="font-mono text-[9px] text-slate-400">Hôte actuel : {window.location.origin}</span>
+          </div>
+        </div>
 
         <div className="flex flex-wrap justify-between items-center text-[9px] text-slate-500 gap-2 pt-1 border-t border-slate-800/40">
           <span>Mode d'accès : Requêtes Directes Autorité Serveur à 100% (Aucun stockage local prioritaire)</span>
