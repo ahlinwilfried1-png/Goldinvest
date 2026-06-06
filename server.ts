@@ -230,12 +230,25 @@ async function startServer() {
                   const existingTime = existingItem.lastModified || 0;
                   const incomingTime = item.lastModified || 0;
                   
-                  const { lastModified: _, ...cleanExisting } = existingItem;
-                  const { lastModified: __, ...cleanIncoming } = item;
-                  const isModified = JSON.stringify(cleanExisting) !== JSON.stringify(cleanIncoming);
-                  
-                  if (incomingTime > existingTime) {
-                    mergedMap.set(idStr, item);
+                  if (key === "gi_users") {
+                    const mergedUser = {
+                      ...existingItem,
+                      ...item,
+                      // Preserve critical financial statistics by preferring the maximum values
+                      balance: Math.max(existingItem.balance || 0, item.balance || 0),
+                      bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
+                      totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
+                      dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
+                      // Role should be admin if either copy is admin
+                      role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
+                      isBlocked: existingItem.isBlocked || item.isBlocked,
+                      lastModified: Math.max(existingTime, incomingTime)
+                    };
+                    mergedMap.set(idStr, mergedUser);
+                  } else {
+                    if (incomingTime > existingTime) {
+                      mergedMap.set(idStr, item);
+                    }
                   }
                 }
               }
