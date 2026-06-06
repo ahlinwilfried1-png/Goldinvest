@@ -83,15 +83,11 @@ async function startServer() {
                 const incomingTime = item.lastModified || 0;
                 
                 if (key === "gi_users") {
+                  const useIncoming = incomingTime > existingTime;
                   const mergedUser = {
-                    ...existingItem,
-                    ...item,
-                    balance: Math.max(existingItem.balance || 0, item.balance || 0),
-                    bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
-                    totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
-                    dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
-                    role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
-                    isBlocked: existingItem.isBlocked || item.isBlocked,
+                    ...(useIncoming ? item : existingItem),
+                    role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
+                    isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
                     lastModified: Math.max(existingTime, incomingTime)
                   };
                   if (JSON.stringify(existingItem) !== JSON.stringify(mergedUser)) {
@@ -296,15 +292,11 @@ async function startServer() {
                           const incomingTime = item.lastModified || 0;
                           
                           if (key === "gi_users") {
+                            const useIncoming = incomingTime > existingTime;
                             const mergedUser = {
-                              ...existingItem,
-                              ...item,
-                              balance: Math.max(existingItem.balance || 0, item.balance || 0),
-                              bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
-                              totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
-                              dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
-                              role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
-                              isBlocked: existingItem.isBlocked || item.isBlocked,
+                              ...(useIncoming ? item : existingItem),
+                              role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
+                              isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
                               lastModified: Math.max(existingTime, incomingTime)
                             };
                             mergedMap.set(idStr, mergedUser);
@@ -579,17 +571,11 @@ async function startServer() {
                   const incomingTime = item.lastModified || 0;
                   
                   if (key === "gi_users") {
+                    const useIncoming = incomingTime > existingTime;
                     const mergedUser = {
-                      ...existingItem,
-                      ...item,
-                      // Preserve critical financial statistics by preferring the maximum values
-                      balance: Math.max(existingItem.balance || 0, item.balance || 0),
-                      bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
-                      totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
-                      dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
-                      // Role should be admin if either copy is admin
-                      role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
-                      isBlocked: existingItem.isBlocked || item.isBlocked,
+                      ...(useIncoming ? item : existingItem),
+                      role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
+                      isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
                       lastModified: Math.max(existingTime, incomingTime)
                     };
                     mergedMap.set(idStr, mergedUser);
@@ -1145,38 +1131,60 @@ async function startServer() {
     let deposits = storeData["gi_deposits"] || [];
     let notifications = storeData["gi_notifications"] || [];
 
-    const user = users.find((u: any) => u.id === userId);
+    const uIdx = users.findIndex((u: any) => u.id === userId);
+    const user = uIdx !== -1 ? users[uIdx] : null;
+
+    const isAutomated = receiptImage === 'automated_westpay' || receiptImage === 'automated';
 
     const newDep = {
       id: `dep-${Date.now()}`,
       userId,
       userName: user ? user.name : 'Utilisateur',
-      amount,
-      operator,
+      amount: Number(amount),
+      operator: operator || 'WestPay Direct',
       reference,
       receiptImage,
-      status: 'pending',
+      status: isAutomated ? 'approved' : 'pending',
       lastModified: Date.now(),
       createdAt: new Date().toISOString()
     };
     deposits.unshift(newDep);
 
-    notifications.unshift({
-      id: `not-dep-${Date.now()}`,
-      userId,
-      title: 'Dépôt soumis',
-      message: `Votre demande de dépôt de ${amount.toLocaleString()} FCFA via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
-      type: 'deposit',
-      lastModified: Date.now(),
-      createdAt: new Date().toISOString(),
-      read: false
-    });
+    if (isAutomated && user) {
+      user.balance += Number(amount);
+      user.lastModified = Date.now();
+    }
+
+    if (isAutomated) {
+      notifications.unshift({
+        id: `not-dep-wp-${Date.now()}`,
+        userId,
+        title: 'Dépôt Automatique WestPay',
+        message: `Votre versement de ${Number(amount).toLocaleString()} FCFA via ${operator || 'WestPay'} (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
+        type: 'deposit',
+        lastModified: Date.now(),
+        createdAt: new Date().toISOString(),
+        read: false
+      });
+    } else {
+      notifications.unshift({
+        id: `not-dep-${Date.now()}`,
+        userId,
+        title: 'Dépôt soumis',
+        message: `Votre demande de dépôt de ${Number(amount).toLocaleString()} FCFA via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
+        type: 'deposit',
+        lastModified: Date.now(),
+        createdAt: new Date().toISOString(),
+        read: false
+      });
+    }
 
     storeData["gi_deposits"] = deposits;
     storeData["gi_notifications"] = notifications;
+    storeData["gi_users"] = users;
 
     saveStore();
-    res.json({ success: true, deposit: newDep });
+    res.json({ success: true, deposit: newDep, user: user || undefined });
   });
 
   // Centralized Create Withdrawal API

@@ -511,8 +511,8 @@ export default function Dashboard({
   };
 
   // Check-in helper
-  const handleDailyCheckin = () => {
-    const res = DataStore.claimDailyReward(userState.id);
+  const handleDailyCheckin = async () => {
+    const res = await DataStore.claimDailyReward(userState.id);
     if (res.success) {
       openAlert('Félicitations !', res.message, 'success');
       syncDashboardData();
@@ -522,8 +522,8 @@ export default function Dashboard({
   };
 
   // Claim specific investment return simulation (Click pay)
-  const handleClaimReturn = (invId: string) => {
-    const res = DataStore.claimInvestmentReturn(userState.id, invId);
+  const handleClaimReturn = async (invId: string) => {
+    const res = await DataStore.claimInvestmentReturn(userState.id, invId);
     if (res.success) {
       openAlert('Dividende Collecté', res.message, 'success');
       syncDashboardData();
@@ -584,7 +584,7 @@ export default function Dashboard({
   };
 
   // Withdrawal event
-  const submitWithdrawal = (e: React.FormEvent) => {
+  const submitWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
     setWithdrawError('');
     setWithdrawSuccess('');
@@ -612,7 +612,7 @@ export default function Dashboard({
       return;
     }
 
-    const res = DataStore.createWithdrawal(userState.id, amt, withdrawOperator, withdrawNumber);
+    const res = await DataStore.createWithdrawal(userState.id, amt, withdrawOperator, withdrawNumber);
     if (res.success) {
       setWithdrawSuccess('Votre demande de retrait a été transmise ! Le solde a été mis à jour.');
       setWithdrawAmount('');

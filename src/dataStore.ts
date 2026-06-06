@@ -391,15 +391,11 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
                             const incomingTime = item.lastModified || 0;
                             
                             if (key === "gi_users") {
+                              const useIncoming = incomingTime > existingTime;
                               const mergedUser = {
-                                ...existingItem,
-                                ...item,
-                                balance: Math.max(existingItem.balance || 0, item.balance || 0),
-                                bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
-                                totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
-                                dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
-                                role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
-                                isBlocked: existingItem.isBlocked || item.isBlocked,
+                                ...(useIncoming ? item : existingItem),
+                                role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
+                                isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
                                 lastModified: Math.max(existingTime, incomingTime)
                               };
                               mergedMap.set(idStr, mergedUser);
@@ -680,15 +676,11 @@ export const syncWithBackend = async (): Promise<boolean> => {
                     const incomingTime = item.lastModified || 0;
                     
                     if (key === "gi_users") {
+                      const useIncoming = incomingTime > existingTime;
                       const mergedUser = {
-                        ...existingItem,
-                        ...item,
-                        balance: Math.max(existingItem.balance || 0, item.balance || 0),
-                        bonus: Math.max(existingItem.bonus || 0, item.bonus || 0),
-                        totalEarnings: Math.max(existingItem.totalEarnings || 0, item.totalEarnings || 0),
-                        dailyEarnings: Math.max(existingItem.dailyEarnings || 0, item.dailyEarnings || 0),
-                        role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (existingItem.role || item.role || 'user'),
-                        isBlocked: existingItem.isBlocked || item.isBlocked,
+                        ...(useIncoming ? item : existingItem),
+                        role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
+                        isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
                         lastModified: Math.max(existingTime, incomingTime)
                       };
                       if (JSON.stringify(existingItem) !== JSON.stringify(mergedUser)) {
@@ -1212,7 +1204,27 @@ export class DataStore {
   }
 
   // Deposit logic
-  static createDeposit(userId: string, amount: number, operator: string, reference: string, receiptImage: string): Deposit {
+  static async createDeposit(userId: string, amount: number, operator: string, reference: string, receiptImage: string): Promise<Deposit> {
+    try {
+      const response = await apiFetch(getApiUrl('/api/create-deposit'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount, operator, reference, receiptImage })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success && res.deposit) {
+          if (res.user) {
+            this.saveCurrentUser(res.user);
+          }
+          await syncWithBackend();
+          return res.deposit;
+        }
+      }
+    } catch (error) {
+      console.error('Create deposit API error, using local fallback:', error);
+    }
+
     const deposits = this.getDeposits();
     const users = this.getUsers();
     const user = users.find(u => u.id === userId);
@@ -1248,13 +1260,33 @@ export class DataStore {
     return newDep;
   }
 
-  static createAutomaticDeposit(userId: string, amount: number, operator: string): Deposit {
+  static async createAutomaticDeposit(userId: string, amount: number, operator: string): Promise<Deposit> {
+    const randomHex = Math.floor(Math.random() * 0xffffff).toString(16).toUpperCase();
+    const reference = `SPY-${randomHex}`;
+
+    try {
+      const response = await apiFetch(getApiUrl('/api/create-deposit'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount, operator, reference, receiptImage: 'automated' })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success && res.deposit) {
+          if (res.user) {
+            this.saveCurrentUser(res.user);
+          }
+          await syncWithBackend();
+          return res.deposit;
+        }
+      }
+    } catch (error) {
+      console.error('Create automatic deposit API error, using local fallback:', error);
+    }
+
     const deposits = this.getDeposits();
     const users = this.getUsers();
     const user = users.find(u => u.id === userId);
-
-    const randomHex = Math.floor(Math.random() * 0xffffff).toString(16).toUpperCase();
-    const reference = `SPY-${randomHex}`;
 
     const newDep: Deposit = {
       id: `dep-${Date.now()}`,
@@ -1287,7 +1319,7 @@ export class DataStore {
     notifications.unshift({
       id: `not-dep-${Date.now()}`,
       userId,
-      title: 'Dépôt approuvé automatiquement',
+      title: 'Dépôt approved automatiquement',
       message: `Votre versement de ${amount.toLocaleString()} FCFA via SoinaPay (Réf: ${reference}) a été crédité instantanément et automatiquement.`,
       type: 'deposit',
       createdAt: new Date().toISOString(),
@@ -1298,7 +1330,27 @@ export class DataStore {
     return newDep;
   }
 
-  static createWestPayDeposit(userId: string, amount: number, reference: string, operator: string = 'WestPay Direct'): Deposit | null {
+  static async createWestPayDeposit(userId: string, amount: number, reference: string, operator: string = 'WestPay Direct'): Promise<Deposit | null> {
+    try {
+      const response = await apiFetch(getApiUrl('/api/create-deposit'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount, operator, reference, receiptImage: 'automated_westpay' })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success && res.deposit) {
+          if (res.user) {
+            this.saveCurrentUser(res.user);
+          }
+          await syncWithBackend();
+          return res.deposit;
+        }
+      }
+    } catch (error) {
+      console.error('Create WestPay deposit API error, using local fallback:', error);
+    }
+
     const deposits = this.getDeposits();
     if (deposits.some(d => d.reference === reference)) {
       return null; // Already processed
@@ -1350,7 +1402,29 @@ export class DataStore {
   }
 
   // Withdrawal logic
-  static createWithdrawal(userId: string, amount: number, operator: string, number: string): { success: boolean, error?: string, withdrawal?: Withdrawal } {
+  static async createWithdrawal(userId: string, amount: number, operator: string, number: string): Promise<{ success: boolean, error?: string, withdrawal?: Withdrawal }> {
+    try {
+      const response = await apiFetch(getApiUrl('/api/create-withdrawal'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount, operator, number })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success && res.withdrawal) {
+          if (res.user) {
+            this.saveCurrentUser(res.user);
+          }
+          await syncWithBackend();
+          return { success: true, withdrawal: res.withdrawal };
+        } else {
+          return { success: false, error: res.error || 'Erreur lors de la soumission.' };
+        }
+      }
+    } catch (error) {
+      console.error('Withdrawal API error, using local fallback:', error);
+    }
+
     const users = this.getUsers();
     const userIdx = users.findIndex(u => u.id === userId);
     
@@ -1633,13 +1707,36 @@ export class DataStore {
   }
 
   // Claim Daily Rewards Code
-  static claimDailyReward(userId: string): { success: boolean, message: string, amount: number } {
+  static async claimDailyReward(userId: string): Promise<{ success: boolean, message: string, amount: number }> {
     const checkKey = `gi_last_daily_${userId}`;
     const today = new Date().toDateString();
     const lastClaim = localStorage.getItem(checkKey);
 
     if (lastClaim === today) {
       return { success: false, message: 'Revenu journalier déjà réclamé pour aujourd\'hui. Revenez demain !', amount: 0 };
+    }
+
+    try {
+      const response = await apiFetch(getApiUrl('/api/claim-daily'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success) {
+          if (res.user) {
+            this.saveCurrentUser(res.user);
+          }
+          localStorage.setItem(checkKey, today);
+          await syncWithBackend();
+          return { success: true, message: res.message, amount: res.amount };
+        } else {
+          return { success: false, message: res.message || 'Erreur lors de la récolte.', amount: 0 };
+        }
+      }
+    } catch (error) {
+      console.error('Claim daily reward API error, using local fallback:', error);
     }
 
     const rewardAmt = 50; // Standard daily loyalty reward
@@ -1651,6 +1748,7 @@ export class DataStore {
 
     user.balance += rewardAmt;
     user.bonus += rewardAmt;
+    user.lastModified = Date.now();
     this.saveUsers(users);
 
     const activeUser = this.getCurrentUser();
@@ -1679,7 +1777,29 @@ export class DataStore {
   }
 
   // Simulate claiming dividends on all ACTIVE investments for user
-  static claimInvestmentReturn(userId: string, investmentId: string): { success: boolean, message: string, amount: number } {
+  static async claimInvestmentReturn(userId: string, investmentId: string): Promise<{ success: boolean, message: string, amount: number }> {
+    try {
+      const response = await apiFetch(getApiUrl('/api/claim-investment'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, investmentId })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success) {
+          if (res.user) {
+            this.saveCurrentUser(res.user);
+          }
+          await syncWithBackend();
+          return { success: true, message: res.message, amount: res.amount };
+        } else {
+          return { success: false, message: res.message || 'Le revenu n\'est pas encore disponible.', amount: 0 };
+        }
+      }
+    } catch (error) {
+      console.error('Claim investment API error, using local fallback:', error);
+    }
+
     const investments = this.getInvestments();
     const invIdx = investments.findIndex(inv => inv.id === investmentId && inv.userId === userId);
     
@@ -1717,6 +1837,7 @@ export class DataStore {
 
     if (inv.daysPassed >= inv.durationDays) {
       inv.status = 'completed';
+      inv.lastModified = Date.now();
       this.saveInvestments(investments);
       return { success: false, message: 'Ce plan est complété ! Tous les revenus ont été distribués.', amount: 0 };
     }
@@ -1725,6 +1846,7 @@ export class DataStore {
     inv.daysPassed += 1;
     inv.totalReturnClaimed += inv.dailyReturn;
     inv.lastClaimDate = new Date().toISOString();
+    inv.lastModified = Date.now();
 
     if (inv.daysPassed >= inv.durationDays) {
       inv.status = 'completed';
@@ -1736,6 +1858,7 @@ export class DataStore {
     if (user) {
       user.balance += inv.dailyReturn;
       user.totalEarnings += inv.dailyReturn;
+      user.lastModified = Date.now();
       this.saveUsers(users);
       
       const curr = this.getCurrentUser();
