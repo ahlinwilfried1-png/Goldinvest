@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   TrendingUp, 
   Coins, 
@@ -217,6 +217,16 @@ export default function Dashboard({
     type: 'info'
   });
 
+  const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'error' | 'info' }[]>([]);
+
+  const triggerToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4500);
+  };
+
   const openAlert = (title: string, message: string, type: 'success' | 'error' | 'info' | 'purchase_success' = 'info') => {
     setCustomModal({
       isOpen: true,
@@ -249,7 +259,7 @@ export default function Dashboard({
   const [simulationStatus, setSimulationStatus] = useState<string>('');
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showAnnouncementDismissible, setShowAnnouncementDismissible] = useState<boolean>(true);
-  const [profileHistoryTab, setProfileHistoryTab] = useState<'deposits' | 'withdrawals' | 'purchases' | 'notifications'>('deposits');
+  const [profileHistoryTab, setProfileHistoryTab] = useState<'history' | 'deposits' | 'withdrawals' | 'purchases' | 'notifications'>('history');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -355,6 +365,99 @@ export default function Dashboard({
     : [];
 
   const totalReferrals = level1Users.length + level2Users.length + level3Users.length;
+
+  // Unified history aggregator that merges all transaction logs and events
+  const getUnifiedHistory = () => {
+    const list: {
+      id: string;
+      date: string;
+      amount: number;
+      type: 'Recharge' | 'Retrait' | 'Commission' | 'Achat VIP' | 'Revenu Quotidien';
+      status: 'Validé' | 'En attente' | 'Refusé' | 'Complété';
+      details: string;
+      rawDate: Date;
+    }[] = [];
+
+    // 1. Deposits (Recharges)
+    allDeposits.forEach((dep) => {
+      let mappedStatus: 'Validé' | 'En attente' | 'Refusé' = 'En attente';
+      if (dep.status === 'approved') mappedStatus = 'Validé';
+      if (dep.status === 'rejected') mappedStatus = 'Refusé';
+      
+      list.push({
+        id: `history-dep-${dep.id}`,
+        date: dep.createdAt,
+        amount: dep.amount,
+        type: 'Recharge',
+        status: mappedStatus,
+        details: `Recharge via ${dep.operator} ${dep.reference ? `[Réf: ${dep.reference}]` : ''}`,
+        rawDate: new Date(dep.createdAt)
+      });
+    });
+
+    // 2. Withdrawals (Retraits)
+    allWithdrawals.forEach((wth) => {
+      let mappedStatus: 'Validé' | 'En attente' | 'Refusé' = 'En attente';
+      if (wth.status === 'approved') mappedStatus = 'Validé';
+      if (wth.status === 'rejected') mappedStatus = 'Refusé';
+
+      list.push({
+        id: `history-wth-${wth.id}`,
+        date: wth.createdAt,
+        amount: wth.amount,
+        type: 'Retrait',
+        status: mappedStatus,
+        details: `Retrait Mobile Money (${wth.operator}) vers ${wth.number}`,
+        rawDate: new Date(wth.createdAt)
+      });
+    });
+
+    // 3. Purchases/Activations
+    activeInvestments.forEach((inv) => {
+      list.push({
+        id: `history-buy-${inv.id}`,
+        date: inv.createdAt,
+        amount: inv.price,
+        type: 'Achat VIP',
+        status: inv.status === 'completed' ? 'Complété' : 'Validé',
+        details: `Activation Formule ${inv.productName} (${inv.dailyReturn.toLocaleString()} F/jour pendant ${inv.durationDays}j)`,
+        rawDate: new Date(inv.createdAt)
+      });
+
+      // 4. Daily Earnings (Revenus Quotidiens)
+      for (let d = 1; d <= inv.daysPassed; d++) {
+        const installmentTime = new Date(inv.createdAt).getTime() + d * 24 * 60 * 60 * 1000;
+        const finalTime = Math.min(Date.now(), installmentTime);
+        const instDate = new Date(finalTime).toISOString();
+
+        list.push({
+          id: `history-earn-${inv.id}-${d}`,
+          date: instDate,
+          amount: inv.dailyReturn,
+          type: 'Revenu Quotidien',
+          status: 'Validé',
+          details: `Gain journalier généré - Formule ${inv.productName} (Jour ${d}/${inv.durationDays})`,
+          rawDate: new Date(finalTime)
+        });
+      }
+    });
+
+    // 5. Commissions
+    commissions.forEach((c) => {
+      list.push({
+        id: `history-comm-${c.id}`,
+        date: c.createdAt,
+        amount: c.amount,
+        type: 'Commission',
+        status: 'Validé',
+        details: `Bonus d'affiliation de Niveau ${c.level} (généré par ${c.fromUserName})`,
+        rawDate: new Date(c.createdAt)
+      });
+    });
+
+    // Sort descending (most recent first)
+    return list.sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
+  };
 
   // Sync state function from local storage
   const syncDashboardData = () => {
@@ -514,6 +617,7 @@ export default function Dashboard({
   const handleDailyCheckin = async () => {
     const res = await DataStore.claimDailyReward(userState.id);
     if (res.success) {
+      triggerToast('🎉 Félicitations ! Votre cadeau journalier a été réclamé avec succès.', 'success');
       openAlert('Félicitations !', res.message, 'success');
       syncDashboardData();
     } else {
@@ -717,6 +821,7 @@ export default function Dashboard({
       async () => {
         const res = await DataStore.buyProduct(userState.id, product.id);
         if (res.success) {
+          triggerToast('✅ Félicitations ! Votre produit a été activé avec succès.', 'success');
           openPurchaseSuccessAlert('Félicitations ! 🎉', res.message);
         } else {
           openAlert('Achat Échoué', res.message, 'error');
@@ -1910,10 +2015,20 @@ export default function Dashboard({
                 </div>
 
                  {/* Sub-tabs for Recharger, Retrait, Achats et Notifications */}
-                 <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800/85">
+                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800/85">
+                   <button
+                     onClick={() => setProfileHistoryTab('history')}
+                     className={`py-2 text-center text-[10px] md:text-xs font-black uppercase rounded-lg transition-all ${
+                       profileHistoryTab === 'history' 
+                         ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                         : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                     }`}
+                   >
+                     🧾 Historique ({getUnifiedHistory().length})
+                   </button>
                    <button
                      onClick={() => setProfileHistoryTab('deposits')}
-                     className={`py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                     className={`py-2 text-center text-[10px] md:text-xs font-black uppercase rounded-lg transition-all ${
                        profileHistoryTab === 'deposits' 
                          ? 'bg-yellow-500 text-slate-950 shadow-md' 
                          : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
@@ -1923,7 +2038,7 @@ export default function Dashboard({
                    </button>
                    <button
                      onClick={() => setProfileHistoryTab('withdrawals')}
-                     className={`py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                     className={`py-2 text-center text-[10px] md:text-xs font-black uppercase rounded-lg transition-all ${
                        profileHistoryTab === 'withdrawals' 
                          ? 'bg-yellow-500 text-slate-950 shadow-md' 
                          : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
@@ -1933,7 +2048,7 @@ export default function Dashboard({
                    </button>
                    <button
                      onClick={() => setProfileHistoryTab('purchases')}
-                     className={`py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                     className={`py-2 text-center text-[10px] md:text-xs font-black uppercase rounded-lg transition-all ${
                        profileHistoryTab === 'purchases' 
                          ? 'bg-yellow-500 text-slate-950 shadow-md' 
                          : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
@@ -1943,7 +2058,7 @@ export default function Dashboard({
                    </button>
                    <button
                      onClick={() => setProfileHistoryTab('notifications')}
-                     className={`py-2 text-center text-xs font-black uppercase rounded-lg transition-all ${
+                     className={`py-2 text-center text-[10px] md:text-xs font-black uppercase rounded-lg transition-all col-span-2 sm:col-span-1 ${
                        profileHistoryTab === 'notifications' 
                          ? 'bg-yellow-500 text-slate-950 shadow-md' 
                          : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
@@ -1956,6 +2071,91 @@ export default function Dashboard({
                 {/* Tab content rendering */}
                 <div className="space-y-3 min-h-[160px] max-h-[350px] overflow-y-auto pr-1">
                   
+                  {/* UNIFIED TRANSACTION HISTORY */}
+                  {profileHistoryTab === 'history' && (
+                    <>
+                      {getUnifiedHistory().length === 0 ? (
+                        <div className="text-center py-8 text-slate-500 text-xs font-bold leading-relaxed">
+                          Aucune opération enregistrée.<br/>
+                          <span className="text-[10px] font-medium text-slate-600">Le détail en direct de vos flux d'investissement s'affichera ici.</span>
+                        </div>
+                      ) : (
+                        getUnifiedHistory().map((op) => (
+                          <div key={op.id} className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+                            <div className="flex items-start gap-2.5">
+                              {/* Type Badge/Emoji */}
+                              <div className="mt-0.5 shrink-0">
+                                {op.type === 'Recharge' && (
+                                  <span className="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold text-xs" title="Recharge">📥</span>
+                                )}
+                                {op.type === 'Retrait' && (
+                                  <span className="w-6 h-6 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center font-bold text-xs" title="Retrait">📤</span>
+                                )}
+                                {op.type === 'Commission' && (
+                                  <span className="w-6 h-6 rounded-lg bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 flex items-center justify-center font-bold text-xs" title="Commission">🥇</span>
+                                )}
+                                {op.type === 'Achat VIP' && (
+                                  <span className="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center font-bold text-xs" title="Activation Produit">🛍️</span>
+                                )}
+                                {op.type === 'Revenu Quotidien' && (
+                                  <span className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold text-xs" title="Revenu Quotidien">💰</span>
+                                )}
+                              </div>
+                              <div className="space-y-0.5 min-w-0 flex-1">
+                                <span className="text-[10px] text-slate-400 font-mono block">
+                                  {new Date(op.date).toLocaleString('fr-FR', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                  })}
+                                </span>
+                                <div className="font-extrabold text-slate-100 flex items-center gap-1.5 flex-wrap">
+                                  <span className={`text-[9px] uppercase font-black tracking-wide shrink-0 px-1.5 py-0.5 rounded ${
+                                    op.type === 'Recharge' ? 'bg-blue-500/15 text-blue-400' :
+                                    op.type === 'Retrait' ? 'bg-rose-500/15 text-rose-400' :
+                                    op.type === 'Commission' ? 'bg-yellow-500/15 text-yellow-500' :
+                                    op.type === 'Achat VIP' ? 'bg-purple-500/15 text-purple-400' :
+                                    'bg-emerald-500/15 text-emerald-400'
+                                  }`}>
+                                    {op.type}
+                                  </span>
+                                  <span className="text-slate-300 font-bold truncate max-w-[200px] sm:max-w-xs">{op.details}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-1 pb-1 sm:pb-0 px-1 sm:px-0 border-t sm:border-t-0 border-slate-900/40 pt-1.5 sm:pt-0 shrink-0">
+                              <span className={`font-black font-mono text-xs sm:text-sm tracking-tight ${
+                                op.type === 'Recharge' || op.type === 'Commission' || op.type === 'Revenu Quotidien'
+                                  ? 'text-emerald-400'
+                                  : 'text-rose-400'
+                              }`}>
+                                {op.type === 'Recharge' || op.type === 'Commission' || op.type === 'Revenu Quotidien' ? '+' : '-'}
+                                {op.amount.toLocaleString()} {getCurrency()}
+                              </span>
+                              <div>
+                                {op.status === 'Validé' && (
+                                  <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/25 text-green-400 text-[9px] font-black rounded font-mono uppercase">Validé</span>
+                                )}
+                                {op.status === 'Complété' && (
+                                  <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded font-mono uppercase">Terminé</span>
+                                )}
+                                {op.status === 'Refusé' && (
+                                  <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/25 text-red-400 text-[9px] font-black rounded font-mono uppercase">Refusé</span>
+                                )}
+                                {op.status === 'En attente' && (
+                                  <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/25 text-yellow-500 text-[9px] font-black rounded font-mono uppercase animate-pulse">En attente</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </>
+                  )}
+
                   {/* DEPOTS */}
                   {profileHistoryTab === 'deposits' && (
                     <>
@@ -2456,6 +2656,34 @@ export default function Dashboard({
           </div>
         </div>
       )}
+
+      {/* FLOATING TOAST NOTIFICATIONS */}
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-sm px-4 pointer-events-none">
+        <AnimatePresence>
+          {toasts.map((toast) => (
+            <motion.div
+              key={toast.id}
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.95, transition: { duration: 0.2 } }}
+              className="pointer-events-auto w-full bg-[#0a0f1d]/95 backdrop-blur-md border-2 border-[#1b64d9]/50 rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 select-none"
+            >
+              <div className="text-lg shrink-0 leading-none">
+                {toast.type === 'success' ? '✨' : 'ℹ️'}
+              </div>
+              <div className="flex-1 text-[11px] font-black text-slate-100 uppercase tracking-widest leading-relaxed">
+                {toast.message}
+              </div>
+              <button
+                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0 mt-0.5"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
     </div>
   );
