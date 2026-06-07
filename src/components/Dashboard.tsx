@@ -1217,33 +1217,33 @@ export default function Dashboard({
                 >
                   <motion.div 
                      variants={cardVariants}
-                     className="bg-[#eef3fc] border-2 border-slate-200/40 rounded-3xl p-5 flex flex-col justify-between relative shadow-sm"
+                     className="bg-[#eef3fc] border-2 border-slate-200/40 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between relative shadow-sm"
                   >
-                    <div className="w-10 h-10 rounded-2xl bg-[#00bd74]/10 text-[#00bd74] flex items-center justify-center mb-2">
-                      <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+                    <div className="w-8 h-8 rounded-xl bg-[#00bd74]/10 text-[#00bd74] flex items-center justify-center mb-1.5">
+                      <TrendingUp className="w-4 h-4 stroke-[2.5]" />
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500 block uppercase font-extrabold tracking-wider">Gains Quotidiens</span>
-                      <span className="text-2xl sm:text-3.5xl font-display font-black text-[#00bd74] block mt-1.5 font-sans">
+                      <span className="text-[10px] sm:text-xs text-slate-500 block uppercase font-extrabold tracking-wider">Gains Quotidiens</span>
+                      <span className="text-lg sm:text-2xl font-display font-black text-[#00bd74] block mt-1 font-sans">
                         +{userState.dailyEarnings.toLocaleString()} F
                       </span>
-                      <span className="text-[10px] text-slate-400 block font-mono mt-1 font-bold">Gains sur plans actifs</span>
+                      <span className="text-[9px] sm:text-[10px] text-slate-400 block font-mono mt-0.5 font-bold">Gains sur plans actifs</span>
                     </div>
                   </motion.div>
 
                   <motion.div 
                     variants={cardVariants}
-                    className="bg-[#eef3fc] border-2 border-slate-200/40 rounded-3xl p-5 flex flex-col justify-between relative shadow-sm"
+                    className="bg-[#eef3fc] border-2 border-slate-200/40 rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between relative shadow-sm"
                   >
-                    <div className="w-10 h-10 rounded-2xl bg-[#1b64d9]/10 text-[#1b64d9] flex items-center justify-center mb-2">
-                      <Coins className="w-5 h-5 stroke-[2.5]" />
+                    <div className="w-8 h-8 rounded-xl bg-[#1b64d9]/10 text-[#1b64d9] flex items-center justify-center mb-1.5">
+                      <Coins className="w-4 h-4 stroke-[2.5]" />
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500 block uppercase font-extrabold tracking-wider">Total Récolté</span>
-                      <span className="text-2xl sm:text-3.5xl font-display font-black text-slate-800 block mt-1.5 font-sans">
+                      <span className="text-[10px] sm:text-xs text-slate-500 block uppercase font-extrabold tracking-wider">Total Récolté</span>
+                      <span className="text-lg sm:text-2xl font-display font-black text-slate-800 block mt-1 font-sans">
                         {userState.totalEarnings.toLocaleString()} F
                       </span>
-                      <span className="text-[10px] text-slate-400 block font-mono mt-1 font-bold">Retraits nets accumulés</span>
+                      <span className="text-[9px] sm:text-[10px] text-slate-400 block font-mono mt-0.5 font-bold">Retraits nets accumulés</span>
                     </div>
                   </motion.div>
 
