@@ -140,7 +140,7 @@ async function startServer() {
     // Prefill central database with standard mock data if keys are absent
     const defaultData: Record<string, any> = {
       "gi_users": [
-        { id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGRO777', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' },
+        { id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' },
         { id: 'u-1', name: 'Aline Ouédraogo', whatsapp: '+22670717273', password: 'user123', country: 'Burkina Faso', balance: 14200, dailyEarnings: 600, totalEarnings: 4200, bonus: 500, referralCode: 'ALINE226', referredBy: 'u-admin', role: 'user', isBlocked: false, createdAt: '2026-05-18T14:30:00Z' },
         { id: 'u-2', name: 'Koffi Kouamé', whatsapp: '+2250708091011', password: 'user123', country: 'Côte d’Ivoire', balance: 38000, dailyEarnings: 2500, totalEarnings: 15000, bonus: 1000, referralCode: 'KOFFI225', referredBy: 'u-1', role: 'user', isBlocked: false, createdAt: '2026-05-20T09:15:00Z' },
         { id: 'u-3', name: 'Moussa Diarra', whatsapp: '+22360616263', password: 'user123', country: 'Mali', balance: 2400, dailyEarnings: 0, totalEarnings: 0, bonus: 500, referralCode: 'MOUSSA223', referredBy: 'u-2', role: 'user', isBlocked: false, createdAt: '2026-05-22T16:45:00Z' },
@@ -159,7 +159,7 @@ async function startServer() {
       "gi_commissions": [],
       "gi_notifications": [],
       "gi_bonus_codes": [
-        { code: 'AGRO777', amount: 1000, maxUses: 100, usedCount: 3, usedByUsers: ['u-1', 'u-2', 'u-3'] },
+        { code: 'AGR72', amount: 1000, maxUses: 100, usedCount: 3, usedByUsers: ['u-1', 'u-2', 'u-3'] },
         { code: 'WELCOME500', amount: 500, maxUses: 500, usedCount: 0, usedByUsers: [] },
         { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
       ],
@@ -692,7 +692,7 @@ async function startServer() {
             totalEarnings: 0,
             bonus: 200,
             referralCode: codeClean,
-            referredBy: 'AGRO777',
+            referredBy: 'AGR72',
             role: 'user',
             isBlocked: false,
             lastModified: Date.now(),

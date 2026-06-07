@@ -194,7 +194,7 @@ export default function Auth({
           </h2>
           <p className="text-[11px] text-slate-500 font-bold mt-1 leading-relaxed">
             {isRegister 
-              ? `Recevez 200 ${selectedCode === '+237' ? 'CAF' : 'XOF'} gratuit immédiatement` 
+              ? `Recevez 200 ${selectedCode === '+237' ? 'XAF' : 'XOF'} gratuit immédiatement` 
               : 'Accédez de manière entièrement cryptée à vos investissements passifs'
             }
           </p>
@@ -253,7 +253,7 @@ export default function Auth({
                     className="bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-3 text-xs md:text-sm text-slate-800 font-black focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
                   >
                     {eligibleCountries.map((c, i) => (
-                      <option key={i} value={c.code}>{c.code} ({c.name === 'Cameroun' ? 'CAF' : 'XOF'})</option>
+                      <option key={i} value={c.code}>{c.code} ({c.name === 'Cameroun' ? 'XAF' : 'XOF'})</option>
                     ))}
                   </select>
                   <div className="relative flex-1">
@@ -311,7 +311,7 @@ export default function Auth({
                 <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Code de Parrainage (Optionnel)</label>
                 <input
                   type="text"
-                  placeholder="Ex: AGRO777"
+                  placeholder="Ex: AGR72"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value)}
                   className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-[#1b64d9] font-black tracking-widest font-mono uppercase focus:outline-none transition-colors"
@@ -331,7 +331,7 @@ export default function Auth({
                     className="bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-3 text-xs md:text-sm text-slate-800 font-black focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
                   >
                     {eligibleCountries.map((c, i) => (
-                      <option key={i} value={c.code}>{c.code} ({c.name === 'Cameroun' ? 'CAF' : 'XOF'})</option>
+                      <option key={i} value={c.code}>{c.code} ({c.name === 'Cameroun' ? 'XAF' : 'XOF'})</option>
                     ))}
                   </select>
                   <div className="relative flex-1">

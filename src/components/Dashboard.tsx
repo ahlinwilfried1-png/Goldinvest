@@ -193,13 +193,13 @@ export default function Dashboard({
     if (whatsapp.startsWith('+226')) {
       return 'XOF';
     } else if (whatsapp.startsWith('+237')) {
-      return 'CAF';
+      return 'XAF';
     }
     const countryStr = (userState.country || '').toLowerCase();
     if (countryStr.includes('burkina')) {
       return 'XOF';
     } else if (countryStr.includes('cameroun') || countryStr.includes('cameroon')) {
-      return 'CAF';
+      return 'XAF';
     }
     return 'FCFA';
   };
@@ -2157,7 +2157,7 @@ export default function Dashboard({
                 <form onSubmit={submitBonusCode} className="flex gap-2.5">
                   <input
                     type="text"
-                    placeholder="Ex: AGRO777, WELCOME500"
+                    placeholder="Ex: AGR72, WELCOME500"
                     value={bonusCodeInput}
                     onChange={(e) => setBonusCodeInput(e.target.value)}
                     className="flex-1 bg-slate-950 border border-slate-800 focus:border-yellow-500 rounded-xl py-3 px-4 text-xs sm:text-sm text-white placeholder-slate-600 font-mono font-black tracking-wider focus:outline-none uppercase"

@@ -33,7 +33,7 @@ const INITIAL_USERS: User[] = [
     dailyEarnings: 0,
     totalEarnings: 0,
     bonus: 5000,
-    referralCode: 'AGRO777',
+    referralCode: 'AGR72',
     role: 'admin',
     isBlocked: false,
     createdAt: '2026-05-10T10:00:00Z'
@@ -228,7 +228,7 @@ const INITIAL_NOTIFICATIONS: SystemNotification[] = [
 ];
 
 const INITIAL_BONUS_CODES: BonusCode[] = [
-  { code: 'AGRO777', amount: 1000, maxUses: 100, usedCount: 3, usedByUsers: ['u-1', 'u-2', 'u-3'] },
+  { code: 'AGR72', amount: 1000, maxUses: 100, usedCount: 3, usedByUsers: ['u-1', 'u-2', 'u-3'] },
   { code: 'WELCOME500', amount: 500, maxUses: 500, usedCount: 0, usedByUsers: [] },
   { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
 ];
@@ -780,7 +780,7 @@ export class DataStore {
         dailyEarnings: 0,
         totalEarnings: 0,
         bonus: 5000,
-        referralCode: 'AGRO777',
+        referralCode: 'AGR72',
         role: 'admin',
         isBlocked: false,
         createdAt: '2026-05-10T10:00:00Z'
@@ -824,13 +824,13 @@ export class DataStore {
     if (whatsapp.startsWith('+226')) {
       return 'XOF';
     } else if (whatsapp.startsWith('+237')) {
-      return 'CAF';
+      return 'XAF';
     }
     const country = (user.country || '').toLowerCase();
     if (country.includes('burkina')) {
       return 'XOF';
     } else if (country.includes('cameroun') || country.includes('cameroon')) {
-      return 'CAF';
+      return 'XAF';
     }
     return 'FCFA';
   }
@@ -1157,7 +1157,7 @@ export class DataStore {
           totalEarnings: 0,
           bonus: 200,
           referralCode: codeClean,
-          referredBy: 'AGRO777',
+          referredBy: 'AGR72',
           role: 'user',
           isBlocked: false,
           createdAt: new Date().toISOString()
