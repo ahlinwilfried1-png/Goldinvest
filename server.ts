@@ -398,6 +398,17 @@ async function startServer() {
     });
 
     if (changed) {
+      // Recalculate dailyEarnings for all users to match active investments status correctly
+      users = users.map((u: any) => {
+        const userActiveInvs = investments.filter((inv: any) => inv.userId === u.id && inv.status === 'active');
+        const activeDailyEarnings = userActiveInvs.reduce((sum: number, inv: any) => sum + inv.dailyReturn, 0);
+        return {
+          ...u,
+          dailyEarnings: activeDailyEarnings,
+          lastModified: Date.now()
+        };
+      });
+
       storeData["gi_users"] = users;
       storeData["gi_investments"] = investments;
       storeData["gi_notifications"] = notifications;

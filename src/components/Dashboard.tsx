@@ -258,7 +258,17 @@ export default function Dashboard({
   // Layout states
   const [simulationStatus, setSimulationStatus] = useState<string>('');
   const [isAdminMode, setIsAdminMode] = useState(false);
-  const [showAnnouncementDismissible, setShowAnnouncementDismissible] = useState<boolean>(true);
+  const [showAnnouncementDismissible, setShowAnnouncementDismissible] = useState<boolean>(() => {
+    try {
+      const justReg = sessionStorage.getItem('gi_just_registered') === 'true';
+      if (justReg) {
+        return true;
+      }
+      return localStorage.getItem('gi_announcement_dismissed_v2') !== 'true';
+    } catch (e) {
+      return true;
+    }
+  });
   const [profileHistoryTab, setProfileHistoryTab] = useState<'history' | 'deposits' | 'withdrawals' | 'purchases' | 'notifications'>('history');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
@@ -874,46 +884,52 @@ export default function Dashboard({
       
       {showAnnouncementDismissible && (
         <div 
-          onClick={() => setShowAnnouncementDismissible(false)}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto cursor-pointer"
+          onClick={() => {
+            setShowAnnouncementDismissible(false);
+            try { localStorage.setItem('gi_announcement_dismissed_v2', 'true'); } catch(e){}
+          }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto cursor-pointer"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border-4 border-yellow-400 rounded-3xl p-5 text-left shadow-[0_15px_50px_rgba(234,179,8,0.35)] relative max-w-sm w-full overflow-hidden my-auto cursor-default text-slate-900"
+            className="bg-[#0b101d] border-2 border-slate-800 rounded-3xl p-6 text-left shadow-[0_25px_60px_rgba(0,0,0,0.85)] relative max-w-sm w-full overflow-hidden my-auto cursor-default text-white"
           >
             {/* Background glow decorator */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-450/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#1b64d9]/10 rounded-full blur-3xl pointer-events-none" />
             
             {/* Close cross/button */}
             <button
-              onClick={() => setShowAnnouncementDismissible(false)}
-              className="absolute top-3 right-3 text-slate-400 hover:text-slate-800 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer z-[101]"
+              onClick={() => {
+                setShowAnnouncementDismissible(false);
+                try { localStorage.setItem('gi_announcement_dismissed_v2', 'true'); } catch(e){}
+              }}
+              className="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-slate-900 transition-colors cursor-pointer z-[101]"
               aria-label="Fermer"
             >
               <X className="w-4 h-4 stroke-[2.5]" />
             </button>
 
             {/* Title */}
-            <div className="flex items-center space-x-2.5 mb-3 border-b border-yellow-250 pb-2.5">
-              <div className="w-8 h-8 rounded-lg bg-yellow-450 flex items-center justify-center text-slate-950 text-base shadow-md">
+            <div className="flex items-center space-x-2.5 mb-4 border-b border-slate-800/80 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-yellow-500 flex items-center justify-center text-slate-950 text-base shadow-md">
                 <span>🎉</span>
               </div>
               <div>
-                <h3 className="text-sm font-sans font-black text-slate-950 uppercase tracking-wider">Inscription Réussie !</h3>
-                <p className="text-[10px] text-slate-500 font-bold">Vos informations de départ :</p>
+                <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">Inscription Réussie !</h3>
+                <p className="text-[10px] text-white font-bold">Vos informations de départ :</p>
               </div>
             </div>
 
-            <div className="space-y-2 text-[11px]">
+            <div className="space-y-3 text-[11px]">
               {/* Stats pillar */}
-              <div className="space-y-1.5 bg-yellow-50/70 p-3 border border-yellow-200/60 rounded-xl text-slate-800">
+              <div className="space-y-2 bg-[#090d16] p-3.5 border border-slate-800/80 rounded-xl text-white">
                 <div className="flex items-start space-x-2">
                   <span className="text-xs select-none">🌍</span>
                   <div className="flex flex-wrap items-center gap-1">
-                    <span className="font-bold text-slate-600">Pays :</span>
-                    <span className="bg-yellow-100 px-1.5 py-0.5 rounded text-yellow-800 font-extrabold text-[9px]">
+                    <span className="font-bold text-white">Pays :</span>
+                    <span className="bg-slate-900 border border-slate-800 text-white px-1.5 py-0.5 rounded font-extrabold text-[9px]">
                       Burkina Faso 🇧🇫 / Cameroun 🇨🇲
                     </span>
                   </div>
@@ -922,67 +938,67 @@ export default function Dashboard({
                 <div className="flex items-center space-x-2">
                   <span className="text-xs select-none">🎁</span>
                   <div>
-                    <span className="font-bold text-slate-600">Bonus d'inscription :</span>{' '}
-                    <span className="text-emerald-600 font-extrabold text-[11px] ml-0.5">200 {getCurrency()}</span>
+                    <span className="font-bold text-white">Bonus d'inscription :</span>{' '}
+                    <span className="text-white font-extrabold text-[11px] ml-0.5">200 {getCurrency()}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <span className="text-xs select-none">📥</span>
                   <div>
-                    <span className="font-bold text-slate-600">Recharge minimale :</span>{' '}
-                    <span className="text-amber-600 font-mono font-black text-[11px] ml-0.5">3 000 {getCurrency()}</span>
+                    <span className="font-bold text-white">Recharge minimale :</span>{' '}
+                    <span className="text-white font-mono font-black text-[11px] ml-0.5">3 000 {getCurrency()}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <span className="text-xs select-none text-red-500">📤</span>
-                  <div className="flex items-center flex-wrap gap-1 text-red-650">
-                    <span className="font-bold">Retrait minimum :</span>{' '}
-                    <span className="font-mono font-black text-[11px]">1 000 {getCurrency()}</span>{' '}
-                    <span className="text-[8px] font-sans font-black uppercase bg-red-100 px-1 py-0.2 rounded border border-red-200">(12% frais)</span>
+                  <div className="flex items-center flex-wrap gap-1">
+                    <span className="font-bold text-white">Retrait minimum :</span>{' '}
+                    <span className="font-mono font-black text-[11px] text-white">1 000 {getCurrency()}</span>{' '}
+                    <span className="text-[8px] font-sans font-black uppercase bg-red-950/40 text-white px-1 py-0.2 rounded border border-red-900/40">(12% frais)</span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <span className="text-xs select-none">🔥</span>
                   <div>
-                    <span className="font-bold text-slate-600">Bonus de connexion :</span>{' '}
-                    <span className="text-emerald-600 font-black text-[11px] ml-0.5">20 {getCurrency()} / jour</span>
+                    <span className="font-bold text-white">Bonus de connexion :</span>{' '}
+                    <span className="text-white font-black text-[11px] ml-0.5">20 {getCurrency()} / jour</span>
                   </div>
                 </div>
               </div>
 
               {/* Referral Pillar */}
-              <div className="bg-yellow-50/70 p-3 border border-yellow-200/60 rounded-xl space-y-1.5">
+              <div className="bg-[#090d16] p-3 border border-slate-800/80 rounded-xl space-y-1.5">
                 <div className="flex items-center space-x-1.5">
                   <span className="text-xs select-none">🤝</span>
-                  <span className="font-bold text-slate-600">Parrainage MLM :</span>
+                  <span className="font-bold text-white">Parrainage MLM :</span>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 font-mono text-[8px] font-black text-center">
-                  <span className="bg-yellow-100 text-yellow-805 p-1 rounded-lg border border-yellow-250 flex flex-col items-center justify-center">
-                    <span className="opacity-75 mb-0.5 text-slate-600">🥇 Niv. 1</span>
-                    <span className="font-extrabold text-[10px] text-yellow-700">20%</span>
+                  <span className="bg-yellow-500/10 text-white p-1.5 rounded-lg border border-yellow-500/20 flex flex-col items-center justify-center">
+                    <span className="opacity-100 mb-0.5 text-white/90">🥇 Niv. 1</span>
+                    <span className="font-extrabold text-[10px] text-white">20%</span>
                   </span>
-                  <span className="bg-green-50 text-green-800 p-1 rounded-lg border border-green-200 flex flex-col items-center justify-center">
-                    <span className="opacity-75 mb-0.5 text-slate-600">🥈 Niv. 2</span>
-                    <span className="font-extrabold text-[10px] text-green-700">3%</span>
+                  <span className="bg-emerald-500/10 text-white p-1.5 rounded-lg border border-emerald-500/20 flex flex-col items-center justify-center">
+                    <span className="opacity-100 mb-0.5 text-white/90">🥈 Niv. 2</span>
+                    <span className="font-extrabold text-[10px] text-white font-bold">3%</span>
                   </span>
-                  <span className="bg-amber-100/50 text-amber-800 p-1 rounded-lg border border-amber-205 flex flex-col items-center justify-center">
-                    <span className="opacity-75 mb-0.5 text-slate-600">🥉 Niv. 3</span>
-                    <span className="font-extrabold text-[10px] text-amber-700 font-bold">1%</span>
+                  <span className="bg-blue-500/10 text-white p-1.5 rounded-lg border border-blue-500/20 flex flex-col items-center justify-center">
+                    <span className="opacity-100 mb-0.5 text-white/90">🥉 Niv. 3</span>
+                    <span className="font-extrabold text-[10px] text-white font-bold">1%</span>
                   </span>
                 </div>
               </div>
 
               {/* Official Group Link Segment */}
-              <div className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl p-3 flex items-center justify-between gap-2.5 transition-colors">
+              <div className="bg-[#090d16] hover:bg-slate-900 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between gap-2.5 transition-colors">
                 <div className="space-y-0.5 text-left flex-1 min-w-0">
-                  <div className="flex items-center space-x-1 text-emerald-700 font-extrabold text-[9px] uppercase tracking-wider">
+                  <div className="flex items-center space-x-1 text-white font-extrabold text-[9px] uppercase tracking-wider">
                     <span>💬 Groupe officiel</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   </div>
-                  <p className="text-[10px] text-slate-500 font-semibold leading-tight truncate">
+                  <p className="text-[10px] text-white font-semibold leading-tight truncate">
                     Rejoignez la discussion officielle AgroCapital.
                   </p>
                 </div>
@@ -990,18 +1006,21 @@ export default function Dashboard({
                   href="https://chat.whatsapp.com/JJ4ewxWrtc56p3kiEZCTdx?s=cl&p=a&mlu=3"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
+                  className="px-2.5 py-1.5 bg-[#00bd74] hover:bg-emerald-500 text-slate-950 font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
                 >
                   <span>Rejoindre 👉</span>
                 </a>
               </div>
             </div>
-            
+
             {/* Footer hint */}
-            <div className="mt-4 pt-3 border-t border-yellow-200 text-center flex justify-center">
+            <div className="mt-5 pt-3 border-t border-slate-800/80 text-center flex justify-center">
               <button
-                onClick={() => setShowAnnouncementDismissible(false)}
-                className="text-[11px] text-white hover:bg-yellow-500 font-bold uppercase tracking-wider px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded-xl cursor-pointer transition-all shadow-[0_4px_12px_rgba(234,179,8,0.25)]"
+                onClick={() => {
+                  setShowAnnouncementDismissible(false);
+                  try { localStorage.setItem('gi_announcement_dismissed_v2', 'true'); } catch(e){}
+                }}
+                className="w-full text-[11px] text-slate-950 bg-yellow-500 hover:bg-yellow-400 font-black uppercase tracking-widest py-3.5 rounded-xl cursor-pointer transition-all shadow-[0_4px_15px_rgba(234,179,8,0.25)]"
               >
                 Accéder à mon tableau de bord
               </button>

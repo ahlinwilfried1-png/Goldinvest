@@ -134,6 +134,11 @@ export default function Auth({
 
       if (result.success && result.user) {
         setSuccessMessage(result.message);
+        try {
+          sessionStorage.setItem('gi_just_registered', 'true');
+        } catch (e) {
+          console.error(e);
+        }
         setTimeout(() => {
           onAuthSuccess(result.user!);
           setLoading(false);

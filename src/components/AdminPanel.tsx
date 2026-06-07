@@ -1979,19 +1979,44 @@ export default function AdminPanel({
               createdAt: c.createdAt
             };
           }),
-          ...investments.map(inv => {
+          ...investments.flatMap(inv => {
             const client = users.find(u => u.id === inv.userId);
-            return {
+            const clientName = client ? client.name : 'Membre inconnu';
+            const txs: any[] = [];
+            
+            // The VIP purchase itself:
+            txs.push({
               id: inv.id,
               userId: inv.userId,
-              userName: client ? client.name : 'Membre inconnu',
+              userName: clientName,
               type: 'Achat VIP' as const,
               amount: -inv.price,
               operator: inv.productName || 'VIP Plan',
               reference: `VIP-${inv.productId}`,
-              status: inv.status === 'active' ? 'approved' : (inv.status as any),
+              status: inv.status === 'active' ? 'approved' : 'completed',
               createdAt: inv.createdAt
-            };
+            });
+
+            // The daily return payouts:
+            for (let d = 1; d <= inv.daysPassed; d++) {
+              const installmentTime = new Date(inv.createdAt).getTime() + d * 24 * 60 * 60 * 1000;
+              const finalTime = Math.min(Date.now(), installmentTime);
+              const instDate = new Date(finalTime).toISOString();
+              
+              txs.push({
+                id: `earn-${inv.id}-${d}`,
+                userId: inv.userId,
+                userName: clientName,
+                type: 'Revenu Quotidien' as const,
+                amount: inv.dailyReturn,
+                operator: `${inv.productName} (Jour ${d}/${inv.durationDays})`,
+                reference: 'Crédité automatiquement',
+                status: 'approved' as const,
+                createdAt: instDate
+              });
+            }
+
+            return txs;
           })
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -2040,6 +2065,7 @@ export default function AdminPanel({
                   <option value="Retrait">📤 Retraits uniquement</option>
                   <option value="Commission">💰 Commissions uniquement</option>
                   <option value="Achat VIP">🛍️ Achats VIP uniquement</option>
+                  <option value="Revenu Quotidien">💰 Revenus Quotidiens</option>
                 </select>
 
                 {/* Filter Status */}

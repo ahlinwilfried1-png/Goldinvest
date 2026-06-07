@@ -2081,6 +2081,17 @@ export class DataStore {
     });
 
     if (changed) {
+      // Recalculate dailyEarnings for all users to match active investments status correctly
+      users = users.map(u => {
+        const userActiveInvs = investments.filter(inv => inv.userId === u.id && inv.status === 'active');
+        const activeDailyEarnings = userActiveInvs.reduce((sum, inv) => sum + inv.dailyReturn, 0);
+        return {
+          ...u,
+          dailyEarnings: activeDailyEarnings,
+          lastModified: Date.now()
+        };
+      });
+
       this.saveInvestments(investments);
       this.saveUsers(users);
       this.saveNotifications(notifications);
