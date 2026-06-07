@@ -1529,15 +1529,17 @@ export class DataStore {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, productId })
       });
-      const res = await response.json();
-      if (res.success && res.user) {
-        this.saveCurrentUser(res.user);
-        await syncWithBackend();
-        return res;
-      } else {
-        // Server actively completed but rejected purchase (e.g. insufficient funds, blocked VIP plan)
-        // Do NOT execute the local fallback! Return the server error directly.
-        return res;
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success && res.user) {
+          this.saveCurrentUser(res.user);
+          await syncWithBackend();
+          return res;
+        } else if (res) {
+          // Server actively completed but rejected purchase (e.g. insufficient funds, blocked VIP plan)
+          // Do NOT execute the local fallback! Return the server error directly.
+          return res;
+        }
       }
     } catch (error) {
       console.error('Buy product API error, using local fallback:', error);
