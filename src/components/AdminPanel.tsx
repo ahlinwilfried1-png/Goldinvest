@@ -73,7 +73,7 @@ export default function AdminPanel({
 
   // Consolidated transactions filters
   const [txSearch, setTxSearch] = useState('');
-  const [txTypeFilter, setTxTypeFilter] = useState<'all' | 'Dépôt' | 'Retrait' | 'Commission'>('all');
+  const [txTypeFilter, setTxTypeFilter] = useState<'all' | 'Dépôt' | 'Retrait' | 'Commission' | 'Achat VIP'>('all');
   const [txStatusFilter, setTxStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
   // Real-time synchronization directly with the central Express database server.
@@ -1978,6 +1978,20 @@ export default function AdminPanel({
               status: 'approved' as const,
               createdAt: c.createdAt
             };
+          }),
+          ...investments.map(inv => {
+            const client = users.find(u => u.id === inv.userId);
+            return {
+              id: inv.id,
+              userId: inv.userId,
+              userName: client ? client.name : 'Membre inconnu',
+              type: 'Achat VIP' as const,
+              amount: -inv.price,
+              operator: inv.productName || 'VIP Plan',
+              reference: `VIP-${inv.productId}`,
+              status: inv.status === 'active' ? 'approved' : (inv.status as any),
+              createdAt: inv.createdAt
+            };
           })
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -1998,7 +2012,7 @@ export default function AdminPanel({
               <div>
                 <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">🔒 Registre Général des Transactions Récentes</h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  Vue unifiée en temps réel de tous les flux financiers de la plateforme (dépôts, retraits et commissions parrainages).
+                  Vue unifiée en temps réel de tous les flux financiers de la plateforme (dépôts, retraits, achats VIP et commissions parrainages).
                 </p>
               </div>
               
@@ -2025,6 +2039,7 @@ export default function AdminPanel({
                   <option value="Dépôt">📥 Dépôts uniquement</option>
                   <option value="Retrait">📤 Retraits uniquement</option>
                   <option value="Commission">💰 Commissions uniquement</option>
+                  <option value="Achat VIP">🛍️ Achats VIP uniquement</option>
                 </select>
 
                 {/* Filter Status */}
@@ -2075,6 +2090,8 @@ export default function AdminPanel({
                               ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                               : tx.type === 'Retrait'
                               ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                              : tx.type === 'Achat VIP'
+                              ? 'bg-rose-500/10 text-rose-450 border border-rose-500/20'
                               : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
                           }`}>
                             {tx.type}

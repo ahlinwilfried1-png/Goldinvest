@@ -66,7 +66,7 @@ export default function App() {
         const amt = parseInt(wpAmount);
         if (!isNaN(amt)) {
           if (active) {
-            const res = DataStore.createWestPayDeposit(active.id, amt, wpRef);
+            const res = await DataStore.createWestPayDeposit(active.id, amt, wpRef);
             if (res) {
               const updatedActive = DataStore.getCurrentUser();
               if (updatedActive) {
@@ -110,14 +110,14 @@ export default function App() {
     initAndLoad();
   }, []);
 
-  const handleAuthSuccess = (loggedInUser: User) => {
+  const handleAuthSuccess = async (loggedInUser: User) => {
     // Check if there is any pending WestPay credit waiting
     const pendingStr = safeLocalStorage.getItem('gi_pending_westpay_credit');
     if (pendingStr) {
       try {
         const pending = JSON.parse(pendingStr);
         if (pending && pending.amount && pending.ref) {
-          const res = DataStore.createWestPayDeposit(loggedInUser.id, pending.amount, pending.ref);
+          const res = await DataStore.createWestPayDeposit(loggedInUser.id, pending.amount, pending.ref);
           if (res) {
             const updated = DataStore.getCurrentUser();
             if (updated) {

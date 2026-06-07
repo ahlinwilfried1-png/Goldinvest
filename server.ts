@@ -1134,6 +1134,15 @@ async function startServer() {
     const uIdx = users.findIndex((u: any) => u.id === userId);
     const user = uIdx !== -1 ? users[uIdx] : null;
 
+    // Prevent duplicate processing of the same transaction reference!
+    if (reference) {
+      const existing = deposits.find((d: any) => d.reference === reference);
+      if (existing) {
+        console.log(`[DEPOSIT API] Reference "${reference}" already processed for deposit ${existing.id}. Skipping to avoid duplicates.`);
+        return res.json({ success: true, deposit: existing, user: user || undefined });
+      }
+    }
+
     const isAutomated = receiptImage === 'automated_westpay' || receiptImage === 'automated';
 
     const newDep = {
@@ -1186,6 +1195,161 @@ async function startServer() {
     saveStore();
     res.json({ success: true, deposit: newDep, user: user || undefined });
   });
+
+  // Centralized payment integration webhooks (PayDunya & WestPay)
+  app.all("/api/webhooks/westpay", (req, res) => {
+    handlePaymentWebhook(req, res, 'WestPay');
+  });
+
+  app.all("/api/webhooks/paydunya", (req, res) => {
+    handlePaymentWebhook(req, res, 'PayDunya');
+  });
+
+  function handlePaymentWebhook(req: any, res: any, sourceName: string) {
+    console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Request received.`);
+    console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Headers:`, req.headers);
+    console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Query:`, req.query);
+    console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Body:`, req.body);
+
+    const payload = { ...req.query, ...req.body };
+
+    // extraction of status
+    let rawStatus = payload.status || payload.response_code || payload.invoice_status || "";
+    if (payload.invoice && payload.invoice.status) {
+      rawStatus = payload.invoice.status;
+    }
+    const statusStr = String(rawStatus).toLowerCase();
+
+    const isApproved = 
+      statusStr.includes("success") || 
+      statusStr.includes("completed") || 
+      statusStr.includes("approved") || 
+      statusStr.includes("valid") ||
+      statusStr === "00"; // PayDunya response_code for success is "00"
+
+    if (!isApproved) {
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Transaction status "${rawStatus}" is not successful. Skipping.`);
+      return res.json({ success: false, message: `Transaction is not approved: status is ${rawStatus}` });
+    }
+
+    // extraction of amount
+    let amount = 0;
+    if (payload.amount) amount = Number(payload.amount);
+    else if (payload.amount_payed) amount = Number(payload.amount_payed);
+    else if (payload.invoice && payload.invoice.total_amount) amount = Number(payload.invoice.total_amount);
+    else if (payload.total_amount) amount = Number(payload.total_amount);
+
+    // extraction of reference
+    let reference = payload.ref || payload.reference || payload.transaction_id || payload.token || "";
+    if (!reference && payload.invoice && payload.invoice.token) {
+      reference = payload.invoice.token;
+    }
+
+    // extraction of userId mapping
+    let userId = payload.userId || payload.user_id || payload.customer_id || "";
+    if (!userId && payload.custom_data) {
+      userId = payload.custom_data.userId || payload.custom_data.user_id || "";
+    }
+    if (!userId && payload.invoice && payload.invoice.custom_data) {
+      userId = payload.invoice.custom_data.userId || payload.invoice.custom_data.user_id;
+    }
+
+    if (!reference) {
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Error: Missing transaction reference/token in payload.`);
+      return res.status(400).json({ success: false, error: "Missing reference" });
+    }
+
+    let users = storeData["gi_users"] || [];
+    let deposits = storeData["gi_deposits"] || [];
+    let notifications = storeData["gi_notifications"] || [];
+
+    // Check if this transaction reference has already been approved
+    const existingApproved = deposits.find((d: any) => d.reference === reference && d.status === 'approved');
+    if (existingApproved) {
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Reference "${reference}" has already been processed and approved. Avoiding duplicates.`);
+      return res.json({ success: true, message: "Already processed" });
+    }
+
+    // Try finding the user
+    let user = users.find((u: any) => u.id === userId);
+
+    let existingDepIdx = deposits.findIndex((d: any) => d.reference === reference);
+    if (existingDepIdx !== -1) {
+      const dep = deposits[existingDepIdx];
+      if (!user) {
+        user = users.find((u: any) => u.id === dep.userId);
+      }
+      if (amount <= 0) {
+        amount = dep.amount;
+      }
+    }
+
+    // If still no user found, try scanning users for a pending deposit reference or match
+    if (!user) {
+      // Find among pending deposits
+      const matchingPendingDep = deposits.find((d: any) => d.reference === reference);
+      if (matchingPendingDep) {
+        user = users.find((u: any) => u.id === matchingPendingDep.userId);
+        if (amount <= 0) amount = matchingPendingDep.amount;
+      }
+    }
+
+    if (!user) {
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Error: No user found for userId "${userId}" or reference "${reference}".`);
+      return res.status(404).json({ success: false, error: "Associated user not found" });
+    }
+
+    if (amount <= 0) {
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Error: Invalid amount <= 0.`);
+      return res.status(400).json({ success: false, error: "Invalid amount" });
+    }
+
+    // Credit user's principal balance
+    user.balance += amount;
+    user.lastModified = Date.now();
+
+    // Create or Update deposit record
+    if (existingDepIdx !== -1) {
+      deposits[existingDepIdx].status = 'approved';
+      deposits[existingDepIdx].amount = amount;
+      deposits[existingDepIdx].lastModified = Date.now();
+    } else {
+      const newDep = {
+        id: `dep-${Date.now()}`,
+        userId: user.id,
+        userName: user.name,
+        amount: amount,
+        operator: payload.operator || `${sourceName} Auto`,
+        reference: reference,
+        receiptImage: 'automated_westpay',
+        status: 'approved',
+        lastModified: Date.now(),
+        createdAt: new Date().toISOString()
+      };
+      deposits.unshift(newDep);
+    }
+
+    // Create notification
+    notifications.unshift({
+      id: `not-dep-auto-${Date.now()}`,
+      userId: user.id,
+      title: '🟢 Recharge Confirmée !',
+      message: `Votre paiement de ${amount.toLocaleString()} FCFA via ${sourceName} (Réf: ${reference}) a été validé et crédité automatiquement avec succès sur votre solde principal.`,
+      type: 'deposit',
+      lastModified: Date.now(),
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+
+    storeData["gi_users"] = users;
+    storeData["gi_deposits"] = deposits;
+    storeData["gi_notifications"] = notifications;
+
+    saveStore();
+
+    console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully processed deposit of ${amount} FCFA for user ${user.name} (${user.id}).`);
+    return res.json({ success: true, message: "Webhook processed successfully" });
+  }
 
   // Centralized Create Withdrawal API
   app.post("/api/create-withdrawal", (req, res) => {

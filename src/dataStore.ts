@@ -1092,10 +1092,39 @@ export class DataStore {
       return { success: false, message: 'Ce numéro WhatsApp est déjà enregistré sur notre plateforme.' };
     }
 
-    // Generate unique referral code
-    const usernameClean = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
-    const randomSuffix = Math.floor(100 + Math.random() * 900);
-    const referralCode = `${usernameClean || 'AGRO'}${randomSuffix}`;
+    // Generate unique referral code (3 letters mixed with 2 digits)
+    let referralCode = '';
+    let codeExists = true;
+    const lettersPool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digitsPool = '0123456789';
+
+    while (codeExists) {
+      let selectedLetters = '';
+      for (let i = 0; i < 3; i++) {
+        selectedLetters += lettersPool.charAt(Math.floor(Math.random() * lettersPool.length));
+      }
+      
+      let selectedDigits = '';
+      for (let i = 0; i < 2; i++) {
+        selectedDigits += digitsPool.charAt(Math.floor(Math.random() * digitsPool.length));
+      }
+      
+      // Shuffle them to mix letters and digits
+      const combinedArray = (selectedLetters + selectedDigits).split('');
+      for (let i = combinedArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = combinedArray[i];
+        combinedArray[i] = combinedArray[j];
+        combinedArray[j] = temp;
+      }
+      
+      const potentialCode = combinedArray.join('');
+      const isDuplicate = users.some((u: any) => u.referralCode && u.referralCode.toUpperCase() === potentialCode);
+      if (!isDuplicate) {
+        referralCode = potentialCode;
+        codeExists = false;
+      }
+    }
 
     let refereeId: string | undefined = undefined;
     if (data.referredByCode && data.referredByCode.trim().length > 0) {
@@ -1345,6 +1374,9 @@ export class DataStore {
           }
           await syncWithBackend();
           return res.deposit;
+        } else {
+          // If server actively returned false (such as duplicate transaction), do not fallback locally!
+          return null;
         }
       }
     } catch (error) {
@@ -1501,6 +1533,10 @@ export class DataStore {
       if (res.success && res.user) {
         this.saveCurrentUser(res.user);
         await syncWithBackend();
+        return res;
+      } else {
+        // Server actively completed but rejected purchase (e.g. insufficient funds, blocked VIP plan)
+        // Do NOT execute the local fallback! Return the server error directly.
         return res;
       }
     } catch (error) {
