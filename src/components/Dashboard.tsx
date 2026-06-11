@@ -28,7 +28,7 @@ import {
   X
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage } from '../types';
-import { DataStore, syncWithBackend } from '../dataStore';
+import { DataStore, syncWithBackend, getApiUrl } from '../dataStore';
 import AdminPanel from './AdminPanel';
 
 const containerVariants = {
@@ -102,13 +102,14 @@ export default function Dashboard({
   // Form states
   const [depositAmount, setDepositAmount] = useState<string>('5000');
   const [depositOperator, setDepositOperator] = useState<string>('Orange Money');
-  const [depositMethod, setDepositMethod] = useState<'paydunya' | 'westpay'>('paydunya');
+  const [depositMethod, setDepositMethod] = useState<'paydunya' | 'westpay'>('westpay');
   const [depositRef, setDepositRef] = useState<string>('');
   const [receiptBase64, setReceiptBase64] = useState<string>('');
   const [depositError, setDepositError] = useState<string>('');
   const [depositSuccess, setDepositSuccess] = useState<string>('');
   const [isSubmittingDeposit, setIsSubmittingDeposit] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [depositRedirectUrl, setDepositRedirectUrl] = useState<string>('');
 
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
   const [withdrawOperator, setWithdrawOperator] = useState<string>("Wave (Côte d'Ivoire)");
@@ -686,6 +687,7 @@ export default function Dashboard({
     e.preventDefault();
     setDepositError('');
     setDepositSuccess('');
+    setDepositRedirectUrl('');
 
     const amt = parseInt(depositAmount);
     if (isNaN(amt) || amt < 3000) {
@@ -695,17 +697,46 @@ export default function Dashboard({
 
     setIsSubmittingDeposit(true);
     try {
-      const randomRef = `WP-${Math.floor(100000 + Math.random() * 900000)}`;
-      const dep = await DataStore.createDeposit(userState.id, amt, "Versement Mobile Money", randomRef, "manual_screenshot_pending");
-      if (dep) {
-        setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} FCFA (Réf: ${randomRef}) a bien été enregistrée et est en attente. Veuillez finaliser votre paiement sur la page sécurisée WestPay.`);
-        setDepositAmount('5000');
-        syncDashboardData();
-        
-        // Open the WestPay direct checkout link
-        window.open('https://westpay.cfd/link/c25ukanomq2agyq6', '_blank', 'noopener,noreferrer');
+      const isAutomated = (depositMethod === 'paydunya' || depositMethod === 'westpay');
+      if (isAutomated) {
+        const response = await fetch(getApiUrl('/api/paydunya/create-charge'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            userId: userState.id,
+            amount: amt,
+            method: depositMethod
+          })
+        });
+
+        const res = await response.json();
+        if (res.success && res.url) {
+          setDepositRedirectUrl(res.url);
+          const channelName = depositMethod === 'westpay' ? 'WestPay' : 'PayDunya';
+          setDepositSuccess(`Votre facture de recharge ${channelName} de ${amt.toLocaleString()} FCFA a été créée. Veuillez cliquer sur le bouton ci-dessous pour finaliser votre paiement sur la passerelle sécurisée.`);
+          setDepositAmount('5000');
+          syncDashboardData();
+
+          // Open the payment direct checkout link in a new window automatically
+          window.open(res.url, '_blank', 'noopener,noreferrer');
+        } else {
+          setDepositError(res.error || `Une erreur est survenue lors de la création de la facture de paiement ${depositMethod === 'westpay' ? 'WestPay' : 'PayDunya'}. Veuillez réessayer ou contacter le support.`);
+        }
       } else {
-        setDepositError("Une erreur est survenue lors de l'enregistrement de votre demande. Veuillez réessayer.");
+        const randomRef = `WP-${Math.floor(100000 + Math.random() * 900000)}`;
+        const dep = await DataStore.createDeposit(userState.id, amt, "Versement Mobile Money", randomRef, "manual_screenshot_pending");
+        if (dep) {
+          setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} FCFA (Réf: ${randomRef}) a bien été enregistrée et est en attente. Veuillez finaliser votre paiement sur la page sécurisée WestPay.`);
+          setDepositAmount('5000');
+          syncDashboardData();
+          
+          // Open the WestPay direct checkout link
+          window.open('https://westpay.cfd/link/c25ukanomq2agyq6', '_blank', 'noopener,noreferrer');
+        } else {
+          setDepositError("Une erreur est survenue lors de l'enregistrement de votre demande. Veuillez réessayer.");
+        }
       }
     } catch (error) {
       console.error("Deposit submission error:", error);
@@ -903,7 +934,7 @@ export default function Dashboard({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1b64d9] to-[#03368a] text-white flex flex-col font-sans w-full max-w-full relative overflow-x-hidden">
+    <div className="min-h-screen bg-transparent text-white flex flex-col font-sans w-full max-w-full relative overflow-x-hidden">
       
       {showAnnouncementDismissible && (
         <div 
@@ -1056,11 +1087,11 @@ export default function Dashboard({
       <div className="absolute top-0 left-0 w-full max-w-[800px] h-[500px] bg-white/5 blur-[150px] rounded-full pointer-events-none -z-10 animate-pulse" />  <div className="absolute top-0 left-0 w-full max-w-[800px] h-[500px] bg-white/5 blur-[150px] rounded-full pointer-events-none -z-10 animate-pulse" />
 
       {/* DASHBOARD TOP HEADER */}
-      <header className="bg-gradient-to-r from-[#1b64d9] to-[#044ab0] border-b border-white/10 py-5 px-4 md:px-12 sticky top-0 z-40 shadow-xl">
+      <header className="bg-[#0e1c33]/80 border-b border-blue-900/40 backdrop-blur-md py-4 px-4 md:px-12 sticky top-0 z-40 shadow-xl">
         <div className="max-w-full mx-auto flex justify-between items-center">
           
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#f7b03b] to-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/15">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/15">
               <TrendingUp className="w-5.5 h-5.5 text-slate-900 stroke-[3]" />
             </div>
             <div>
@@ -1515,16 +1546,6 @@ export default function Dashboard({
 
           {/* DEPOSIT FORM TAB */}
           {activeTab === 'deposit' && (() => {
-            const handleWestPayRedirect = () => {
-              const amt = parseInt(depositAmount);
-              if (isNaN(amt) || amt < 3000) {
-                setDepositError(`Veuillez d'abord saisir un montant valide (minimum 3 000 ${getCurrency()}).`);
-                return;
-              }
-              setDepositError('');
-              window.open('https://westpay.cfd/link/c25ukanomq2agyq6', '_blank', 'noopener,noreferrer');
-            };
-
             return (
               <div className="max-w-xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800 animate-fade-in animate-duration-300">
                 <div className="text-center mb-6">
@@ -1533,7 +1554,7 @@ export default function Dashboard({
                   </span>
                   <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Recharger mon compte</h3>
                   <p className="text-xs text-slate-500 font-bold mt-1">
-                    Saisissez le montant et rechargez instantanément votre compte.
+                    Saisissez le montant, choisissez votre méthode de paiement et rechargez instantanément votre compte.
                   </p>
                 </div>
 
@@ -1543,14 +1564,16 @@ export default function Dashboard({
                 {depositSuccess && (
                   <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold leading-normal space-y-2">
                     <div>{depositSuccess}</div>
-                    <a
-                      href="https://westpay.cfd/link/c25ukanomq2agyq6"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block py-2.5 px-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-black uppercase text-[10px] mt-1 text-center shadow"
-                    >
-                      👉 Cliquer ici pour ouvrir le paiement
-                    </a>
+                    {depositRedirectUrl && (
+                      <a
+                        href={depositRedirectUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block py-2.5 px-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-black uppercase text-[10px] mt-1 text-center shadow"
+                      >
+                        👉 Cliquer ici pour ouvrir le paiement sécurisé
+                      </a>
+                    )}
                   </div>
                 )}
 
@@ -1574,7 +1597,7 @@ export default function Dashboard({
 
                   <div className="bg-[#e2ebf9]/80 p-4 rounded-xl border border-slate-200/50 text-xs text-slate-650 leading-relaxed font-semibold">
                     <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block mb-0.5">🔒 Protection Sécurisée :</span>
-                    En validant, votre demande est enregistrée avec le statut « En attente » sur votre tableau de bord administrateur et vous accédez directement au portail sécurisé de rechargement Mobile Money.
+                    En validant, votre demande est enregistrée avec le statut « En attente » et vous accédez directement au portail sécurisé de rechargement Mobile Money. Le solde est crédité automatiquement dès confirmation.
                   </div>
 
                   {/* Submitting button */}
@@ -2545,7 +2568,7 @@ export default function Dashboard({
       )}
 
       {/* DASHBOARD MOBILE FIXED BOTTOM NAVIGATION */}
-      <footer className="fixed bottom-0 left-0 right-0 py-2.5 px-4 bg-white/95 border-t border-slate-200 backdrop-blur-md z-40 lg:py-3 shadow-[0_-5px_15px_rgba(0,0,0,0.04)]">
+      <footer className="fixed bottom-0 left-0 right-0 py-2.5 px-4 bg-[#050a0e]/95 border-t border-white/5 backdrop-blur-md z-40 lg:py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
         <div className="max-w-2xl mx-auto flex items-center justify-between font-bold text-[10px] md:text-xs">
           
           <button

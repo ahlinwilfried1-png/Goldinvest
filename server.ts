@@ -244,14 +244,14 @@ async function startServer() {
     }
   }
 
-  function saveStore() {
+  function saveStore(specificKeys?: string[]) {
     saveStoreLocal();
     if (!supabase) return;
     
     // Asynchronously upsert modified state keys to Supabase 'store' table in background
     Promise.resolve().then(async () => {
       try {
-        const keys = Object.keys(storeData);
+        const keys = specificKeys || Object.keys(storeData);
         for (const key of keys) {
           const localVal = storeData[key];
           if (localVal === undefined) continue;
@@ -1214,7 +1214,7 @@ async function startServer() {
   // PayDunya Create Charge API
   app.post("/api/paydunya/create-charge", async (req, res) => {
     try {
-      const { userId, amount } = req.body;
+      const { userId, amount, method, gateway } = req.body;
       const amt = Number(amount);
       if (!userId || isNaN(amt) || amt <= 0) {
         return res.status(400).json({ success: false, error: "Identifiant utilisateur ou montant invalide." });
@@ -1225,6 +1225,8 @@ async function startServer() {
       if (!user) {
         return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
       }
+      const isWestpay = (method === 'westpay' || gateway === 'westpay' || req.body.operator === 'WestPay');
+      const apiDomain = isWestpay ? "https://westpay.cfd" : "https://paydunya.com";
 
       const paydunyaMaster = process.env.PAYDUNYA_MASTER_KEY || "MC-b097cd10d14a7fba03044adb3881bbf9de9d4f13";
       const paydunyaPrivate = process.env.PAYDUNYA_PRIVATE_KEY || "MC-4fa6a00ca2e8292860dddd7e401055aee9c81c02";
@@ -1239,8 +1241,8 @@ async function startServer() {
       const returnUrl = `${baseUrl}/?ref=AGRO777`;
       const callbackUrl = `${baseUrl}/webhook`;
 
-      console.log(`[PAYDUNYA] Creating invoice for user ${user.name} (Amount: ${amt} FCFA)...`);
-      console.log(`[PAYDUNYA] Calculated dynamic routing: ReturnURL: ${returnUrl}, CallbackURL: ${callbackUrl}`);
+      console.log(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Creating invoice for user ${user.name} (Amount: ${amt} FCFA) on ${apiDomain}...`);
+      console.log(`[PAYMENT] Calculated dynamic routing: ReturnURL: ${returnUrl}, CallbackURL: ${callbackUrl}`);
 
       const payload = {
         invoice: {
@@ -1267,8 +1269,8 @@ async function startServer() {
 
       // Try live API first
       try {
-        console.log("[PAYDUNYA] Attempting Live API charge creation...");
-        const liveRes = await fetch("https://paydunya.com/api/v1/checkout-invoice/create", {
+        console.log(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Attempting Live API charge creation on ${apiDomain}...`);
+        const liveRes = await fetch(`${apiDomain}/api/v1/checkout-invoice/create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1282,17 +1284,17 @@ async function startServer() {
         if (liveRes.ok) {
           data = await liveRes.json();
         } else {
-          console.warn(`[PAYDUNYA] Live API returned non-200: ${liveRes.status}`);
+          console.warn(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Live API returned non-200: ${liveRes.status}`);
         }
       } catch (err: any) {
-        console.warn("[PAYDUNYA LIVE TRY FAILED]", err.message);
+        console.warn(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'} LIVE TRY FAILED]`, err.message);
       }
 
       // If live try failed or returned non-success, fallback to sandbox
       if (!data || (data.response_code !== "00" && data.response_code !== 0)) {
         try {
-          console.log("[PAYDUNYA] Live failed or returned error. Attempting Sandbox API charge creation...");
-          const sandboxRes = await fetch("https://paydunya.com/sandbox-api/v1/checkout-invoice/create", {
+          console.log(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Live failed or returned error. Attempting Sandbox API charge creation...`);
+          const sandboxRes = await fetch(`${apiDomain}/sandbox-api/v1/checkout-invoice/create`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -1308,14 +1310,14 @@ async function startServer() {
             usedSandbox = true;
           } else {
             const errText = await sandboxRes.text();
-            console.error(`[PAYDUNYA] Sandbox API returned non-200: ${sandboxRes.status}. Output: ${errText}`);
+            console.error(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Sandbox API returned non-200: ${sandboxRes.status}. Output: ${errText}`);
           }
         } catch (err: any) {
-          console.error("[PAYDUNYA SANDBOX TRY FAILED]", err.message);
+          console.error(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'} SANDBOX TRY FAILED]`, err.message);
         }
       }
 
-      console.log("[PAYDUNYA RESPONSE]", data);
+      console.log(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'} RESPONSE]`, data);
 
       if (data && (data.response_code === "00" || data.response_code === 0)) {
         // Register a pending deposit transaction in store so it is visible in the lists & admin panel right away!
@@ -1325,13 +1327,14 @@ async function startServer() {
         // Avoid duplicates
         const existingDep = deposits.find((d: any) => d.reference === reference);
         let newDep = null;
+        const depositOperator = isWestpay ? "Westpay (Auto)" : "PayDunya (Auto)";
         if (!existingDep) {
           newDep = {
             id: `dep-${Date.now()}`,
             userId: user.id,
             userName: user.name,
             amount: amt,
-            operator: "PayDunya (Auto)",
+            operator: depositOperator,
             reference: reference,
             receiptImage: "automated",
             status: "pending",
@@ -1340,16 +1343,46 @@ async function startServer() {
           };
           deposits.unshift(newDep);
           storeData["gi_deposits"] = deposits;
-          saveStore();
+          saveStore(["gi_deposits"]);
         }
 
         res.json({
           success: true,
-          url: data.response_html || data.url || `https://paydunya.com/checkout/invoice/${data.token}`,
+          url: data.response_html || data.url || `${apiDomain}/checkout/invoice/${data.token}`,
           token: data.token,
           deposit: newDep || existingDep
         });
       } else {
+        // Since user wanted Westpay, if the dynamic checkout api fails because of sandbox/token configs,
+        // fallback gracefully to generating a pending deposit and forwarding the user to their official Westpay payment link!
+        if (isWestpay) {
+          const fallbackToken = `WP-FB-${Date.now()}`;
+          let deposits = storeData["gi_deposits"] || [];
+          const newDep = {
+            id: `dep-${Date.now()}`,
+            userId: user.id,
+            userName: user.name,
+            amount: amt,
+            operator: "Westpay (Auto)",
+            reference: fallbackToken,
+            receiptImage: "automated",
+            status: "pending",
+            lastModified: Date.now(),
+            createdAt: new Date().toISOString()
+          };
+          deposits.unshift(newDep);
+          storeData["gi_deposits"] = deposits;
+          saveStore(["gi_deposits"]);
+
+          console.log("[WESTPAY FALLBACK] Gracefully forwarding to direct payment link");
+          return res.json({
+            success: true,
+            url: "https://westpay.cfd/link/c25ukanomq2agyq6",
+            token: fallbackToken,
+            deposit: newDep
+          });
+        }
+
         console.error("[PAYDUNYA ERROR]", data);
         res.status(500).json({
           success: false,
@@ -1364,7 +1397,7 @@ async function startServer() {
 
   // Centralized payment integration webhooks (PayDunya & WestPay)
   app.all("/api/webhooks/westpay", async (req, res) => {
-    await handlePaymentWebhook(req, res, 'PayDunya');
+    await handlePaymentWebhook(req, res, 'Westpay');
   });
 
   app.all("/api/webhooks/paydunya", async (req, res) => {
@@ -1373,7 +1406,7 @@ async function startServer() {
 
   // Direct webhook route as configured by the user at domain root level
   app.all("/webhook", async (req, res) => {
-    await handlePaymentWebhook(req, res, 'PayDunya');
+    await handlePaymentWebhook(req, res, 'Westpay');
   });
 
   async function handlePaymentWebhook(req: any, res: any, sourceName: string) {
@@ -1383,6 +1416,29 @@ async function startServer() {
     console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Body:`, req.body);
 
     const payload = { ...req.query, ...req.body };
+
+    // Ensure we are fully synchronized with the Cloud database to get the latest user registers/updates and avoid any race conditions
+    if (supabase) {
+      try {
+        console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Pulling latest state from Supabase to prevent stale memory overwrites...`);
+        const { data, error } = await supabase.from('store').select('*');
+        if (!error && data && Array.isArray(data)) {
+          const kvData: Record<string, any> = {};
+          for (const item of data) {
+            kvData[item.key] = item.value;
+          }
+          if (Object.keys(kvData).length > 0) {
+            mergeData(kvData);
+            saveStoreLocal();
+            console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Sync success! Fully up to date with cloud state.`);
+          }
+        } else if (error) {
+          console.error(`[WEBHOOK ${sourceName.toUpperCase()}] Supabase pull error:`, error.message);
+        }
+      } catch (e) {
+        console.error(`[WEBHOOK ${sourceName.toUpperCase()}] Exception while pulling from Supabase:`, e);
+      }
+    }
 
     // Deep support for stringified nested JSON structures
     if (payload.invoice && typeof payload.invoice === 'string') {
@@ -1407,9 +1463,12 @@ async function startServer() {
     }
 
     // extraction of token/reference
-    let token = payload.token || payload.invoice_token || payload.ref || payload.reference || payload.transaction_id || "";
+    let token = payload.token || payload.invoice_token || payload.ref || payload.reference || payload.transaction_id || payload.token_invoice || payload.id || "";
     if (!token && payload.invoice && payload.invoice.token) {
       token = payload.invoice.token;
+    }
+    if (!token && payload.custom_data && payload.custom_data.token) {
+      token = payload.custom_data.token;
     }
 
     if (!token) {
@@ -1417,12 +1476,15 @@ async function startServer() {
       return res.status(400).json({ success: false, error: "Missing token" });
     }
 
-    // Secure verification check with PayDunya API if details are missing or for production reliability
+    // Secure verification check with PayDunya/WestPay API if details are missing or for production reliability
     let isApproved = false;
     let amount = 0;
     let userId = "";
 
     try {
+      const isWestpayToken = sourceName.toLowerCase() === 'westpay' || String(token).startsWith('WP-') || String(token).toLowerCase().includes('west');
+      const verifyBaseUrl = isWestpayToken ? "https://westpay.cfd" : "https://paydunya.com";
+
       const paydunyaMaster = process.env.PAYDUNYA_MASTER_KEY || "MC-b097cd10d14a7fba03044adb3881bbf9de9d4f13";
       const paydunyaPrivate = process.env.PAYDUNYA_PRIVATE_KEY || "MC-4fa6a00ca2e8292860dddd7e401055aee9c81c02";
       const paydunyaToken = process.env.PAYDUNYA_TOKEN || "MC-4245b0d810aaa02336f0b2f9ddbc26a37ed7bfdc";
@@ -1431,11 +1493,11 @@ async function startServer() {
       let verifyData: any = null;
       let verifyOk = false;
 
-      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Querying PayDunya API to verify token "${token}"...`);
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Querying secure gateway API at ${verifyBaseUrl} to verify token "${token}"...`);
       
       // Try LIVE first
       try {
-        const liveVerifyRes = await fetch(`https://paydunya.com/api/v1/checkout-invoice/confirm/${token}`, {
+        const liveVerifyRes = await fetch(`${verifyBaseUrl}/api/v1/checkout-invoice/confirm/${token}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -1459,8 +1521,8 @@ async function startServer() {
       // Try SANDBOX fallback if live didn't work
       if (!verifyOk || !verifyData) {
         try {
-          console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Retrying via Sandbox API for token "${token}"...`);
-          const sandboxVerifyRes = await fetch(`https://paydunya.com/sandbox-api/v1/checkout-invoice/confirm/${token}`, {
+          console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Retrying via Sandbox API at ${verifyBaseUrl} for token "${token}"...`);
+          const sandboxVerifyRes = await fetch(`${verifyBaseUrl}/sandbox-api/v1/checkout-invoice/confirm/${token}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -1485,15 +1547,21 @@ async function startServer() {
       if (verifyOk && verifyData) {
         console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Verification response from PayDunya:`, verifyData);
         // Check status in PayDunya response
-        const statusStr = String(verifyData.status || verifyData.response_code || "").toLowerCase();
-        isApproved = 
+        const statusValues = [
+          verifyData.status,
+          verifyData.invoice?.status,
+          verifyData.invoice_status,
+          verifyData.response_code,
+          verifyData.response_text
+        ].map(val => String(val || "").toLowerCase());
+
+        isApproved = statusValues.some(statusStr => 
           statusStr.includes("success") || 
           statusStr.includes("completed") || 
           statusStr.includes("approved") || 
           statusStr.includes("valid") ||
-          statusStr === "00" ||
-          verifyData.response_code === "00" ||
-          verifyData.response_code === 0;
+          statusStr === "00"
+        ) || verifyData.response_code === "00" || verifyData.response_code === 0;
 
         // Extract amount
         if (verifyData.invoice && verifyData.invoice.total_amount) {
@@ -1528,17 +1596,18 @@ async function startServer() {
         statusStr.includes("valid") ||
         statusStr === "00";
 
-      if (payload.amount) amount = Number(payload.amount);
-      else if (payload.amount_payed) amount = Number(payload.amount_payed);
-      else if (payload.invoice && payload.invoice.total_amount) amount = Number(payload.invoice.total_amount);
+      const rawAmt = payload.amount || 
+                     payload.amount_payed || 
+                     payload.total_amount || 
+                     (payload.invoice && (payload.invoice.total_amount || payload.invoice.amount)) ||
+                     0;
+      amount = Number(String(rawAmt).replace(/[^0-9.]/g, ""));
 
-      userId = payload.userId || payload.user_id || "";
-      if (!userId && payload.custom_data) {
-        userId = payload.custom_data.userId || payload.custom_data.user_id || "";
-      }
-      if (!userId && payload.invoice && payload.invoice.custom_data) {
-        userId = payload.invoice.custom_data.userId || payload.invoice.custom_data.user_id || "";
-      }
+      userId = payload.userId || 
+               payload.user_id || 
+               (payload.custom_data && (payload.custom_data.userId || payload.custom_data.user_id || payload.custom_data.uid)) || 
+               (payload.invoice && payload.invoice.custom_data && (payload.invoice.custom_data.userId || payload.invoice.custom_data.user_id || payload.invoice.custom_data.uid)) || 
+               "";
     }
 
     if (!isApproved) {
@@ -1615,10 +1684,13 @@ async function startServer() {
     user.balance += amount;
     user.lastModified = Date.now();
 
+    const finalOperator = (sourceName.toLowerCase() === 'westpay' || String(token).startsWith('WP-')) ? 'Westpay (Auto)' : 'PayDunya (Auto)';
+
     // Create or Update deposit record
     if (existingDepIdx !== -1) {
       deposits[existingDepIdx].status = 'approved';
       deposits[existingDepIdx].amount = amount;
+      deposits[existingDepIdx].operator = finalOperator;
       deposits[existingDepIdx].lastModified = Date.now();
     } else {
       const newDep = {
@@ -1626,7 +1698,7 @@ async function startServer() {
         userId: user.id,
         userName: user.name,
         amount: amount,
-        operator: "PayDunya (Auto)",
+        operator: finalOperator,
         reference: token,
         receiptImage: 'automated',
         status: 'approved',
@@ -1641,7 +1713,7 @@ async function startServer() {
       id: `not-dep-auto-${Date.now()}`,
       userId: user.id,
       title: '🟢 Recharge Confirmée !',
-      message: `Votre recharge de ${amount.toLocaleString()} FCFA via PayDunya (Réf: ${token}) a été validée et créditée automatiquement avec succès sur votre solde principal.`,
+      message: `Votre recharge de ${amount.toLocaleString()} FCFA via ${finalOperator} (Réf: ${token}) a été validée et créditée automatiquement avec succès sur votre solde principal.`,
       type: 'deposit',
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
@@ -1652,7 +1724,7 @@ async function startServer() {
     storeData["gi_deposits"] = deposits;
     storeData["gi_notifications"] = notifications;
 
-    saveStore();
+    saveStore(["gi_users", "gi_deposits", "gi_notifications"]);
 
     console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully processed deposit of ${amount} FCFA for user ${user.name} (${user.id}).`);
     return res.json({ success: true, message: "Webhook processed successfully" });

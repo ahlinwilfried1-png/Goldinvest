@@ -5,16 +5,16 @@
       "name": "Administrateur Principal",
       "role": "admin",
       "bonus": 10050,
-      "balance": 5200,
+      "balance": 1300,
       "country": "Cameroun",
       "password": "agro777",
       "whatsapp": "+237600000000",
       "createdAt": "2026-05-10T10:00:00Z",
       "isBlocked": false,
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "AGRO777",
       "dailyEarnings": 2100,
-      "totalEarnings": 6500,
+      "totalEarnings": 7600,
       "withdrawBlocked": false
     },
     {
@@ -29,7 +29,7 @@
       "createdAt": "2026-05-18T14:30:00Z",
       "isBlocked": false,
       "referredBy": "u-admin",
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "ALINE226",
       "dailyEarnings": 0,
       "totalEarnings": 4200
@@ -45,7 +45,7 @@
       "whatsapp": "+2250708091011",
       "createdAt": "2026-05-20T09:15:00Z",
       "isBlocked": false,
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "KOFFI225",
       "dailyEarnings": 0,
       "totalEarnings": 15000
@@ -61,7 +61,7 @@
       "whatsapp": "+22360616263",
       "createdAt": "2026-05-22T16:45:00Z",
       "isBlocked": false,
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "MOUSSA223",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -76,7 +76,7 @@
       "whatsapp": "70903319",
       "createdAt": "2026-05-28T06:49:18.295Z",
       "isBlocked": false,
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "KODJO180",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -92,7 +92,7 @@
       "whatsapp": "+2376544822",
       "createdAt": "2026-06-03T11:00:38.133Z",
       "isBlocked": false,
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "ASR971",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -108,7 +108,7 @@
       "whatsapp": "+23770903318",
       "createdAt": "2026-06-05T12:20:00.134Z",
       "isBlocked": false,
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "WIL818",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -125,7 +125,7 @@
       "whatsapp": "+237709033185",
       "createdAt": "2026-06-06T11:15:04.091Z",
       "isBlocked": false,
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "GCFFC244",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -142,7 +142,7 @@
       "whatsapp": "+22697783065",
       "createdAt": "2026-06-06T11:25:48.200Z",
       "isBlocked": false,
-      "lastModified": 1781171688747,
+      "lastModified": 1781178597933,
       "referralCode": "WILLY802",
       "dailyEarnings": 900,
       "totalEarnings": 2100,
@@ -160,7 +160,7 @@
       "whatsapp": "+22697561188",
       "createdAt": "2026-06-06T12:48:38.046Z",
       "isBlocked": false,
-      "lastModified": 1781171688748,
+      "lastModified": 1781178597933,
       "referralCode": "BORIS699",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -177,7 +177,7 @@
       "whatsapp": "+2376688477",
       "createdAt": "2026-06-07T08:06:19.698Z",
       "isBlocked": false,
-      "lastModified": 1781171688748,
+      "lastModified": 1781178597933,
       "referralCode": "ZN64C",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -193,7 +193,7 @@
       "whatsapp": "+237695718462",
       "createdAt": "2026-06-08T08:29:27.631Z",
       "isBlocked": false,
-      "lastModified": 1781171688748,
+      "lastModified": 1781178597933,
       "referralCode": "OPTIONNEL",
       "dailyEarnings": 0,
       "totalEarnings": 0,
@@ -211,7 +211,7 @@
       "whatsapp": "+237155686985",
       "createdAt": "2026-06-08T08:29:27.654Z",
       "isBlocked": false,
-      "lastModified": 1781171688748,
+      "lastModified": 1781178597933,
       "referralCode": "0QF4D",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -228,7 +228,7 @@
       "whatsapp": "+22670903319",
       "createdAt": "2026-06-08T20:57:38.969Z",
       "isBlocked": false,
-      "lastModified": 1781171688748,
+      "lastModified": 1781178597933,
       "referralCode": "QOA63",
       "dailyEarnings": 500,
       "totalEarnings": 500,
@@ -246,8 +246,25 @@
       "whatsapp": "+237709034525",
       "createdAt": "2026-06-08T21:02:57.759Z",
       "isBlocked": false,
-      "lastModified": 1781171688748,
+      "lastModified": 1781178597933,
       "referralCode": "0TZ0C",
+      "dailyEarnings": 0,
+      "totalEarnings": 0
+    },
+    {
+      "id": "u-1781177928968",
+      "name": "Fffg",
+      "role": "user",
+      "bonus": 200,
+      "device": "iPhone",
+      "balance": 200,
+      "country": "Togo",
+      "password": "123456",
+      "whatsapp": "+22897783065",
+      "createdAt": "2026-06-11T11:38:48.968Z",
+      "isBlocked": false,
+      "lastModified": 1781178597933,
+      "referralCode": "P4J9U",
       "dailyEarnings": 0,
       "totalEarnings": 0
     }
@@ -288,6 +305,66 @@
       "reference": "OM-TX-2236162",
       "lastModified": 1780855874861,
       "receiptImage": "https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop"
+    },
+    {
+      "id": "dep-1781175793332",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-admin",
+      "operator": "Versement Mobile Money",
+      "userName": "Administrateur Principal",
+      "createdAt": "2026-06-11T11:03:13.332Z",
+      "reference": "WP-444618",
+      "lastModified": 1781175793332,
+      "receiptImage": "manual_screenshot_pending"
+    },
+    {
+      "id": "dep-1781176258993",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-admin",
+      "operator": "Versement Mobile Money",
+      "userName": "Administrateur Principal",
+      "createdAt": "2026-06-11T11:10:58.993Z",
+      "reference": "WP-413313",
+      "lastModified": 1781176258993,
+      "receiptImage": "manual_screenshot_pending"
+    },
+    {
+      "id": "dep-1781177678912",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-1780952258969",
+      "operator": "Versement Mobile Money",
+      "userName": "Aaaa",
+      "createdAt": "2026-06-11T11:34:38.912Z",
+      "reference": "WP-779259",
+      "lastModified": 1781177678912,
+      "receiptImage": "manual_screenshot_pending"
+    },
+    {
+      "id": "dep-1781179542542",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-1780952258969",
+      "operator": "Versement Mobile Money",
+      "userName": "Aaaa",
+      "createdAt": "2026-06-11T12:05:42.542Z",
+      "reference": "WP-194663",
+      "lastModified": 1781179542542,
+      "receiptImage": "manual_screenshot_pending"
+    },
+    {
+      "id": "dep-1781179999204",
+      "userId": "u-1780952258969",
+      "userName": "Aaaa",
+      "amount": 5000,
+      "operator": "Versement Mobile Money",
+      "reference": "WP-313429",
+      "receiptImage": "manual_screenshot_pending",
+      "status": "pending",
+      "lastModified": 1781179999204,
+      "createdAt": "2026-06-11T12:13:19.204Z"
     }
   ],
   "gi_withdrawals": [
@@ -325,6 +402,19 @@
       "createdAt": "2026-06-07T10:49:50.440Z",
       "netAmount": 1102596,
       "lastModified": 1780829432861
+    },
+    {
+      "id": "wth-1781178049270",
+      "fee": 600,
+      "amount": 5000,
+      "number": "+22870903319",
+      "status": "pending",
+      "userId": "u-admin",
+      "operator": "T-Money (Togo)",
+      "userName": "Administrateur Principal",
+      "createdAt": "2026-06-11T11:40:49.270Z",
+      "netAmount": 4400,
+      "lastModified": 1781178049271
     }
   ],
   "gi_investments": [
@@ -335,13 +425,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-02T10:55:03.487Z",
       "productId": "vip-1",
-      "daysPassed": 8,
+      "daysPassed": 9,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1781171688747,
-      "lastClaimDate": "2026-06-11T09:54:48.747Z",
-      "totalReturnClaimed": 2400
+      "lastModified": 1781175304993,
+      "lastClaimDate": "2026-06-11T10:55:04.993Z",
+      "totalReturnClaimed": 2700
     },
     {
       "id": "inv-301",
@@ -380,13 +470,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T11:19:49.294Z",
       "productId": "vip-1",
-      "daysPassed": 4,
+      "daysPassed": 5,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1781171688747,
-      "lastClaimDate": "2026-06-11T09:54:48.747Z",
-      "totalReturnClaimed": 1200
+      "lastModified": 1781177729424,
+      "lastClaimDate": "2026-06-11T11:35:29.424Z",
+      "totalReturnClaimed": 1500
     },
     {
       "id": "inv-1780748359886",
@@ -455,13 +545,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T11:49:57.559Z",
       "productId": "vip-1",
-      "daysPassed": 3,
+      "daysPassed": 4,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781171688747,
-      "lastClaimDate": "2026-06-11T09:54:48.747Z",
-      "totalReturnClaimed": 1500
+      "lastModified": 1781178597933,
+      "lastClaimDate": "2026-06-11T11:49:57.933Z",
+      "totalReturnClaimed": 2000
     },
     {
       "id": "inv-1780841270273",
@@ -1439,6 +1529,116 @@
       "lastModified": 1781171688747,
       "createdAt": "2026-06-11T09:54:48.747Z",
       "read": false
+    },
+    {
+      "id": "not-autodrop-srv-1781175304978-inv-1780397703473-8",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-11T10:55:04.993Z",
+      "lastModified": 1781175304993
+    },
+    {
+      "id": "not-dep-1781175793332",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-admin",
+      "message": "Votre demande de dépôt de 5,000 FCFA via Versement Mobile Money (Réf: WP-444618) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-11T11:03:13.346Z",
+      "lastModified": 1781175793346
+    },
+    {
+      "id": "not-dep-1781176258993",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-admin",
+      "message": "Votre demande de dépôt de 5,000 FCFA via Versement Mobile Money (Réf: WP-413313) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-11T11:10:59.010Z",
+      "lastModified": 1781176259010
+    },
+    {
+      "id": "not-autodrop-1781176797807-inv-1780744789286-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-11T11:19:57.807Z",
+      "lastModified": 1781176797812
+    },
+    {
+      "id": "not-dep-1781177678917",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1780952258969",
+      "message": "Votre demande de dépôt de 5 000 FCFA via Versement Mobile Money (Réf: WP-779259) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-11T11:34:38.918Z",
+      "lastModified": 1781177678919
+    },
+    {
+      "id": "not-autodrop-srv-1781177729423-inv-1780744789286-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-11T11:35:29.423Z",
+      "lastModified": 1781177729423
+    },
+    {
+      "id": "not-1781177928971",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroCapital !",
+      "userId": "u-1781177928968",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
+      "createdAt": "2026-06-11T11:38:48.971Z",
+      "lastModified": 1781177928971
+    },
+    {
+      "id": "not-wth-1781178049284",
+      "read": false,
+      "type": "withdraw",
+      "title": "Retrait en attente",
+      "userId": "u-admin",
+      "message": "Votre demande de retrait de 5 000 FCFA vers +22870903319 (T-Money (Togo)) est en attente de traitement par la comptabilité.",
+      "createdAt": "2026-06-11T11:40:49.284Z",
+      "lastModified": 1781178049286
+    },
+    {
+      "id": "not-autodrop-srv-1781178597918-inv-1780832997559-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-11T11:49:57.933Z",
+      "lastModified": 1781178597933
+    },
+    {
+      "id": "not-dep-1781179542542",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1780952258969",
+      "message": "Votre demande de dépôt de 5,000 FCFA via Versement Mobile Money (Réf: WP-194663) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-11T12:05:42.557Z",
+      "lastModified": 1781179542557
+    },
+    {
+      "id": "not-dep-1781179999204",
+      "userId": "u-1780952258969",
+      "title": "Dépôt soumis",
+      "message": "Votre demande de dépôt de 5,000 FCFA via Versement Mobile Money (Réf: WP-313429) est en cours de vérification par l'administration.",
+      "type": "deposit",
+      "lastModified": 1781179999223,
+      "createdAt": "2026-06-11T12:13:19.223Z",
+      "read": false
     }
   ],
   "gi_bonus_codes": [
@@ -1730,5 +1930,5 @@
   "gi_mlm_level1_rate": 20,
   "gi_mlm_level2_rate": 3,
   "gi_mlm_level3_rate": 1,
-  "gi_withdrawals_blocked_global": true
+  "gi_withdrawals_blocked_global": false
 }

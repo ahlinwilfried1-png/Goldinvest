@@ -184,44 +184,37 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative bg-slate-950">
-      {/* Background gradients */}
-      <div className="absolute top-[20%] left-[20%] w-72 h-72 bg-[#1b64d9]/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[20%] w-80 h-80 bg-[#1b64d9]/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative bg-stone-50 overflow-hidden">
+      {/* Absolute gold and warm ambient glow lights */}
+      <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-yellow-400/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[0%] right-[-10%] w-[400px] h-[400px] bg-amber-400/20 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] bg-yellow-300/10 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Main card */}
-      <div className="w-full max-w-lg bg-[#eef3fc] border-2 border-slate-200/50 rounded-3xl p-6 md:p-8 shadow-2xl relative">
+      {/* Main card - completely White */}
+      <div className="w-full max-w-lg bg-white border-2 border-amber-400/50 rounded-3xl p-6 md:p-8 shadow-[0_20px_50px_rgba(245,158,11,0.12)] relative overflow-hidden backdrop-blur-xl ring-1 ring-yellow-400/20">
         
+        {/* Subtle decorative top gold line */}
+        <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 opacity-90" />
+
         {/* Brand logo */}
         <div className="text-center mb-6">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1b64d9] to-[#046fff] flex items-center justify-center mx-auto shadow-md mb-2">
-            <Lock className="w-4 h-4 text-white stroke-[2.5]" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center mx-auto shadow-[0_8px_20px_rgba(245,158,11,0.25)] mb-3">
+            <Lock className="w-5 h-5 text-stone-900 stroke-[2.5]" />
           </div>
-          <h2 className="text-xl font-sans font-black text-slate-800 uppercase tracking-tight">
-            {isRegister ? 'Inscription' : 'Connexion Premium'}
+          <h2 className="text-2xl font-sans font-black text-stone-950 uppercase tracking-tight">
+            {isRegister ? 'Créer un Compte' : 'Espace Investisseur'}
           </h2>
-          <p className="text-[11px] text-slate-500 font-bold mt-1 leading-relaxed">
+          <p className="text-[11px] text-amber-600 font-extrabold mt-1.5 leading-relaxed tracking-wider uppercase font-mono">
             {isRegister 
-              ? `Recevez 200 ${selectedCode === '+237' ? 'XAF' : 'XOF'} gratuit immédiatement` 
-              : 'Accédez de manière entièrement cryptée à vos investissements passifs'
+              ? `Bonus immédiat : 200 ${selectedCode === '+237' ? 'XAF' : 'XOF'} offert` 
+              : 'Accès sécurisé et crypté à vos investissements AgroCapital'
             }
           </p>
         </div>
 
-        {/* Support regions notice */}
-        {isRegister && (
-          <div className="mb-4 p-3 bg-white/80 border-2 border-[#1b64d9]/10 rounded-2xl text-[10px] text-slate-700 leading-relaxed font-semibold flex items-center space-x-2.5 shadow-sm">
-            <span className="flex-shrink-0 text-sm leading-none">🌍</span>
-            <div className="text-left">
-              <span className="font-black uppercase text-[#1b64d9] block text-[8px] tracking-wider mb-0.5 text-left">Zone XOF & XAF intégrée</span>
-              Service disponible au : <strong>Bénin, Togo, Côte d'Ivoire, Burkina Faso (XOF)</strong> et <strong>Cameroun (XAF)</strong>.
-            </div>
-          </div>
-        )}
-
         {/* Error notification */}
         {errorMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border-2 border-red-200 text-xs text-red-700 font-bold flex items-start space-x-2.5">
+          <div className="mb-6 p-4 rounded-2xl bg-red-50 border-2 border-red-200 text-xs text-red-700 font-extrabold flex items-start space-x-2.5 shadow-sm">
             <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
@@ -229,8 +222,8 @@ export default function Auth({
 
         {/* Success notification */}
         {successMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-green-500/10 border-2 border-green-200 text-xs text-green-700 font-bold flex items-start space-x-2.5">
-            <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200 text-xs text-emerald-700 font-extrabold flex items-start space-x-2.5 shadow-sm">
+            <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
             <span>{successMessage}</span>
           </div>
         )}
@@ -242,24 +235,25 @@ export default function Auth({
             /* REGISTRATION FIELDS */
             <>
               <div>
-                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Nom d'utilisateur</label>
+                <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Nom complet ou d’utilisateur</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-3.5 text-slate-400">
+                  <span className="absolute left-3.5 top-3.5 text-amber-500">
                     <UserIcon className="w-4 h-4" />
                   </span>
                   <input
                     type="text"
                     required
-                    placeholder="Ex: alain225"
+                    maxLength={20}
+                    placeholder="Ex: Alain Traore"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] focus:ring-1 focus:ring-[#1b64d9] rounded-2xl py-3 pl-10 pr-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
+                    className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-10 pr-4 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">WhatsApp / Téléphone</label>
+                <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">WhatsApp / Téléphone Mobile</label>
                 <div className="flex gap-2">
                   <select
                     value={selectedCode}
@@ -269,14 +263,14 @@ export default function Auth({
                       const found = eligibleCountries.find(c => c.code === code);
                       if (found) setCountry(found.name);
                     }}
-                    className="bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-3 text-xs md:text-sm text-slate-800 font-black focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
+                    className="bg-stone-50 border border-stone-200 focus:border-amber-400 rounded-2xl py-3 px-3 text-xs md:text-sm text-stone-900 font-extrabold focus:outline-none transition-all cursor-pointer w-32 shrink-0 text-center shadow-sm"
                   >
                     {eligibleCountries.map((c, i) => (
-                      <option key={i} value={c.code}>{c.code} ({c.name === 'Cameroun' ? 'XAF' : 'XOF'})</option>
+                      <option key={i} value={c.code} className="bg-white text-stone-900">{c.code} ({c.name === 'Cameroun' ? 'XAF' : 'XOF'})</option>
                     ))}
                   </select>
                   <div className="relative flex-1">
-                    <span className="absolute left-3.5 top-3.5 text-slate-400">
+                    <span className="absolute left-3.5 top-3.5 text-amber-500">
                       <Smartphone className="w-4 h-4" />
                     </span>
                     <input
@@ -285,7 +279,7 @@ export default function Auth({
                       placeholder="Ex: 0708091011"
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
-                      className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-10 pr-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
+                      className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-10 pr-4 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
                     />
                   </div>
                 </div>
@@ -293,7 +287,7 @@ export default function Auth({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Mot de Passe</label>
+                  <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Mot de Passe</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -301,12 +295,12 @@ export default function Auth({
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-4 pr-10 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
+                      className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-4 pr-10 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-[#1b64d9]"
+                      className="absolute right-3.5 top-3.5 text-stone-400 hover:text-amber-500"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -314,56 +308,55 @@ export default function Auth({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Confirmer le passe</label>
+                  <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Confirmation</label>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
+                    className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 px-4 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Code de Parrainage (Optionnel)</label>
+                <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Sponsor / Code Parrainage</label>
                 <input
                   type="text"
-                  placeholder="Ex: AGR72"
+                  placeholder="Ex: AGR72 (Optionnel)"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value)}
-                  className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-4 text-sm text-[#1b64d9] font-black tracking-widest font-mono uppercase focus:outline-none transition-colors"
+                  className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 px-4 text-sm text-amber-600 font-black tracking-widest font-mono uppercase focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
                 />
-                <span className="text-[10px] text-slate-500 font-bold mt-1 block">Renseignez le code d'un parrain si vous en avez un.</span>
               </div>
             </>
           ) : (
             /* LOGIN FIELDS */
             <>
               <div>
-                <label className="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">Pays et Numéro de téléphone</label>
+                <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Sélectionner votre pays</label>
                 <div className="flex gap-2">
                   <select
                     value={loginSelectedCode}
                     onChange={(e) => setLoginSelectedCode(e.target.value)}
-                    className="bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 px-3 text-xs md:text-sm text-slate-800 font-black focus:outline-none transition-colors cursor-pointer w-32 shrink-0 text-center"
+                    className="bg-stone-50 border border-stone-200 focus:border-amber-400 rounded-2xl py-3 px-3 text-xs md:text-sm text-stone-900 font-extrabold focus:outline-none transition-all cursor-pointer w-32 shrink-0 text-center shadow-sm"
                   >
                     {eligibleCountries.map((c, i) => (
-                      <option key={i} value={c.code}>{c.code} ({c.name === 'Cameroun' ? 'XAF' : 'XOF'})</option>
+                      <option key={i} value={c.code} className="bg-white text-stone-900">{c.code} ({c.name === 'Cameroun' ? 'XAF' : 'XOF'})</option>
                     ))}
                   </select>
                   <div className="relative flex-1">
-                    <span className="absolute left-3.5 top-3.5 text-slate-400">
+                    <span className="absolute left-3.5 top-3.5 text-amber-500">
                       <Smartphone className="w-4 h-4" />
                     </span>
                     <input
                       type="text"
                       required
-                      placeholder="Ex: 0708091011 (ou email/admin)"
+                      placeholder="Ex: 0708091011 (ou admin)"
                       value={loginPhone}
                       onChange={(e) => setLoginPhone(e.target.value)}
-                      className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-10 pr-4 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
+                      className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-10 pr-4 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
                     />
                   </div>
                 </div>
@@ -371,21 +364,21 @@ export default function Auth({
 
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-xs font-black text-slate-600 uppercase tracking-wider">Mot de Passe</label>
+                  <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest">Votre Mot de Passe</label>
                   <button 
                     type="button"
                     onClick={() => {
                       setResetTip(!resetTip);
                     }}
-                    className="text-[10px] text-[#1b64d9] font-black hover:underline"
+                    className="text-[10px] text-amber-600 font-black hover:underline"
                   >
                     Mot de passe oublié ?
                   </button>
                 </div>
 
                 {resetTip && (
-                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] font-bold text-red-700 leading-normal animate-pulse text-left">
-                    Pour réinitialiser votre mot de passe d'investisseur, veuillez contacter notre groupe d'assistance WhatsApp officielle.
+                  <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] font-bold text-amber-800 leading-normal animate-pulse text-left font-sans">
+                    💡 Pour réinitialiser votre compte d’investisseur, veuillez contacter l'assistance officielle AgroCapital via le support WhatsApp.
                   </div>
                 )}
                 <div className="relative">
@@ -395,12 +388,12 @@ export default function Auth({
                     placeholder="••••••••"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3 pl-4 pr-10 text-sm text-slate-800 font-bold focus:outline-none transition-colors"
+                    className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-4 pr-10 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-[#1b64d9]"
+                    className="absolute right-3.5 top-3.5 text-stone-400 hover:text-amber-500"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -409,27 +402,27 @@ export default function Auth({
             </>
           )}
 
-          {/* SUBMIT BUTTON */}
+          {/* SUBMIT BUTTON - Glowing Gold */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-2xl text-white font-sans font-black text-xs flex items-center justify-center space-x-2 bg-gradient-to-r from-[#1b64d9] to-[#046fff] hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer uppercase tracking-widest shadow-lg disabled:opacity-40"
+            className="w-full py-4 rounded-2xl text-stone-950 font-sans font-black text-xs flex items-center justify-center space-x-2 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer uppercase tracking-widest shadow-[0_8px_25px_rgba(245,158,11,0.25)] disabled:opacity-40"
           >
             {loading ? (
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Traitement sécurisé...</span>
+                <div className="w-4 h-4 border-2 border-stone-955 border-t-transparent rounded-full animate-spin" />
+                <span>Synchronisation cryptée de l’accès...</span>
               </div>
             ) : (
-              <span>{isRegister ? "Créer mon Compte" : "Se Connecter Maintenant"}</span>
+              <span>{isRegister ? "Créer mon Compte" : "Se Connecter Sécurisé"}</span>
             )}
           </button>
         </form>
 
         {/* TOGGLE AUTH */}
-        <div className="mt-6 pt-4 border-t border-slate-200 text-center text-xs">
-          <span className="text-slate-500 font-bold">
-            {isRegister ? 'Déjà membre de AgroCapital ?' : 'Nouveau sur notre plateforme ?'}
+        <div className="mt-6 pt-4 border-t border-stone-200 text-center text-xs">
+          <span className="text-stone-500 font-bold">
+            {isRegister ? 'Déjà membre AgroCapital ?' : 'Nouveau investisseur ?'}
           </span>{' '}
           <button
             onClick={() => {
@@ -437,12 +430,13 @@ export default function Auth({
               setErrorMessage('');
               setSuccessMessage('');
             }}
-            className="text-[#1b64d9] font-black hover:underline ml-1 focus:outline-none uppercase tracking-wider text-[11px]"
+            className="text-amber-600 font-black hover:underline hover:text-amber-700 ml-1 focus:outline-none uppercase tracking-wider text-[11px]"
           >
-            {isRegister ? 'Connectez-vous' : 'Inscrivez-vous (+200F)'}
+            {isRegister ? 'Se connecter' : 'Créer un compte d’investissements'}
           </button>
         </div>
       </div>
     </div>
   );
 }
+
