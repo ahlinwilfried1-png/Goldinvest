@@ -21,7 +21,7 @@ import {
   Search,
   RefreshCw
 } from 'lucide-react';
-import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment } from '../types';
+import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment, SupportMessage } from '../types';
 import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl, apiFetch } from '../dataStore';
 
 interface AdminPanelProps {
@@ -42,6 +42,9 @@ export default function AdminPanel({
   const [products, setProducts] = useState<Product[]>(() => DataStore.getProducts());
   const [bonusCodes, setBonusCodes] = useState<BonusCode[]>(() => DataStore.getBonusCodes());
   const [investments, setInvestments] = useState<Investment[]>(() => DataStore.getInvestments());
+  const [supportMessages, setSupportMessages] = useState<SupportMessage[]>(() => DataStore.getSupportMessages());
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [adminReplyInput, setAdminReplyInput] = useState('');
 
   // Manual synchronizing state feedback 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -56,7 +59,7 @@ export default function AdminPanel({
   } | null>(null);
 
   // Navigation tab
-  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions'>('deposits');
+  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions' | 'support'>('deposits');
   const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
 
   // Search filter query for users tab
@@ -94,6 +97,7 @@ export default function AdminPanel({
           if (Array.isArray(data['gi_bonus_codes'])) setBonusCodes(data['gi_bonus_codes']);
           if (Array.isArray(data['gi_commissions'])) setCommissions(data['gi_commissions']);
           if (Array.isArray(data['gi_investments'])) setInvestments(data['gi_investments']);
+          if (Array.isArray(data['gi_support_messages'])) setSupportMessages(data['gi_support_messages']);
           
           // 2. Keep local storage safe inside a try-catch to prevent iframe/sandboxed crashes
           try {
@@ -306,24 +310,84 @@ export default function AdminPanel({
   };
 
   // Finance events
-  const handleApproveDeposit = (id: string) => {
-    DataStore.approveDeposit(id);
-    syncLocalStates();
+  const handleApproveDeposit = async (id: string) => {
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/deposit-action'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ depositId: id, action: 'approve' })
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      } else {
+        DataStore.approveDeposit(id);
+        syncLocalStates();
+      }
+    } catch (e) {
+      console.error("Failed server approval of deposit, fallback to local:", e);
+      DataStore.approveDeposit(id);
+      syncLocalStates();
+    }
   };
 
-  const handleRejectDeposit = (id: string) => {
-    DataStore.rejectDeposit(id);
-    syncLocalStates();
+  const handleRejectDeposit = async (id: string) => {
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/deposit-action'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ depositId: id, action: 'reject' })
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      } else {
+        DataStore.rejectDeposit(id);
+        syncLocalStates();
+      }
+    } catch (e) {
+      console.error("Failed server rejection of deposit, fallback to local:", e);
+      DataStore.rejectDeposit(id);
+      syncLocalStates();
+    }
   };
 
-  const handleApproveWithdrawal = (id: string) => {
-    DataStore.approveWithdrawal(id);
-    syncLocalStates();
+  const handleApproveWithdrawal = async (id: string) => {
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/withdrawal-action'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ withdrawalId: id, action: 'approve' })
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      } else {
+        DataStore.approveWithdrawal(id);
+        syncLocalStates();
+      }
+    } catch (e) {
+      console.error("Failed server approval of withdrawal, fallback to local:", e);
+      DataStore.approveWithdrawal(id);
+      syncLocalStates();
+    }
   };
 
-  const handleRejectWithdrawal = (id: string) => {
-    DataStore.rejectWithdrawal(id);
-    syncLocalStates();
+  const handleRejectWithdrawal = async (id: string) => {
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/withdrawal-action'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ withdrawalId: id, action: 'reject' })
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      } else {
+        DataStore.rejectWithdrawal(id);
+        syncLocalStates();
+      }
+    } catch (e) {
+      console.error("Failed server rejection of withdrawal, fallback to local:", e);
+      DataStore.rejectWithdrawal(id);
+      syncLocalStates();
+    }
   };
 
   // Product actions
@@ -487,7 +551,7 @@ export default function AdminPanel({
     return acc + (curr.amount - fee);
   }, 0);
 
-  const totalVolumeApproved = deposits.filter(d => d.status === 'approved').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalVolumeApproved = deposits.filter(d => d.status === 'approved' || d.status === 'completed' || d.status === 'success').reduce((acc, curr) => acc + curr.amount, 0);
   const totalPayoutApproved = withdrawals.filter(w => w.status === 'approved').reduce((acc, curr) => acc + curr.amount, 0);
 
   // Active VIP Plan metrics
@@ -877,6 +941,17 @@ export default function AdminPanel({
         >
           <span>💼 Transactions Récentes</span>
         </button>
+        <button
+          onClick={() => setActiveAdminTab('support')}
+          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors flex items-center space-x-2 ${activeAdminTab === 'support' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <span>💬 Support en ligne</span>
+          {supportMessages.filter(m => m.sender === 'user' && m.status === 'unread').length > 0 && (
+            <span className="bg-emerald-500 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-full animate-bounce">
+              {supportMessages.filter(m => m.sender === 'user' && m.status === 'unread').length}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* SYSTEM DIAGNOSTICS & SYNC MONITOR */}
@@ -1035,11 +1110,11 @@ export default function AdminPanel({
                         )}
                       </td>
                       <td className="p-3">
-                        {dep.status === 'approved' && (
-                          <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-bold font-mono">APPROUVÉ</span>
+                        {(dep.status === 'approved' || dep.status === 'completed' || dep.status === 'success') && (
+                          <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-bold font-mono">RÉUSSI</span>
                         )}
-                        {dep.status === 'rejected' && (
-                          <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded text-[9px] font-bold font-mono">REJETÉ</span>
+                        {(dep.status === 'rejected' || dep.status === 'failed' || dep.status === 'cancelled') && (
+                          <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded text-[9px] font-bold font-mono">REFUSÉ / ÉCHOUÉ</span>
                         )}
                         {dep.status === 'pending' && (
                           <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded text-[9px] font-bold font-mono animate-pulse">EN ATTENTE</span>
@@ -1313,11 +1388,11 @@ export default function AdminPanel({
 
                       // Compute deposit and withdrawal aggregates
                       const userApprovedDepositsNum = deposits
-                        .filter(d => d.userId === user.id && d.status === 'approved')
+                        .filter(d => d.userId === user.id && (d.status === 'approved' || d.status === 'completed' || d.status === 'success'))
                         .reduce((sum, d) => sum + d.amount, 0);
 
                       const userApprovedWithdrawalsNum = withdrawals
-                        .filter(w => w.userId === user.id && w.status === 'approved')
+                        .filter(w => w.userId === user.id && (w.status === 'approved' || w.status === 'completed' || w.status === 'success'))
                         .reduce((sum, w) => sum + w.amount, 0);
 
                       // Get active VIP investment details
@@ -2027,7 +2102,10 @@ export default function AdminPanel({
                             (t.operator || '').toLowerCase().includes(query) ||
                             (t.reference || '').toLowerCase().includes(query);
           const matchType = txTypeFilter === 'all' || t.type === txTypeFilter;
-          const matchStatus = txStatusFilter === 'all' || t.status === txStatusFilter;
+          const matchStatus = txStatusFilter === 'all' || 
+                              t.status === txStatusFilter || 
+                              (txStatusFilter === 'approved' && (t.status === 'completed' || t.status === 'success')) ||
+                              (txStatusFilter === 'rejected' && (t.status === 'failed' || t.status === 'cancelled'));
           return matchText && matchType && matchStatus;
         });
 
@@ -2151,6 +2229,266 @@ export default function AdminPanel({
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* SUPPORT EN LIGNE TAB */}
+      {activeAdminTab === 'support' && (() => {
+        const uniqueMsgUserIds: string[] = Array.from(new Set(supportMessages.map((m: SupportMessage) => m.userId)));
+        
+        const chatSessions = uniqueMsgUserIds.map(uid => {
+          const userObj = users.find(u => u.id === uid);
+          const userMsgs = supportMessages.filter(m => m.userId === uid);
+          const sortedMessages = [...userMsgs].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          const lastMsgObj = sortedMessages[sortedMessages.length - 1];
+          const unreadCount = userMsgs.filter(m => m.sender === 'user' && m.status === 'unread').length;
+          
+          let threadStatus: 'unread' | 'read' | 'replied' = 'unread';
+          if (unreadCount > 0) {
+            threadStatus = 'unread';
+          } else if (lastMsgObj?.sender === 'admin') {
+            threadStatus = 'replied';
+          } else if (lastMsgObj?.status === 'read' || lastMsgObj?.status === 'replied') {
+            threadStatus = lastMsgObj && lastMsgObj.status ? lastMsgObj.status : 'read';
+          }
+
+          return {
+            userId: uid,
+            user: userObj || { id: uid, name: 'Utilisateur Inconnu', whatsapp: uid, balance: 0 } as any,
+            messages: sortedMessages,
+            lastMsg: lastMsgObj,
+            unreadCount,
+            status: threadStatus
+          };
+        });
+
+        const sortedSessions = [...chatSessions].sort((a, b) => {
+          if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+          if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+          const aTime = a.lastMsg ? new Date(a.lastMsg.createdAt).getTime() : 0;
+          const bTime = b.lastMsg ? new Date(b.lastMsg.createdAt).getTime() : 0;
+          return bTime - aTime;
+        });
+
+        const selectedSession = sortedSessions.find(s => s.userId === selectedUserId);
+
+        const selectChatSession = async (uid: string) => {
+          setSelectedUserId(uid);
+          await DataStore.markSupportMessagesAsRead(uid);
+          executeDirectCentralSync();
+        };
+
+        const handleSendAdminReply = async (e: React.FormEvent) => {
+          e.preventDefault();
+          if (!selectedUserId || !adminReplyInput.trim()) return;
+
+          const replyText = adminReplyInput;
+          setAdminReplyInput('');
+          await DataStore.sendMessageToSupport(selectedUserId, replyText, 'admin');
+          executeDirectCentralSync();
+        };
+
+        return (
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 md:p-6 mb-8 mt-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="text-lg font-bold text-slate-100 flex items-center space-x-2">
+                  <span className="text-yellow-500">💬</span>
+                  <span>Messagerie d'Assistance Directe</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Gérez et répondez aux messages d'assistance des membres en temps réel. Les réponses sont synchronisées à Supabase de suite.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={executeDirectCentralSync}
+                  className="flex items-center space-x-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white rounded-lg border border-slate-750 transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Actualiser ({supportMessages.length})</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[500px]">
+              {/* SESSIONS LIST PANEL (LEFT COLUMN) */}
+              <div className="lg:col-span-4 border-r border-slate-800/80 pr-0 lg:pr-6 max-h-[550px] overflow-y-auto">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-3 font-semibold">
+                  Conversations ({sortedSessions.length})
+                </span>
+
+                {sortedSessions.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">
+                    <p className="text-sm">Aucun message d'assistance reçu.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {sortedSessions.map(session => {
+                      const isActive = session.userId === selectedUserId;
+                      return (
+                        <div
+                          key={session.userId}
+                          onClick={() => selectChatSession(session.userId)}
+                          className={`w-full text-left p-3.5 rounded-lg cursor-pointer transition-all duration-150 border flex flex-col justify-between ${
+                            isActive
+                              ? 'bg-yellow-500/10 border-yellow-500/30'
+                              : 'bg-slate-800/30 border-slate-800/60 hover:bg-slate-800/60 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-1.5">
+                            <span className="font-bold text-xs text-slate-200 truncate pr-2 block">
+                              {session.user.name}
+                            </span>
+                            <span className={`px-2 py-0.5 text-[8px] font-mono font-bold uppercase rounded-full ${
+                              session.status === 'unread'
+                                ? 'bg-red-500/15 text-red-500 border border-red-500/10'
+                                : session.status === 'read'
+                                ? 'bg-blue-500/15 text-blue-400 border border-blue-500/10'
+                                : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/10'
+                            }`}>
+                              {session.status === 'unread' ? 'Non Lu' : session.status === 'read' ? 'Lu, En attente' : 'Répondu'}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-slate-400">
+                            <span className="font-mono text-slate-400">
+                              {session.user.whatsapp || 'Aucun numéro'}
+                            </span>
+                            {session.lastMsg && (
+                              <span className="text-[9px] font-mono text-slate-500">
+                                {new Date(session.lastMsg.createdAt).toLocaleDateString('fr-FR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                          </div>
+
+                          {session.lastMsg && (
+                            <p className="text-[11px] text-slate-400 line-clamp-1 italic mt-2 border-t border-slate-800/40 pt-1.5 font-mono">
+                              {session.lastMsg.sender === 'admin' ? 'Vous : ' : ''}{session.lastMsg.message}
+                            </p>
+                          )}
+
+                          {session.unreadCount > 0 && (
+                            <div className="mt-2 text-right">
+                              <span className="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">
+                                {session.unreadCount} nouveaux
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* ACTIVE CONVERSATION MESSAGES PANEL (RIGHT COLUMN) */}
+              <div className="lg:col-span-8 flex flex-col justify-between">
+                {!selectedSession ? (
+                  <div className="flex flex-col items-center justify-center text-center py-20 bg-slate-950/20 border border-dashed border-slate-800 rounded-xl p-6 min-h-[460px]">
+                    <div className="text-4xl mb-4 text-slate-600">💬</div>
+                    <span className="text-sm font-medium text-slate-300">
+                      Aucune conversation sélectionnée
+                    </span>
+                    <p className="text-xs text-slate-500 mt-2 max-w-sm font-sans">
+                      Veuillez cliquer sur un membre dans la liste de gauche pour afficher l'historique complet de ses messages et lui envoyer une réponse directe.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col h-full justify-between">
+                    {/* Chat Session Header */}
+                    <div className="p-3 bg-slate-800/50 border border-slate-750 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+                      <div>
+                        <span className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                          {selectedSession.user.name}
+                        </span>
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          ID: <span className="text-slate-300">{selectedSession.userId}</span> • WhatsApp : <span className="text-slate-300">{selectedSession.user.whatsapp}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900 border border-slate-750 px-2.5 py-1 rounded text-[10px] uppercase font-mono text-slate-300">
+                        Solde principal : <span className="text-emerald-400 font-bold">{selectedSession.user.balance?.toLocaleString()} FCFA</span>
+                      </div>
+                    </div>
+
+                    {/* Message Logs */}
+                    <div className="flex-1 min-h-[300px] max-h-[365px] overflow-y-auto p-4 bg-slate-950/40 rounded-lg border border-slate-800/80 mb-4 space-y-4">
+                      {selectedSession.messages.map((m) => {
+                        const isFromAdmin = m.sender === 'admin';
+                        return (
+                          <div
+                            key={m.id}
+                            className={`flex flex-col max-w-[85%] ${isFromAdmin ? 'ml-auto items-end' : 'mr-auto items-start'}`}
+                          >
+                            <div className={`p-3 rounded-lg text-xs leading-relaxed ${
+                              isFromAdmin
+                                ? 'bg-yellow-500 text-slate-950 font-medium rounded-tr-none shadow-md shadow-yellow-500/5'
+                                : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700/60'
+                            }`}>
+                              <p className="whitespace-pre-line">{m.message}</p>
+                            </div>
+
+                            {/* Requirement 3 specifications display footer */}
+                            <div className="flex items-center space-x-2 text-[8.5px] text-slate-500 mt-1 font-mono">
+                              <span>{isFromAdmin ? 'Support' : selectedSession.user.name}</span>
+                              <span>•</span>
+                              <span>
+                                {new Date(m.createdAt).toLocaleString('fr-FR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  second: '2-digit'
+                                })}
+                              </span>
+                              {!isFromAdmin && (
+                                <>
+                                  <span>•</span>
+                                  <span className={`font-bold uppercase ${
+                                    m.status === 'unread'
+                                      ? 'text-rose-450'
+                                      : m.status === 'read'
+                                      ? 'text-sky-400'
+                                      : 'text-emerald-400'
+                                  }`}>
+                                    {m.status === 'unread' ? 'Non lu' : m.status === 'read' ? 'Lu' : 'Répondu'}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Form Input Reply Section */}
+                    <form onSubmit={handleSendAdminReply} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={adminReplyInput}
+                        onChange={(e) => setAdminReplyInput(e.target.value)}
+                        placeholder={`Saisissez votre réponse pour ${selectedSession.user.name}...`}
+                        className="flex-1 bg-slate-950 border border-slate-850 focus:border-yellow-500 focus:outline-none rounded-lg text-xs text-white p-3 font-medium transition-colors"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!adminReplyInput.trim()}
+                        className="px-5 py-3 rounded-lg text-xs font-bold tracking-wide transition-colors duration-150 flex items-center space-x-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <span>Envoyer</span>
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         );

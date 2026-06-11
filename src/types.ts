@@ -103,6 +103,7 @@ export interface SupportMessage {
   message: string;
   createdAt: string;
   lastModified?: number;
+  status?: 'unread' | 'read' | 'replied';
 }
 
 export interface BonusCode {

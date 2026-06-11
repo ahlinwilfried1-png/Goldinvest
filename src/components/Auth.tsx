@@ -15,8 +15,11 @@ import {
 import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
-  { name: 'Cameroun', code: '+237' },
-  { name: 'Burkina Faso', code: '+226' }
+  { name: 'Côte d\'Ivoire', code: '+225' },
+  { name: 'Togo', code: '+228' },
+  { name: 'Bénin', code: '+229' },
+  { name: 'Burkina Faso', code: '+226' },
+  { name: 'Cameroun', code: '+237' }
 ];
 
 interface AuthProps {
@@ -47,14 +50,14 @@ export default function Auth({
   // Sign up fields
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [selectedCode, setSelectedCode] = useState('+237');
-  const [country, setCountry] = useState('Cameroun');
+  const [selectedCode, setSelectedCode] = useState('+225');
+  const [country, setCountry] = useState('Côte d\'Ivoire');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
 
   // Sign in fields
-  const [loginSelectedCode, setLoginSelectedCode] = useState('+237');
+  const [loginSelectedCode, setLoginSelectedCode] = useState('+225');
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [resetTip, setResetTip] = useState(false);
@@ -204,6 +207,17 @@ export default function Auth({
             }
           </p>
         </div>
+
+        {/* Support regions notice */}
+        {isRegister && (
+          <div className="mb-4 p-3 bg-white/80 border-2 border-[#1b64d9]/10 rounded-2xl text-[10px] text-slate-700 leading-relaxed font-semibold flex items-center space-x-2.5 shadow-sm">
+            <span className="flex-shrink-0 text-sm leading-none">🌍</span>
+            <div className="text-left">
+              <span className="font-black uppercase text-[#1b64d9] block text-[8px] tracking-wider mb-0.5 text-left">Zone XOF & XAF intégrée</span>
+              Service disponible au : <strong>Bénin, Togo, Côte d'Ivoire, Burkina Faso (XOF)</strong> et <strong>Cameroun (XAF)</strong>.
+            </div>
+          </div>
+        )}
 
         {/* Error notification */}
         {errorMessage && (

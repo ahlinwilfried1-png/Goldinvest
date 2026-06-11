@@ -295,8 +295,12 @@ async function startServer() {
                             const useIncoming = incomingTime > existingTime;
                             const mergedUser = {
                               ...(useIncoming ? item : existingItem),
+                              balance: (useIncoming ? item.balance : existingItem.balance) ?? 0,
+                              dailyEarnings: (useIncoming ? item.dailyEarnings : existingItem.dailyEarnings) ?? 0,
+                              totalEarnings: (useIncoming ? item.totalEarnings : existingItem.totalEarnings) ?? 0,
+                              bonus: (useIncoming ? item.bonus : existingItem.bonus) ?? 0,
                               role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
-                              isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
+                              isBlocked: (useIncoming ? item.isBlocked : existingItem.isBlocked) ?? false,
                               lastModified: Math.max(existingTime, incomingTime)
                             };
                             mergedMap.set(idStr, mergedUser);
@@ -1207,16 +1211,172 @@ async function startServer() {
     res.json({ success: true, deposit: newDep, user: user || undefined });
   });
 
+  // PayDunya Create Charge API
+  app.post("/api/paydunya/create-charge", async (req, res) => {
+    try {
+      const { userId, amount } = req.body;
+      const amt = Number(amount);
+      if (!userId || isNaN(amt) || amt <= 0) {
+        return res.status(400).json({ success: false, error: "Identifiant utilisateur ou montant invalide." });
+      }
+
+      const users = storeData["gi_users"] || [];
+      const user = users.find((u: any) => u.id === userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
+      }
+
+      const paydunyaMaster = process.env.PAYDUNYA_MASTER_KEY || "MC-b097cd10d14a7fba03044adb3881bbf9de9d4f13";
+      const paydunyaPrivate = process.env.PAYDUNYA_PRIVATE_KEY || "MC-4fa6a00ca2e8292860dddd7e401055aee9c81c02";
+      const paydunyaToken = process.env.PAYDUNYA_TOKEN || "MC-4245b0d810aaa02336f0b2f9ddbc26a37ed7bfdc";
+      const paydunyaPublic = process.env.PAYDUNYA_PUBLIC_KEY || "MC-b6eb9046e9eb1a18bfbcd8a468ad5f16a6942647";
+
+      const host = req.get('host') || 'agrocapital.online';
+      const protocol = req.headers['x-forwarded-proto'] === 'http' ? 'http' : 'https';
+      const baseUrl = `${protocol}://${host}`;
+
+      const cancelUrl = `${baseUrl}/?status=cancelled`;
+      const returnUrl = `${baseUrl}/?ref=AGRO777`;
+      const callbackUrl = `${baseUrl}/webhook`;
+
+      console.log(`[PAYDUNYA] Creating invoice for user ${user.name} (Amount: ${amt} FCFA)...`);
+      console.log(`[PAYDUNYA] Calculated dynamic routing: ReturnURL: ${returnUrl}, CallbackURL: ${callbackUrl}`);
+
+      const payload = {
+        invoice: {
+          total_amount: amt,
+          description: `Recharge de compte AgroCapital - Utilisateur: ${user.name}`
+        },
+        store: {
+          name: "AgroCapital",
+          website_url: baseUrl
+        },
+        actions: {
+          cancel_url: cancelUrl,
+          callback_url: callbackUrl,
+          return_url: returnUrl
+        },
+        custom_data: {
+          userId: user.id
+        }
+      };
+
+      let response;
+      let data: any = null;
+      let usedSandbox = false;
+
+      // Try live API first
+      try {
+        console.log("[PAYDUNYA] Attempting Live API charge creation...");
+        const liveRes = await fetch("https://paydunya.com/api/v1/checkout-invoice/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "PAYDUNYA-MASTER-KEY": paydunyaMaster,
+            "PAYDUNYA-PRIVATE-KEY": paydunyaPrivate,
+            "PAYDUNYA-TOKEN": paydunyaToken,
+            "PAYDUNYA-PUBLIC-KEY": paydunyaPublic
+          },
+          body: JSON.stringify(payload)
+        });
+        if (liveRes.ok) {
+          data = await liveRes.json();
+        } else {
+          console.warn(`[PAYDUNYA] Live API returned non-200: ${liveRes.status}`);
+        }
+      } catch (err: any) {
+        console.warn("[PAYDUNYA LIVE TRY FAILED]", err.message);
+      }
+
+      // If live try failed or returned non-success, fallback to sandbox
+      if (!data || (data.response_code !== "00" && data.response_code !== 0)) {
+        try {
+          console.log("[PAYDUNYA] Live failed or returned error. Attempting Sandbox API charge creation...");
+          const sandboxRes = await fetch("https://paydunya.com/sandbox-api/v1/checkout-invoice/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "PAYDUNYA-MASTER-KEY": paydunyaMaster,
+              "PAYDUNYA-PRIVATE-KEY": paydunyaPrivate,
+              "PAYDUNYA-TOKEN": paydunyaToken,
+              "PAYDUNYA-PUBLIC-KEY": paydunyaPublic
+            },
+            body: JSON.stringify(payload)
+          });
+          if (sandboxRes.ok) {
+            data = await sandboxRes.json();
+            usedSandbox = true;
+          } else {
+            const errText = await sandboxRes.text();
+            console.error(`[PAYDUNYA] Sandbox API returned non-200: ${sandboxRes.status}. Output: ${errText}`);
+          }
+        } catch (err: any) {
+          console.error("[PAYDUNYA SANDBOX TRY FAILED]", err.message);
+        }
+      }
+
+      console.log("[PAYDUNYA RESPONSE]", data);
+
+      if (data && (data.response_code === "00" || data.response_code === 0)) {
+        // Register a pending deposit transaction in store so it is visible in the lists & admin panel right away!
+        let deposits = storeData["gi_deposits"] || [];
+        const reference = data.token; // using invoice token as reference
+
+        // Avoid duplicates
+        const existingDep = deposits.find((d: any) => d.reference === reference);
+        let newDep = null;
+        if (!existingDep) {
+          newDep = {
+            id: `dep-${Date.now()}`,
+            userId: user.id,
+            userName: user.name,
+            amount: amt,
+            operator: "PayDunya (Auto)",
+            reference: reference,
+            receiptImage: "automated",
+            status: "pending",
+            lastModified: Date.now(),
+            createdAt: new Date().toISOString()
+          };
+          deposits.unshift(newDep);
+          storeData["gi_deposits"] = deposits;
+          saveStore();
+        }
+
+        res.json({
+          success: true,
+          url: data.response_html || data.url || `https://paydunya.com/checkout/invoice/${data.token}`,
+          token: data.token,
+          deposit: newDep || existingDep
+        });
+      } else {
+        console.error("[PAYDUNYA ERROR]", data);
+        res.status(500).json({
+          success: false,
+          error: data?.response_text || "La construction de la facture de paiement PayDunya a échoué ou les clés API ne sont pas actives."
+        });
+      }
+    } catch (err: any) {
+      console.error("[PAYDUNYA EXCEPTION]", err);
+      res.status(500).json({ success: false, error: `Erreur interne de communication: ${err.message}` });
+    }
+  });
+
   // Centralized payment integration webhooks (PayDunya & WestPay)
-  app.all("/api/webhooks/westpay", (req, res) => {
-    handlePaymentWebhook(req, res, 'WestPay');
+  app.all("/api/webhooks/westpay", async (req, res) => {
+    await handlePaymentWebhook(req, res, 'PayDunya');
   });
 
-  app.all("/api/webhooks/paydunya", (req, res) => {
-    handlePaymentWebhook(req, res, 'PayDunya');
+  app.all("/api/webhooks/paydunya", async (req, res) => {
+    await handlePaymentWebhook(req, res, 'PayDunya');
   });
 
-  function handlePaymentWebhook(req: any, res: any, sourceName: string) {
+  // Direct webhook route as configured by the user at domain root level
+  app.all("/webhook", async (req, res) => {
+    await handlePaymentWebhook(req, res, 'PayDunya');
+  });
+
+  async function handlePaymentWebhook(req: any, res: any, sourceName: string) {
     console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Request received.`);
     console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Headers:`, req.headers);
     console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Query:`, req.query);
@@ -1224,50 +1384,166 @@ async function startServer() {
 
     const payload = { ...req.query, ...req.body };
 
-    // extraction of status
-    let rawStatus = payload.status || payload.response_code || payload.invoice_status || "";
-    if (payload.invoice && payload.invoice.status) {
-      rawStatus = payload.invoice.status;
+    // Deep support for stringified nested JSON structures
+    if (payload.invoice && typeof payload.invoice === 'string') {
+      try {
+        payload.invoice = JSON.parse(payload.invoice);
+      } catch (err) {
+        console.warn('Failed parsing payload.invoice from string:', err);
+      }
     }
-    const statusStr = String(rawStatus).toLowerCase();
+    if (payload.custom_data && typeof payload.custom_data === 'string') {
+      try {
+        payload.custom_data = JSON.parse(payload.custom_data);
+      } catch (err) {
+        try {
+          const params = new URLSearchParams(payload.custom_data);
+          const uid = params.get('userId') || params.get('user_id');
+          if (uid) {
+            payload.custom_data = { userId: uid };
+          }
+        } catch (e2) {}
+      }
+    }
 
-    const isApproved = 
-      statusStr.includes("success") || 
-      statusStr.includes("completed") || 
-      statusStr.includes("approved") || 
-      statusStr.includes("valid") ||
-      statusStr === "00"; // PayDunya response_code for success is "00"
+    // extraction of token/reference
+    let token = payload.token || payload.invoice_token || payload.ref || payload.reference || payload.transaction_id || "";
+    if (!token && payload.invoice && payload.invoice.token) {
+      token = payload.invoice.token;
+    }
+
+    if (!token) {
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Error: Missing transaction reference/token in hook payload.`);
+      return res.status(400).json({ success: false, error: "Missing token" });
+    }
+
+    // Secure verification check with PayDunya API if details are missing or for production reliability
+    let isApproved = false;
+    let amount = 0;
+    let userId = "";
+
+    try {
+      const paydunyaMaster = process.env.PAYDUNYA_MASTER_KEY || "MC-b097cd10d14a7fba03044adb3881bbf9de9d4f13";
+      const paydunyaPrivate = process.env.PAYDUNYA_PRIVATE_KEY || "MC-4fa6a00ca2e8292860dddd7e401055aee9c81c02";
+      const paydunyaToken = process.env.PAYDUNYA_TOKEN || "MC-4245b0d810aaa02336f0b2f9ddbc26a37ed7bfdc";
+      const paydunyaPublic = process.env.PAYDUNYA_PUBLIC_KEY || "MC-b6eb9046e9eb1a18bfbcd8a468ad5f16a6942647";
+
+      let verifyData: any = null;
+      let verifyOk = false;
+
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Querying PayDunya API to verify token "${token}"...`);
+      
+      // Try LIVE first
+      try {
+        const liveVerifyRes = await fetch(`https://paydunya.com/api/v1/checkout-invoice/confirm/${token}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "PAYDUNYA-MASTER-KEY": paydunyaMaster,
+            "PAYDUNYA-PRIVATE-KEY": paydunyaPrivate,
+            "PAYDUNYA-TOKEN": paydunyaToken,
+            "PAYDUNYA-PUBLIC-KEY": paydunyaPublic
+          }
+        });
+        if (liveVerifyRes.ok) {
+          verifyData = await liveVerifyRes.json();
+          verifyOk = true;
+          console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully verified via Live API.`);
+        } else {
+          console.warn(`[WEBHOOK ${sourceName.toUpperCase()}] Live confirm API returned status: ${liveVerifyRes.status}`);
+        }
+      } catch (err: any) {
+        console.warn(`[WEBHOOK ${sourceName.toUpperCase()}] Live verification query encountered error:`, err.message);
+      }
+
+      // Try SANDBOX fallback if live didn't work
+      if (!verifyOk || !verifyData) {
+        try {
+          console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Retrying via Sandbox API for token "${token}"...`);
+          const sandboxVerifyRes = await fetch(`https://paydunya.com/sandbox-api/v1/checkout-invoice/confirm/${token}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "PAYDUNYA-MASTER-KEY": paydunyaMaster,
+              "PAYDUNYA-PRIVATE-KEY": paydunyaPrivate,
+              "PAYDUNYA-TOKEN": paydunyaToken,
+              "PAYDUNYA-PUBLIC-KEY": paydunyaPublic
+            }
+          });
+          if (sandboxVerifyRes.ok) {
+            verifyData = await sandboxVerifyRes.json();
+            verifyOk = true;
+            console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully verified via Sandbox API.`);
+          } else {
+            console.warn(`[WEBHOOK ${sourceName.toUpperCase()}] Sandbox confirm API returned status: ${sandboxVerifyRes.status}`);
+          }
+        } catch (err: any) {
+          console.error(`[WEBHOOK ${sourceName.toUpperCase()}] Sandbox verification query encountered error:`, err.message);
+        }
+      }
+
+      if (verifyOk && verifyData) {
+        console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Verification response from PayDunya:`, verifyData);
+        // Check status in PayDunya response
+        const statusStr = String(verifyData.status || verifyData.response_code || "").toLowerCase();
+        isApproved = 
+          statusStr.includes("success") || 
+          statusStr.includes("completed") || 
+          statusStr.includes("approved") || 
+          statusStr.includes("valid") ||
+          statusStr === "00" ||
+          verifyData.response_code === "00" ||
+          verifyData.response_code === 0;
+
+        // Extract amount
+        if (verifyData.invoice && verifyData.invoice.total_amount) {
+          amount = Number(verifyData.invoice.total_amount);
+        } else if (verifyData.amount) {
+          amount = Number(verifyData.amount);
+        }
+
+        // Extract userId
+        if (verifyData.custom_data && verifyData.custom_data.userId) {
+          userId = verifyData.custom_data.userId;
+        } else if (verifyData.invoice && verifyData.invoice.custom_data && verifyData.invoice.custom_data.userId) {
+          userId = verifyData.invoice.custom_data.userId;
+        }
+      } else {
+        console.warn(`[WEBHOOK ${sourceName.toUpperCase()}] Direct verification failed. Falling back to payload parameters.`);
+      }
+    } catch (err) {
+      console.error(`[WEBHOOK ${sourceName.toUpperCase()}] Exception during direct PayDunya verification:`, err);
+    }
+
+    // Fallback block if API verification didn't resolve properties
+    if (!userId || amount <= 0) {
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Falling back to payload properties extraction...`);
+      
+      const rawStatus = payload.status || payload.response_code || payload.invoice_status || "";
+      const statusStr = String(rawStatus).toLowerCase();
+      isApproved = 
+        statusStr.includes("success") || 
+        statusStr.includes("completed") || 
+        statusStr.includes("approved") || 
+        statusStr.includes("valid") ||
+        statusStr === "00";
+
+      if (payload.amount) amount = Number(payload.amount);
+      else if (payload.amount_payed) amount = Number(payload.amount_payed);
+      else if (payload.invoice && payload.invoice.total_amount) amount = Number(payload.invoice.total_amount);
+
+      userId = payload.userId || payload.user_id || "";
+      if (!userId && payload.custom_data) {
+        userId = payload.custom_data.userId || payload.custom_data.user_id || "";
+      }
+      if (!userId && payload.invoice && payload.invoice.custom_data) {
+        userId = payload.invoice.custom_data.userId || payload.invoice.custom_data.user_id || "";
+      }
+    }
 
     if (!isApproved) {
-      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Transaction status "${rawStatus}" is not successful. Skipping.`);
-      return res.json({ success: false, message: `Transaction is not approved: status is ${rawStatus}` });
-    }
-
-    // extraction of amount
-    let amount = 0;
-    if (payload.amount) amount = Number(payload.amount);
-    else if (payload.amount_payed) amount = Number(payload.amount_payed);
-    else if (payload.invoice && payload.invoice.total_amount) amount = Number(payload.invoice.total_amount);
-    else if (payload.total_amount) amount = Number(payload.total_amount);
-
-    // extraction of reference
-    let reference = payload.ref || payload.reference || payload.transaction_id || payload.token || "";
-    if (!reference && payload.invoice && payload.invoice.token) {
-      reference = payload.invoice.token;
-    }
-
-    // extraction of userId mapping
-    let userId = payload.userId || payload.user_id || payload.customer_id || "";
-    if (!userId && payload.custom_data) {
-      userId = payload.custom_data.userId || payload.custom_data.user_id || "";
-    }
-    if (!userId && payload.invoice && payload.invoice.custom_data) {
-      userId = payload.invoice.custom_data.userId || payload.invoice.custom_data.user_id;
-    }
-
-    if (!reference) {
-      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Error: Missing transaction reference/token in payload.`);
-      return res.status(400).json({ success: false, error: "Missing reference" });
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Transaction token "${token}" is not approved or verification failed.`);
+      return res.status(200).json({ success: false, message: "Transaction is not successful or approved" });
     }
 
     let users = storeData["gi_users"] || [];
@@ -1275,16 +1551,16 @@ async function startServer() {
     let notifications = storeData["gi_notifications"] || [];
 
     // Check if this transaction reference has already been approved
-    const existingApproved = deposits.find((d: any) => d.reference === reference && d.status === 'approved');
+    const existingApproved = deposits.find((d: any) => d.reference === token && d.status === 'approved');
     if (existingApproved) {
-      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Reference "${reference}" has already been processed and approved. Avoiding duplicates.`);
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Reference "${token}" has already been processed and approved. Avoiding duplicates.`);
       return res.json({ success: true, message: "Already processed" });
     }
 
     // Try finding the user
     let user = users.find((u: any) => u.id === userId);
 
-    let existingDepIdx = deposits.findIndex((d: any) => d.reference === reference);
+    let existingDepIdx = deposits.findIndex((d: any) => d.reference === token);
     if (existingDepIdx !== -1) {
       const dep = deposits[existingDepIdx];
       if (!user) {
@@ -1295,18 +1571,38 @@ async function startServer() {
       }
     }
 
-    // If still no user found, try scanning users for a pending deposit reference or match
+    // If still no user found, try scanning for a pending deposit by exact reference matchup first
     if (!user) {
-      // Find among pending deposits
-      const matchingPendingDep = deposits.find((d: any) => d.reference === reference);
+      const matchingPendingDep = deposits.find((d: any) => d.reference === token);
       if (matchingPendingDep) {
         user = users.find((u: any) => u.id === matchingPendingDep.userId);
         if (amount <= 0) amount = matchingPendingDep.amount;
+        if (existingDepIdx === -1) {
+          existingDepIdx = deposits.findIndex((d: any) => d.id === matchingPendingDep.id);
+        }
+      }
+    }
+
+    // --- SECURE FALLBACK MATCHING (DYNAMIC RECOVERY OF ANONYMOUS DEPOSITS) ---
+    // If no user/deposit matches the reference directly, match a pending deposit of the same amount submitted by a user within the last 30 minutes
+    if (!user && amount > 0) {
+      const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
+      const matchingPendingDep = deposits.find((d: any) => 
+        d.status === 'pending' && 
+        Number(d.amount) === amount && 
+        new Date(d.createdAt).getTime() > thirtyMinutesAgo
+      );
+      if (matchingPendingDep) {
+        user = users.find((u: any) => u.id === matchingPendingDep.userId);
+        if (existingDepIdx === -1) {
+          existingDepIdx = deposits.findIndex((d: any) => d.id === matchingPendingDep.id);
+        }
+        console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully matched anonymous webhook of ${amount} FCFA with pending deposit of user ${user?.name} via amount-time matching!`);
       }
     }
 
     if (!user) {
-      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Error: No user found for userId "${userId}" or reference "${reference}".`);
+      console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Error: No user found for userId "${userId}" or reference "${token}".`);
       return res.status(404).json({ success: false, error: "Associated user not found" });
     }
 
@@ -1330,9 +1626,9 @@ async function startServer() {
         userId: user.id,
         userName: user.name,
         amount: amount,
-        operator: payload.operator || `${sourceName} Auto`,
-        reference: reference,
-        receiptImage: 'automated_westpay',
+        operator: "PayDunya (Auto)",
+        reference: token,
+        receiptImage: 'automated',
         status: 'approved',
         lastModified: Date.now(),
         createdAt: new Date().toISOString()
@@ -1345,7 +1641,7 @@ async function startServer() {
       id: `not-dep-auto-${Date.now()}`,
       userId: user.id,
       title: '🟢 Recharge Confirmée !',
-      message: `Votre paiement de ${amount.toLocaleString()} FCFA via ${sourceName} (Réf: ${reference}) a été validé et crédité automatiquement avec succès sur votre solde principal.`,
+      message: `Votre recharge de ${amount.toLocaleString()} FCFA via PayDunya (Réf: ${token}) a été validée et créditée automatiquement avec succès sur votre solde principal.`,
       type: 'deposit',
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
@@ -1478,18 +1774,49 @@ async function startServer() {
   app.post("/api/send-message", (req, res) => {
     const { userId, message, sender } = req.body;
     let msgs = storeData["gi_support_messages"] || [];
+    
+    let updatedMsgs = [...msgs];
+    if (sender === 'admin') {
+      // Mark preceding user messages as replied when the admin posts a response
+      updatedMsgs = msgs.map((m: any) => {
+        if (m.userId === userId && m.sender === 'user' && m.status !== 'replied') {
+          return { ...m, status: 'replied', lastModified: Date.now() };
+        }
+        return m;
+      });
+    }
+
     const newMsg = {
       id: `msg-${Date.now()}`,
       userId,
       sender,
       message,
+      status: sender === 'user' ? 'unread' : 'replied',
       lastModified: Date.now(),
       createdAt: new Date().toISOString()
     };
-    msgs.push(newMsg);
-    storeData["gi_support_messages"] = msgs;
+    updatedMsgs.push(newMsg);
+    storeData["gi_support_messages"] = updatedMsgs;
     saveStore();
     res.json({ success: true, message: newMsg });
+  });
+
+  app.post("/api/mark-messages-read", (req, res) => {
+    const { userId } = req.body;
+    let msgs = storeData["gi_support_messages"] || [];
+    let changed = false;
+    const updatedMsgs = msgs.map((m: any) => {
+      if (m.userId === userId && m.sender === 'user' && m.status !== 'read' && m.status !== 'replied') {
+        changed = true;
+        return { ...m, status: 'read', lastModified: Date.now() };
+      }
+      return m;
+    });
+    if (changed) {
+      storeData["gi_support_messages"] = updatedMsgs;
+      saveStore();
+    }
+    res.json({ success: true, changed });
   });
 
   // Admin Account controls

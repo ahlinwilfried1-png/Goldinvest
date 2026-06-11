@@ -28,7 +28,7 @@ import {
   X
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage } from '../types';
-import { DataStore } from '../dataStore';
+import { DataStore, syncWithBackend } from '../dataStore';
 import AdminPanel from './AdminPanel';
 
 const containerVariants = {
@@ -101,14 +101,17 @@ export default function Dashboard({
 
   // Form states
   const [depositAmount, setDepositAmount] = useState<string>('5000');
-  const [depositOperator, setDepositOperator] = useState<string>('MTN Mobile Money (Cameroun)');
+  const [depositOperator, setDepositOperator] = useState<string>('Orange Money');
+  const [depositMethod, setDepositMethod] = useState<'paydunya' | 'westpay'>('paydunya');
   const [depositRef, setDepositRef] = useState<string>('');
   const [receiptBase64, setReceiptBase64] = useState<string>('');
   const [depositError, setDepositError] = useState<string>('');
   const [depositSuccess, setDepositSuccess] = useState<string>('');
+  const [isSubmittingDeposit, setIsSubmittingDeposit] = useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
-  const [withdrawOperator, setWithdrawOperator] = useState<string>('MTN Mobile Money (Cameroun)');
+  const [withdrawOperator, setWithdrawOperator] = useState<string>("Wave (Côte d'Ivoire)");
   const [withdrawNumber, setWithdrawNumber] = useState<string>('');
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [withdrawSuccess, setWithdrawSuccess] = useState<string>('');
@@ -272,6 +275,7 @@ export default function Dashboard({
   const [profileHistoryTab, setProfileHistoryTab] = useState<'history' | 'deposits' | 'withdrawals' | 'purchases' | 'notifications'>('history');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const lastSupportMsgsCount = useRef<number>(0);
 
   // MLM sponsorship dynamic calculation based on real user registration tree
   const [allUsers, setAllUsers] = useState<User[]>(() => DataStore.getUsers());
@@ -554,7 +558,10 @@ export default function Dashboard({
     }
 
     // Setup periodic check interval to automatically credit of earnings in real-time and check for new notifications in Chrome or app
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
+      // Synchronize with backend to pull latest changes in real-time (e.g. admin replies)
+      await syncWithBackend();
+
       const oldBal = userState.balance;
       const oldUsersLen = allUsers.length;
       DataStore.processAutomaticDailyInstallments();
@@ -574,6 +581,20 @@ export default function Dashboard({
         syncDashboardData();
       } else if ((fresh && fresh.balance !== oldBal) || freshUsers.length !== oldUsersLen) {
         syncDashboardData();
+      }
+
+      // Check for newly received admin replies in real-time
+      const freshMsgs = DataStore.getSupportMessages().filter(m => m.userId === currentUser.id);
+      if (freshMsgs.length > lastSupportMsgsCount.current) {
+        const newMsgs = freshMsgs.slice(lastSupportMsgsCount.current);
+        const adminReplies = newMsgs.filter(m => m.sender === 'admin');
+        if (adminReplies.length > 0) {
+          adminReplies.forEach(r => {
+            triggerToast(`💬 Nouveau message du support : "${r.message}"`, "info");
+          });
+        }
+        lastSupportMsgsCount.current = freshMsgs.length;
+        setSupportMessages(freshMsgs);
       }
     }, 5000);
 
@@ -647,11 +668,6 @@ export default function Dashboard({
   };
 
   // Deposit events
-  const handleGenerateRef = () => {
-    const randomHex = Math.floor(100000000 + Math.random() * 900000000).toString();
-    setDepositRef(`TXN-GI-${randomHex}`);
-  };
-
   // Simulate drop / select image as Base64 for receipt
   const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -666,7 +682,7 @@ export default function Dashboard({
 
   const [paymentProcessing, setPaymentProcessing] = useState<boolean>(false);
 
-  const submitDeposit = (e: React.FormEvent) => {
+  const submitDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     setDepositError('');
     setDepositSuccess('');
@@ -677,24 +693,26 @@ export default function Dashboard({
       return;
     }
 
-    setPaymentProcessing(true);
-    
-    // Determine proper country parameter for WestPay
-    let queryCountry = 'Cameroun';
-    if (depositOperator.includes('Burkina')) {
-      queryCountry = 'Burkina Faso';
-    } else if (depositOperator.includes('Cameroun')) {
-      queryCountry = 'Cameroun';
-    } else if (userState.country) {
-      queryCountry = userState.country;
+    setIsSubmittingDeposit(true);
+    try {
+      const randomRef = `WP-${Math.floor(100000 + Math.random() * 900000)}`;
+      const dep = await DataStore.createDeposit(userState.id, amt, "Versement Mobile Money", randomRef, "manual_screenshot_pending");
+      if (dep) {
+        setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} FCFA (Réf: ${randomRef}) a bien été enregistrée et est en attente. Veuillez finaliser votre paiement sur la page sécurisée WestPay.`);
+        setDepositAmount('5000');
+        syncDashboardData();
+        
+        // Open the WestPay direct checkout link
+        window.open('https://westpay.cfd/link/c25ukanomq2agyq6', '_blank', 'noopener,noreferrer');
+      } else {
+        setDepositError("Une erreur est survenue lors de l'enregistrement de votre demande. Veuillez réessayer.");
+      }
+    } catch (error) {
+      console.error("Deposit submission error:", error);
+      setDepositError("Erreur de connexion. Veuillez réessayer.");
+    } finally {
+      setIsSubmittingDeposit(false);
     }
-
-    const baseUrl = window.location.origin + window.location.pathname;
-    const redirectUrl = encodeURIComponent(baseUrl);
-    const paymentUrl = `https://westpay.cfd/link/c25ukanomq2agyq6?amount=${amt}&redirect=${redirectUrl}`;
-
-    // Proceed with automatic redirect to WestPay in a new window/tab to prevent iframe blocking policies (X-Frame-Options)
-    window.open(paymentUrl, '_blank');
   };
 
   // Withdrawal event
@@ -843,12 +861,17 @@ export default function Dashboard({
   };
 
   // Send support message
-  const handleSendChatMessage = (e: React.FormEvent) => {
+  const handleSendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatMessageInput.trim()) return;
 
-    DataStore.sendMessageToSupport(userState.id, chatMessageInput, 'user');
+    const input = chatMessageInput;
     setChatMessageInput('');
+    await DataStore.sendMessageToSupport(userState.id, input, 'user');
+    
+    // Update ref immediately to prevent triggering unread replies toasts on our own message
+    lastSupportMsgsCount.current = DataStore.getSupportMessages().filter(m => m.userId === currentUser.id).length;
+    
     syncDashboardData();
   };
 
@@ -894,10 +917,10 @@ export default function Dashboard({
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#0b101d] border-2 border-slate-800 rounded-3xl p-6 text-left shadow-[0_25px_60px_rgba(0,0,0,0.85)] relative max-w-sm w-full overflow-hidden my-auto cursor-default text-white"
+            className="bg-white border-2 border-slate-200 rounded-3xl p-6 text-left shadow-[0_25px_60px_rgba(0,0,0,0.85)] relative max-w-sm w-full overflow-hidden my-auto cursor-default text-slate-900"
           >
             {/* Background glow decorator */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#1b64d9]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#1b64d9]/5 rounded-full blur-3xl pointer-events-none" />
             
             {/* Close cross/button */}
             <button
@@ -905,31 +928,31 @@ export default function Dashboard({
                 setShowAnnouncementDismissible(false);
                 try { localStorage.setItem('gi_announcement_dismissed_v2', 'true'); } catch(e){}
               }}
-              className="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-slate-900 transition-colors cursor-pointer z-[101]"
+              className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-900 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer z-[101]"
               aria-label="Fermer"
             >
               <X className="w-4 h-4 stroke-[2.5]" />
             </button>
 
             {/* Title */}
-            <div className="flex items-center space-x-2.5 mb-4 border-b border-slate-800/80 pb-3">
-              <div className="w-8 h-8 rounded-lg bg-yellow-500 flex items-center justify-center text-slate-950 text-base shadow-md">
+            <div className="flex items-center space-x-2.5 mb-4 border-b border-slate-100 pb-3">
+              <div className="w-8 h-8 rounded-lg bg-[#1b64d9] flex items-center justify-center text-white text-base shadow-md">
                 <span>🎉</span>
               </div>
               <div>
-                <h3 className="text-sm font-sans font-black text-white uppercase tracking-wider">Inscription Réussie !</h3>
-                <p className="text-[10px] text-white font-bold">Vos informations de départ :</p>
+                <h3 className="text-sm font-sans font-black text-slate-900 uppercase tracking-wider">Inscription Réussie !</h3>
+                <p className="text-[10px] text-slate-500 font-bold">Vos informations de départ :</p>
               </div>
             </div>
 
             <div className="space-y-3 text-[11px]">
-              {/* Stats pillar */}
-              <div className="space-y-2 bg-[#090d16] p-3.5 border border-slate-800/80 rounded-xl text-white">
+              {/* Stats pillar con UN COMMUNIQUÉ EN ÉCRITURE BLANCHE de design moderne */}
+              <div className="space-y-2 bg-gradient-to-br from-[#1b64d9] to-[#044ab0] p-4 rounded-xl text-white shadow-md border border-[#1b64d9]/10">
                 <div className="flex items-start space-x-2">
                   <span className="text-xs select-none">🌍</span>
                   <div className="flex flex-wrap items-center gap-1">
-                    <span className="font-bold text-white">Pays :</span>
-                    <span className="bg-slate-900 border border-slate-800 text-white px-1.5 py-0.5 rounded font-extrabold text-[9px]">
+                    <span className="font-bold text-white/95">Pays :</span>
+                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
                       Burkina Faso 🇧🇫 / Cameroun 🇨🇲
                     </span>
                   </div>
@@ -938,67 +961,67 @@ export default function Dashboard({
                 <div className="flex items-center space-x-2">
                   <span className="text-xs select-none">🎁</span>
                   <div>
-                    <span className="font-bold text-white">Bonus d'inscription :</span>{' '}
-                    <span className="text-white font-extrabold text-[11px] ml-0.5">200 {getCurrency()}</span>
+                    <span className="font-bold text-white/95">Bonus d'inscription :</span>{' '}
+                    <span className="text-white font-black text-xs ml-0.5">200 {getCurrency()}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <span className="text-xs select-none">📥</span>
                   <div>
-                    <span className="font-bold text-white">Recharge minimale :</span>{' '}
-                    <span className="text-white font-mono font-black text-[11px] ml-0.5">3 000 {getCurrency()}</span>
+                    <span className="font-bold text-white/95">Recharge minimale :</span>{' '}
+                    <span className="text-white font-mono font-black text-xs ml-0.5">3 000 {getCurrency()}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs select-none text-red-500">📤</span>
+                  <span className="text-xs select-none">📤</span>
                   <div className="flex items-center flex-wrap gap-1">
-                    <span className="font-bold text-white">Retrait minimum :</span>{' '}
-                    <span className="font-mono font-black text-[11px] text-white">1 000 {getCurrency()}</span>{' '}
-                    <span className="text-[8px] font-sans font-black uppercase bg-red-950/40 text-white px-1 py-0.2 rounded border border-red-900/40">(12% frais)</span>
+                    <span className="font-bold text-white/95">Retrait minimum :</span>{' '}
+                    <span className="font-mono font-black text-xs text-white">1 000 {getCurrency()}</span>{' '}
+                    <span className="text-[8px] font-sans font-black uppercase bg-white/10 text-white px-1 py-0.2 rounded border border-white/5">(12% frais)</span>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <span className="text-xs select-none">🔥</span>
                   <div>
-                    <span className="font-bold text-white">Bonus de connexion :</span>{' '}
-                    <span className="text-white font-black text-[11px] ml-0.5">20 {getCurrency()} / jour</span>
+                    <span className="font-bold text-white/95">Bonus de connexion :</span>{' '}
+                    <span className="text-white font-black text-xs ml-0.5">20 {getCurrency()} / jour</span>
                   </div>
                 </div>
               </div>
 
-              {/* Referral Pillar */}
-              <div className="bg-[#090d16] p-3 border border-slate-800/80 rounded-xl space-y-1.5">
+              {/* Referral Pillar con Écriture Blanche */}
+              <div className="bg-slate-900 p-3.5 border border-slate-800 rounded-xl space-y-2 text-white shadow-sm">
                 <div className="flex items-center space-x-1.5">
                   <span className="text-xs select-none">🤝</span>
                   <span className="font-bold text-white">Parrainage MLM :</span>
                 </div>
-                <div className="grid grid-cols-3 gap-1.5 font-mono text-[8px] font-black text-center">
-                  <span className="bg-yellow-500/10 text-white p-1.5 rounded-lg border border-yellow-500/20 flex flex-col items-center justify-center">
-                    <span className="opacity-100 mb-0.5 text-white/90">🥇 Niv. 1</span>
-                    <span className="font-extrabold text-[10px] text-white">20%</span>
+                <div className="grid grid-cols-3 gap-1.5 font-mono text-[8px] text-center">
+                  <span className="bg-white/5 text-white p-1.5 rounded-lg border border-white/10 flex flex-col items-center justify-center">
+                    <span className="opacity-90 mb-0.5 text-white/80 font-bold">🥇 Niv. 1</span>
+                    <span className="font-black text-[10px] text-white">20%</span>
                   </span>
-                  <span className="bg-emerald-500/10 text-white p-1.5 rounded-lg border border-emerald-500/20 flex flex-col items-center justify-center">
-                    <span className="opacity-100 mb-0.5 text-white/90">🥈 Niv. 2</span>
-                    <span className="font-extrabold text-[10px] text-white font-bold">3%</span>
+                  <span className="bg-white/5 text-white p-1.5 rounded-lg border border-white/10 flex flex-col items-center justify-center">
+                    <span className="opacity-90 mb-0.5 text-white/80 font-bold">🥈 Niv. 2</span>
+                    <span className="font-black text-[10px] text-white">3%</span>
                   </span>
-                  <span className="bg-blue-500/10 text-white p-1.5 rounded-lg border border-blue-500/20 flex flex-col items-center justify-center">
-                    <span className="opacity-100 mb-0.5 text-white/90">🥉 Niv. 3</span>
-                    <span className="font-extrabold text-[10px] text-white font-bold">1%</span>
+                  <span className="bg-white/5 text-white p-1.5 rounded-lg border border-white/10 flex flex-col items-center justify-center">
+                    <span className="opacity-90 mb-0.5 text-white/80 font-bold">🥉 Niv. 3</span>
+                    <span className="font-black text-[10px] text-white">1%</span>
                   </span>
                 </div>
               </div>
 
               {/* Official Group Link Segment */}
-              <div className="bg-[#090d16] hover:bg-slate-900 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between gap-2.5 transition-colors">
+              <div className="bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl p-3 flex items-center justify-between gap-2.5 transition-all shadow-sm">
                 <div className="space-y-0.5 text-left flex-1 min-w-0">
-                  <div className="flex items-center space-x-1 text-white font-extrabold text-[9px] uppercase tracking-wider">
+                  <div className="flex items-center space-x-1 text-slate-900 font-extrabold text-[9px] uppercase tracking-wider">
                     <span>💬 Groupe officiel</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   </div>
-                  <p className="text-[10px] text-white font-semibold leading-tight truncate">
+                  <p className="text-[10px] text-slate-500 font-semibold leading-tight truncate">
                     Rejoignez la discussion officielle AgroCapital.
                   </p>
                 </div>
@@ -1006,7 +1029,7 @@ export default function Dashboard({
                   href="https://chat.whatsapp.com/JJ4ewxWrtc56p3kiEZCTdx?s=cl&p=a&mlu=3"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-2.5 py-1.5 bg-[#00bd74] hover:bg-emerald-500 text-slate-950 font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
+                  className="px-2.5 py-1.5 bg-[#00bd74] hover:bg-emerald-500 text-white font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
                 >
                   <span>Rejoindre 👉</span>
                 </a>
@@ -1014,13 +1037,13 @@ export default function Dashboard({
             </div>
 
             {/* Footer hint */}
-            <div className="mt-5 pt-3 border-t border-slate-800/80 text-center flex justify-center">
+            <div className="mt-5 pt-3 border-t border-slate-100 text-center flex justify-center">
               <button
                 onClick={() => {
                   setShowAnnouncementDismissible(false);
                   try { localStorage.setItem('gi_announcement_dismissed_v2', 'true'); } catch(e){}
                 }}
-                className="w-full text-[11px] text-slate-950 bg-yellow-500 hover:bg-yellow-400 font-black uppercase tracking-widest py-3.5 rounded-xl cursor-pointer transition-all shadow-[0_4px_15px_rgba(234,179,8,0.25)]"
+                className="w-full text-xs text-white bg-[#1b64d9] hover:bg-blue-600 font-black uppercase tracking-widest py-3.5 rounded-xl cursor-pointer transition-all shadow-[0_4px_15px_rgba(27,100,217,0.25)]"
               >
                 Accéder à mon tableau de bord
               </button>
@@ -1491,82 +1514,53 @@ export default function Dashboard({
           )}
 
           {/* DEPOSIT FORM TAB */}
-          {activeTab === 'deposit' && (
-            <div className="max-w-xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800">
-              <div className="text-center mb-6">
-                <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">RECHARGE AUTOMATIQUE INSTANTANÉE</span>
-                <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Recharger mon compte</h3>
-                <p className="text-xs text-slate-500 font-bold mt-1">Créditez instantanément votre compte de façon 100% sécurisée et automatisée.</p>
-              </div>
+          {activeTab === 'deposit' && (() => {
+            const handleWestPayRedirect = () => {
+              const amt = parseInt(depositAmount);
+              if (isNaN(amt) || amt < 3000) {
+                setDepositError(`Veuillez d'abord saisir un montant valide (minimum 3 000 ${getCurrency()}).`);
+                return;
+              }
+              setDepositError('');
+              window.open('https://westpay.cfd/link/c25ukanomq2agyq6', '_blank', 'noopener,noreferrer');
+            };
 
-              {depositError && (
-                <div className="mb-4 p-3 rounded-xl bg-red-100 border border-red-200 text-xs text-red-700 font-bold">{depositError}</div>
-              )}
-              {depositSuccess && (
-                <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold">{depositSuccess}</div>
-              )}
-
-              {paymentProcessing ? (
-                <div className="py-8 text-center space-y-5">
-                  <div className="w-12 h-12 border-4 border-[#1b64d9] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                  <h4 className="font-display font-bold text-slate-800 text-sm">Redirection vers le guichet de paiement...</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                    Veuillez finaliser votre opération de <strong>{parseInt(depositAmount).toLocaleString()} {getCurrency()}</strong> sur le guichet de paiement sécurisé.
+            return (
+              <div className="max-w-xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800 animate-fade-in animate-duration-300">
+                <div className="text-center mb-6">
+                  <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">
+                    Recharge Sécurisée Directe
+                  </span>
+                  <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Recharger mon compte</h3>
+                  <p className="text-xs text-slate-500 font-bold mt-1">
+                    Saisissez le montant et rechargez instantanément votre compte.
                   </p>
-                  
-                  <div className="pt-2 border-t border-slate-200/60 max-w-xs mx-auto space-y-3">
-                    <span className="text-[10px] text-slate-400 block font-mono">Si la redirection automatique est bloquée par votre navigateur, utilisez les boutons ci-dessous :</span>
-                    
-                    <a 
-                      href={`https://westpay.cfd/link/c25ukanomq2agyq6?amount=${depositAmount}&redirect=${encodeURIComponent(window.location.origin + window.location.pathname)}`}
+                </div>
+
+                {depositError && (
+                  <div className="mb-4 p-3 rounded-xl bg-red-100 border border-red-200 text-xs text-red-700 font-bold">{depositError}</div>
+                )}
+                {depositSuccess && (
+                  <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold leading-normal space-y-2">
+                    <div>{depositSuccess}</div>
+                    <a
+                      href="https://westpay.cfd/link/c25ukanomq2agyq6"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex w-full justify-center items-center py-2.5 px-3 text-[10px] bg-[#1b64d9] hover:bg-[#1553b3] font-black tracking-wider text-white uppercase rounded-xl transition-all active:scale-[0.98]"
+                      className="inline-block py-2.5 px-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-black uppercase text-[10px] mt-1 text-center shadow"
                     >
-                      Ouvrir la page de paiement ↗
+                      👉 Cliquer ici pour ouvrir le paiement
                     </a>
-
-                    <button
-                      onClick={() => {
-                        const randomRef = 'TST-WP-' + Math.floor(Math.random() * 900000 + 100000);
-                        const baseUrl = window.location.origin + window.location.pathname;
-                        window.location.href = `${baseUrl}?status=success&amount=${depositAmount}&ref=${randomRef}`;
-                      }}
-                      className="w-full py-2.5 px-3 text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-sans font-black uppercase tracking-wider rounded-xl cursor-pointer"
-                    >
-                      ⚡ Simuler validation de test (Sans payer)
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentProcessing(false)}
-                      className="w-full py-2 px-3 text-[10px] border border-slate-300 text-slate-500 font-sans font-bold uppercase tracking-wider rounded-xl hover:bg-slate-50 transition-all cursor-pointer"
-                    >
-                      Retourner au formulaire
-                    </button>
                   </div>
-                </div>
-              ) : (
-                <form onSubmit={submitDeposit} className="space-y-5 text-left">
+                )}
+
+                <form onSubmit={submitDeposit} className="space-y-6 text-left animate-fade-in font-sans">
                   
-                  {/* 1. SECTOR OPERATOR */}
+                  {/* AMOUNT FIELD */}
                   <div>
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">1. Choisissez votre réseau de paiement</label>
-                    <select 
-                      value={depositOperator}
-                      onChange={(e) => setDepositOperator(e.target.value)}
-                      className="w-full bg-white border-2 border-slate-200/45 rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:border-[#1b64d9] focus:outline-none cursor-pointer shadow-sm"
-                    >
-                      <option value="MTN Mobile Money (Cameroun)">MTN Momo — Cameroun (+237)</option>
-                      <option value="Orange Money (Cameroun)">Orange Money — Cameroun (+237)</option>
-                      <option value="Orange Money (Burkina)">Orange Money — Burkina Faso (+226)</option>
-                      <option value="Moov Money (Burkina)">Moov Flooz — Burkina Faso (+226)</option>
-                    </select>
-                  </div>
-
-                  {/* Amount */}
-                  <div>
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">2. Montant du versement ({getCurrency()})</label>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                      Saisissez le montant à recharger ({getCurrency()})
+                    </label>
                     <input
                       type="number"
                       required
@@ -1575,24 +1569,34 @@ export default function Dashboard({
                       onChange={(e) => setDepositAmount(e.target.value)}
                       className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
                     />
+                    <span className="text-[10px] text-slate-400 font-semibold block mt-1.5">Note : Montant minimum autorisé de 3 000 FCFA.</span>
                   </div>
 
-                  <div className="bg-[#e2ebf9] p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed font-semibold space-y-2">
-                    <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block">🔒 Sécurité Chiffrée :</span>
-                    Vous allez être redirigé vers la passerelle sécurisée pour effectuer votre virement en toute confiance. Le crédit sur votre balance s'effectue de manière instantanée et automatique dès validation de la transaction.
+                  <div className="bg-[#e2ebf9]/80 p-4 rounded-xl border border-slate-200/50 text-xs text-slate-650 leading-relaxed font-semibold">
+                    <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block mb-0.5">🔒 Protection Sécurisée :</span>
+                    En validant, votre demande est enregistrée avec le statut « En attente » sur votre tableau de bord administrateur et vous accédez directement au portail sécurisé de rechargement Mobile Money.
                   </div>
 
                   {/* Submitting button */}
                   <button
                     type="submit"
-                    className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#1b64d9] to-[#046fff] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2"
+                    disabled={isSubmittingDeposit}
+                    className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#1b64d9] to-[#046fff] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span>Procéder au paiement sécurisé</span>
+                    {isSubmittingDeposit ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Traitement en cours...</span>
+                      </div>
+                    ) : (
+                      <span>⚡ Confirmer et Recharger maintenant</span>
+                    )}
                   </button>
+
                 </form>
-              )}
-            </div>
-          )}
+              </div>
+            );
+          })()}
 
           {/* WITHDRAW FORM TAB */}
           {activeTab === 'withdraw' && (
@@ -1637,10 +1641,23 @@ export default function Dashboard({
                     onChange={(e) => setWithdrawOperator(e.target.value)}
                     className="w-full bg-white border-2 border-slate-200/45 rounded-2xl py-3 px-4 text-sm text-slate-800 font-bold focus:border-[#1b64d9] focus:outline-none cursor-pointer shadow-sm"
                   >
-                    <option value="MTN Mobile Money (Cameroun)">MTN Mobile Money — Cameroun (+237)</option>
-                    <option value="Orange Money (Cameroun)">Orange Money — Cameroun (+237)</option>
+                    <option value="Wave (Côte d'Ivoire)">Wave — Côte d'Ivoire (+225)</option>
+                    <option value="MTN Mobile Money (Côte d'Ivoire)">MTN Mobile Money — Côte d'Ivoire (+225)</option>
+                    <option value="Orange Money (Côte d'Ivoire)">Orange Money — Côte d'Ivoire (+225)</option>
+                    <option value="Moov Money (Côte d'Ivoire)">Moov Money — Côte d'Ivoire (+225)</option>
+                    
+                    <option value="T-Money (Togo)">T-Money — Togo (+228)</option>
+                    <option value="Moov Money (Togo)">Moov Money (Flooz) — Togo (+228)</option>
+                    
+                    <option value="MTN Mobile Money (Bénin)">MTN Mobile Money — Bénin (+229)</option>
+                    <option value="Moov Money (Bénin)">Moov Money — Bénin (+229)</option>
+                    <option value="Celtiis (Bénin)">Celtiis — Bénin (+229)</option>
+                    
                     <option value="Orange Money (Burkina Faso)">Orange Money — Burkina Faso (+226)</option>
                     <option value="Moov Money (Burkina Faso)">Moov Money (Moov Flooz) — Burkina Faso (+226)</option>
+                    
+                    <option value="MTN Mobile Money (Cameroun)">MTN Mobile Money — Cameroun (+237)</option>
+                    <option value="Orange Money (Cameroun)">Orange Money — Cameroun (+237)</option>
                   </select>
                 </div>
 
@@ -2189,19 +2206,19 @@ export default function Dashboard({
                             <div className="space-y-0.5">
                               <span className="text-[10px] text-slate-404 font-mono block">{new Date(dep.createdAt).toLocaleString()}</span>
                               <div className="font-extrabold text-slate-250">{dep.operator}</div>
-                              {dep.refCode && <span className="text-[10px] text-[#1b64d9] font-mono block font-black uppercase">REF: {dep.refCode}</span>}
+                              {(dep.reference || (dep as any).refCode) && <span className="text-[10px] text-[#1b64d9] font-mono block font-black uppercase">REF: {dep.reference || (dep as any).refCode}</span>}
                             </div>
                             <div className="text-right space-y-1">
                               <span className="text-emerald-400 font-black font-mono">+{dep.amount.toLocaleString()} {getCurrency()}</span>
                               <div>
-                                {dep.status === 'approved' && (
-                                  <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 text-[9px] font-black rounded font-mono">CONFORME</span>
+                                {(dep.status === 'approved' || dep.status === 'completed' || dep.status === 'success') && (
+                                  <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 text-[9px] font-black rounded font-mono">RÉUSSI</span>
                                 )}
-                                {dep.status === 'rejected' && (
-                                  <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-black rounded font-mono">REJETÉ</span>
+                                {(dep.status === 'rejected' || dep.status === 'failed' || dep.status === 'cancelled') && (
+                                  <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-black rounded font-mono">REFUSÉ / ÉCHOUÉ</span>
                                 )}
                                 {dep.status === 'pending' && (
-                                  <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-[9px] font-black rounded font-mono animate-pulse">ATTENTE</span>
+                                  <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-[9px] font-black rounded font-mono animate-pulse">EN ATTENTE</span>
                                 )}
                               </div>
                             </div>

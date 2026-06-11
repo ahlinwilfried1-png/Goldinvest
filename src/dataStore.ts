@@ -679,8 +679,12 @@ export const syncWithBackend = async (): Promise<boolean> => {
                       const useIncoming = incomingTime > existingTime;
                       const mergedUser = {
                         ...(useIncoming ? item : existingItem),
+                        balance: existingItem.balance !== undefined ? existingItem.balance : (item.balance || 0),
+                        dailyEarnings: existingItem.dailyEarnings !== undefined ? existingItem.dailyEarnings : (item.dailyEarnings || 0),
+                        totalEarnings: existingItem.totalEarnings !== undefined ? existingItem.totalEarnings : (item.totalEarnings || 0),
+                        bonus: existingItem.bonus !== undefined ? existingItem.bonus : (item.bonus || 0),
                         role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
-                        isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
+                        isBlocked: existingItem.isBlocked !== undefined ? existingItem.isBlocked : (item.isBlocked || false),
                         lastModified: Math.max(existingTime, incomingTime)
                       };
                       if (JSON.stringify(existingItem) !== JSON.stringify(mergedUser)) {
@@ -1984,46 +1988,77 @@ export class DataStore {
   }
 
   // Support / Live chat integration
-  static sendMessageToSupport(userId: string, messageText: string, senderRole: 'user' | 'admin' = 'user'): SupportMessage {
+  static async sendMessageToSupport(userId: string, messageText: string, senderRole: 'user' | 'admin' = 'user'): Promise<SupportMessage> {
     const messages = this.getSupportMessages();
+    
+    // Save locally first for instant, latency-free UX feedback
+    let updatedMsgs = [...messages];
+    if (senderRole === 'admin') {
+      updatedMsgs = messages.map(m => {
+        if (m.userId === userId && m.sender === 'user' && m.status !== 'replied') {
+          return { ...m, status: 'replied' as const, lastModified: Date.now() };
+        }
+        return m;
+      });
+    }
+
     const newMsg: SupportMessage = {
       id: `msg-${Date.now()}`,
       userId,
       sender: senderRole,
       message: messageText,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      status: senderRole === 'user' ? 'unread' : 'replied',
+      lastModified: Date.now()
     };
 
-    messages.push(newMsg);
-    this.saveSupportMessages(messages);
+    updatedMsgs.push(newMsg);
+    this.saveSupportMessages(updatedMsgs);
 
-    // Automated simulated interactive support agent answering shortly after
-    if (senderRole === 'user') {
-      setTimeout(() => {
-        const responses = [
-          "Bonjour ! Notre support financier examine votre demande. Quel opérateur utilisez-vous ?",
-          "Ravi de vous aider ! Pour les dépôts, la référence doit correspondre exactement au reçu Mobile Money.",
-          "Les retraits sont traités par vagues régulières chaque heure de 08h00 à 22h00.",
-          "Merci pour votre message. Un conseiller financier va valider votre dossier d'affiliation sous peu !",
-          "Votre message a bien été transmis. N'oubliez pas d'inviter de nouveaux membres pour débloquer les commissions VIP !",
-        ];
-        const randomAnswer = responses[Math.floor(Math.random() * responses.length)];
-        const systemMessages = this.getSupportMessages();
-        systemMessages.push({
-          id: `msg-reply-${Date.now()}`,
-          userId,
-          sender: 'admin',
-          message: randomAnswer,
-          createdAt: new Date().toISOString()
-        });
-        this.saveSupportMessages(systemMessages);
-        
-        // Dispatch custom global event if needed to let components re-render or pull
-        window.dispatchEvent(new Event('gi_new_message'));
-      }, 3500);
+    window.dispatchEvent(new Event('gi_store_updated'));
+    window.dispatchEvent(new Event('gi_new_message'));
+
+    // Push to backend server asynchronously for central database synchronization
+    try {
+      await apiFetch(getApiUrl('/api/send-message'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, message: messageText, sender: senderRole })
+      });
+      await syncWithBackend();
+    } catch (e) {
+      console.warn('Failed to sync support message with central server:', e);
     }
 
     return newMsg;
+  }
+
+  static async markSupportMessagesAsRead(userId: string): Promise<void> {
+    const messages = this.getSupportMessages();
+    let changed = false;
+    const updated = messages.map(m => {
+      if (m.userId === userId && m.sender === 'user' && m.status !== 'read' && m.status !== 'replied') {
+        changed = true;
+        return { ...m, status: 'read' as const, lastModified: Date.now() };
+      }
+      return m;
+    });
+
+    if (changed) {
+      this.saveSupportMessages(updated);
+      window.dispatchEvent(new Event('gi_store_updated'));
+
+      try {
+        await apiFetch(getApiUrl('/api/mark-messages-read'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        await syncWithBackend();
+      } catch (e) {
+        console.warn('Failed to sync marked-read support status with central server:', e);
+      }
+    }
   }
 
   // Processes and automatically credits due chronological daily earnings for all active plans
