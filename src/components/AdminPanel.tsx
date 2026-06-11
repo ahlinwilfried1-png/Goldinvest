@@ -195,6 +195,7 @@ export default function AdminPanel({
   const [mlmRate1, setMlmRate1] = useState<number>(() => DataStore.getMLMRates().level1);
   const [mlmRate2, setMlmRate2] = useState<number>(() => DataStore.getMLMRates().level2);
   const [mlmRate3, setMlmRate3] = useState<number>(() => DataStore.getMLMRates().level3);
+  const [referralDomain, setReferralDomain] = useState<string>(() => DataStore.getReferralDomain());
 
   const handleSaveMlmRates = (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,7 +204,8 @@ export default function AdminPanel({
       level2: mlmRate2,
       level3: mlmRate3
     });
-    alert('Pourcentages de commission MLM (Parrainage) regulés avec succès !');
+    DataStore.saveReferralDomain(referralDomain);
+    alert('Pourcentages de commission MLM et domaine de parrainage régulés avec succès !');
   };
 
   // Picture receipt lightbox state
@@ -2004,11 +2006,28 @@ export default function AdminPanel({
                 </div>
               </div>
 
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <span className="text-yellow-500">🌐</span>
+                  <span>Domaine de Parrainage Officiel (Optionnel)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: goldinvest-mdbg.vercel.app ou https://mes-investissements.com"
+                  value={referralDomain}
+                  onChange={(e) => setReferralDomain(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-yellow-400 font-mono focus:outline-none"
+                />
+                <span className="text-[10px] text-slate-500 mt-1.5 block leading-relaxed">
+                  Si défini, tous les liens de parrainage générés pour les utilisateurs utiliseront ce domaine principal (ex : <code>https://votre-domaine.com/?ref=CODE</code>). Laissez vide pour utiliser l'adresse courante du navigateur.
+                </span>
+              </div>
+
               <button
                 type="submit"
                 className="w-full py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
               >
-                💾 Enregistrer les pourcentages de commission
+                💾 Enregistrer les réglages MLM et domaine
               </button>
             </form>
           </div>

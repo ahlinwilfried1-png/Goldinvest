@@ -37,14 +37,6 @@ export default function Auth({
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Pre-fill sponsor referral code if captured from a direct web link
-  React.useEffect(() => {
-    const captured = safeLocalStorage.getItem('gi_captured_ref');
-    if (captured) {
-      setReferralCode(captured);
-    }
-  }, []);
-
   // Sign up fields
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -53,6 +45,14 @@ export default function Auth({
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
+
+  // Pre-fill sponsor referral code if captured from a direct web link
+  React.useEffect(() => {
+    const captured = safeLocalStorage.getItem('gi_captured_ref');
+    if (captured) {
+      setReferralCode(captured);
+    }
+  }, []);
 
   // Sign in fields
   const [loginSelectedCode, setLoginSelectedCode] = useState('+226');

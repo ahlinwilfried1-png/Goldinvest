@@ -625,6 +625,15 @@ export default function Dashboard({
 
   // Copy referral elements
   const getReferralBaseURL = () => {
+    const configuredDomain = DataStore.getReferralDomain();
+    if (configuredDomain) {
+      let formatted = configuredDomain.trim();
+      if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
+        formatted = 'https://' + formatted;
+      }
+      return formatted.replace(/\/+$/, '');
+    }
+
     const origin = window.location.origin;
     if (!origin || origin.includes('aistudio.google.com')) {
       return 'https://ais-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app';

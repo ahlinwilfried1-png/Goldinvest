@@ -594,7 +594,8 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_mlm_level1_rate',
           'gi_mlm_level2_rate',
           'gi_mlm_level3_rate',
-          'gi_withdrawals_blocked_global'
+          'gi_withdrawals_blocked_global',
+          'gi_referral_domain'
         ];
         
         // Ensure standard keys are read with their default fallback if they are not in local storage yet
@@ -609,6 +610,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
         DataStore.getProducts();
         DataStore.getMLMRates();
         DataStore.areWithdrawalsBlocked();
+        DataStore.getReferralDomain();
  
         for (const key of keysToSync) {
           try {
@@ -855,6 +857,21 @@ export class DataStore {
     setToStore<number>('gi_mlm_level1_rate', rates.level1);
     setToStore<number>('gi_mlm_level2_rate', rates.level2);
     setToStore<number>('gi_mlm_level3_rate', rates.level3);
+  }
+
+  static getReferralDomain(): string {
+    return getFromStore<string>('gi_referral_domain', '').trim();
+  }
+
+  static saveReferralDomain(domain: string): void {
+    setToStore<string>('gi_referral_domain', domain.trim());
+    apiFetch(getApiUrl('/api/save-store'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gi_referral_domain: domain.trim()
+      })
+    }).catch(err => console.error("Error saving referral domain to server", err));
   }
 
   static getProducts(): Product[] {

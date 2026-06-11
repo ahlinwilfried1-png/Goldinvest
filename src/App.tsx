@@ -57,10 +57,36 @@ export default function App() {
       setProducts(DataStore.getProducts());
   
       // 3. WestPay automatic deposit verification from redirect query params
-      const params = new URLSearchParams(window.location.search);
-      const wpStatus = params.get('status');
-      const wpAmount = params.get('amount');
-      const wpRef = params.get('ref');
+      const searchParams = new URLSearchParams(window.location.search);
+      let hashQuery = "";
+      if (window.location.hash && window.location.hash.includes("?")) {
+        hashQuery = window.location.hash.substring(window.location.hash.indexOf("?"));
+      }
+      const hashParams = new URLSearchParams(hashQuery);
+
+      const getParamInsensitive = (key: string) => {
+        const lowerKey = key.toLowerCase();
+        
+        // Scan standard search query parameters ignoring case
+        for (const [k, v] of searchParams.entries()) {
+          if (k.toLowerCase() === lowerKey) {
+            return v;
+          }
+        }
+        
+        // Scan hash parameters ignoring case
+        for (const [k, v] of hashParams.entries()) {
+          if (k.toLowerCase() === lowerKey) {
+            return v;
+          }
+        }
+        
+        return null;
+      };
+
+      const wpStatus = getParamInsensitive('status');
+      const wpAmount = getParamInsensitive('amount');
+      const wpRef = getParamInsensitive('ref');
   
       if (wpStatus === 'success' && wpAmount && wpRef) {
         const amt = parseInt(wpAmount);
@@ -86,7 +112,11 @@ export default function App() {
       }
   
       // 4. Catch referral tags in URL parameters (supports ?ref=, ?code=, ?r=, ?parrain=, ?sponsor=)
-      const refCode = params.get('ref') || params.get('code') || params.get('r') || params.get('parrain') || params.get('sponsor');
+      const refCode = getParamInsensitive('ref') || 
+                      getParamInsensitive('code') || 
+                      getParamInsensitive('r') || 
+                      getParamInsensitive('parrain') || 
+                      getParamInsensitive('sponsor');
       if (refCode) {
         safeLocalStorage.setItem('gi_captured_ref', refCode.toUpperCase());
         if (active) {

@@ -179,7 +179,8 @@ async function startServer() {
       "gi_mlm_level1_rate": 20,
       "gi_mlm_level2_rate": 3,
       "gi_mlm_level3_rate": 1,
-      "gi_withdrawals_blocked_global": false
+      "gi_withdrawals_blocked_global": false,
+      "gi_referral_domain": ""
     };
 
     let modified = false;
