@@ -1816,7 +1816,7 @@ export default function Dashboard({
                   </div>
  
                   <div>
-                    <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Lien d'Affiliation Directe :</span>
+                    <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Lien d'Inscription Agrocapital :</span>
                     <div className="flex bg-slate-900 border border-slate-800 p-2 px-3 rounded-lg justify-between items-center gap-2">
                       <span className="font-mono text-xs font-bold text-slate-200 truncate flex-1">{referralURL}</span>
                       <button
@@ -1944,7 +1944,7 @@ export default function Dashboard({
                   <>
                     {level1Users.length === 0 ? (
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-center py-6 bg-slate-950/20 rounded-xl font-medium">
-                        Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) avec votre code de parrainage. Partagez votre lien d'invitation pour commencer !
+                        Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) avec votre code de parrainage. Partagez votre lien d'inscription Agrocapital pour commencer !
                       </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
