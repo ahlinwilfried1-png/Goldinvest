@@ -15,11 +15,9 @@ import {
 import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
-  { name: 'Côte d\'Ivoire', code: '+225' },
-  { name: 'Togo', code: '+228' },
-  { name: 'Bénin', code: '+229' },
   { name: 'Burkina Faso', code: '+226' },
-  { name: 'Cameroun', code: '+237' }
+  { name: 'Togo', code: '+228' },
+  { name: 'Bénin', code: '+229' }
 ];
 
 interface AuthProps {
@@ -50,14 +48,14 @@ export default function Auth({
   // Sign up fields
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [selectedCode, setSelectedCode] = useState('+225');
-  const [country, setCountry] = useState('Côte d\'Ivoire');
+  const [selectedCode, setSelectedCode] = useState('+226');
+  const [country, setCountry] = useState('Burkina Faso');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
 
   // Sign in fields
-  const [loginSelectedCode, setLoginSelectedCode] = useState('+225');
+  const [loginSelectedCode, setLoginSelectedCode] = useState('+226');
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [resetTip, setResetTip] = useState(false);
