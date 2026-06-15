@@ -29,7 +29,8 @@ import {
   X,
   Download,
   Smartphone,
-  Megaphone
+  Megaphone,
+  Share
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage } from '../types';
 import { DataStore, syncWithBackend, getApiUrl } from '../dataStore';
@@ -169,6 +170,19 @@ export default function Dashboard({
   }, []);
 
   const [dismissedPermissionBanner, setDismissedPermissionBanner] = useState<boolean>(false);
+  const [isPwaInstallModalOpen, setIsPwaInstallModalOpen] = useState<boolean>(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
 
   const [chromeNotifPermission, setChromeNotifPermission] = useState<string>(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -2388,7 +2402,7 @@ export default function Dashboard({
                   </div>
                   <div>
                     <h4 className="text-sm font-sans font-black text-slate-800 uppercase tracking-wider">
-                      Télécharger l’application
+                      Installer l’application Mobile
                     </h4>
                     <span className="text-[11px] text-slate-450 block mt-0.5">
                       Profitez d’une rapidité et d’un confort de navigation accrus
@@ -2397,36 +2411,36 @@ export default function Dashboard({
                 </div>
 
                 <p className="text-xs text-slate-650 leading-relaxed font-semibold">
-                  Téléchargez notre application pour une meilleure expérience mobile, des notifications de gains en temps réel et un accès sécurisé à tout moment.
+                  Notre application mobile est entièrement optimisée sous forme de <strong className="text-orange-600">PWA (Progressive Web App)</strong>. Elle est sécurisée, certifiée sans virus et s'installe en 3 secondes directement depuis votre navigateur Google Chrome ou Safari, sans aucun avertissement critique ni téléchargement d'APK à risque ou corrompus.
                 </p>
 
                 <div className="pt-2 flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={() => {
-                      triggerToast("📥 Téléchargement de l'application AgroCapital démarré...", 'success');
-                      const link = document.createElement('a');
-                      const blob = new Blob(["AgroCapital Mobile Android APK Application Installer"], { type: "application/vnd.android.package-archive" });
-                      link.href = URL.createObjectURL(blob);
-                      link.download = "AgroCapital.apk";
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
+                      if (deferredPrompt) {
+                        try {
+                          deferredPrompt.prompt();
+                        } catch (err) {
+                          setIsPwaInstallModalOpen(true);
+                        }
+                      } else {
+                        setIsPwaInstallModalOpen(true);
+                      }
                     }}
                     className="flex-1 py-3.5 px-5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl text-xs font-sans font-black uppercase tracking-wider text-center flex items-center justify-center space-x-2.5 shadow-md shadow-orange-500/10 hover:opacity-95 active:scale-98 transition-all cursor-pointer"
                   >
                     <Download className="w-4.5 h-4.5" />
-                    <span>Télécharger l'APK (.apk)</span>
+                    <span>Installer Mobile (Sécurisé)</span>
                   </button>
 
                   <button
                     onClick={() => {
-                      triggerToast("📲 Redirection vers la plateforme de téléchargement sécurisée...", 'info');
-                      window.open("https://play.google.com/store", "_blank");
+                      setIsPwaInstallModalOpen(true);
                     }}
                     className="flex-1 py-3.5 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-sans font-black uppercase tracking-wider text-center flex items-center justify-center space-x-2.5 shadow-md active:scale-98 transition-all cursor-pointer"
                   >
-                    <Smartphone className="w-4.5 h-4.5" />
-                    <span>Lien officiel Play Store</span>
+                    <HelpCircle className="w-4.5 h-4.5" />
+                    <span>Guide d'installation</span>
                   </button>
                 </div>
               </div>
@@ -2790,6 +2804,142 @@ export default function Dashboard({
           </div>
         </div>
       )}
+      
+      {/* GORGEOUS MODAL: GUIDE & INSTALLATION DES APPLICATIONS MOBILE PROGRESSIVES */}
+      <AnimatePresence>
+        {isPwaInstallModalOpen && (
+          <div 
+            onClick={() => setIsPwaInstallModalOpen(false)}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+              className="bg-white border border-slate-150 rounded-[32px] p-6 max-w-md w-full shadow-2xl relative text-left cursor-default"
+            >
+              <button
+                onClick={() => setIsPwaInstallModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer"
+                title="Fermer"
+              >
+                <X className="w-5 h-5 stroke-[2.5]" />
+              </button>
+
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-xl font-bold">
+                  <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <div>
+                  <h3 className="text-md font-sans font-black text-slate-900 uppercase tracking-wider">
+                    Installation Sécurisée
+                  </h3>
+                  <span className="text-[10px] text-emerald-600 block font-semibold uppercase tracking-widest mt-0.5">
+                    Certifié sans virus & sans fichiers à risque
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl p-4 mb-5 border border-slate-100 text-xs text-slate-600 leading-relaxed space-y-2">
+                <p className="font-semibold">
+                  ⚠️ <strong className="text-red-600 font-bold">Pourquoi le fichier .apk indique "dangereux" ?</strong>
+                </p>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Le système Android de Google affiche un avertissement de sécurité pour tous les fichiers d'installation (.apk) téléchargés depuis un navigateur internet en dehors du Play Store. C'est une sécurité standard de Google.
+                </p>
+                <p className="font-semibold text-emerald-600 flex items-center gap-1.5 pt-1">
+                  <span>🚀</span>
+                  <span>Notre Solution : L'Application Officielle Web (PWA)</span>
+                </p>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Notre plateforme mobile officielle est une application web certifiée de nouvelle génération (PWA). Elle s'installe sans fichiers d'installation corrompus, sans publicité, et place l'icône AgroCapital sur votre écran d'accueil d'un simple clic sûr.
+                </p>
+              </div>
+
+              {/* STEPS FOR MOBILE DEVICES */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest border-b border-slate-100 pb-2">
+                  Comment procéder à l'installation ?
+                </h4>
+
+                {/* Android / Chrome */}
+                <div className="space-y-3">
+                  <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <span className="bg-orange-100 text-orange-600 px-2.5 py-0.5 rounded-full text-[9px] font-black font-sans uppercase">ANDROID / CHROME</span>
+                  </div>
+                  <ol className="space-y-2 pl-2 text-xs text-slate-650 font-medium">
+                    <li className="flex items-start gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">1</span>
+                      <span>Ouvrez le menu de Google Chrome <strong className="text-slate-950">(les 3 points verticaux ⋮)</strong> en haut à droite.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">2</span>
+                      <span>Sélectionnez <strong className="text-orange-600">"Installer l'application"</strong> ou <strong className="text-orange-600">"Ajouter à l'écran d'accueil"</strong>.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">3</span>
+                      <span>Validez l'étape pour installer l'application sur votre écran d'accueil de façon sécurisée ! 📱</span>
+                    </li>
+                  </ol>
+                </div>
+
+                {/* iPhone / Safari */}
+                <div className="space-y-3 pt-3 border-t border-slate-100">
+                  <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <span className="bg-blue-100 text-blue-600 px-2.5 py-0.5 rounded-full text-[9px] font-black font-sans uppercase">IPHONE / SAFARI</span>
+                  </div>
+                  <ol className="space-y-2 pl-2 text-xs text-slate-650 font-medium">
+                    <li className="flex items-start gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">1</span>
+                      <span>Appuyez sur le bouton de <strong className="text-slate-950">Partage (l'icône carrée avec la flèche vers le haut <Share className="inline-block w-3.5 h-3.5 stroke-[2.5] text-blue-500 mx-0.5" />)</strong> en bas de l'écran Safari.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">2</span>
+                      <span>Faites défiler vers le bas et sélectionnez <strong className="text-slate-950">"Sur l'écran d'accueil"</strong>.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">3</span>
+                      <span>Validez en cliquant sur <strong className="text-slate-950">Ajouter</strong> en haut à droite.</span>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* MODAL CLOSE */}
+              <div className="mt-6">
+                <button
+                  onClick={async () => {
+                    setIsPwaInstallModalOpen(false);
+                    if (deferredPrompt) {
+                      try {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                          setDeferredPrompt(null);
+                          triggerToast("🎉 Bravo ! Installation initiée.", "success");
+                        }
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    } else {
+                      triggerToast("📱 Guide d'installation compris ! Suivez les étapes pour votre navigateur.", "info");
+                    }
+                  }}
+                  className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-sans font-black uppercase tracking-wider text-center transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-2"
+                >
+                  {deferredPrompt ? (
+                    <span>🚀 DÉMARRER L'INSTALLATION AUTOMATIQUE</span>
+                  ) : (
+                    <span>J'AI COMPRIS LES INSTRUCTIONS 🚀</span>
+                  )}
+                </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* FLOATING TOAST NOTIFICATIONS */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-sm px-4 pointer-events-none">
