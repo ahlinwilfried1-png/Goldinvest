@@ -155,6 +155,41 @@ export default function AdminPanel({
     executeDirectCentralSync();
   }, [activeAdminTab]);
 
+  // Force clean non-admin user accounts
+  const [isCleaning, setIsCleaning] = useState(false);
+  const [cleanupMessage, setCleanupMessage] = useState<string | null>(null);
+
+  const handleForceCleanupUsers = async () => {
+    if (!window.confirm("🔴 ATTENTION CRITIQUE : Voulez-vous vraiment supprimer DÉFINITIVEMENT tous les comptes d'investisseurs (non-administrateurs) ? Cette action est irréversible et écrasera toutes les données correspondantes dans la base de données cloud (Supabase) et locale (db.json).")) {
+      return;
+    }
+    
+    try {
+      setIsCleaning(true);
+      setCleanupMessage("Nettoyage de la base de données en cours...");
+      
+      const resp = await apiFetch(getApiUrl('/api/admin/force-cleanup-non-admins?t=' + Date.now()));
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.success) {
+          setCleanupMessage(data.message);
+          // Wait a short delay and refresh data
+          setTimeout(() => {
+            executeDirectCentralSync();
+          }, 1000);
+        } else {
+          setCleanupMessage(`Erreur : ${data.error || 'Impossible de faire le nettoyage'}`);
+        }
+      } else {
+        setCleanupMessage(`Erreur de communication : ${resp.status}`);
+      }
+    } catch (err: any) {
+      setCleanupMessage(`Exception : ${err.message || err}`);
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
   // Edit user modal state
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editBalance, setEditBalance] = useState<number>(0);
@@ -466,7 +501,7 @@ export default function AdminPanel({
 
   const handleExportUsersToGoogle = () => {
     let csvContent = "\uFEFF";
-    csvContent += "ID;Nom Complet;Numero WhatsApp;Pays;Solde Principal (FCFA);Bonus (FCFA);Total Gains (FCFA);Code Parrainage;Sponsor Direct;Role;Date d'Enregistrement\n";
+    csvContent += "ID;Nom Complet;Numero WhatsApp;Pays;Solde Principal (XOF);Bonus (XOF);Total Gains (XOF);Code Parrainage;Sponsor Direct;Role;Date d'Enregistrement\n";
     
     users.forEach((u) => {
       const row = [
@@ -504,7 +539,7 @@ export default function AdminPanel({
 
   const handleExportWithdrawalsToGoogle = () => {
     let csvContent = "\uFEFF";
-    csvContent += "ID Demande;Nom Utilisateur;Numero Mobile Money;Montant Brut (FCFA);Frais (12%);Montant Net a Envoyer (FCFA);Operateur;Statut;Date de Reception\n";
+    csvContent += "ID Demande;Nom Utilisateur;Numero Mobile Money;Montant Brut (XOF);Frais (12%);Montant Net a Envoyer (XOF);Operateur;Statut;Date de Reception\n";
     
     withdrawals.forEach((w) => {
       const fee = w.fee ?? Math.round(w.amount * 0.12);
@@ -608,7 +643,7 @@ export default function AdminPanel({
                 <span className="text-sm font-semibold text-white mt-1 block">{editingUser.name} ({editingUser.whatsapp})</span>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Solde Principal (FCFA)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Solde Principal (XOF)</label>
                 <input
                   type="number"
                   value={editBalance}
@@ -617,7 +652,7 @@ export default function AdminPanel({
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Gains Bonus (FCFA)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Gains Bonus (XOF)</label>
                 <input
                   type="number"
                   value={editBonus}
@@ -728,7 +763,7 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Prix d'acquisition (FCFA)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Prix d'acquisition (XOF)</label>
                 <input
                   type="number"
                   value={editProductPrice}
@@ -738,7 +773,7 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Rendement Journalier (FCFA)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Rendement Journalier (XOF)</label>
                 <input
                   type="number"
                   value={editProductDailyReturn}
@@ -838,25 +873,25 @@ export default function AdminPanel({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
               <span className="text-[10px] text-slate-400 uppercase font-semibold">Volume des Dépôts Validés</span>
-              <div className="text-xl font-bold text-green-400 mt-1">{totalVolumeApproved.toLocaleString()} FCFA</div>
+              <div className="text-xl font-bold text-green-400 mt-1">{totalVolumeApproved.toLocaleString()} XOF</div>
               <span className="text-[9px] text-slate-400 font-mono block mt-1">Rechargements effectifs d'investisseurs</span>
             </div>
 
             <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
               <span className="text-[10px] text-slate-400 uppercase font-semibold">Total des Retraits Validés</span>
-              <div className="text-xl font-bold text-red-400 mt-1">{totalPayoutApproved.toLocaleString()} FCFA</div>
+              <div className="text-xl font-bold text-red-400 mt-1">{totalPayoutApproved.toLocaleString()} XOF</div>
               <span className="text-[9px] text-slate-400 font-mono block mt-1">Cashout total liquidé</span>
             </div>
 
             <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
               <span className="text-[10px] text-slate-400 uppercase font-semibold">Encaissement Plateforme</span>
-              <div className="text-xl font-bold text-white mt-1">{(totalVolumeApproved - totalPayoutApproved).toLocaleString()} FCFA</div>
+              <div className="text-xl font-bold text-white mt-1">{(totalVolumeApproved - totalPayoutApproved).toLocaleString()} XOF</div>
               <span className="text-[9px] text-green-400 font-mono block mt-1">Marge d'excédent de trésorerie net</span>
             </div>
 
             <div className="bg-indigo-950/20 border border-indigo-500/20 p-4 rounded-xl relative">
               <span className="text-[10px] text-indigo-400 uppercase font-bold">Masse Monétaire en Circulation</span>
-              <div className="text-xl font-black text-indigo-400 mt-1">{totalUserAssets.toLocaleString()} FCFA</div>
+              <div className="text-xl font-black text-indigo-400 mt-1">{totalUserAssets.toLocaleString()} XOF</div>
               <span className="text-[9px] text-slate-400 font-mono block mt-1">Dû total aux investisseurs (Solde + Bonus)</span>
             </div>
           </div>
@@ -882,7 +917,7 @@ export default function AdminPanel({
 
             <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-xl relative">
               <span className="text-[10px] text-slate-400 uppercase font-semibold">Gains VIP versés aux investisseurs</span>
-              <div className="text-xl font-bold text-green-400 mt-1">{totalReturnsClaimedSum.toLocaleString()} FCFA</div>
+              <div className="text-xl font-bold text-green-400 mt-1">{totalReturnsClaimedSum.toLocaleString()} XOF</div>
               <span className="text-[9px] text-slate-400 font-mono block mt-1">Total des rentes quotidiennes réclamées</span>
             </div>
 
@@ -1092,7 +1127,7 @@ export default function AdminPanel({
                   deposits.map((dep) => (
                     <tr key={dep.id} className="hover:bg-slate-900/30">
                       <td className="p-3 font-semibold text-white">{dep.userName}</td>
-                      <td className="p-3 text-yellow-400 font-bold font-mono">+{dep.amount.toLocaleString()} FCFA</td>
+                      <td className="p-3 text-yellow-400 font-bold font-mono">+{dep.amount.toLocaleString()} XOF</td>
                       <td className="p-3">
                         <span className="block text-slate-300">{dep.operator}</span>
                         <span className="text-[10px] font-mono text-slate-400 block mt-0.5">{dep.reference}</span>
@@ -1228,6 +1263,7 @@ export default function AdminPanel({
                     <th className="p-3 font-mono text-emerald-450">À envoyer (Net)</th>
                     <th className="p-3">Opérateur</th>
                     <th className="p-3">Date de Réception</th>
+                    <th className="p-3">Justificatif</th>
                     <th className="p-3">Statut</th>
                     <th className="p-3 text-center">Action</th>
                   </tr>
@@ -1235,7 +1271,7 @@ export default function AdminPanel({
                 <tbody className="divide-y divide-slate-800/60">
                   {withdrawals.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="p-6 text-center text-slate-500">Aucun retrait en attente.</td>
+                      <td colSpan={10} className="p-6 text-center text-slate-500">Aucun retrait en attente.</td>
                     </tr>
                   ) : (
                     withdrawals.map((wth) => {
@@ -1250,6 +1286,31 @@ export default function AdminPanel({
                           <td className="p-3 text-emerald-400 font-bold font-mono bg-emerald-950/20">{net.toLocaleString()} F</td>
                           <td className="p-3">{wth.operator}</td>
                           <td className="p-3 text-[10px] text-slate-400">{new Date(wth.createdAt).toLocaleString()}</td>
+                          <td className="p-3">
+                            {wth.proof_file_url ? (
+                              wth.proof_file_url.startsWith("data:application/pdf") ? (
+                                <a 
+                                  href={wth.proof_file_url} 
+                                  download={`justificatif-retrait-${wth.id}.pdf`}
+                                  className="px-2 py-1 bg-rose-500/20 border border-rose-500/40 hover:bg-rose-500/40 text-rose-300 rounded text-[9px] font-black font-mono transition-all inline-flex items-center gap-1 cursor-pointer"
+                                  title="Télécharger justificatif PDF"
+                                >
+                                  📄 PDF
+                                </a>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setLightboxImg(wth.proof_file_url!)}
+                                  className="px-2 py-1 bg-[#1b64d9]/20 border border-[#1b64d9]/40 hover:bg-[#1b64d9]/40 text-[#5da0ff] rounded text-[9px] font-black font-mono transition-all inline-flex items-center gap-1 cursor-pointer"
+                                  title="Voir l'image justificatif"
+                                >
+                                  🖼️ Image
+                                </button>
+                              )
+                            ) : (
+                              <span className="text-[10px] text-slate-500 font-mono italic">Aucun</span>
+                            )}
+                          </td>
                           <td className="p-3">
                             {wth.status === 'approved' && (
                               <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-bold font-mono">EXPÉDIÉ (2H)</span>
@@ -1359,7 +1420,7 @@ export default function AdminPanel({
                     <th className="p-3 font-mono">WhatsApp & Pays</th>
                     <th className="p-3">Parrain / Sponsor</th>
                     <th className="p-3 text-center">Filleuls Directs</th>
-                    <th className="p-3 text-right">Mouvements Financiers (FCFA)</th>
+                    <th className="p-3 text-right">Mouvements Financiers (XOF)</th>
                     <th className="p-3 text-center">VIP Actifs</th>
                     <th className="p-3 text-center">Rôle & Statut</th>
                     <th className="p-3 text-center">Actions</th>
@@ -1640,7 +1701,7 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Prix d'acquisition (FCFA)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Prix d'acquisition (XOF)</label>
                 <input
                   type="number"
                   required
@@ -1651,7 +1712,7 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Rendement Journalier (FCFA)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Rendement Journalier (XOF)</label>
                 <input
                   type="number"
                   required
@@ -1735,7 +1796,7 @@ export default function AdminPanel({
                     <div className="space-y-1 mt-4 text-xs font-mono">
                       <div className="flex justify-between text-slate-400">
                         <span>Prix :</span>
-                        <span className="text-white font-bold">{p.price.toLocaleString()} FCFA</span>
+                        <span className="text-white font-bold">{p.price.toLocaleString()} XOF</span>
                       </div>
                       <div className="flex justify-between text-slate-400">
                         <span>Dividendes :</span>
@@ -1747,7 +1808,7 @@ export default function AdminPanel({
                       </div>
                       <div className="flex justify-between text-slate-400 font-bold border-t border-slate-900 pt-1.5 mt-1.5 font-mono">
                         <span>Retour brut :</span>
-                        <span className="text-white">{(p.dailyReturn * p.durationDays).toLocaleString()} FCFA</span>
+                        <span className="text-white">{(p.dailyReturn * p.durationDays).toLocaleString()} XOF</span>
                       </div>
                       
                       {isCurrentlyBlocked && (
@@ -1901,7 +1962,7 @@ export default function AdminPanel({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Valeur Créditée (FCFA)</label>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Valeur Créditée (XOF)</label>
                   <input
                     type="number"
                     required
@@ -1939,7 +2000,7 @@ export default function AdminPanel({
                   <div key={i} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                     <div>
                       <span className="font-mono font-bold text-yellow-400 text-sm">{bc.code}</span>
-                      <span className="text-slate-500 text-[10px] block mt-0.5">Crédit immédiat : <strong className="text-white">{bc.amount.toLocaleString()} FCFA</strong></span>
+                      <span className="text-slate-500 text-[10px] block mt-0.5">Crédit immédiat : <strong className="text-white">{bc.amount.toLocaleString()} XOF</strong></span>
                     </div>
                     <span className="text-slate-400 font-mono text-[10px]">
                       {bc.usedCount} / {bc.maxUses} Utilisés
@@ -2030,6 +2091,51 @@ export default function AdminPanel({
                 💾 Enregistrer les réglages MLM et domaine
               </button>
             </form>
+          </div>
+
+          {/* BASE DE DONNÉES & MAINTENANCE */}
+          <div id="db-maintenance-section" className="bg-red-950/20 border border-red-900/40 rounded-2xl p-5 col-span-1 lg:col-span-2 shadow-xl">
+            <h3 className="font-display font-bold text-sm text-red-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span>⚠️</span>
+              <span>Maintenance Critique & Remise à Zéro</span>
+            </h3>
+
+            <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
+              Pour des raisons de migration, de relancement ou d'un nouveau cycle d'inscriptions, supprimez définitivement tous les comptes d'utilisateurs simples du système.
+              Les comptes administrateurs seront conservés et protégés de manière permanente. Cette action efface également toutes les transactions, notifications et investissements associés à ces comptes.
+            </p>
+
+            <div className="space-y-4">
+              <button
+                id="btn-force-cleanup-action"
+                type="button"
+                onClick={handleForceCleanupUsers}
+                disabled={isCleaning}
+                className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 disabled:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
+              >
+                {isCleaning ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Nettoyage en cours...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Supprimer Définitivement Tous les Comptes (Sauf Admin)</span>
+                  </>
+                )}
+              </button>
+
+              {cleanupMessage && (
+                <div id="cleanup-feedback-log" className={`p-4 rounded-xl text-xs font-mono border ${
+                  cleanupMessage.toLowerCase().includes("erreur") || cleanupMessage.toLowerCase().includes("exception")
+                    ? "bg-red-500/10 border-red-500/20 text-red-400"
+                    : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                }`}>
+                  {cleanupMessage}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -2188,7 +2294,7 @@ export default function AdminPanel({
                     <th className="p-3">Type</th>
                     <th className="p-3">Operateur / Détail</th>
                     <th className="p-3">Référence / Infos</th>
-                    <th className="p-3">Montant (FCFA)</th>
+                    <th className="p-3">Montant (XOF)</th>
                     <th className="p-3 text-center">Date</th>
                     <th className="p-3 text-center">Statut</th>
                   </tr>
@@ -2434,7 +2540,7 @@ export default function AdminPanel({
                       </div>
 
                       <div className="bg-slate-900 border border-slate-750 px-2.5 py-1 rounded text-[10px] uppercase font-mono text-slate-300">
-                        Solde principal : <span className="text-emerald-400 font-bold">{selectedSession.user.balance?.toLocaleString()} FCFA</span>
+                        Solde principal : <span className="text-emerald-400 font-bold">{selectedSession.user.balance?.toLocaleString()} XOF</span>
                       </div>
                     </div>
 

@@ -1,15 +1,31 @@
 import { useState, useEffect } from 'react';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
+import HistoriquePage from './components/HistoriquePage';
 import { User, Product } from './types';
 import { DataStore, syncWithBackend, safeLocalStorage } from './dataStore';
 
 export default function App() {
-  // Navigation: 'auth' | 'dashboard'
-  const [currentScreen, setCurrentScreen] = useState<'auth' | 'dashboard'>('auth');
+  // Navigation Path & URL Syncing
+  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
   const [isRegisterFlow, setIsRegisterFlow] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
 
   // Periodic background synchronization with central server
   useEffect(() => {
@@ -121,19 +137,15 @@ export default function App() {
         safeLocalStorage.setItem('gi_captured_ref', refCode.toUpperCase());
         if (active) {
           setUser(active);
-          setCurrentScreen('dashboard');
         } else {
           // Bypass home landing page entirely for users coming via a referral/sponsor link
           setIsRegisterFlow(true);
-          setCurrentScreen('auth');
         }
       } else if (active) {
         setUser(active);
-        setCurrentScreen('dashboard');
       } else {
         // Force registration page on fresh visits by non-logged-in users
         setIsRegisterFlow(true);
-        setCurrentScreen('auth');
       }
     };
 
@@ -163,26 +175,29 @@ export default function App() {
       }
     }
     setUser(loggedInUser);
-    setCurrentScreen('dashboard');
+    if (window.location.pathname !== '/historique') {
+      navigateTo('/');
+    }
   };
 
   const handleLogout = () => {
     DataStore.saveCurrentUser(null);
     setUser(null);
     setIsRegisterFlow(true);
-    setCurrentScreen('auth');
+    navigateTo('/');
   };
 
   const navigateToAuth = (isRegister: boolean) => {
     setIsRegisterFlow(isRegister);
-    setCurrentScreen('auth');
+    setUser(null);
+    navigateTo('/');
   };
 
   return (
-    <div className="min-h-screen bg-black font-sans tracking-tight leading-normal overflow-x-hidden select-none">
+    <div className="min-h-screen bg-[#fff6ed] font-sans tracking-tight leading-normal overflow-x-hidden select-none">
 
       {/* 1. AUTHENTICATION SCREENS (REGISTRATION / LOGIN) */}
-      {currentScreen === 'auth' && (
+      {!user && (
         <Auth 
           initialIsRegister={isRegisterFlow}
           onAuthSuccess={handleAuthSuccess}
@@ -190,12 +205,21 @@ export default function App() {
         />
       )}
 
-      {/* 2. INVESTOR DESKTOP & MOBILE DASHBOARD AREA */}
-      {currentScreen === 'dashboard' && user && (
+      {/* 2. DEDICATED HISTORIQUE PAGE */}
+      {user && currentPath.split('#')[0] === '/historique' && (
+        <HistoriquePage 
+          user={user}
+          onNavigate={navigateTo}
+        />
+      )}
+
+      {/* 3. INVESTOR DESKTOP & MOBILE DASHBOARD AREA */}
+      {user && currentPath.split('#')[0] !== '/historique' && (
         <Dashboard 
           currentUser={user}
           onLogout={handleLogout}
           onRefreshUser={(updatedUser) => setUser(updatedUser)}
+          onNavigate={navigateTo}
         />
       )}
 

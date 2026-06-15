@@ -10,14 +10,19 @@ import {
   Check, 
   Info, 
   AlertTriangle,
-  RotateCw
+  RotateCw,
+  Tractor,
+  Shield,
+  Sprout,
+  Sparkles,
+  ChevronDown
 } from 'lucide-react';
 import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
-  { name: 'Burkina Faso', code: '+226' },
-  { name: 'Togo', code: '+228' },
-  { name: 'Bénin', code: '+229' }
+  { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
+  { name: 'Togo', code: '+228', flag: '🇹🇬' },
+  { name: 'Bénin', code: '+229', flag: '🇧🇯' }
 ];
 
 interface AuthProps {
@@ -182,256 +187,315 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative bg-stone-50 overflow-hidden">
-      {/* Absolute gold and warm ambient glow lights */}
-      <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-yellow-400/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[0%] right-[-10%] w-[400px] h-[400px] bg-amber-400/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] bg-yellow-300/10 rounded-full blur-[100px] pointer-events-none" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative bg-gradient-to-b from-[#ffffff] to-[#fff6ed] overflow-hidden font-sans" id="auth-container">
+      {/* Background glow effects to create a prestigious tech-agricultural ambient depth */}
+      <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[0%] right-[-10%] w-[400px] h-[400px] bg-rose-500/8 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[30%] left-[25%] w-[300px] h-[300px] bg-amber-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Main card - completely White */}
-      <div className="w-full max-w-lg bg-white border-2 border-amber-400/50 rounded-3xl p-6 md:p-8 shadow-[0_20px_50px_rgba(245,158,11,0.12)] relative overflow-hidden backdrop-blur-xl ring-1 ring-yellow-400/20">
-        
-        {/* Subtle decorative top gold line */}
-        <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 opacity-90" />
+      {/* Main Container Wrapper */}
+      <div className="w-full max-w-md flex flex-col items-center relative z-10">
 
-        {/* Brand logo */}
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center mx-auto shadow-[0_8px_20px_rgba(245,158,11,0.25)] mb-3">
-            <Lock className="w-5 h-5 text-stone-900 stroke-[2.5]" />
+        {/* 1. Header Logo Block (Matches top of screenshot) */}
+        <div className="flex items-center gap-3.5 mb-6 self-start w-full px-1">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-orange-600 flex items-center justify-center shadow-lg text-white transform hover:rotate-3 transition-transform">
+            <Tractor className="w-6 h-6 stroke-[1.8]" />
           </div>
-          <h2 className="text-2xl font-sans font-black text-stone-950 uppercase tracking-tight">
-            {isRegister ? 'Créer un Compte' : 'Espace Investisseur'}
-          </h2>
-          <p className="text-[11px] text-amber-600 font-extrabold mt-1.5 leading-relaxed tracking-wider uppercase font-mono">
-            {isRegister 
-              ? `Bonus immédiat : 200 ${selectedCode === '+237' ? 'XAF' : 'XOF'} offert` 
-              : 'Accès sécurisé et crypté à vos investissements AgroCapital'
-            }
-          </p>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-900 font-sans font-black text-2xl tracking-wide uppercase">AgroCapital</span>
+              <Sprout className="w-5 h-5 text-orange-500 fill-orange-500/10 shrink-0" />
+            </div>
+            <p className="text-[10px] text-orange-600 font-bold uppercase tracking-widest leading-none">Plateforme d’Investissement Agricole</p>
+          </div>
         </div>
 
-        {/* Error notification */}
-        {errorMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-50 border-2 border-red-200 text-xs text-red-700 font-extrabold flex items-start space-x-2.5 shadow-sm">
-            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        {/* Success notification */}
-        {successMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200 text-xs text-emerald-700 font-extrabold flex items-start space-x-2.5 shadow-sm">
-            <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-            <span>{successMessage}</span>
-          </div>
-        )}
-
-        {/* FORM */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* 2. Main Card Form - Beautiful White & Orange theme */}
+        <div className="w-full bg-white border border-orange-200/60 rounded-3xl p-6 md:p-8 shadow-[0_20px_50px_rgba(249,115,22,0.08)] relative overflow-hidden" id="auth-card">
           
-          {isRegister ? (
-            /* REGISTRATION FIELDS */
-            <>
-              <div>
-                <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Nom complet ou d’utilisateur</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-3.5 text-amber-500">
-                    <UserIcon className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="text"
-                    required
-                    maxLength={20}
-                    placeholder="Ex: Alain Traore"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-10 pr-4 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
-                  />
-                </div>
-              </div>
+          {/* Decorative Top Accent Line */}
+          <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500 opacity-90" />
 
-              <div>
-                <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">WhatsApp / Téléphone Mobile</label>
-                <div className="flex gap-2">
-                  <select
-                    value={selectedCode}
-                    onChange={(e) => {
-                      const code = e.target.value;
-                      setSelectedCode(code);
-                      const found = eligibleCountries.find(c => c.code === code);
-                      if (found) setCountry(found.name);
-                    }}
-                    className="bg-stone-50 border border-stone-200 focus:border-amber-400 rounded-2xl py-3 px-3 text-xs md:text-sm text-stone-900 font-extrabold focus:outline-none transition-all cursor-pointer w-32 shrink-0 text-center shadow-sm"
-                  >
-                    {eligibleCountries.map((c, i) => (
-                      <option key={i} value={c.code} className="bg-white text-stone-900">{c.code} ({c.name === 'Cameroun' ? 'XAF' : 'XOF'})</option>
-                    ))}
-                  </select>
-                  <div className="relative flex-1">
-                    <span className="absolute left-3.5 top-3.5 text-amber-500">
-                      <Smartphone className="w-4 h-4" />
-                    </span>
+          {/* 3. Panel Title Card with Icon badge (Looks like "Création de Portefeuille") */}
+          <div className="flex items-center gap-3 bg-orange-50/70 p-3 rounded-2xl border border-orange-100 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white select-none">
+              {isRegister ? <UserIcon className="w-5 h-5 text-white" /> : <Lock className="w-5 h-5 text-white" />}
+            </div>
+            <div>
+              <h3 className="text-slate-900 font-sans font-black text-sm uppercase tracking-wider">
+                {isRegister ? "Création de Portefeuille" : "Ouverture de Session"}
+              </h3>
+              <p className="text-[9px] text-orange-600 font-bold uppercase tracking-wider font-mono">
+                {isRegister ? "Nouveau compte d'investisseur" : "Accéder à vos placements"}
+              </p>
+            </div>
+          </div>
+
+          {/* Special Signup Bonus Badge */}
+          {isRegister && (
+            <div className="p-2.5 rounded-2xl bg-orange-500/10 border border-orange-200/80 text-[10px] text-orange-700 font-extrabold flex items-center justify-center gap-1.5 uppercase tracking-wider font-mono mb-4 text-center select-none">
+              <span>🎁</span> Bonus de départ : 200 FCFA Offerts !
+            </div>
+          )}
+
+          {/* Error and Success alerts */}
+          {errorMessage && (
+            <div className="mb-4 p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 font-bold flex items-start space-x-2 shadow-sm">
+              <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-4 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 font-bold flex items-start space-x-2 shadow-sm">
+              <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <span>{successMessage}</span>
+            </div>
+          )}
+
+          {/* 4. Form inputs styled with custom containers & inner white pills */}
+          <form onSubmit={handleSubmit} className="space-y-4" id="auth-form">
+            
+            {isRegister ? (
+              /* REGISTRATION SPECIFIC FIELDS */
+              <>
+                {/* Full name input */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest pl-1 font-sans">Nom complet d’utilisateur</label>
+                  <div className="bg-orange-50/50 border border-orange-200/80 rounded-3xl p-1.5 px-3 flex items-center justify-between gap-2 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all shadow-inner">
+                    <div className="flex items-center gap-1.5 shrink-0 text-orange-500 pl-1">
+                      <UserIcon className="w-4 h-4" />
+                      <div className="h-5 w-[1px] bg-orange-200 ml-1.5" />
+                    </div>
                     <input
-                      type="tel"
+                      type="text"
                       required
-                      placeholder="Ex: 0708091011"
-                      value={whatsapp}
-                      onChange={(e) => setWhatsapp(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-10 pr-4 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
+                      maxLength={20}
+                      placeholder="Ex: Alain Traoré"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="flex-1 bg-white text-slate-900 text-sm font-semibold px-4 py-2 rounded-full placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Mot de Passe</label>
-                  <div className="relative">
+                {/* Country-coded phone input */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest pl-1 font-sans">Numéro de Téléphone WhatsApp</label>
+                  <div className="bg-orange-50/50 border border-orange-200/80 rounded-3xl p-1.5 px-3 flex items-center justify-between gap-1 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all shadow-inner">
+                    <div className="flex items-center gap-1 select-none text-slate-800 font-bold text-sm shrink-0 pl-1">
+                      <span className="text-base select-none leading-none">
+                        {eligibleCountries.find(c => c.code === selectedCode)?.flag || '🇧🇫'}
+                      </span>
+                      <select
+                        id="auth-country-select"
+                        value={selectedCode}
+                        onChange={(e) => {
+                          const code = e.target.value;
+                          setSelectedCode(code);
+                          const found = eligibleCountries.find(c => c.code === code);
+                          if (found) setCountry(found.name);
+                        }}
+                        className="bg-transparent text-slate-800 font-bold text-xs md:text-sm focus:outline-none cursor-pointer pr-1"
+                      >
+                        {eligibleCountries.map((c, i) => (
+                          <option key={i} value={c.code} className="bg-white text-slate-900">
+                            {c.code}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <div className="h-5 w-[1px] bg-orange-200 mx-1 shrink-0" />
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="Numéro de téléphone"
+                      value={whatsapp}
+                      onChange={(e) => setWhatsapp(e.target.value)}
+                      className="flex-1 bg-white text-slate-900 text-sm font-semibold px-4 py-2 rounded-full placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
+                    />
+                  </div>
+                </div>
+
+                {/* Password fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest pl-1 font-sans">Mot de Passe</label>
+                    <div className="bg-orange-50/50 border border-orange-200/80 rounded-3xl p-1.5 px-3 flex items-center justify-between gap-2 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all shadow-inner">
+                      <div className="flex items-center gap-1.5 shrink-0 text-orange-500 pl-1">
+                        <Lock className="w-4 h-4" />
+                        <div className="h-5 w-[1px] bg-orange-200 ml-1.5" />
+                      </div>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        placeholder="Mot de passe"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="flex-1 bg-white text-slate-900 text-sm font-semibold px-4 py-2 rounded-full placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest pl-1 font-sans">Confirmation</label>
+                    <div className="bg-orange-50/50 border border-orange-200/80 rounded-3xl p-1.5 px-3 flex items-center justify-between gap-2 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all shadow-inner">
+                      <div className="flex items-center gap-1.5 shrink-0 text-orange-500 pl-1">
+                        <Lock className="w-4 h-4" />
+                        <div className="h-5 w-[1px] bg-orange-200 ml-1.5" />
+                      </div>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        placeholder="Confirmez"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="flex-1 bg-white text-slate-900 text-sm font-semibold px-4 py-2 rounded-full placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sponsor code */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest pl-1 font-sans">Sponsor / Code Parrainage</label>
+                  <div className="bg-orange-50/50 border border-orange-200/80 rounded-3xl p-1.5 px-3 flex items-center justify-between gap-2 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all shadow-inner">
+                    <div className="flex items-center gap-1.5 shrink-0 text-orange-500 pl-1">
+                      <Shield className="w-4 h-4" />
+                      <div className="h-5 w-[1px] bg-orange-200 ml-1.5" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="ADMIN228"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value)}
+                      className="flex-1 bg-white text-slate-900 text-sm font-bold tracking-widest font-mono uppercase px-4 py-2 rounded-full placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
+                    />
+                    <Sparkles className="w-4 h-4 text-orange-500 shrink-0 mr-1 animate-pulse" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* LOGIN SPECIFIC FIELDS */
+              <>
+                {/* Phone & Country selection nested */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest pl-1 font-sans">Numéro de Téléphone</label>
+                  <div className="bg-orange-50/50 border border-orange-200/80 rounded-3xl p-1.5 px-3 flex items-center justify-between gap-1 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all shadow-inner">
+                    <div className="flex items-center gap-1 select-none text-slate-800 font-bold text-sm shrink-0 pl-1">
+                      <span className="text-base select-none leading-none">
+                        {eligibleCountries.find(c => c.code === loginSelectedCode)?.flag || '🇧🇫'}
+                      </span>
+                      <select
+                        id="auth-login-country-select"
+                        value={loginSelectedCode}
+                        onChange={(e) => setLoginSelectedCode(e.target.value)}
+                        className="bg-transparent text-slate-200 font-bold text-xs md:text-sm focus:outline-none cursor-pointer pr-1"
+                      >
+                        {eligibleCountries.map((c, i) => (
+                          <option key={i} value={c.code} className="bg-white text-slate-900">
+                            {c.code}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <div className="h-5 w-[1px] bg-orange-200 mx-1 shrink-0" />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Numéro de téléphone"
+                      value={loginPhone}
+                      onChange={(e) => setLoginPhone(e.target.value)}
+                      className="flex-1 bg-white text-slate-900 text-sm font-semibold px-4 py-2 rounded-full placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
+                    />
+                  </div>
+                </div>
+
+                {/* Password field with forget pass option */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center mb-1 px-1">
+                    <label className="block text-[10px] font-mono font-bold text-slate-700 uppercase tracking-widest font-sans">Mot de Passe</label>
+                    <button 
+                      type="button"
+                      onClick={() => setResetTip(!resetTip)}
+                      className="text-[9px] text-orange-600 hover:text-orange-850 font-bold underline cursor-pointer hover:no-underline transition-colors select-none uppercase font-mono tracking-wider font-sans"
+                    >
+                      Perdu ?
+                    </button>
+                  </div>
+
+                  {resetTip && (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[10px] font-bold text-amber-700 leading-relaxed text-left font-mono">
+                      💡 Pour réinitialiser votre compte d’investisseur, veuillez contacter l'assistance officielle AgroCapital via le support WhatsApp.
+                    </div>
+                  )}
+
+                  <div className="bg-orange-50/50 border border-orange-200/80 rounded-3xl p-1.5 px-3 flex items-center justify-between gap-2 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all shadow-inner font-sans">
+                    <div className="flex items-center gap-1.5 shrink-0 text-orange-500 pl-1">
+                      <Lock className="w-4 h-4" />
+                      <div className="h-5 w-[1px] bg-orange-200 ml-1.5" />
+                    </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-4 pr-10 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
+                      placeholder="Mot de passe"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      className="flex-1 bg-white text-slate-900 text-sm font-semibold px-4 py-2 rounded-full placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-3.5 text-stone-400 hover:text-amber-500"
+                      className="p-1 text-slate-400 hover:text-slate-600 transition-colors mr-1 shrink-0"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Confirmation</label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 px-4 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Sponsor / Code Parrainage</label>
-                <input
-                  type="text"
-                  placeholder="Ex: AGR72 (Optionnel)"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
-                  className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 px-4 text-sm text-amber-600 font-black tracking-widest font-mono uppercase focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
-                />
-              </div>
-            </>
-          ) : (
-            /* LOGIN FIELDS */
-            <>
-              <div>
-                <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest mb-1.5">Sélectionner votre pays</label>
-                <div className="flex gap-2">
-                  <select
-                    value={loginSelectedCode}
-                    onChange={(e) => setLoginSelectedCode(e.target.value)}
-                    className="bg-stone-50 border border-stone-200 focus:border-amber-400 rounded-2xl py-3 px-3 text-xs md:text-sm text-stone-900 font-extrabold focus:outline-none transition-all cursor-pointer w-32 shrink-0 text-center shadow-sm"
-                  >
-                    {eligibleCountries.map((c, i) => (
-                      <option key={i} value={c.code} className="bg-white text-stone-900">{c.code} ({c.name === 'Cameroun' ? 'XAF' : 'XOF'})</option>
-                    ))}
-                  </select>
-                  <div className="relative flex-1">
-                    <span className="absolute left-3.5 top-3.5 text-amber-500">
-                      <Smartphone className="w-4 h-4" />
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: 0708091011 (ou admin)"
-                      value={loginPhone}
-                      onChange={(e) => setLoginPhone(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-10 pr-4 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-xs font-mono font-black text-stone-700 uppercase tracking-widest">Votre Mot de Passe</label>
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      setResetTip(!resetTip);
-                    }}
-                    className="text-[10px] text-amber-600 font-black hover:underline"
-                  >
-                    Mot de passe oublié ?
-                  </button>
-                </div>
-
-                {resetTip && (
-                  <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] font-bold text-amber-800 leading-normal animate-pulse text-left font-sans">
-                    💡 Pour réinitialiser votre compte d’investisseur, veuillez contacter l'assistance officielle AgroCapital via le support WhatsApp.
-                  </div>
-                )}
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    placeholder="••••••••"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-2xl py-3 pl-4 pr-10 text-sm text-stone-900 font-extrabold focus:outline-none transition-all placeholder:text-stone-400 shadow-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-stone-400 hover:text-amber-500"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* SUBMIT BUTTON - Glowing Gold */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-2xl text-stone-950 font-sans font-black text-xs flex items-center justify-center space-x-2 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer uppercase tracking-widest shadow-[0_8px_25px_rgba(245,158,11,0.25)] disabled:opacity-40"
-          >
-            {loading ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-stone-955 border-t-transparent rounded-full animate-spin" />
-                <span>Synchronisation cryptée de l’accès...</span>
-              </div>
-            ) : (
-              <span>{isRegister ? "Créer mon Compte" : "Se Connecter Sécurisé"}</span>
+              </>
             )}
-          </button>
-        </form>
 
-        {/* TOGGLE AUTH */}
-        <div className="mt-6 pt-4 border-t border-stone-200 text-center text-xs">
-          <span className="text-stone-500 font-bold">
-            {isRegister ? 'Déjà membre AgroCapital ?' : 'Nouveau investisseur ?'}
-          </span>{' '}
-          <button
-            onClick={() => {
-              setIsRegister(!isRegister);
-              setErrorMessage('');
-              setSuccessMessage('');
-            }}
-            className="text-amber-600 font-black hover:underline hover:text-amber-700 ml-1 focus:outline-none uppercase tracking-wider text-[11px]"
-          >
-            {isRegister ? 'Se connecter' : 'Créer un compte d’investissements'}
-          </button>
+            {/* Submit button (Pure elegant orange with Sprout icon) */}
+            <button
+              id="auth-submit-btn"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-500/25 active:scale-[0.98] text-white font-sans font-black text-xs py-3.5 px-4 rounded-full flex items-center justify-center space-x-2 transition-all shadow-lg uppercase tracking-wider select-none cursor-pointer disabled:opacity-40"
+            >
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Traitement sécurisé...</span>
+                </div>
+              ) : (
+                <>
+                  <Sprout className="w-4 h-4 text-white shrink-0" />
+                  <span>{isRegister ? "Créer mon compte" : "Se connecter"}</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* 5. Under-form toggle action (Standard lowercase like photo but very polished) */}
+          <div className="mt-6 pt-4 border-t border-orange-100/80 text-center font-sans">
+            <button
+              id="auth-toggle-mode-btn"
+              type="button"
+              onClick={() => {
+                setIsRegister(!isRegister);
+                setErrorMessage('');
+                setSuccessMessage('');
+              }}
+              className="text-[#ea580c] hover:text-orange-900 transition-colors text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer lowercase"
+            >
+              <span>🔑</span>
+              <span className="underline select-none">
+                {isRegister ? "déjà un compte? se connecter ➔" : "nouveau investisseur? s'inscrire ➔"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

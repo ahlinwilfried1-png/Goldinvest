@@ -202,7 +202,7 @@ const INITIAL_NOTIFICATIONS: SystemNotification[] = [
     id: 'not-1',
     userId: 'u-2',
     title: 'Dépôt approuvé',
-    message: 'Votre dépôt de 10 000 FCFA a été validé par l\'administrateur. Votre solde a été mis à jour.',
+    message: 'Votre dépôt de 10 000 XOF a été validé par l\'administrateur. Votre solde a été mis à jour.',
     type: 'deposit',
     createdAt: '2026-05-20T09:30:00Z',
     read: false
@@ -211,7 +211,7 @@ const INITIAL_NOTIFICATIONS: SystemNotification[] = [
     id: 'not-2',
     userId: 'u-2',
     title: 'Achat de plan',
-    message: 'Félicitations ! Vous avez acquis le plan VIP Emeraude 2 pour 10 000 FCFA.',
+    message: 'Félicitations ! Vous avez acquis le plan VIP Emeraude 2 pour 10 000 XOF.',
     type: 'plan',
     createdAt: '2026-05-21T08:00:00Z',
     read: true
@@ -220,7 +220,7 @@ const INITIAL_NOTIFICATIONS: SystemNotification[] = [
     id: 'not-3',
     userId: 'u-1',
     title: 'Bonus de parrainage',
-    message: 'Vous avez reçu un bonus de parrainage de Niveau 1 d\'une valeur de 1 000 FCFA suite à l\'investissement de Koffi Kouamé.',
+    message: 'Vous avez reçu un bonus de parrainage de Niveau 1 d\'une valeur de 1 000 XOF suite à l\'investissement de Koffi Kouamé.',
     type: 'bonus',
     createdAt: '2026-05-20T09:30:00Z',
     read: false
@@ -825,20 +825,7 @@ export class DataStore {
   }
 
   static getCurrencyForUser(user: any): string {
-    if (!user) return 'FCFA';
-    const whatsapp = user.whatsapp || '';
-    if (whatsapp.startsWith('+226')) {
-      return 'XOF';
-    } else if (whatsapp.startsWith('+237')) {
-      return 'XAF';
-    }
-    const country = (user.country || '').toLowerCase();
-    if (country.includes('burkina')) {
-      return 'XOF';
-    } else if (country.includes('cameroun') || country.includes('cameroon')) {
-      return 'XAF';
-    }
-    return 'FCFA';
+    return 'XOF';
   }
 
   static saveUsers(users: User[]): void {
@@ -1217,7 +1204,7 @@ export class DataStore {
       id: `not-${Date.now()}`,
       userId: newUser.id,
       title: 'Bienvenue sur AgroCapital !',
-      message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.',
+      message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
       type: 'bonus',
       createdAt: new Date().toISOString(),
       read: false
@@ -1300,7 +1287,7 @@ export class DataStore {
       id: `not-dep-${Date.now()}`,
       userId,
       title: 'Dépôt soumis',
-      message: `Votre demande de dépôt de ${amount.toLocaleString()} FCFA via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
+      message: `Votre demande de dépôt de ${amount.toLocaleString()} XOF via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
       type: 'deposit',
       createdAt: new Date().toISOString(),
       read: false
@@ -1370,7 +1357,7 @@ export class DataStore {
       id: `not-dep-${Date.now()}`,
       userId,
       title: 'Dépôt approved automatiquement',
-      message: `Votre versement de ${amount.toLocaleString()} FCFA via SoinaPay (Réf: ${reference}) a été crédité instantanément et automatiquement.`,
+      message: `Votre versement de ${amount.toLocaleString()} XOF via SoinaPay (Réf: ${reference}) a été crédité instantanément et automatiquement.`,
       type: 'deposit',
       createdAt: new Date().toISOString(),
       read: false
@@ -1444,7 +1431,7 @@ export class DataStore {
       id: `not-dep-wp-${Date.now()}`,
       userId,
       title: 'Dépôt Automatique WestPay',
-      message: `Votre versement de ${amount.toLocaleString()} FCFA via WestPay (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
+      message: `Votre versement de ${amount.toLocaleString()} XOF via WestPay (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
       type: 'deposit',
       createdAt: new Date().toISOString(),
       read: false
@@ -1455,12 +1442,12 @@ export class DataStore {
   }
 
   // Withdrawal logic
-  static async createWithdrawal(userId: string, amount: number, operator: string, number: string): Promise<{ success: boolean, error?: string, withdrawal?: Withdrawal }> {
+  static async createWithdrawal(userId: string, amount: number, operator: string, number: string, proof_file_url?: string): Promise<{ success: boolean, error?: string, withdrawal?: Withdrawal }> {
     try {
       const response = await apiFetch(getApiUrl('/api/create-withdrawal'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, amount, operator, number })
+        body: JSON.stringify({ userId, amount, operator, number, proof_file_url })
       });
       if (response.ok) {
         const res = await response.json();
@@ -1513,7 +1500,8 @@ export class DataStore {
       status: 'pending',
       createdAt: new Date().toISOString(),
       fee,
-      netAmount
+      netAmount,
+      proof_file_url
     };
 
     withdrawals.unshift(newWth);
@@ -1532,7 +1520,7 @@ export class DataStore {
       id: `not-wth-${Date.now()}`,
       userId,
       title: 'Retrait en attente',
-      message: `Votre demande de retrait de ${amount.toLocaleString()} FCFA vers ${number} (${operator}) est en attente de traitement par la comptabilité.`,
+      message: `Votre demande de retrait de ${amount.toLocaleString()} XOF vers ${number} (${operator}) est en attente de traitement par la comptabilité.`,
       type: 'withdraw',
       createdAt: new Date().toISOString(),
       read: false
@@ -1576,7 +1564,7 @@ export class DataStore {
       return { success: false, message: 'VIP plan ou utilisateur introuvable.' };
     }
     if (user.balance < targetProduct.price) {
-      return { success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} FCFA.` };
+      return { success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} XOF.` };
     }
 
     // Deduct balance and update properties
@@ -1652,7 +1640,7 @@ export class DataStore {
           id: `not-com1-${Date.now()}`,
           userId: parentUser.id,
           title: 'Commission MLM reçue !',
-          message: `Félicitations, vous avez perçu ${commAmtLvl1} FCFA (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi dans le plan ${targetProduct.name}.`,
+          message: `Félicitations, vous avez perçu ${commAmtLvl1} XOF (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi dans le plan ${targetProduct.name}.`,
           type: 'bonus',
           createdAt: new Date().toISOString(),
           read: false
@@ -1694,7 +1682,7 @@ export class DataStore {
               id: `not-com2-${Date.now()}`,
               userId: grandParentUser.id,
               title: 'Commission MLM Niveau 2 !',
-              message: `Vous avez perçu ${commAmtLvl2} FCFA (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
+              message: `Vous avez perçu ${commAmtLvl2} XOF (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
               type: 'bonus',
               createdAt: new Date().toISOString(),
               read: false
@@ -1736,7 +1724,7 @@ export class DataStore {
                   id: `not-com3-${Date.now()}`,
                   userId: greatGrandParentUser.id,
                   title: 'Commission MLM Niveau 3 !',
-                  message: `Vous avez perçu ${commAmtLvl3} FCFA (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name}.`,
+                  message: `Vous avez perçu ${commAmtLvl3} XOF (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name}.`,
                   type: 'bonus',
                   createdAt: new Date().toISOString(),
                   read: false
@@ -1752,7 +1740,7 @@ export class DataStore {
       id: `not-plan-${Date.now()}`,
       userId,
       title: 'Plan activé avec succès !',
-      message: `Votre investissement de ${targetProduct.price.toLocaleString()} FCFA dans le plan ${targetProduct.name} a bien été pris en compte. Vous gagnerez ${targetProduct.dailyReturn.toLocaleString()} FCFA chaque jour.`,
+      message: `Votre investissement de ${targetProduct.price.toLocaleString()} XOF dans le plan ${targetProduct.name} a bien été pris en compte. Vous gagnerez ${targetProduct.dailyReturn.toLocaleString()} XOF chaque jour.`,
       type: 'plan',
       createdAt: new Date().toISOString(),
       read: false
@@ -1825,14 +1813,14 @@ export class DataStore {
       id: `not-daily-${Date.now()}`,
       userId,
       title: 'Récompense journalière obtenue',
-      message: `Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de ${rewardAmt} FCFA.`,
+      message: `Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de ${rewardAmt} XOF.`,
       type: 'bonus',
       createdAt: new Date().toISOString(),
       read: false
     });
     this.saveNotifications(notifications);
 
-    return { success: true, message: `Félicitations! Vous avez reçu un bonus journalier de ${rewardAmt} FCFA!`, amount: rewardAmt };
+    return { success: true, message: `Félicitations! Vous avez reçu un bonus journalier de ${rewardAmt} XOF!`, amount: rewardAmt };
   }
 
   // Simulate claiming dividends on all ACTIVE investments for user
@@ -1936,14 +1924,14 @@ export class DataStore {
       id: `not-claim-${Date.now()}`,
       userId,
       title: 'Rendement quotidien récolté',
-      message: `Vous avez récolté votre dividende quotidien de ${inv.dailyReturn.toLocaleString()} FCFA sur le plan ${inv.productName}.`,
+      message: `Vous avez récolté votre dividende quotidien de ${inv.dailyReturn.toLocaleString()} XOF sur le plan ${inv.productName}.`,
       type: 'plan',
       createdAt: new Date().toISOString(),
       read: false
     });
     this.saveNotifications(notifs);
 
-    return { success: true, message: `Revenu journalier de +${inv.dailyReturn} FCFA encaissé avec succès !`, amount: inv.dailyReturn };
+    return { success: true, message: `Revenu journalier de +${inv.dailyReturn} XOF encaissé avec succès !`, amount: inv.dailyReturn };
   }
 
   // Bonus Code validation & applying
@@ -1988,20 +1976,35 @@ export class DataStore {
     target.usedByUsers.push(userId);
     this.saveBonusCodes(bonusCodes);
 
+    // Create a real Deposit record to document in historical recharges
+    const deposits = this.getDeposits();
+    deposits.unshift({
+      id: `dep-code-${Date.now()}`,
+      userId,
+      userName: user.name,
+      amount: target.amount,
+      operator: 'Code Cadeau 🎁',
+      reference: cleanCode,
+      receiptImage: '',
+      status: 'approved',
+      createdAt: new Date().toISOString()
+    });
+    this.saveDeposits(deposits);
+
     // Create Notification
     const notifications = this.getNotifications();
     notifications.unshift({
       id: `not-code-${Date.now()}`,
       userId,
       title: 'Code promotionnel activé',
-      message: `Félicitations ! Le code "${cleanCode}" a été validé. Votre compte a été crédité de ${target.amount.toLocaleString()} FCFA de bonus.`,
+      message: `Félicitations ! Le code "${cleanCode}" a été validé. Votre compte a été crédité de ${target.amount.toLocaleString()} XOF de bonus.`,
       type: 'bonus',
       createdAt: new Date().toISOString(),
       read: false
     });
     this.saveNotifications(notifications);
 
-    return { success: true, message: `Succès! Le code bonus a été appliqué avec succès. +${target.amount.toLocaleString()} FCFA !` };
+    return { success: true, message: `Succès! Le code bonus a été appliqué avec succès. +${target.amount.toLocaleString()} XOF !` };
   }
 
   // Support / Live chat integration
@@ -2115,7 +2118,7 @@ export class DataStore {
             id: `not-autodrop-${Date.now()}-${inv.id}-${inv.daysPassed}`,
             userId: inv.userId,
             title: `💰 Gain automatique reçu (${inv.productName})`,
-            message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
+            message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
             type: 'plan',
             createdAt: new Date().toISOString(),
             read: false
@@ -2313,7 +2316,7 @@ export class DataStore {
       id: `not-dep-app-${Date.now()}`,
       userId: deposits[idx].userId,
       title: '💵 Dépôt validé !',
-      message: `Votre versement de ${deposits[idx].amount.toLocaleString()} FCFA via ${deposits[idx].operator} a été approuvé. Votre solde principal a été rechargé.`,
+      message: `Votre versement de ${deposits[idx].amount.toLocaleString()} XOF via ${deposits[idx].operator} a été approuvé. Votre solde principal a été rechargé.`,
       type: 'deposit',
       createdAt: new Date().toISOString(),
       read: false
@@ -2337,7 +2340,7 @@ export class DataStore {
       id: `not-dep-rej-${Date.now()}`,
       userId: deposits[idx].userId,
       title: '⚠️ Dépôt rejeté',
-      message: `Votre demande de dépôt de ${deposits[idx].amount.toLocaleString()} FCFA a été refusée suite à une anomalie de référence ou de capture d'écran de paiement. Contactez le service client.`,
+      message: `Votre demande de dépôt de ${deposits[idx].amount.toLocaleString()} XOF a été refusée suite à une anomalie de référence ou de capture d'écran de paiement. Contactez le service client.`,
       type: 'deposit',
       createdAt: new Date().toISOString(),
       read: false
@@ -2361,7 +2364,7 @@ export class DataStore {
       id: `not-wth-app-${Date.now()}`,
       userId: withdrawals[idx].userId,
       title: '💸 Retrait envoyé !',
-      message: `Félicitations, votre retrait de ${withdrawals[idx].amount.toLocaleString()} FCFA sur le numéro ${withdrawals[idx].number} (${withdrawals[idx].operator}) a été validé et expédié avec succès.`,
+      message: `Félicitations, votre retrait de ${withdrawals[idx].amount.toLocaleString()} XOF sur le numéro ${withdrawals[idx].number} (${withdrawals[idx].operator}) a été validé et expédié avec succès.`,
       type: 'withdraw',
       createdAt: new Date().toISOString(),
       read: false
@@ -2399,7 +2402,7 @@ export class DataStore {
       id: `not-wth-rej-${Date.now()}`,
       userId: withdrawals[idx].userId,
       title: '❌ Retrait rejeté',
-      message: `Votre retrait de ${withdrawals[idx].amount.toLocaleString()} FCFA a été refusé. Les fonds ont été intégralement restitués à votre solde principal.`,
+      message: `Votre retrait de ${withdrawals[idx].amount.toLocaleString()} XOF a été refusé. Les fonds ont été intégralement restitués à votre solde principal.`,
       type: 'withdraw',
       createdAt: new Date().toISOString(),
       read: false

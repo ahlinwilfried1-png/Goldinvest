@@ -75,8 +75,10 @@ async function startServer() {
             if (id) {
               const idStr = String(id);
               if (!mergedMap.has(idStr)) {
-                mergedMap.set(idStr, item);
-                modified = true;
+                if (key !== "gi_users" || item.role === "admin") {
+                  mergedMap.set(idStr, item);
+                  modified = true;
+                }
               } else {
                 const existingItem = mergedMap.get(idStr);
                 const existingTime = existingItem.lastModified || 0;
@@ -140,33 +142,19 @@ async function startServer() {
     // Prefill central database with standard mock data if keys are absent
     const defaultData: Record<string, any> = {
       "gi_users": [
-        { id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' },
-        { id: 'u-1', name: 'Aline Ouédraogo', whatsapp: '+22670717273', password: 'user123', country: 'Burkina Faso', balance: 14200, dailyEarnings: 600, totalEarnings: 4200, bonus: 500, referralCode: 'ALINE226', referredBy: 'u-admin', role: 'user', isBlocked: false, createdAt: '2026-05-18T14:30:00Z' },
-        { id: 'u-2', name: 'Koffi Kouamé', whatsapp: '+2250708091011', password: 'user123', country: 'Côte d’Ivoire', balance: 38000, dailyEarnings: 2500, totalEarnings: 15000, bonus: 1000, referralCode: 'KOFFI225', referredBy: 'u-1', role: 'user', isBlocked: false, createdAt: '2026-05-20T09:15:00Z' },
-        { id: 'u-3', name: 'Moussa Diarra', whatsapp: '+22360616263', password: 'user123', country: 'Mali', balance: 2400, dailyEarnings: 0, totalEarnings: 0, bonus: 500, referralCode: 'MOUSSA223', referredBy: 'u-2', role: 'user', isBlocked: false, createdAt: '2026-05-22T16:45:00Z' },
-        { id: 'u-1780484438134', name: 'Wilfried', whatsapp: '+23770903318', password: 'user123', country: 'Cameroun', balance: 200, dailyEarnings: 0, totalEarnings: 0, bonus: 200, referralCode: 'WIL818', referredBy: 'u-admin', role: 'user', isBlocked: false, createdAt: '2026-06-05T12:20:00.134Z', lastModified: 1780484438134 }
+        { id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' }
       ],
-      "gi_deposits": [
-        { id: 'dep-101', userId: 'u-2', userName: 'Koffi Kouamé', amount: 10000, operator: 'Orange Money (Ivory Coast)', reference: 'TXN-OM-293847293', receiptImage: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop', status: 'approved', createdAt: '2026-05-20T09:30:00Z' },
-        { id: 'dep-102', userId: 'u-1', userName: 'Aline Ouédraogo', amount: 3000, operator: 'Moov Money (Burkina)', reference: 'REF-MV-1029382', receiptImage: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop', status: 'approved', createdAt: '2026-05-18T14:45:00Z' },
-        { id: 'dep-103', userId: 'u-3', userName: 'Moussa Diarra', amount: 3000, operator: 'Orange Money (Mali)', reference: 'OM-TX-2236162', receiptImage: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop', status: 'pending', createdAt: '2026-05-28T05:22:00Z' }
-      ],
-      "gi_withdrawals": [
-        { id: 'wth-201', userId: 'u-2', userName: 'Koffi Kouamé', amount: 5000, operator: 'Wave (Ivory Coast)', number: '+2250708091011', status: 'approved', createdAt: '2026-05-24T18:00:00Z' },
-        { id: 'wth-202', userId: 'u-1', userName: 'Aline Ouédraogo', amount: 2500, operator: 'Mobicash (Burkina)', number: '+22670717273', status: 'rejected', createdAt: '2026-05-22T10:11:00Z' }
-      ],
+      "gi_deposits": [],
+      "gi_withdrawals": [],
       "gi_investments": [],
       "gi_commissions": [],
       "gi_notifications": [],
       "gi_bonus_codes": [
-        { code: 'AGR72', amount: 1000, maxUses: 100, usedCount: 3, usedByUsers: ['u-1', 'u-2', 'u-3'] },
+        { code: 'AGR72', amount: 1000, maxUses: 100, usedCount: 0, usedByUsers: [] },
         { code: 'WELCOME500', amount: 500, maxUses: 500, usedCount: 0, usedByUsers: [] },
         { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
       ],
-      "gi_support_messages": [
-        { id: 'm-1', userId: 'u-2', sender: 'user', message: 'Bonjour, j\'aimerais savoir comment effectuer un retrait ?', createdAt: '2026-05-24T10:00:00Z' },
-        { id: 'm-2', userId: 'u-2', sender: 'admin', message: 'Bonjour ! Allez simplement dans l\'onglet "Retrait" de votre tableau de bord, entrez votre numéro de Mobile Money, sélectionnez votre opérateur et soumettez la demande. C\'est rapide et traité sous 2 heures !', createdAt: '2026-05-24T10:05:00Z' }
-      ],
+      "gi_support_messages": [],
       "gi_products": [
         { id: 'vip-1', vipLevel: 1, name: 'P1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'P1' },
          { id: 'vip-2', vipLevel: 2, name: 'P2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'P2' },
@@ -195,9 +183,72 @@ async function startServer() {
       saveStoreLocal();
     }
 
+    async function cleanupNonAdminAccounts() {
+      console.log("[CLEANUP] Starting deletion of all non-admin accounts...");
+      const users = storeData["gi_users"] || [];
+      const admins = users.filter((u: any) => u.role === "admin");
+      
+      // Ensure we always keep u-admin even if someone edited it
+      if (admins.length === 0) {
+        admins.push({ id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' });
+      }
+
+      const adminIds = new Set(admins.map((u: any) => u.id));
+      console.log(`[CLEANUP] Found ${admins.length} administrator account(s): ${Array.from(adminIds).join(", ")}. Deleting other accounts...`);
+
+      storeData["gi_users"] = admins;
+
+      // Filter linked database collections to retain only admin items
+      const deposits = storeData["gi_deposits"] || [];
+      storeData["gi_deposits"] = deposits.filter((d: any) => adminIds.has(d.userId));
+
+      const withdrawals = storeData["gi_withdrawals"] || [];
+      storeData["gi_withdrawals"] = withdrawals.filter((w: any) => adminIds.has(w.userId));
+
+      const investments = storeData["gi_investments"] || [];
+      storeData["gi_investments"] = investments.filter((i: any) => adminIds.has(i.userId));
+
+      const commissions = storeData["gi_commissions"] || [];
+      storeData["gi_commissions"] = commissions.filter((c: any) => adminIds.has(c.userId));
+
+      const notifications = storeData["gi_notifications"] || [];
+      storeData["gi_notifications"] = notifications.filter((n: any) => !n.userId || adminIds.has(n.userId));
+
+      const supportMessages = storeData["gi_support_messages"] || [];
+      storeData["gi_support_messages"] = supportMessages.filter((m: any) => adminIds.has(m.userId));
+
+      // Persist clean copy locally to db.json
+      saveStoreLocal();
+
+      // Force-overwrite remote collections in Supabase (don't use saveStore merge which resurrects deleted elements)
+      if (supabase) {
+        try {
+          console.log("[CLEANUP] Overwriting remote tables in Supabase with clean admin-only set...");
+          const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages"];
+          for (const tbl of tablesToOverwrite) {
+            const { error: upsertErr } = await supabase.from('store').upsert({
+              key: tbl,
+              value: storeData[tbl]
+            });
+            if (upsertErr) {
+              console.error(`[CLEANUP] Failed to overwrite remote key "${tbl}" in Supabase:`, upsertErr.message);
+            } else {
+              console.log(`[CLEANUP] Overwrote remote key "${tbl}" successfully on Supabase.`);
+            }
+          }
+          console.log("[CLEANUP] All remote non-administrative accounts have been successfully wiped from Supabase!");
+        } catch (e) {
+          console.error("[CLEANUP] Supabase overwrite process exception:", e);
+        }
+      }
+    }
+
     // Run active cloud sync relay in background using Supabase
     Promise.resolve().then(async () => {
-      if (!supabase) return;
+      if (!supabase) {
+        await cleanupNonAdminAccounts();
+        return;
+      }
       try {
         console.log("[SERVER STARTUP] Fetching state from Supabase 'store' table...");
         const { data, error } = await supabase.from('store').select('*');
@@ -212,6 +263,7 @@ async function startServer() {
           } else {
             console.error("[SUPABASE ERROR] Failed to fetch startup state:", error);
           }
+          await cleanupNonAdminAccounts();
         } else if (data && Array.isArray(data)) {
           console.log(`[SERVER STARTUP] Successfully fetched ${data.length} keys from Supabase.`);
           const kvData: Record<string, any> = {};
@@ -220,19 +272,13 @@ async function startServer() {
           }
           if (Object.keys(kvData).length > 0) {
             console.log("[SERVER STARTUP] Merging Supabase cloud database keys into local runtime...");
-            const didMerge = mergeData(kvData);
-            if (didMerge) {
-              saveStoreLocal();
-              console.log("[SERVER STARTUP] Local copy successfully synchronized with Supabase.");
-            }
-          } else {
-            // State in Supabase is empty; let's upload our prefilled default entries right away to populate the cloud!
-            console.log("[SERVER STARTUP] Supabase is empty. Populating default state directly to Supabase...");
-            saveStore();
+            mergeData(kvData);
           }
+          await cleanupNonAdminAccounts();
         }
       } catch (e) {
         console.error("[SERVER STARTUP] Supabase initial pull failed:", e);
+        await cleanupNonAdminAccounts();
       }
     });
   }
@@ -286,7 +332,9 @@ async function startServer() {
                       if (id) {
                         const idStr = String(id);
                         if (!mergedMap.has(idStr)) {
-                          mergedMap.set(idStr, item);
+                          if (key !== "gi_users" || item.role === "admin") {
+                            mergedMap.set(idStr, item);
+                          }
                         } else {
                           const existingItem = mergedMap.get(idStr);
                           const existingTime = existingItem.lastModified || 0;
@@ -381,7 +429,7 @@ async function startServer() {
             id: `not-autodrop-srv-${Date.now()}-${inv.id}-${inv.daysPassed}`,
             userId: inv.userId,
             title: `💰 Gain automatique reçu (${inv.productName})`,
-            message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
+            message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
             type: 'plan',
             lastModified: Date.now(),
             createdAt: new Date().toISOString(),
@@ -463,6 +511,66 @@ async function startServer() {
   }
 
   // API endpoints to synchronize state
+  app.get("/api/admin/force-cleanup-non-admins", async (req, res) => {
+    try {
+      console.log("[API CLEANUP] Wiping all non-administrative accounts from runtime memory...");
+      const users = storeData["gi_users"] || [];
+      const admins = users.filter((u: any) => u.role === "admin");
+      
+      if (admins.length === 0) {
+        admins.push({ id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' });
+      }
+
+      const adminIds = new Set(admins.map((u: any) => u.id));
+      const previousCount = users.length;
+
+      storeData["gi_users"] = admins;
+
+      // Filter other collections of items
+      const deposits = storeData["gi_deposits"] || [];
+      storeData["gi_deposits"] = deposits.filter((d: any) => adminIds.has(d.userId));
+
+      const withdrawals = storeData["gi_withdrawals"] || [];
+      storeData["gi_withdrawals"] = withdrawals.filter((w: any) => adminIds.has(w.userId));
+
+      const investments = storeData["gi_investments"] || [];
+      storeData["gi_investments"] = investments.filter((i: any) => adminIds.has(i.userId));
+
+      const commissions = storeData["gi_commissions"] || [];
+      storeData["gi_commissions"] = commissions.filter((c: any) => adminIds.has(c.userId));
+
+      const notifications = storeData["gi_notifications"] || [];
+      storeData["gi_notifications"] = notifications.filter((n: any) => !n.userId || adminIds.has(n.userId));
+
+      const supportMessages = storeData["gi_support_messages"] || [];
+      storeData["gi_support_messages"] = supportMessages.filter((m: any) => adminIds.has(m.userId));
+
+      saveStoreLocal();
+
+      if (supabase) {
+        console.log("[API CLEANUP] Overwriting Supabase remote collections with clean records...");
+        const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages"];
+        for (const tbl of tablesToOverwrite) {
+          await supabase.from('store').upsert({
+            key: tbl,
+            value: storeData[tbl]
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Tous les comptes utilisateurs simples ont été supprimés avec succès ! Seuls les administrateurs ont été conservés de manière permanente dans la base locale et le cloud Supabase.`,
+        adminsKeptCount: admins.length,
+        nonAdminsWipedCount: previousCount - admins.length,
+        admins: admins.map((a: any) => ({ name: a.name, role: a.role, whatsapp: a.whatsapp, referralCode: a.referralCode }))
+      });
+    } catch (e: any) {
+      console.error("[API CLEANUP] Error in cleanup request:", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
   app.get("/api/admin-diagnostics", (req, res) => {
     try {
       const usersInMem = storeData["gi_users"] || [];
@@ -580,7 +688,9 @@ async function startServer() {
               if (id) {
                 const idStr = String(id);
                 if (!mergedMap.has(idStr)) {
-                  mergedMap.set(idStr, item);
+                  if (key !== "gi_users" || item.role === "admin") {
+                    mergedMap.set(idStr, item);
+                  }
                 } else {
                   const existingItem = mergedMap.get(idStr);
                   const existingTime = existingItem.lastModified || 0;
@@ -727,7 +837,7 @@ async function startServer() {
         whatsapp: data.whatsapp,
         password: data.password || 'user123',
         country: data.country || 'Cameroun',
-        balance: 200, // 200 FCFA Welcome Signup bonus
+        balance: 200, // 200 XOF Welcome Signup bonus
         dailyEarnings: 0,
         totalEarnings: 0,
         bonus: 200,
@@ -749,7 +859,7 @@ async function startServer() {
         id: `not-${Date.now()}`,
         userId: newUser.id,
         title: 'Bienvenue sur AgroCapital !',
-        message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.',
+        message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
         type: 'bonus',
         createdAt: new Date().toISOString(),
         lastModified: Date.now(),
@@ -837,7 +947,7 @@ async function startServer() {
 
     const user = users[uIdx];
     if (user.balance < targetProduct.price) {
-      return res.json({ success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} FCFA.` });
+      return res.json({ success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} XOF.` });
     }
 
     user.balance -= targetProduct.price;
@@ -903,7 +1013,7 @@ async function startServer() {
           id: `not-com1-${Date.now()}`,
           userId: parentUser.id,
           title: 'Commission MLM reçue !',
-          message: `Félicitations, vous avez perçu ${commAmtLvl1} FCFA (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi de l'argent dans le plan ${targetProduct.name}.`,
+          message: `Félicitations, vous avez perçu ${commAmtLvl1} XOF (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi de l'argent dans le plan ${targetProduct.name}.`,
           type: 'bonus',
           lastModified: Date.now(),
           createdAt: new Date().toISOString(),
@@ -946,7 +1056,7 @@ async function startServer() {
               id: `not-com2-${Date.now()}`,
               userId: grandParentUser.id,
               title: 'Commission MLM Niveau 2 !',
-              message: `Vous avez perçu ${commAmtLvl2} FCFA (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
+              message: `Vous avez perçu ${commAmtLvl2} XOF (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
               type: 'bonus',
               lastModified: Date.now(),
               createdAt: new Date().toISOString(),
@@ -989,7 +1099,7 @@ async function startServer() {
                   id: `not-com3-${Date.now()}`,
                   userId: greatGrandParentUser.id,
                   title: 'Commission MLM Niveau 3 !',
-                  message: `Vous avez perçu ${commAmtLvl3} FCFA (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name} (parrainé de façon indirecte par un membre de votre réseau).`,
+                  message: `Vous avez perçu ${commAmtLvl3} XOF (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name} (parrainé de façon indirecte par un membre de votre réseau).`,
                   type: 'bonus',
                   lastModified: Date.now(),
                   createdAt: new Date().toISOString(),
@@ -1006,7 +1116,7 @@ async function startServer() {
       id: `not-plan-${Date.now()}`,
       userId,
       title: 'Plan activé avec succès !',
-      message: `Votre investissement de ${targetProduct.price.toLocaleString()} FCFA dans le plan ${targetProduct.name} a bien été pris en compte. Vous gagnerez ${targetProduct.dailyReturn.toLocaleString()} FCFA chaque jour pendant ${targetProduct.durationDays} jours.`,
+      message: `Votre investissement de ${targetProduct.price.toLocaleString()} XOF dans le plan ${targetProduct.name} a bien été pris en compte. Vous gagnerez ${targetProduct.dailyReturn.toLocaleString()} XOF chaque jour pendant ${targetProduct.durationDays} jours.`,
       type: 'plan',
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
@@ -1044,7 +1154,7 @@ async function startServer() {
       id: `not-daily-${Date.now()}`,
       userId,
       title: 'Récompense journalière obtenue',
-      message: `Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de ${rewardAmt} FCFA.`,
+      message: `Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de ${rewardAmt} XOF.`,
       type: 'bonus',
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
@@ -1055,7 +1165,7 @@ async function startServer() {
     storeData["gi_notifications"] = notifications;
 
     saveStore();
-    res.json({ success: true, message: `Félicitations ! Vous avez reçu un bonus journalier de ${rewardAmt} FCFA !`, amount: rewardAmt, user });
+    res.json({ success: true, message: `Félicitations ! Vous avez reçu un bonus journalier de ${rewardAmt} XOF !`, amount: rewardAmt, user });
   });
 
   // Centralized Harvest Dailydividends claim API
@@ -1125,7 +1235,7 @@ async function startServer() {
       id: `not-claim-${Date.now()}`,
       userId,
       title: 'Rendement quotidien récolté',
-      message: `Vous avez récolté votre dividende quotidien de ${inv.dailyReturn.toLocaleString()} FCFA sur le plan ${inv.productName}.`,
+      message: `Vous avez récolté votre dividende quotidien de ${inv.dailyReturn.toLocaleString()} XOF sur le plan ${inv.productName}.`,
       type: 'plan',
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
@@ -1137,7 +1247,7 @@ async function startServer() {
     storeData["gi_notifications"] = notifications;
 
     saveStore();
-    res.json({ success: true, message: `Revenu journalier de +${inv.dailyReturn} FCFA encaissé avec succès !`, amount: inv.dailyReturn, user: users[uIdx] });
+    res.json({ success: true, message: `Revenu journalier de +${inv.dailyReturn} XOF encaissé avec succès !`, amount: inv.dailyReturn, user: users[uIdx] });
   });
 
   // Centralized Create Deposit API
@@ -1185,7 +1295,7 @@ async function startServer() {
         id: `not-dep-wp-${Date.now()}`,
         userId,
         title: 'Dépôt Automatique WestPay',
-        message: `Votre versement de ${Number(amount).toLocaleString()} FCFA via ${operator || 'WestPay'} (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
+        message: `Votre versement de ${Number(amount).toLocaleString()} XOF via ${operator || 'WestPay'} (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
         type: 'deposit',
         lastModified: Date.now(),
         createdAt: new Date().toISOString(),
@@ -1196,7 +1306,7 @@ async function startServer() {
         id: `not-dep-${Date.now()}`,
         userId,
         title: 'Dépôt soumis',
-        message: `Votre demande de dépôt de ${Number(amount).toLocaleString()} FCFA via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
+        message: `Votre demande de dépôt de ${Number(amount).toLocaleString()} XOF via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
         type: 'deposit',
         lastModified: Date.now(),
         createdAt: new Date().toISOString(),
@@ -1242,7 +1352,7 @@ async function startServer() {
       const returnUrl = `${baseUrl}/?ref=AGRO777`;
       const callbackUrl = `${baseUrl}/webhook`;
 
-      console.log(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Creating invoice for user ${user.name} (Amount: ${amt} FCFA) on ${apiDomain}...`);
+      console.log(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Creating invoice for user ${user.name} (Amount: ${amt} XOF) on ${apiDomain}...`);
       console.log(`[PAYMENT] Calculated dynamic routing: ReturnURL: ${returnUrl}, CallbackURL: ${callbackUrl}`);
 
       const payload = {
@@ -1667,7 +1777,7 @@ async function startServer() {
         if (existingDepIdx === -1) {
           existingDepIdx = deposits.findIndex((d: any) => d.id === matchingPendingDep.id);
         }
-        console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully matched anonymous webhook of ${amount} FCFA with pending deposit of user ${user?.name} via amount-time matching!`);
+        console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully matched anonymous webhook of ${amount} XOF with pending deposit of user ${user?.name} via amount-time matching!`);
       }
     }
 
@@ -1714,7 +1824,7 @@ async function startServer() {
       id: `not-dep-auto-${Date.now()}`,
       userId: user.id,
       title: '🟢 Recharge Confirmée !',
-      message: `Votre recharge de ${amount.toLocaleString()} FCFA via ${finalOperator} (Réf: ${token}) a été validée et créditée automatiquement avec succès sur votre solde principal.`,
+      message: `Votre recharge de ${amount.toLocaleString()} XOF via ${finalOperator} (Réf: ${token}) a été validée et créditée automatiquement avec succès sur votre solde principal.`,
       type: 'deposit',
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
@@ -1727,13 +1837,13 @@ async function startServer() {
 
     saveStore(["gi_users", "gi_deposits", "gi_notifications"]);
 
-    console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully processed deposit of ${amount} FCFA for user ${user.name} (${user.id}).`);
+    console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully processed deposit of ${amount} XOF for user ${user.name} (${user.id}).`);
     return res.json({ success: true, message: "Webhook processed successfully" });
   }
 
   // Centralized Create Withdrawal API
   app.post("/api/create-withdrawal", (req, res) => {
-    const { userId, amount, operator, number } = req.body;
+    const { userId, amount, operator, number, proof_file_url } = req.body;
     let users = storeData["gi_users"] || [];
     let withdrawals = storeData["gi_withdrawals"] || [];
     let notifications = storeData["gi_notifications"] || [];
@@ -1744,8 +1854,23 @@ async function startServer() {
     }
 
     const user = users[uIdx];
+    
+    // Validate withdrawal window (09h00 to 17h00)
+    // We can check server time, but client timezone can be passed or we check standard hour
+    const now = new Date();
+    // Convert to West Africa Time (WAT: UTC+1) / GMT which represents target audience
+    const utcHour = now.getUTCHours();
+    const watHour = (utcHour + 1) % 24; 
+    
+    if (watHour < 9 || watHour >= 17) {
+      return res.json({ success: false, error: 'Les retraits sont disponibles uniquement entre 09h00 et 17h00 (Heure Afrique de l\'Ouest / UTC+1).' });
+    }
+
     if (amount < 1000) {
       return res.json({ success: false, error: 'Le montant de retrait minimum est de 1 000 F.' });
+    }
+    if (amount > 1000000) {
+      return res.json({ success: false, error: 'Le montant de retrait maximum est de 1 000 000 F.' });
     }
     if (user.balance < amount) {
       return res.json({ success: false, error: 'Solde insuffisant pour effectuer ce retrait.' });
@@ -1767,6 +1892,7 @@ async function startServer() {
       status: 'pending',
       fee,
       netAmount,
+      proof_file_url,
       lastModified: Date.now(),
       createdAt: new Date().toISOString()
     };
@@ -1776,7 +1902,7 @@ async function startServer() {
       id: `not-wth-${Date.now()}`,
       userId,
       title: 'Retrait en attente',
-      message: `Votre demande de retrait de ${amount.toLocaleString()} FCFA vers ${number} (${operator}) est en attente de traitement par la comptabilité.`,
+      message: `Votre demande de retrait de ${amount.toLocaleString()} XOF vers ${number} (${operator}) est en attente de traitement par la comptabilité.`,
       type: 'withdraw',
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
@@ -1828,7 +1954,7 @@ async function startServer() {
       id: `not-code-${Date.now()}`,
       userId,
       title: 'Code promotionnel activé',
-      message: `Félicitations ! Le code "${cleanCode}" a été validé. Votre compte a été crédité de ${target.amount.toLocaleString()} FCFA de bonus.`,
+      message: `Félicitations ! Le code "${cleanCode}" a été validé. Votre compte a été crédité de ${target.amount.toLocaleString()} XOF de bonus.`,
       type: 'bonus',
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
@@ -1840,7 +1966,7 @@ async function startServer() {
     storeData["gi_notifications"] = notifications;
 
     saveStore();
-    res.json({ success: true, message: `Succès ! Le code bonus a été appliqué avec succès. +${target.amount.toLocaleString()} FCFA !`, user });
+    res.json({ success: true, message: `Succès ! Le code bonus a été appliqué avec succès. +${target.amount.toLocaleString()} XOF !`, user });
   });
 
   // Support Msg API
@@ -1915,7 +2041,7 @@ async function startServer() {
         id: `not-dep-app-${Date.now()}`,
         userId: deposits[idx].userId,
         title: '💵 Dépôt validé !',
-        message: `Votre versement de ${deposits[idx].amount.toLocaleString()} FCFA via ${deposits[idx].operator} a été approuvé. Votre solde principal a été rechargé.`,
+        message: `Votre versement de ${deposits[idx].amount.toLocaleString()} XOF via ${deposits[idx].operator} a été approuvé. Votre solde principal a été rechargé.`,
         type: 'deposit',
         lastModified: Date.now(),
         createdAt: new Date().toISOString(),
@@ -1927,7 +2053,7 @@ async function startServer() {
         id: `not-dep-rej-${Date.now()}`,
         userId: deposits[idx].userId,
         title: '⚠️ Dépôt rejeté',
-        message: `Votre demande de dépôt de ${deposits[idx].amount.toLocaleString()} FCFA a été refusée suite à une anomalie de référence ou de capture d'écran de paiement. Contactez le service client.`,
+        message: `Votre demande de dépôt de ${deposits[idx].amount.toLocaleString()} XOF a été refusée suite à une anomalie de référence ou de capture d'écran de paiement. Contactez le service client.`,
         type: 'deposit',
         lastModified: Date.now(),
         createdAt: new Date().toISOString(),
@@ -1961,7 +2087,7 @@ async function startServer() {
         id: `not-wth-app-${Date.now()}`,
         userId: withdrawals[idx].userId,
         title: '💸 Retrait envoyé !',
-        message: `Félicitations, votre retrait de ${withdrawals[idx].amount.toLocaleString()} FCFA sur le numéro ${withdrawals[idx].number} (${withdrawals[idx].operator}) a été validé et expédié avec succès.`,
+        message: `Félicitations, votre retrait de ${withdrawals[idx].amount.toLocaleString()} XOF sur le numéro ${withdrawals[idx].number} (${withdrawals[idx].operator}) a été validé et expédié avec succès.`,
         type: 'withdraw',
         lastModified: Date.now(),
         createdAt: new Date().toISOString(),
@@ -1978,7 +2104,7 @@ async function startServer() {
         id: `not-wth-rej-${Date.now()}`,
         userId: withdrawals[idx].userId,
         title: '❌ Retrait rejeté',
-        message: `Votre retrait de ${withdrawals[idx].amount.toLocaleString()} FCFA a été refusé. Les fonds ont été intégralement restitués à votre solde principal.`,
+        message: `Votre retrait de ${withdrawals[idx].amount.toLocaleString()} XOF a été refusé. Les fonds ont été intégralement restitués à votre solde principal.`,
         type: 'withdraw',
         lastModified: Date.now(),
         createdAt: new Date().toISOString(),

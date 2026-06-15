@@ -5,216 +5,34 @@
       "name": "Administrateur Principal",
       "role": "admin",
       "bonus": 10050,
-      "balance": 2300,
+      "balance": 9200,
       "country": "Cameroun",
       "password": "agro777",
       "whatsapp": "+237600000000",
       "createdAt": "2026-05-10T10:00:00Z",
       "isBlocked": false,
-      "lastModified": 1781190335808,
+      "lastModified": 1781522390520,
       "referralCode": "AGRO777",
       "dailyEarnings": 2100,
-      "totalEarnings": 8600,
+      "totalEarnings": 15500,
       "withdrawBlocked": false
-    },
-    {
-      "id": "u-1",
-      "name": "Aline Ouédraogo",
-      "role": "user",
-      "bonus": 500,
-      "balance": 14200,
-      "country": "Burkina Faso",
-      "password": "user123",
-      "whatsapp": "+22670717273",
-      "createdAt": "2026-05-18T14:30:00Z",
-      "isBlocked": false,
-      "referredBy": "u-admin",
-      "lastModified": 1781190335808,
-      "referralCode": "ALINE226",
-      "dailyEarnings": 0,
-      "totalEarnings": 4200
-    },
-    {
-      "id": "u-2",
-      "name": "Koffi Kouamé",
-      "role": "user",
-      "bonus": 1000,
-      "balance": 38000,
-      "country": "Côte d’Ivoire",
-      "password": "user123",
-      "whatsapp": "+2250708091011",
-      "createdAt": "2026-05-20T09:15:00Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "KOFFI225",
-      "dailyEarnings": 0,
-      "totalEarnings": 15000
-    },
-    {
-      "id": "u-3",
-      "name": "Moussa Diarra",
-      "role": "user",
-      "bonus": 500,
-      "balance": 5400,
-      "country": "Mali",
-      "password": "user123",
-      "whatsapp": "+22360616263",
-      "createdAt": "2026-05-22T16:45:00Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "MOUSSA223",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
     },
     {
       "id": "u-1779950958295",
       "name": "Kodjo ",
       "role": "admin",
-      "bonus": 1400,
-      "balance": 1400,
+      "bonus": 50,
+      "balance": 950,
       "country": "Togo",
+      "password": "admin",
       "whatsapp": "70903319",
       "createdAt": "2026-05-28T06:49:18.295Z",
       "isBlocked": false,
-      "lastModified": 1781190335808,
+      "lastModified": 1781522390520,
       "referralCode": "KODJO180",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-1780484438133",
-      "name": "Asr",
-      "role": "user",
-      "bonus": 200,
-      "balance": 200,
-      "country": "Cameroun",
-      "password": "123456",
-      "whatsapp": "+2376544822",
-      "createdAt": "2026-06-03T11:00:38.133Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "ASR971",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-1780484438134",
-      "name": "Wilfried",
-      "role": "user",
-      "bonus": 200,
-      "balance": 200,
-      "country": "Cameroun",
-      "password": "user123",
-      "whatsapp": "+23770903318",
-      "createdAt": "2026-06-05T12:20:00.134Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "WIL818",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-1780744504090",
-      "name": "Gcffc",
-      "role": "user",
-      "bonus": 200,
-      "device": "iPhone",
-      "balance": 200,
-      "country": "Cameroun",
-      "password": "123456",
-      "whatsapp": "+237709033185",
-      "createdAt": "2026-06-06T11:15:04.091Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "GCFFC244",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-1780745148200",
-      "name": "Willy",
-      "role": "user",
-      "bonus": 300,
-      "device": "iPhone",
-      "balance": 3100,
-      "country": "Burkina Faso",
-      "password": "123456",
-      "whatsapp": "+22697783065",
-      "createdAt": "2026-06-06T11:25:48.200Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "WILLY802",
-      "dailyEarnings": 900,
-      "totalEarnings": 3000,
+      "dailyEarnings": 300,
+      "totalEarnings": 900,
       "withdrawBlocked": false
-    },
-    {
-      "id": "u-1780750118046",
-      "name": "Boris",
-      "role": "user",
-      "bonus": 200,
-      "device": "Android",
-      "balance": 200,
-      "country": "Burkina Faso",
-      "password": "00000000",
-      "whatsapp": "+22697561188",
-      "createdAt": "2026-06-06T12:48:38.046Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "BORIS699",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-1780819579698",
-      "name": "Adedf",
-      "role": "user",
-      "bonus": 200,
-      "device": "Android",
-      "balance": 200,
-      "country": "Cameroun",
-      "password": "123456",
-      "whatsapp": "+2376688477",
-      "createdAt": "2026-06-07T08:06:19.698Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "ZN64C",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-ref-892685",
-      "name": "Optionnel (Parrain)",
-      "role": "user",
-      "bonus": 200,
-      "balance": 3000,
-      "country": "Cameroun",
-      "password": "user123",
-      "whatsapp": "+237695718462",
-      "createdAt": "2026-06-08T08:29:27.631Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "OPTIONNEL",
-      "dailyEarnings": 0,
-      "totalEarnings": 0,
-      "withdrawBlocked": false
-    },
-    {
-      "id": "u-1780907367653",
-      "name": "Omer",
-      "role": "user",
-      "bonus": 200,
-      "device": "Android",
-      "balance": 200,
-      "country": "Cameroun",
-      "password": "565500",
-      "whatsapp": "+237155686985",
-      "createdAt": "2026-06-08T08:29:27.654Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "0QF4D",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
     },
     {
       "id": "u-1780952258969",
@@ -222,107 +40,20 @@
       "role": "admin",
       "bonus": 200,
       "device": "Android",
-      "balance": 500,
+      "balance": 2500,
       "country": "Burkina Faso",
       "password": "123456",
       "whatsapp": "+22670903319",
       "createdAt": "2026-06-08T20:57:38.969Z",
       "isBlocked": false,
-      "lastModified": 1781190335808,
+      "lastModified": 1781522390520,
       "referralCode": "QOA63",
       "dailyEarnings": 500,
-      "totalEarnings": 500,
+      "totalEarnings": 2500,
       "withdrawBlocked": false
-    },
-    {
-      "id": "u-1780952577759",
-      "name": "Agaga",
-      "role": "user",
-      "bonus": 200,
-      "device": "Android",
-      "balance": 200,
-      "country": "Cameroun",
-      "password": "123456",
-      "whatsapp": "+237709034525",
-      "createdAt": "2026-06-08T21:02:57.759Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "0TZ0C",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-1781177928968",
-      "name": "Fffg",
-      "role": "user",
-      "bonus": 200,
-      "device": "iPhone",
-      "balance": 200,
-      "country": "Togo",
-      "password": "123456",
-      "whatsapp": "+22897783065",
-      "createdAt": "2026-06-11T11:38:48.968Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "P4J9U",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-1781183290994",
-      "name": "Boris",
-      "role": "user",
-      "bonus": 250,
-      "device": "Android",
-      "balance": 250,
-      "country": "Togo",
-      "password": "00000000",
-      "whatsapp": "+22897561188",
-      "createdAt": "2026-06-11T13:08:10.994Z",
-      "isBlocked": false,
-      "lastModified": 1781190335808,
-      "referralCode": "DT75L",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
     }
   ],
   "gi_deposits": [
-    {
-      "id": "dep-101",
-      "amount": 10000,
-      "status": "approved",
-      "userId": "u-2",
-      "operator": "Orange Money (Ivory Coast)",
-      "userName": "Koffi Kouamé",
-      "createdAt": "2026-05-20T09:30:00Z",
-      "reference": "TXN-OM-293847293",
-      "lastModified": 1780855874861,
-      "receiptImage": "https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop"
-    },
-    {
-      "id": "dep-102",
-      "amount": 3000,
-      "status": "approved",
-      "userId": "u-1",
-      "operator": "Moov Money (Burkina)",
-      "userName": "Aline Ouédraogo",
-      "createdAt": "2026-05-18T14:45:00Z",
-      "reference": "REF-MV-1029382",
-      "lastModified": 1780855874861,
-      "receiptImage": "https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop"
-    },
-    {
-      "id": "dep-103",
-      "amount": 3000,
-      "status": "approved",
-      "userId": "u-3",
-      "operator": "Orange Money (Mali)",
-      "userName": "Moussa Diarra",
-      "createdAt": "2026-05-28T05:22:00Z",
-      "reference": "OM-TX-2236162",
-      "lastModified": 1780855874861,
-      "receiptImage": "https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop"
-    },
     {
       "id": "dep-1781175793332",
       "amount": 5000,
@@ -454,31 +185,21 @@
       "reference": "WP-FB-1781193594643",
       "lastModified": 1781193594897,
       "receiptImage": "automated_fallback"
+    },
+    {
+      "id": "dep-1781519786652",
+      "userId": "u-1779950958295",
+      "userName": "Kodjo ",
+      "amount": 5000,
+      "operator": "Westpay (Auto)",
+      "reference": "WP-FB-1781519786652",
+      "receiptImage": "automated",
+      "status": "rejected",
+      "lastModified": 1781520640857,
+      "createdAt": "2026-06-15T10:36:26.652Z"
     }
   ],
   "gi_withdrawals": [
-    {
-      "id": "wth-201",
-      "amount": 5000,
-      "number": "+2250708091011",
-      "status": "approved",
-      "userId": "u-2",
-      "operator": "Wave (Ivory Coast)",
-      "userName": "Koffi Kouamé",
-      "createdAt": "2026-05-24T18:00:00Z",
-      "lastModified": 1780829390440
-    },
-    {
-      "id": "wth-202",
-      "amount": 2500,
-      "number": "+22670717273",
-      "status": "rejected",
-      "userId": "u-1",
-      "operator": "Mobicash (Burkina)",
-      "userName": "Aline Ouédraogo",
-      "createdAt": "2026-05-22T10:11:00Z",
-      "lastModified": 1780829390440
-    },
     {
       "id": "wth-1780829390440",
       "fee": 150354,
@@ -514,43 +235,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-02T10:55:03.487Z",
       "productId": "vip-1",
-      "daysPassed": 9,
+      "daysPassed": 13,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1781175304993,
-      "lastClaimDate": "2026-06-11T10:55:04.993Z",
-      "totalReturnClaimed": 2700
-    },
-    {
-      "id": "inv-301",
-      "userId": "u-2",
-      "productId": "vip-2",
-      "productName": "VIP Emeraude 2",
-      "price": 10000,
-      "dailyReturn": 2500,
-      "daysPassed": 10,
-      "durationDays": 10,
-      "totalReturnClaimed": 25000,
-      "lastClaimDate": "2026-06-01T03:32:35.153Z",
-      "status": "completed",
-      "createdAt": "2026-05-21T08:00:00Z",
-      "lastModified": 1780484394624
-    },
-    {
-      "id": "inv-302",
-      "userId": "u-1",
-      "productId": "vip-1",
-      "productName": "VIP Élixir 1",
-      "price": 3000,
-      "dailyReturn": 600,
-      "daysPassed": 10,
-      "durationDays": 10,
-      "totalReturnClaimed": 6000,
-      "lastClaimDate": "2026-05-30T17:01:29.581Z",
-      "status": "completed",
-      "createdAt": "2026-05-20T10:30:00Z",
-      "lastModified": 1780484394624
+      "lastModified": 1781520904640,
+      "lastClaimDate": "2026-06-15T10:55:04.640Z",
+      "totalReturnClaimed": 3900
     },
     {
       "id": "inv-1780744789286",
@@ -559,58 +250,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T11:19:49.294Z",
       "productId": "vip-1",
-      "daysPassed": 5,
+      "daysPassed": 9,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1781177729424,
-      "lastClaimDate": "2026-06-11T11:35:29.424Z",
-      "totalReturnClaimed": 1500
-    },
-    {
-      "id": "inv-1780748359886",
-      "price": 7000,
-      "status": "active",
-      "userId": "u-1780745148200",
-      "createdAt": "2026-06-06T12:19:19.886Z",
-      "productId": "vip-1",
-      "daysPassed": 5,
-      "dailyReturn": 300,
-      "productName": "P1",
-      "durationDays": 365,
-      "lastModified": 1781180361723,
-      "lastClaimDate": "2026-06-11T12:19:21.723Z",
-      "totalReturnClaimed": 1500
-    },
-    {
-      "id": "inv-1780748530291",
-      "price": 7000,
-      "status": "active",
-      "userId": "u-1780745148200",
-      "createdAt": "2026-06-06T12:22:10.291Z",
-      "productId": "vip-1",
-      "daysPassed": 5,
-      "dailyReturn": 300,
-      "productName": "P1",
-      "durationDays": 365,
-      "lastModified": 1781180530484,
-      "lastClaimDate": "2026-06-11T12:22:10.484Z",
-      "totalReturnClaimed": 1500
-    },
-    {
-      "id": "inv-1780749590240",
-      "price": 7000,
-      "status": "active",
-      "userId": "u-1780745148200",
-      "createdAt": "2026-06-06T12:39:50.242Z",
-      "productId": "vip-1",
-      "daysPassed": 5,
-      "dailyReturn": 300,
-      "productName": "P1",
-      "durationDays": 365,
-      "lastModified": 1781181592572,
-      "lastClaimDate": "2026-06-11T12:39:52.572Z",
-      "totalReturnClaimed": 1500
+      "lastModified": 1781522390520,
+      "lastClaimDate": "2026-06-15T11:19:50.520Z",
+      "totalReturnClaimed": 2700
     },
     {
       "id": "inv-1780755294947",
@@ -619,13 +265,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T14:14:54.947Z",
       "productId": "vip-1",
-      "daysPassed": 5,
+      "daysPassed": 8,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781190335808,
-      "lastClaimDate": "2026-06-11T15:05:35.808Z",
-      "totalReturnClaimed": 2500
+      "lastModified": 1781512099324,
+      "lastClaimDate": "2026-06-15T08:28:19.323Z",
+      "totalReturnClaimed": 4000
     },
     {
       "id": "inv-1780832997559",
@@ -634,13 +280,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T11:49:57.559Z",
       "productId": "vip-1",
-      "daysPassed": 4,
+      "daysPassed": 7,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781178597933,
-      "lastClaimDate": "2026-06-11T11:49:57.933Z",
-      "totalReturnClaimed": 2000
+      "lastModified": 1781512099324,
+      "lastClaimDate": "2026-06-15T08:28:19.323Z",
+      "totalReturnClaimed": 3500
     },
     {
       "id": "inv-1780841270273",
@@ -649,13 +295,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T14:07:50.275Z",
       "productId": "vip-1",
-      "daysPassed": 4,
+      "daysPassed": 7,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781190335808,
-      "lastClaimDate": "2026-06-11T15:05:35.808Z",
-      "totalReturnClaimed": 2000
+      "lastModified": 1781512099324,
+      "lastClaimDate": "2026-06-15T08:28:19.323Z",
+      "totalReturnClaimed": 3500
     },
     {
       "id": "inv-1780952684130",
@@ -664,13 +310,28 @@
       "userId": "u-1780952258969",
       "createdAt": "2026-06-08T21:04:44.130Z",
       "productId": "vip-1",
-      "daysPassed": 2,
+      "daysPassed": 6,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781171688747,
-      "lastClaimDate": "2026-06-11T09:54:48.747Z",
-      "totalReturnClaimed": 1000
+      "lastModified": 1781512099324,
+      "lastClaimDate": "2026-06-15T08:28:19.323Z",
+      "totalReturnClaimed": 3000
+    },
+    {
+      "id": "inv-1781195123001",
+      "price": 3000,
+      "status": "active",
+      "userId": "u-1779950958295",
+      "createdAt": "2026-06-11T16:25:23.001Z",
+      "productId": "vip-1",
+      "daysPassed": 3,
+      "dailyReturn": 300,
+      "productName": "STARTER",
+      "durationDays": 365,
+      "lastModified": 1781512099324,
+      "lastClaimDate": "2026-06-15T08:28:19.324Z",
+      "totalReturnClaimed": 900
     }
   ],
   "gi_commissions": [
@@ -762,16 +423,6 @@
       "lastModified": 1780484394675
     },
     {
-      "id": "not-autodrop-1780284755142-inv-301-9",
-      "userId": "u-2",
-      "title": "💰 Gain automatique reçu (VIP Emeraude 2)",
-      "message": "Félicitations, votre gain quotidien de 2 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "type": "plan",
-      "createdAt": "2026-06-01T03:32:35.142Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
       "id": "not-daily-1780198513254",
       "userId": "u-1779950958295",
       "title": "Récompense journalière obtenue",
@@ -788,46 +439,6 @@
       "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 150 FCFA.",
       "type": "bonus",
       "createdAt": "2026-05-30T22:28:56.000Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
-      "id": "not-autodrop-1780160489580-inv-302-9",
-      "userId": "u-1",
-      "title": "💰 Gain automatique reçu (VIP Élixir 1)",
-      "message": "Félicitations, votre gain quotidien de 600 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "type": "plan",
-      "createdAt": "2026-05-30T17:01:29.581Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
-      "id": "not-autodrop-1780160489569-inv-301-8",
-      "userId": "u-2",
-      "title": "💰 Gain automatique reçu (VIP Emeraude 2)",
-      "message": "Félicitations, votre gain quotidien de 2 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "type": "plan",
-      "createdAt": "2026-05-30T17:01:29.569Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
-      "id": "not-autodrop-1780065841359-inv-302-7",
-      "userId": "u-1",
-      "title": "💰 Gain automatique reçu (VIP Élixir 1)",
-      "message": "Félicitations, votre gain quotidien de 1 200 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "type": "plan",
-      "createdAt": "2026-05-29T14:44:01.360Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
-      "id": "not-autodrop-1780065841344-inv-301-6",
-      "userId": "u-2",
-      "title": "💰 Gain automatique reçu (VIP Emeraude 2)",
-      "message": "Félicitations, votre gain quotidien de 5 000 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "type": "plan",
-      "createdAt": "2026-05-29T14:44:01.344Z",
       "read": false,
       "lastModified": 1780484394675
     },
@@ -851,26 +462,6 @@
       "lastModified": 1780484394675
     },
     {
-      "id": "not-wth-rej-1779957065002",
-      "userId": "u-1",
-      "title": "❌ Retrait rejeté",
-      "message": "Votre retrait de 2 000 FCFA a été refusé. Les fonds ont été intégralement restitués à votre solde principal.",
-      "type": "withdraw",
-      "createdAt": "2026-05-28T08:31:05.003Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
-      "id": "not-dep-app-1779951398723",
-      "userId": "u-3",
-      "title": "💵 Dépôt validé !",
-      "message": "Votre versement de 3 000 FCFA via Orange Money (Mali) a été approuvé. Votre solde principal a été rechargé.",
-      "type": "deposit",
-      "createdAt": "2026-05-28T06:56:38.723Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
       "id": "not-1779950958313",
       "userId": "u-1779950958295",
       "title": "Bienvenue sur GoldInvest !",
@@ -879,46 +470,6 @@
       "createdAt": "2026-05-28T06:49:18.313Z",
       "read": false,
       "lastModified": 1780484394675
-    },
-    {
-      "id": "not-1",
-      "userId": "u-2",
-      "title": "Dépôt approuvé",
-      "message": "Votre dépôt de 10 000 FCFA a été validé par l'administrateur. Votre solde a été mis à jour.",
-      "type": "deposit",
-      "createdAt": "2026-05-20T09:30:00Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
-      "id": "not-2",
-      "userId": "u-2",
-      "title": "Achat de plan",
-      "message": "Félicitations ! Vous avez acquis le plan VIP Emeraude 2 pour 10 000 FCFA.",
-      "type": "plan",
-      "createdAt": "2026-05-21T08:00:00Z",
-      "read": true,
-      "lastModified": 1780484394675
-    },
-    {
-      "id": "not-3",
-      "userId": "u-1",
-      "title": "Bonus de parrainage",
-      "message": "Vous avez reçu un bonus de parrainage de Niveau 1 d'une valeur de 1 000 FCFA suite à l'investissement de Koffi Kouamé.",
-      "type": "bonus",
-      "createdAt": "2026-05-20T09:30:00Z",
-      "read": false,
-      "lastModified": 1780484394675
-    },
-    {
-      "id": "not-1780484438133",
-      "userId": "u-1780484438133",
-      "title": "Bienvenue sur AgroCapital !",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "type": "bonus",
-      "createdAt": "2026-06-03T11:00:38.133Z",
-      "lastModified": 1780484438133,
-      "read": false
     },
     {
       "id": "not-autodrop-1780662194979-inv-1780397703473-2",
@@ -941,16 +492,6 @@
       "lastModified": 1780744423187
     },
     {
-      "id": "not-1780744504094",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur AgroCapital !",
-      "userId": "u-1780744504090",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "createdAt": "2026-06-06T11:15:04.094Z",
-      "lastModified": 1780744504094
-    },
-    {
       "id": "not-plan-1780744789297",
       "read": false,
       "type": "plan",
@@ -971,26 +512,6 @@
       "lastModified": 1780745148203
     },
     {
-      "id": "not-1780745148203",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur AgroCapital !",
-      "userId": "u-1780745148200",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "createdAt": "2026-06-06T11:25:48.203Z",
-      "lastModified": 1780745148203
-    },
-    {
-      "id": "not-plan-1780748359887",
-      "read": false,
-      "type": "plan",
-      "title": "Plan activé avec succès !",
-      "userId": "u-1780745148200",
-      "message": "Votre investissement de 7 000 FCFA dans le plan P1 a bien été pris en compte. Vous gagnerez 300 FCFA chaque jour.",
-      "createdAt": "2026-06-06T12:19:19.887Z",
-      "lastModified": 1780748359889
-    },
-    {
       "id": "not-com1-1780748359887",
       "read": false,
       "type": "bonus",
@@ -999,16 +520,6 @@
       "message": "Félicitations, vous avez perçu 1400 FCFA (Niveau 1 : 20%) car votre affilié Willy a investi dans le plan P1.",
       "createdAt": "2026-06-06T12:19:19.887Z",
       "lastModified": 1780748359889
-    },
-    {
-      "id": "not-plan-1780748530293",
-      "read": false,
-      "type": "plan",
-      "title": "Plan activé avec succès !",
-      "userId": "u-1780745148200",
-      "message": "Votre investissement de 7 000 FCFA dans le plan P1 a bien été pris en compte. Vous gagnerez 300 FCFA chaque jour.",
-      "createdAt": "2026-06-06T12:22:10.293Z",
-      "lastModified": 1780748530295
     },
     {
       "id": "not-com1-1780748530293",
@@ -1021,16 +532,6 @@
       "lastModified": 1780748530295
     },
     {
-      "id": "not-plan-1780749590246",
-      "read": false,
-      "type": "plan",
-      "title": "Plan activé avec succès !",
-      "userId": "u-1780745148200",
-      "message": "Votre investissement de 7 000 FCFA dans le plan P1 a bien été pris en compte. Vous gagnerez 300 FCFA chaque jour.",
-      "createdAt": "2026-06-06T12:39:50.247Z",
-      "lastModified": 1780749590252
-    },
-    {
       "id": "not-com1-1780749590246",
       "read": false,
       "type": "bonus",
@@ -1039,16 +540,6 @@
       "message": "Félicitations, vous avez perçu 1400 FCFA (Niveau 1 : 20%) car votre affilié Willy a investi dans le plan P1.",
       "createdAt": "2026-06-06T12:39:50.246Z",
       "lastModified": 1780749590252
-    },
-    {
-      "id": "not-1780750118112",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur AgroCapital !",
-      "userId": "u-1780750118046",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "createdAt": "2026-06-06T12:48:38.113Z",
-      "lastModified": 1780750118116
     },
     {
       "id": "not-daily-1780751624983",
@@ -1088,16 +579,6 @@
       "message": "Agrocapital ",
       "createdAt": "2026-06-06T17:55:26.620Z",
       "lastModified": 1780768526620
-    },
-    {
-      "id": "not-1780819579715",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur AgroCapital !",
-      "userId": "u-1780819579698",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "createdAt": "2026-06-07T08:06:19.715Z",
-      "lastModified": 1780819579716
     },
     {
       "id": "not-wth-1780829390446",
@@ -1150,26 +631,6 @@
       "lastModified": 1780831192060
     },
     {
-      "id": "not-daily-1780831224966",
-      "read": false,
-      "type": "bonus",
-      "title": "Récompense journalière obtenue",
-      "userId": "u-1780745148200",
-      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 FCFA.",
-      "createdAt": "2026-06-07T11:20:24.966Z",
-      "lastModified": 1780831224967
-    },
-    {
-      "id": "not-daily-1780832126819",
-      "read": false,
-      "type": "bonus",
-      "title": "Récompense journalière obtenue",
-      "userId": "u-1780745148200",
-      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 FCFA.",
-      "createdAt": "2026-06-07T11:35:26.819Z",
-      "lastModified": 1780832126819
-    },
-    {
       "id": "not-plan-1780832997559",
       "read": false,
       "type": "plan",
@@ -1188,56 +649,6 @@
       "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 FCFA.",
       "createdAt": "2026-06-07T11:50:17.237Z",
       "lastModified": 1780833017237
-    },
-    {
-      "id": "not-autodrop-srv-1780835442941-inv-1780748530291-0",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-07T12:30:42.941Z",
-      "lastModified": 1780835442941
-    },
-    {
-      "id": "not-autodrop-srv-1780835442940-inv-1780748359886-0",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-07T12:30:42.941Z",
-      "lastModified": 1780835442941
-    },
-    {
-      "id": "not-autodrop-1780837686633-inv-1780749590240-0",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-07T13:08:06.633Z",
-      "lastModified": 1780837686648
-    },
-    {
-      "id": "not-autodrop-srv-1780837921966-inv-1780749590240-0",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-07T13:12:01.966Z",
-      "lastModified": 1780837921966
-    },
-    {
-      "id": "not-autodrop-1780837920081-inv-1780749590240-0",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-07T13:12:00.124Z",
-      "lastModified": 1780837920164
     },
     {
       "id": "not-daily-1780840134135",
@@ -1280,16 +691,6 @@
       "lastModified": 1780855584455
     },
     {
-      "id": "not-dep-app-1780855874866",
-      "read": false,
-      "type": "deposit",
-      "title": "💵 Dépôt validé !",
-      "userId": "u-3",
-      "message": "Votre versement de 3 000 FCFA via Orange Money (Mali) a été approuvé. Votre solde principal a été rechargé.",
-      "createdAt": "2026-06-07T18:11:14.867Z",
-      "lastModified": 1780855874867
-    },
-    {
       "id": "not-daily-1780902985931",
       "read": false,
       "type": "bonus",
@@ -1298,26 +699,6 @@
       "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 FCFA.",
       "createdAt": "2026-06-08T07:16:25.931Z",
       "lastModified": 1780902985931
-    },
-    {
-      "id": "not-ref-1780907367668",
-      "read": false,
-      "type": "info",
-      "title": "Nouveau parrainage",
-      "userId": "u-ref-892685",
-      "message": "Omer s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
-      "createdAt": "2026-06-08T08:29:27.668Z",
-      "lastModified": 1780907367669
-    },
-    {
-      "id": "not-1780907367666",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur AgroCapital !",
-      "userId": "u-1780907367653",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "createdAt": "2026-06-08T08:29:27.666Z",
-      "lastModified": 1780907367669
     },
     {
       "id": "not-autodrop-srv-1780917017701-inv-1780397703473-5",
@@ -1360,36 +741,6 @@
       "lastModified": 1780919435685
     },
     {
-      "id": "not-autodrop-1780925963869-inv-1780749590240-1",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-08T13:39:23.869Z",
-      "lastModified": 1780925963874
-    },
-    {
-      "id": "not-autodrop-1780925963869-inv-1780748530291-1",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-08T13:39:23.869Z",
-      "lastModified": 1780925963874
-    },
-    {
-      "id": "not-autodrop-1780925963851-inv-1780748359886-1",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-08T13:39:23.869Z",
-      "lastModified": 1780925963874
-    },
-    {
       "id": "not-autodrop-1780933736436-inv-1780841270273-0",
       "read": false,
       "type": "plan",
@@ -1420,16 +771,6 @@
       "lastModified": 1780952258974
     },
     {
-      "id": "not-1780952577769",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur AgroCapital !",
-      "userId": "u-1780952577759",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "createdAt": "2026-06-08T21:02:57.769Z",
-      "lastModified": 1780952577770
-    },
-    {
       "id": "not-plan-1780952684137",
       "read": false,
       "type": "plan",
@@ -1446,36 +787,6 @@
       "title": "💰 Gain automatique reçu (STARTER)",
       "userId": "u-admin",
       "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-09T12:48:09.838Z",
-      "lastModified": 1781009289843
-    },
-    {
-      "id": "not-autodrop-1781009289838-inv-1780749590240-2",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-09T12:48:09.838Z",
-      "lastModified": 1781009289843
-    },
-    {
-      "id": "not-autodrop-1781009289838-inv-1780748530291-2",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-09T12:48:09.838Z",
-      "lastModified": 1781009289843
-    },
-    {
-      "id": "not-autodrop-1781009289838-inv-1780748359886-2",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
       "createdAt": "2026-06-09T12:48:09.838Z",
       "lastModified": 1781009289843
     },
@@ -1570,36 +881,6 @@
       "read": false
     },
     {
-      "id": "not-autodrop-srv-1781171688747-inv-1780749590240-3",
-      "userId": "u-1780745148200",
-      "title": "💰 Gain automatique reçu (P1)",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "type": "plan",
-      "lastModified": 1781171688747,
-      "createdAt": "2026-06-11T09:54:48.747Z",
-      "read": false
-    },
-    {
-      "id": "not-autodrop-srv-1781171688747-inv-1780748530291-3",
-      "userId": "u-1780745148200",
-      "title": "💰 Gain automatique reçu (P1)",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "type": "plan",
-      "lastModified": 1781171688747,
-      "createdAt": "2026-06-11T09:54:48.747Z",
-      "read": false
-    },
-    {
-      "id": "not-autodrop-srv-1781171688747-inv-1780748359886-3",
-      "userId": "u-1780745148200",
-      "title": "💰 Gain automatique reçu (P1)",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "type": "plan",
-      "lastModified": 1781171688747,
-      "createdAt": "2026-06-11T09:54:48.747Z",
-      "read": false
-    },
-    {
       "id": "not-autodrop-srv-1781171688747-inv-1780744789286-3",
       "userId": "u-admin",
       "title": "💰 Gain automatique reçu (P1)",
@@ -1680,16 +961,6 @@
       "lastModified": 1781177729423
     },
     {
-      "id": "not-1781177928971",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur AgroCapital !",
-      "userId": "u-1781177928968",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "createdAt": "2026-06-11T11:38:48.971Z",
-      "lastModified": 1781177928971
-    },
-    {
       "id": "not-wth-1781178049284",
       "read": false,
       "type": "withdraw",
@@ -1730,56 +1001,6 @@
       "read": false
     },
     {
-      "id": "not-autodrop-srv-1781180361708-inv-1780748359886-4",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-11T12:19:21.723Z",
-      "lastModified": 1781180361723
-    },
-    {
-      "id": "not-autodrop-srv-1781180530484-inv-1780748530291-4",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-11T12:22:10.484Z",
-      "lastModified": 1781180530484
-    },
-    {
-      "id": "not-autodrop-srv-1781181592557-inv-1780749590240-4",
-      "read": false,
-      "type": "plan",
-      "title": "💰 Gain automatique reçu (P1)",
-      "userId": "u-1780745148200",
-      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
-      "createdAt": "2026-06-11T12:39:52.572Z",
-      "lastModified": 1781181592572
-    },
-    {
-      "id": "not-1781183291006",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur AgroCapital !",
-      "userId": "u-1781183290994",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 FCFA a été crédité sur votre compte.",
-      "createdAt": "2026-06-11T13:08:11.006Z",
-      "lastModified": 1781183291007
-    },
-    {
-      "id": "not-daily-1781183354369",
-      "read": false,
-      "type": "bonus",
-      "title": "Récompense journalière obtenue",
-      "userId": "u-1781183290994",
-      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 FCFA.",
-      "createdAt": "2026-06-11T13:09:14.369Z",
-      "lastModified": 1781183354371
-    },
-    {
       "id": "not-autodrop-srv-1781190335808-inv-1780841270273-3",
       "userId": "u-admin",
       "title": "💰 Gain automatique reçu (STARTER)",
@@ -1808,6 +1029,266 @@
       "message": "Votre demande de dépôt de 5 000 FCFA via Westpay (Auto) (Réf: WP-FB-1781193594643) est en cours de vérification par l'administration.",
       "createdAt": "2026-06-11T15:59:54.900Z",
       "lastModified": 1781193594901
+    },
+    {
+      "id": "not-plan-1781195123007",
+      "read": false,
+      "type": "plan",
+      "title": "Plan activé avec succès !",
+      "userId": "u-1779950958295",
+      "message": "Votre investissement de 3 000 FCFA dans le plan STARTER a bien été pris en compte. Vous gagnerez 300 FCFA chaque jour.",
+      "createdAt": "2026-06-11T16:25:23.008Z",
+      "lastModified": 1781195123017
+    },
+    {
+      "id": "not-autodrop-1781214186223-inv-1780952684130-2",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-11T21:43:06.223Z",
+      "lastModified": 1781214186229
+    },
+    {
+      "id": "not-ref-1781216036477",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1779950958295",
+      "message": "Ayile Stéphane Henri s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-11T22:13:56.477Z",
+      "lastModified": 1781216036477
+    },
+    {
+      "id": "not-autodrop-1781270952324-inv-1780832997559-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-12T13:29:12.324Z",
+      "lastModified": 1781270952338
+    },
+    {
+      "id": "not-autodrop-1781270952323-inv-1780744789286-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-12T13:29:12.324Z",
+      "lastModified": 1781270952338
+    },
+    {
+      "id": "not-autodrop-1781270952323-inv-1780397703473-9",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-12T13:29:12.323Z",
+      "lastModified": 1781270952338
+    },
+    {
+      "id": "not-autodrop-1781280029254-inv-1780841270273-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-12T16:00:29.254Z",
+      "lastModified": 1781280029260
+    },
+    {
+      "id": "not-autodrop-1781280029254-inv-1780755294947-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-12T16:00:29.254Z",
+      "lastModified": 1781280029260
+    },
+    {
+      "id": "not-autodrop-1781282147997-inv-1781195123001-0",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-12T16:35:47.997Z",
+      "lastModified": 1781282148026
+    },
+    {
+      "id": "not-autodrop-1781308236477-inv-1780952684130-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-12T23:50:36.477Z",
+      "lastModified": 1781308236500
+    },
+    {
+      "id": "not-autodrop-1781367793055-inv-1780841270273-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-13T16:23:13.055Z",
+      "lastModified": 1781367793069
+    },
+    {
+      "id": "not-autodrop-1781367793055-inv-1780832997559-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-13T16:23:13.055Z",
+      "lastModified": 1781367793069
+    },
+    {
+      "id": "not-autodrop-1781367793055-inv-1780755294947-6",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-13T16:23:13.055Z",
+      "lastModified": 1781367793069
+    },
+    {
+      "id": "not-autodrop-1781367793053-inv-1780744789286-6",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-13T16:23:13.053Z",
+      "lastModified": 1781367793069
+    },
+    {
+      "id": "not-autodrop-1781367793052-inv-1780397703473-10",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-13T16:23:13.052Z",
+      "lastModified": 1781367793069
+    },
+    {
+      "id": "not-autodrop-1781512099323-inv-1781195123001-1",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 600 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-15T08:28:19.324Z",
+      "lastModified": 1781512099330
+    },
+    {
+      "id": "not-autodrop-1781512099323-inv-1780952684130-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 1 000 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-15T08:28:19.323Z",
+      "lastModified": 1781512099330
+    },
+    {
+      "id": "not-autodrop-1781512099323-inv-1780841270273-6",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-15T08:28:19.323Z",
+      "lastModified": 1781512099330
+    },
+    {
+      "id": "not-autodrop-1781512099323-inv-1780832997559-6",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-15T08:28:19.323Z",
+      "lastModified": 1781512099330
+    },
+    {
+      "id": "not-autodrop-1781512099323-inv-1780755294947-7",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-15T08:28:19.323Z",
+      "lastModified": 1781512099330
+    },
+    {
+      "id": "not-autodrop-1781512099323-inv-1780744789286-7",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-15T08:28:19.323Z",
+      "lastModified": 1781512099330
+    },
+    {
+      "id": "not-autodrop-1781512099322-inv-1780397703473-11",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-15T08:28:19.323Z",
+      "lastModified": 1781512099330
+    },
+    {
+      "id": "not-daily-1781517456388",
+      "userId": "u-1779950958295",
+      "title": "Récompense journalière obtenue",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 FCFA.",
+      "type": "bonus",
+      "lastModified": 1781517456388,
+      "createdAt": "2026-06-15T09:57:36.388Z",
+      "read": false
+    },
+    {
+      "id": "not-dep-rej-1781520640843",
+      "userId": "u-1779950958295",
+      "title": "⚠️ Dépôt rejeté",
+      "message": "Votre demande de dépôt de 5,000 FCFA a été refusée suite à une anomalie de référence ou de capture d'écran de paiement. Contactez le service client.",
+      "type": "deposit",
+      "lastModified": 1781520640857,
+      "createdAt": "2026-06-15T10:50:40.857Z",
+      "read": false
+    },
+    {
+      "id": "not-autodrop-srv-1781520904621-inv-1780397703473-12",
+      "userId": "u-admin",
+      "title": "💰 Gain automatique reçu (P1)",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "type": "plan",
+      "lastModified": 1781520904640,
+      "createdAt": "2026-06-15T10:55:04.640Z",
+      "read": false
+    },
+    {
+      "id": "not-autodrop-srv-1781522390505-inv-1780744789286-8",
+      "userId": "u-admin",
+      "title": "💰 Gain automatique reçu (P1)",
+      "message": "Félicitations, votre gain quotidien de 300 FCFA est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "type": "plan",
+      "lastModified": 1781522390520,
+      "createdAt": "2026-06-15T11:19:50.520Z",
+      "read": false
     }
   ],
   "gi_bonus_codes": [
@@ -1851,23 +1332,6 @@
     }
   ],
   "gi_support_messages": [
-    {
-      "id": "m-1",
-      "sender": "user",
-      "status": "read",
-      "userId": "u-2",
-      "message": "Bonjour, j'aimerais savoir comment effectuer un retrait ?",
-      "createdAt": "2026-05-24T10:00:00Z",
-      "lastModified": 1780918951305
-    },
-    {
-      "id": "m-2",
-      "sender": "admin",
-      "userId": "u-2",
-      "message": "Bonjour ! Allez simplement dans l'onglet \"Retrait\" de votre tableau de bord, entrez votre numéro de Mobile Money, sélectionnez votre opérateur et soumettez la demande. C'est rapide et traité sous 2 heures !",
-      "createdAt": "2026-05-24T10:05:00Z",
-      "lastModified": 1780768631670
-    },
     {
       "id": "msg-1780768631669",
       "sender": "user",
@@ -1937,64 +1401,13 @@
       "lastModified": 1780768693995
     },
     {
-      "id": "msg-1780933753729",
-      "sender": "user",
-      "status": "replied",
-      "userId": "u-1780745148200",
-      "message": "Salut ",
-      "createdAt": "2026-06-08T15:49:13.729Z",
-      "lastModified": 1780933965576
-    },
-    {
-      "id": "msg-reply-1780933757236",
-      "sender": "admin",
-      "userId": "u-1780745148200",
-      "message": "Votre message a bien été transmis. N'oubliez pas d'inviter de nouveaux membres pour débloquer les commissions VIP !",
-      "createdAt": "2026-06-08T15:49:17.236Z",
-      "lastModified": 1780933757237
-    },
-    {
-      "id": "msg-1780933760633",
-      "sender": "user",
-      "status": "replied",
-      "userId": "u-1780745148200",
-      "message": "Problème de dépôt ",
-      "createdAt": "2026-06-08T15:49:20.633Z",
-      "lastModified": 1780933965576
-    },
-    {
-      "id": "msg-reply-1780933764139",
-      "sender": "admin",
-      "userId": "u-1780745148200",
-      "message": "Bonjour ! Notre support financier examine votre demande. Quel opérateur utilisez-vous ?",
-      "createdAt": "2026-06-08T15:49:24.139Z",
-      "lastModified": 1780933764139
-    },
-    {
-      "id": "msg-1780933965573",
-      "sender": "admin",
-      "status": "replied",
-      "userId": "u-1780745148200",
-      "message": "Message de votre dépôt ",
-      "createdAt": "2026-06-08T15:52:45.573Z",
-      "lastModified": 1780933965576
-    },
-    {
-      "id": "msg-1780933966183",
-      "sender": "admin",
-      "status": "replied",
-      "userId": "u-1780745148200",
-      "message": "Message de votre dépôt ",
-      "createdAt": "2026-06-08T15:52:46.183Z",
-      "lastModified": 1780933966183
-    },
-    {
       "id": "msg-1781009441123",
       "sender": "user",
       "userId": "u-admin",
       "message": "Cc",
       "createdAt": "2026-06-09T12:50:41.123Z",
-      "lastModified": 1781009441123
+      "lastModified": 1781514023910,
+      "status": "read"
     },
     {
       "id": "msg-reply-1781009444632",
@@ -2010,7 +1423,8 @@
       "userId": "u-admin",
       "message": "Salut bro ",
       "createdAt": "2026-06-09T12:50:46.551Z",
-      "lastModified": 1781009446551
+      "lastModified": 1781514023910,
+      "status": "read"
     },
     {
       "id": "msg-reply-1781009450059",
@@ -2029,10 +1443,10 @@
       "price": 3000,
       "vipLevel": 1,
       "isBlocked": false,
-      "dailyReturn": 500,
-      "totalReturn": 182500,
+      "dailyReturn": 300,
+      "totalReturn": 109500,
       "durationDays": 365,
-      "lastModified": 1780754538336
+      "lastModified": 1781194879183
     },
     {
       "id": "vip-2",
@@ -2041,10 +1455,10 @@
       "price": 7000,
       "vipLevel": 2,
       "isBlocked": false,
-      "dailyReturn": 750,
-      "totalReturn": 273750,
+      "dailyReturn": 650,
+      "totalReturn": 237250,
       "durationDays": 365,
-      "lastModified": 1780754619172
+      "lastModified": 1781194915658
     },
     {
       "id": "vip-3",
@@ -2052,10 +1466,10 @@
       "name": "PREMIUM",
       "price": 15000,
       "vipLevel": 3,
-      "dailyReturn": 2200,
-      "totalReturn": 803000,
+      "dailyReturn": 1800,
+      "totalReturn": 657000,
       "durationDays": 365,
-      "lastModified": 1780754666265
+      "lastModified": 1781194944625
     },
     {
       "id": "vip-4",
@@ -2067,7 +1481,7 @@
       "dailyReturn": 3200,
       "totalReturn": 1168000,
       "durationDays": 365,
-      "lastModified": 1780754742436
+      "lastModified": 1781194952389
     },
     {
       "id": "vip-5",
@@ -2075,12 +1489,11 @@
       "name": "AGOBUSI ",
       "price": 40000,
       "vipLevel": 5,
-      "isBlocked": true,
+      "isBlocked": false,
       "dailyReturn": 6800,
       "totalReturn": 2482000,
       "durationDays": 365,
-      "lastModified": 1780830823891,
-      "reopenDateTime": "2026-06-15T06:00:00.000Z"
+      "lastModified": 1781512016704
     },
     {
       "id": "vip-6",

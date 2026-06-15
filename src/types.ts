@@ -43,6 +43,7 @@ export interface Withdrawal {
   fee?: number;
   netAmount?: number;
   lastModified?: number;
+  proof_file_url?: string;
 }
 
 export interface Product {
