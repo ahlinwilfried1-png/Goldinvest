@@ -224,7 +224,7 @@ async function startServer() {
       if (supabase) {
         try {
           console.log("[CLEANUP] Overwriting remote tables in Supabase with clean admin-only set...");
-          const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages"];
+          const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages", "gi_withdrawal_proofs"];
           for (const tbl of tablesToOverwrite) {
             const { error: upsertErr } = await supabase.from('store').upsert({
               key: tbl,
@@ -549,7 +549,7 @@ async function startServer() {
 
       if (supabase) {
         console.log("[API CLEANUP] Overwriting Supabase remote collections with clean records...");
-        const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages"];
+        const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages", "gi_withdrawal_proofs"];
         for (const tbl of tablesToOverwrite) {
           await supabase.from('store').upsert({
             key: tbl,
@@ -2389,7 +2389,7 @@ self.addEventListener('fetch', event => {
   });
 
   // Servir un fichier APK réel, signé et valide pour l'installation directe
-  app.get(["/AgroCapital.apk", "/AgroProfit.apk"], async (req, res) => {
+  app.get(["/AgroProfit.apk", "/AgroCapital.apk"], async (req, res) => {
     res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
     res.setHeader("Content-Type", "application/vnd.android.package-archive");
 

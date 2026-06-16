@@ -8,7 +8,8 @@ import {
   SystemNotification, 
   SupportMessage, 
   BonusCode,
-  ChatSession
+  ChatSession,
+  WithdrawalProof
 } from './types';
 
 // Default mock configuration values
@@ -236,6 +237,39 @@ const INITIAL_BONUS_CODES: BonusCode[] = [
 const INITIAL_CHATS: SupportMessage[] = [
   { id: 'm-1', userId: 'u-2', sender: 'user', message: 'Bonjour, j\'aimerais savoir comment effectuer un retrait ?', createdAt: '2026-05-24T10:00:00Z' },
   { id: 'm-2', userId: 'u-2', sender: 'admin', message: 'Bonjour ! Allez simplement dans l\'onglet "Retrait" de votre tableau de bord, entrez votre numéro de Mobile Money, sélectionnez votre opérateur et soumettez la demande. C\'est rapide et traité sous 2 heures !', createdAt: '2026-05-24T10:05:00Z' }
+];
+
+const INITIAL_PROOFS: WithdrawalProof[] = [
+  {
+    id: 'proof-1',
+    userId: 'u-1',
+    userName: 'Koffi Kouamé',
+    userCountry: 'Côte d’Ivoire',
+    amount: 25000,
+    message: 'Retrait de 25 000 XOF bien reçu sur Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
+    likes: ['u-2', 'u-3'],
+    createdAt: '2026-06-15T10:12:00Z'
+  },
+  {
+    id: 'proof-2',
+    userId: 'u-2',
+    userName: 'Aïcha Diallo',
+    userCountry: 'Sénégal',
+    amount: 15400,
+    message: 'Franchement c’est le meilleur service de l’année. Mes retours journaliers accumulés et retirés via Wave sans aucun problème. 😎💪',
+    likes: ['u-1'],
+    createdAt: '2026-06-15T14:30:00Z'
+  },
+  {
+    id: 'proof-3',
+    userId: 'u-3',
+    userName: 'Yao Mensah',
+    userCountry: 'Togo',
+    amount: 8500,
+    message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement AgroProfit à tout mon entourage.',
+    likes: ['u-1', 'u-2', 'u-admin'],
+    createdAt: '2026-06-16T02:05:00Z'
+  }
 ];
 
 // Robust, frame-safe in-memory cache to guarantee full compatibility when running inside sandboxed environments
@@ -595,7 +629,8 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_mlm_level2_rate',
           'gi_mlm_level3_rate',
           'gi_withdrawals_blocked_global',
-          'gi_referral_domain'
+          'gi_referral_domain',
+          'gi_withdrawal_proofs'
         ];
         
         // Ensure standard keys are read with their default fallback if they are not in local storage yet
@@ -611,6 +646,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
         DataStore.getMLMRates();
         DataStore.areWithdrawalsBlocked();
         DataStore.getReferralDomain();
+        DataStore.getWithdrawalProofs();
  
         for (const key of keysToSync) {
           try {
@@ -947,6 +983,14 @@ export class DataStore {
 
   static saveSupportMessages(messages: SupportMessage[]): void {
     setToStore<SupportMessage[]>('gi_support_messages', messages);
+  }
+
+  static getWithdrawalProofs(): WithdrawalProof[] {
+    return getFromStore<WithdrawalProof[]>('gi_withdrawal_proofs', INITIAL_PROOFS);
+  }
+
+  static saveWithdrawalProofs(proofs: WithdrawalProof[]): void {
+    setToStore<WithdrawalProof[]>('gi_withdrawal_proofs', proofs);
   }
 
   // Auth Operations
@@ -2079,6 +2123,99 @@ export class DataStore {
         console.warn('Failed to sync marked-read support status with central server:', e);
       }
     }
+  }
+
+  static async publishWithdrawalProof(
+    userId: string, 
+    userName: string, 
+    userCountry: string, 
+    amount: number, 
+    message: string, 
+    image?: string
+  ): Promise<{ success: boolean, proof?: WithdrawalProof }> {
+    const proofs = this.getWithdrawalProofs();
+    const newProof: WithdrawalProof = {
+      id: `proof-${Date.now()}`,
+      userId,
+      userName,
+      userCountry,
+      amount,
+      message,
+      image,
+      likes: [],
+      createdAt: new Date().toISOString(),
+      lastModified: Date.now()
+    };
+    
+    proofs.unshift(newProof);
+    this.saveWithdrawalProofs(proofs);
+    
+    window.dispatchEvent(new Event('gi_store_updated'));
+    
+    try {
+      await apiFetch(getApiUrl('/api/save-store'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gi_withdrawal_proofs: proofs })
+      });
+    } catch (e) {
+      console.warn('Failed to sync withdrawal proofs:', e);
+    }
+    
+    return { success: true, proof: newProof };
+  }
+
+  static async likeWithdrawalProof(proofId: string, userId: string): Promise<boolean> {
+    const proofs = this.getWithdrawalProofs();
+    let changed = false;
+    const updated = proofs.map(p => {
+      if (p.id === proofId) {
+        changed = true;
+        const exists = p.likes.includes(userId);
+        const newLikes = exists 
+          ? p.likes.filter(id => id !== userId) 
+          : [...p.likes, userId];
+        return { ...p, likes: newLikes, lastModified: Date.now() };
+      }
+      return p;
+    });
+    
+    if (changed) {
+      this.saveWithdrawalProofs(updated);
+      window.dispatchEvent(new Event('gi_store_updated'));
+      
+      try {
+        await apiFetch(getApiUrl('/api/save-store'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gi_withdrawal_proofs: updated })
+        });
+      } catch (e) {
+        console.warn('Failed to sync updated likes:', e);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  static async deleteWithdrawalProof(proofId: string): Promise<boolean> {
+    const proofs = this.getWithdrawalProofs();
+    const filtered = proofs.filter(p => p.id !== proofId);
+    if (filtered.length !== proofs.length) {
+      this.saveWithdrawalProofs(filtered);
+      window.dispatchEvent(new Event('gi_store_updated'));
+      try {
+        await apiFetch(getApiUrl('/api/save-store'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gi_withdrawal_proofs: filtered })
+        });
+      } catch (e) {
+        console.warn('Failed to sync deleted proof:', e);
+      }
+      return true;
+    }
+    return false;
   }
 
   // Processes and automatically credits due chronological daily earnings for all active plans

@@ -122,3 +122,17 @@ export interface ChatSession {
   messages: SupportMessage[];
   lastUpdated: string;
 }
+
+export interface WithdrawalProof {
+  id: string;
+  userId: string;
+  userName: string;
+  userCountry: string;
+  amount: number;
+  message: string;
+  image?: string; // Base64 or standard asset url
+  likes: string[]; // List of user IDs who liked it
+  createdAt: string;
+  lastModified?: number;
+}
+

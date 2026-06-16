@@ -30,9 +30,12 @@ import {
   Download,
   Smartphone,
   Megaphone,
-  Share
+  Share,
+  Camera,
+  ThumbsUp,
+  Trash2
 } from 'lucide-react';
-import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage } from '../types';
+import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage, WithdrawalProof } from '../types';
 import { DataStore, syncWithBackend, getApiUrl } from '../dataStore';
 import AdminPanel from './AdminPanel';
 
@@ -116,6 +119,7 @@ export default function Dashboard({
   const [allWithdrawals, setAllWithdrawals] = useState<Withdrawal[]>([]);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>([]);
+  const [withdrawalProofs, setWithdrawalProofs] = useState<WithdrawalProof[]>([]);
 
   // Form states
   const [depositAmount, setDepositAmount] = useState<string>('5000');
@@ -139,6 +143,16 @@ export default function Dashboard({
   const [isDraggingWithdraw, setIsDraggingWithdraw] = useState<boolean>(false);
 
   const [bonusCodeInput, setBonusCodeInput] = useState<string>('');
+  
+  // Proof form states
+  const [isPublishFormOpen, setIsPublishFormOpen] = useState<boolean>(false);
+  const [proofAmount, setProofAmount] = useState<string>('');
+  const [proofMessage, setProofMessage] = useState<string>('');
+  const [proofImage, setProofImage] = useState<string>('');
+  const [isPublishing, setIsPublishing] = useState<boolean>(false);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
+  const [proofImageFileName, setProofImageFileName] = useState<string>('');
+  const [isDraggingProof, setIsDraggingProof] = useState<boolean>(false);
   const [bonusError, setBonusError] = useState<string>('');
   const [bonusSuccess, setBonusSuccess] = useState<string>('');
 
@@ -565,6 +579,9 @@ export default function Dashboard({
 
     const msgs = DataStore.getSupportMessages().filter(m => m.userId === currentUser.id);
     setSupportMessages(msgs);
+
+    const pfs = DataStore.getWithdrawalProofs();
+    setWithdrawalProofs(pfs);
   };
 
   useEffect(() => {
@@ -1016,6 +1033,73 @@ export default function Dashboard({
     lastSupportMsgsCount.current = DataStore.getSupportMessages().filter(m => m.userId === currentUser.id).length;
     
     syncDashboardData();
+  };
+
+  // Submit withdrawal proof
+  const handlePublishProof = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!proofAmount.trim() || !proofMessage.trim()) {
+      triggerToast('⚠️ Veuillez remplir le montant et votre message.', 'error');
+      return;
+    }
+
+    const amt = parseInt(proofAmount, 10);
+    if (isNaN(amt) || amt <= 0) {
+      triggerToast('⚠️ Veuillez indiquer un montant valide.', 'error');
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const res = await DataStore.publishWithdrawalProof(
+        userState.id,
+        userState.name,
+        userState.country,
+        amt,
+        proofMessage,
+        proofImage
+      );
+
+      if (res.success) {
+        triggerToast('✅ Votre preuve de retrait a été publiée avec succès !', 'success');
+        setProofAmount('');
+        setProofMessage('');
+        setProofImage('');
+        setProofImageFileName('');
+        setIsPublishFormOpen(false);
+        syncDashboardData();
+      } else {
+        triggerToast('⚠️ Une erreur est survenue lors de la publication.', 'error');
+      }
+    } catch (err) {
+      console.error('Error publishing proof:', err);
+      triggerToast('⚠️ Impossible de se connecter au serveur.', 'error');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Like a proof
+  const handleLikeProof = async (proofId: string) => {
+    await DataStore.likeWithdrawalProof(proofId, userState.id);
+    syncDashboardData();
+  };
+
+  // Delete/Moderate a proof (Admins only)
+  const handleDeleteProof = async (proofId: string) => {
+    openConfirm(
+      'Supprimer la Preuve 🗑️',
+      'Êtes-vous sûr de vouloir supprimer définitivement cette preuve de retrait du flux public ?',
+      async () => {
+        const ok = await DataStore.deleteWithdrawalProof(proofId);
+        if (ok) {
+          triggerToast('🗑️ Preuve de retrait supprimée avec succès.', 'success');
+          syncDashboardData();
+        } else {
+          triggerToast('⚠️ Impossible de supprimer de la mémoire.', 'error');
+        }
+      }
+    );
   };
 
   // Quick switch user to admin role helper for seamless reviewer walkthroughs
@@ -1840,115 +1924,6 @@ export default function Dashboard({
                   />
                 </div>
 
-                {/* Proof of withdrawal file upload field */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">
-                    Preuve de Retrait / Justificatif (Optionnel)
-                  </label>
-                  <p className="text-[10px] text-slate-500 font-bold leading-normal">
-                    Vous pouvez joindre un justificatif (capture d'écran, reçu, carte d'identité, confirmation, etc.) accepté sous format JPG/PNG ou PDF. Ce fichier sera visible pour l'ensemble des utilisateurs de la plateforme dans l'historique et par l'administration.
-                  </p>
-
-                  <div
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setIsDraggingWithdraw(true);
-                    }}
-                    onDragLeave={() => setIsDraggingWithdraw(false)}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setIsDraggingWithdraw(false);
-                      const file = e.dataTransfer.files?.[0];
-                      if (file) {
-                        const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-                        if (!validTypes.includes(file.type)) {
-                          alert("Le fichier doit être au format JPG, PNG ou PDF.");
-                          return;
-                        }
-                        setWithdrawProofFileName(file.name);
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setWithdrawProofBase64(reader.result as string);
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    onClick={() => {
-                      const input = document.getElementById("withdraw-proof-file-input");
-                      input?.click();
-                    }}
-                    className={`border border-dashed rounded-2xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-2 select-none ${
-                      isDraggingWithdraw 
-                        ? 'border-orange-400 bg-orange-50/20' 
-                        : 'border-orange-200/50 bg-white hover:bg-orange-50/10'
-                    }`}
-                  >
-                    <input 
-                      type="file"
-                      id="withdraw-proof-file-input"
-                      className="hidden"
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setWithdrawProofFileName(file.name);
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setWithdrawProofBase64(reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-
-                    {withdrawProofBase64 ? (
-                      <div className="w-full flex flex-col items-center space-y-2">
-                        {/* File preview based on type */}
-                        {withdrawProofBase64.startsWith("data:application/pdf") ? (
-                          <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 text-lg font-bold">
-                            PDF
-                          </div>
-                        ) : (
-                          <img 
-                            src={withdrawProofBase64} 
-                            alt="Preuve" 
-                            className="max-h-24 max-w-full rounded-md object-contain border border-slate-100 shadow-sm"
-                            referrerPolicy="no-referrer"
-                          />
-                        )}
-                        <span className="text-[10px] text-slate-600 font-bold block max-w-[200px] truncate">
-                          📎 {withdrawProofFileName || "justificatif.bin"}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setWithdrawProofBase64('');
-                            setWithdrawProofFileName('');
-                          }}
-                          className="text-[9px] text-red-500 hover:text-red-700 font-black uppercase tracking-wider px-2 py-1 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                        >
-                          Retirer le fichier
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-lg">
-                          📁
-                        </div>
-                        <div className="leading-tight">
-                          <span className="text-[11px] text-[#1b64d9] font-black uppercase tracking-wide block">
-                            Sélectionner ou Glisser un fichier
-                          </span>
-                          <span className="text-[9px] text-slate-400 font-bold block mt-0.5">
-                            JPG, PNG ou PDF (max. 4 Mo)
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
                 {/* Real-time fee summary */}
                 {!isNaN(parseInt(withdrawAmount)) && parseInt(withdrawAmount) > 0 && (
                   <div className="bg-[#fffdfb] p-3.5 rounded-2xl border border-orange-100 text-xs font-bold text-slate-700 space-y-1.5 animate-fade-in shadow-sm">
@@ -2008,6 +1983,365 @@ export default function Dashboard({
                   </li>
                 </ul>
               </div>
+            </div>
+          )}
+
+          {/* WITHDRAWAL PROOFS FEED TAB */}
+          {activeTab === 'proofs' && (
+            <div className="space-y-6 max-w-4xl mx-auto text-left bg-white p-6 sm:p-8 rounded-[34px] border border-orange-100 shadow-[0_12px_45px_rgba(249,115,22,0.04)]">
+              
+              {/* BRAND HEADER CARD */}
+              <div className="bg-slate-50 border border-slate-200/60 rounded-[28px] p-6 sm:p-8 shadow-sm text-slate-800 text-left relative overflow-hidden">
+                {/* Decorative background visual blob */}
+                <div className="absolute -top-12 -right-12 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-[10px] font-sans font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-emerald-250/40">
+                      ✅ Communauté Active
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-sans font-black text-slate-800 tracking-tight leading-none mt-1">
+                      Preuves de Retrait
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-600 font-medium">
+                      Découvrez les reçus réels reçus et publiés en direct par nos investisseurs AgroProfit.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setIsPublishFormOpen(!isPublishFormOpen)}
+                    className="self-start sm:self-center px-5 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs rounded-2xl shadow-[0_4px_15px_rgba(249,115,22,0.25)] flex items-center gap-2 duration-150 transition-all cursor-pointer select-none active:scale-95 shrink-0 uppercase tracking-widest font-mono"
+                  >
+                    <Camera className="w-4 h-4" />
+                    {isPublishFormOpen ? "Masquer le formulaire" : "Publier ma preuve"}
+                  </button>
+                </div>
+              </div>
+
+              {/* PUBLISH PROOF SHEET / CARD */}
+              <AnimatePresence>
+                {isPublishFormOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, y: -10 }}
+                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="bg-slate-50/50 border border-orange-100 rounded-3xl p-5 sm:p-6 shadow-md text-slate-800">
+                      <div className="border-b border-slate-200 pb-3 mb-4">
+                        <span className="text-xs sm:text-sm font-sans font-black text-slate-800 uppercase tracking-wider block">
+                          📝 Partager mon expérience de paiement
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-slate-500 block mt-0.5 opacity-90">
+                          Racontez votre retrait pour inspirer notre communauté de producteurs. Votre nom et pays seront joints !
+                        </span>
+                      </div>
+
+                      <form onSubmit={handlePublishProof} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Amount Input */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] sm:text-xs font-sans font-black text-slate-700 uppercase tracking-wider block">
+                              Montant retiré (FCFA / XOF) <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              required
+                              min="1"
+                              placeholder="Ex: 25000"
+                              value={proofAmount}
+                              onChange={(e) => setProofAmount(e.target.value)}
+                              className="w-full bg-white border border-slate-200 focus:border-orange-500 focus:outline-[#f97316] rounded-xl text-xs sm:text-sm text-slate-800 p-3.5 font-bold transition-all focus:ring-2 focus:ring-orange-500/20 placeholder-slate-400"
+                            />
+                          </div>
+
+                          {/* Image Attachment widget with full drag and drop */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] sm:text-xs font-sans font-black text-slate-700 uppercase tracking-wider block">
+                              Capture d'écran du reçu Mobile Money (Optionnel)
+                            </label>
+                            
+                            <div 
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                setIsDraggingProof(true);
+                              }}
+                              onDragLeave={() => setIsDraggingProof(false)}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                setIsDraggingProof(false);
+                                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                  const file = e.dataTransfer.files[0];
+                                  setProofImageFileName(file.name);
+                                  const reader = new FileReader();
+                                  reader.readAsDataURL(file);
+                                  reader.onload = () => {
+                                    setProofImage(reader.result as string);
+                                  };
+                                }
+                              }}
+                              className={`border-2 border-dashed rounded-xl p-3 text-center flex items-center justify-center gap-3 transition-all duration-150 relative ${
+                                isDraggingProof 
+                                  ? 'border-orange-500 bg-orange-500/10' 
+                                  : proofImage 
+                                    ? 'border-emerald-500 bg-emerald-500/10' 
+                                    : 'border-slate-250 bg-white hover:border-orange-400 hover:bg-slate-50/50'
+                              }`}
+                            >
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    const file = e.target.files[0];
+                                    setProofImageFileName(file.name);
+                                    const reader = new FileReader();
+                                    reader.readAsDataURL(file);
+                                    reader.onload = () => {
+                                      setProofImage(reader.result as string);
+                                    };
+                                  }
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                              />
+
+                              {proofImage ? (
+                                <div className="flex items-center justify-between w-full z-20 px-1">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-500/30">
+                                      <img src={proofImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                    </div>
+                                    <div className="text-left leading-tight truncate max-w-[150px] sm:max-w-[200px]">
+                                      <span className="text-[10px] text-slate-700 font-bold block truncate">{proofImageFileName || 'reçu_retrait.jpg'}</span>
+                                      <span className="text-[9px] text-emerald-600 font-black uppercase tracking-wider block">Chargé</span>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setProofImage('');
+                                      setProofImageFileName('');
+                                    }}
+                                    className="text-[9px] text-red-600 hover:text-red-700 font-black uppercase tracking-wider px-2.5 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200/50 rounded-lg transition-colors z-30"
+                                  >
+                                    Enlever
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-100/50 text-orange-600 flex items-center justify-center text-sm shrink-0">
+                                    📸
+                                  </div>
+                                  <div className="text-left leading-tight">
+                                    <span className="text-[10px] sm:text-[11px] text-orange-600 font-black uppercase tracking-wide block">
+                                      Choisir ou glisser l'image
+                                    </span>
+                                    <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold block">
+                                      PNG, JPG (Reçu de transaction)
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Text Message Input */}
+                        <div className="space-y-1">
+                          <label className="text-[10px] sm:text-xs font-sans font-black text-slate-700 uppercase tracking-wider block">
+                            Votre Message / Témoignage <span className="text-red-500">*</span>
+                          </label>
+                          <textarea
+                            required
+                            rows={3}
+                            placeholder="Partagez votre joie ! Ex: Super ! Retrait instantané de mon gain VIP sur mon compte Wave, équipe au top !"
+                            value={proofMessage}
+                            onChange={(e) => setProofMessage(e.target.value)}
+                            className="w-full bg-white border border-slate-200 focus:border-orange-500 focus:outline-[#f97316] rounded-xl text-xs sm:text-sm text-slate-800 p-3.5 font-bold transition-all focus:ring-2 focus:ring-orange-500/20 placeholder-slate-400 resize-none"
+                          />
+                        </div>
+
+                        {/* Submit Actions */}
+                        <div className="flex gap-2.5 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setIsPublishFormOpen(false)}
+                            className="px-4 py-3 border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                          >
+                            Annuler
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isPublishing}
+                            className={`px-6 py-3 font-bold text-xs rounded-xl flex items-center gap-2 text-white shadow-md cursor-pointer ${
+                              isPublishing 
+                                ? 'bg-orange-400 opacity-80 cursor-not-allowed' 
+                                : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/10 active:scale-95 transition-all'
+                            }`}
+                          >
+                            {isPublishing ? "Publication..." : "Partager sur le Flux 🚀"}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* TIMELINE OF PROOFS */}
+              <div className="space-y-4">
+                {withdrawalProofs.length === 0 ? (
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-3xl p-12 text-center text-slate-700">
+                    <span className="text-3xl block">🌾</span>
+                    <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider mt-2.5">Aucun témoignage publié</h3>
+                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto font-medium opacity-90">
+                      Soyez le premier à partager votre joie et à publier votre preuve de retrait pour inspirer de nouveaux membres.
+                    </p>
+                  </div>
+                ) : (
+                  withdrawalProofs.map((proof) => {
+                    const hasLiked = proof.likes.includes(userState.id);
+                    const colors = [
+                      'from-orange-500 to-amber-500', 
+                      'from-emerald-500 to-teal-500', 
+                      'from-blue-500 to-indigo-500', 
+                      'from-purple-500 to-pink-500'
+                    ];
+                    let hash = 0;
+                    for (let i = 0; i < proof.userName.length; i++) {
+                      hash += proof.userName.charCodeAt(i);
+                    }
+                    const avatarGradient = colors[hash % colors.length];
+
+                    return (
+                      <div 
+                        key={proof.id}
+                        className="bg-white border border-slate-150 hover:border-orange-200 hover:shadow-lg transition-all rounded-3xl p-5 text-left relative overflow-hidden group shadow-sm"
+                      >
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/[0.01] rounded-full blur-xl pointer-events-none group-hover:bg-white/[0.02] transition-colors" />
+
+                        <div className="flex justify-between items-start">
+                          <div className="flex gap-3">
+                            <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${avatarGradient} text-white font-sans font-black flex items-center justify-center text-sm shadow-md`}>
+                              {proof.userName.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="leading-tight">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-sans font-black text-slate-800 text-sm block">
+                                  {proof.userName}
+                                </span>
+                                <span className="bg-emerald-50 text-emerald-700 text-[8px] font-sans font-black px-1.5 py-0.5 rounded uppercase tracking-wider border border-emerald-200/50 flex items-center gap-0.5 select-none animate-pulse">
+                                  <span>PAYÉ</span>
+                                  <span>★</span>
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] text-orange-600 font-black uppercase tracking-wider block opacity-95">
+                                  📍 {proof.userCountry}
+                                </span>
+                                <span className="text-slate-400 text-[9px] font-black tracking-normal uppercase opacity-75">
+                                  {new Date(proof.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-right leading-none">
+                            <span className="text-emerald-600 font-mono font-black text-base sm:text-lg tracking-tight block">
+                              +{proof.amount.toLocaleString()} XOF
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 bg-slate-50 border border-slate-100 p-4 rounded-xl">
+                          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold whitespace-pre-wrap">
+                            {proof.message}
+                          </p>
+                        </div>
+
+                        {proof.image && (
+                          <div className="mt-4 max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 hover:border-orange-200 transition-colors">
+                            <button
+                              onClick={() => setExpandedImage(proof.image || null)}
+                              type="button"
+                              className="w-full relative focus:outline-none focus:ring-0 select-none cursor-zoom-in overflow-hidden"
+                              title="Cliquer pour zoomer sur le reçu de retrait"
+                            >
+                              <img 
+                                src={proof.image} 
+                                className="w-full max-h-[350px] object-contain transition-transform duration-300 hover:scale-[1.02] block mx-auto" 
+                                referrerPolicy="no-referrer" 
+                              />
+                              <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] text-white font-mono font-black uppercase tracking-wider flex items-center gap-1 border border-white/10 shadow-md">
+                                <span>🔍 Agrandir l'image</span>
+                              </div>
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="flex justify-start items-center border-t border-slate-100 mt-4 pt-3">
+                          <button
+                            onClick={() => handleLikeProof(proof.id)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-sans font-black tracking-wide uppercase transition-all duration-150 ${
+                              hasLiked 
+                                ? 'bg-orange-50 text-orange-600 font-black saturate-150 border border-orange-200' 
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent'
+                            }`}
+                          >
+                            <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-orange-550 stroke-orange-550' : ''}`} />
+                            <span>{proof.likes.length > 0 ? `${proof.likes.length} ${proof.likes.length === 1 ? 'Like' : 'Likes'}` : 'Soutenir'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* ENLARGED FULLSCREEN RECEIPT MODAL OVERLAY */}
+              <AnimatePresence>
+                {expandedImage && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setExpandedImage(null)}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 cursor-zoom-out"
+                  >
+                    <motion.div
+                      initial={{ scale: 0.95 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0.95 }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="max-w-4xl max-h-[85vh] overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 flex flex-col justify-between relative shadow-[0_25px_60px_rgba(0,0,0,0.85)]"
+                    >
+                      <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-950/40">
+                        <span className="font-sans font-black text-xs text-white uppercase tracking-widest block">
+                          Verified Cash Transaction Receipt
+                        </span>
+                        <button
+                          onClick={() => setExpandedImage(null)}
+                          className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="p-4 flex-grow overflow-auto flex items-center justify-center max-h-[70vh]">
+                        <img 
+                          src={expandedImage} 
+                          className="max-w-full max-h-[62vh] object-contain rounded-2xl border border-slate-800 shadow-inner" 
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
             </div>
           )}
 
@@ -2406,6 +2740,17 @@ export default function Dashboard({
           >
             <Briefcase className="w-5 h-5 stroke-[2.5]" />
             <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Produits</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setIsAdminMode(false);
+              setActiveTab('proofs');
+            }}
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'proofs' && !isAdminMode ? 'text-orange-600 scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+          >
+            <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Preuve</span>
           </button>
 
           <button
