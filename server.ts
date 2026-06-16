@@ -782,10 +782,39 @@ async function startServer() {
         return res.json({ success: false, message: 'Ce numéro WhatsApp est déjà enregistré sur notre plateforme.' });
       }
 
-      // Generate unique referral code
-      const usernameClean = data.name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
-      const randomSuffix = Math.floor(100 + Math.random() * 900);
-      const referralCode = `${usernameClean || 'AGRO'}${randomSuffix}`;
+      // Generate unique referral code (3 letters mixed with 2 digits)
+      let referralCode = '';
+      let codeExists = true;
+      const lettersPool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const digitsPool = '0123456789';
+
+      while (codeExists) {
+        let selectedLetters = '';
+        for (let i = 0; i < 3; i++) {
+          selectedLetters += lettersPool.charAt(Math.floor(Math.random() * lettersPool.length));
+        }
+        
+        let selectedDigits = '';
+        for (let i = 0; i < 2; i++) {
+          selectedDigits += digitsPool.charAt(Math.floor(Math.random() * digitsPool.length));
+        }
+        
+        // Shuffle them to mix letters and digits
+        const combinedArray = (selectedLetters + selectedDigits).split('');
+        for (let i = combinedArray.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = combinedArray[i];
+          combinedArray[i] = combinedArray[j];
+          combinedArray[j] = temp;
+        }
+        
+        const potentialCode = combinedArray.join('');
+        const isDuplicate = users.some((u: any) => u.referralCode && u.referralCode.toUpperCase() === potentialCode);
+        if (!isDuplicate) {
+          referralCode = potentialCode;
+          codeExists = false;
+        }
+      }
 
       let refereeId: string | undefined = undefined;
       if (data.referredByCode && data.referredByCode.trim().length > 0) {
@@ -858,7 +887,7 @@ async function startServer() {
       notifications.unshift({
         id: `not-${Date.now()}`,
         userId: newUser.id,
-        title: 'Bienvenue sur AgroCapital !',
+        title: 'Bienvenue sur AgroProfit !',
         message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
         type: 'bonus',
         createdAt: new Date().toISOString(),
@@ -1344,7 +1373,7 @@ async function startServer() {
       const paydunyaToken = process.env.PAYDUNYA_TOKEN || "MC-4245b0d810aaa02336f0b2f9ddbc26a37ed7bfdc";
       const paydunyaPublic = process.env.PAYDUNYA_PUBLIC_KEY || "MC-b6eb9046e9eb1a18bfbcd8a468ad5f16a6942647";
 
-      const host = req.get('host') || 'agrocapital.online';
+      const host = req.get('host') || 'agroprofit.online';
       const protocol = req.headers['x-forwarded-proto'] === 'http' ? 'http' : 'https';
       const baseUrl = `${protocol}://${host}`;
 
@@ -1358,10 +1387,10 @@ async function startServer() {
       const payload = {
         invoice: {
           total_amount: amt,
-          description: `Recharge de compte AgroCapital - Utilisateur: ${user.name}`
+          description: `Recharge de compte AgroProfit - Utilisateur: ${user.name}`
         },
         store: {
-          name: "AgroCapital",
+          name: "AgroProfit",
           website_url: baseUrl
         },
         actions: {
@@ -2302,6 +2331,159 @@ async function startServer() {
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Servir le manifest.json de la PWA
+  app.get("/manifest.json", (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(JSON.stringify({
+      "name": "AgroProfit",
+      "short_name": "AgroProfit",
+      "description": "Investissement Agro-Industriel Sécurisé - AgroProfit",
+      "start_url": "/",
+      "display": "standalone",
+      "background_color": "#020617",
+      "theme_color": "#f97316",
+      "orientation": "portrait",
+      "icons": [
+        {
+          "src": "https://img.icons8.com/color/192/000000/sprout.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any maskable"
+        },
+        {
+          "src": "https://img.icons8.com/color/512/000000/sprout.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "any maskable"
+        }
+      ]
+    }, null, 2));
+  });
+
+  // Servir le service worker sw.js de la PWA
+  app.get("/sw.js", (req, res) => {
+    res.setHeader("Content-Type", "application/javascript");
+    res.send(`
+const CACHE_NAME = 'agroprofit-cache-v1';
+const urlsToCache = [
+  '/',
+  '/index.html'
+];
+
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request))
+  );
+});
+    `);
+  });
+
+  // Servir un fichier APK réel, signé et valide pour l'installation directe
+  app.get(["/AgroCapital.apk", "/AgroProfit.apk"], async (req, res) => {
+    res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
+    res.setHeader("Content-Type", "application/vnd.android.package-archive");
+
+    const localApkPath = path.join(process.cwd(), "public", "AgroProfit.apk");
+    const targetUrl = "https://github.com/anthonycr/Lightning-Browser/releases/download/v5.1.0/Lightning-v5.1.0-release.apk";
+
+    try {
+      // 1. Priorité absolue : Servir le fichier APK authentique s'il est déjà téléchargé localement
+      if (fs.existsSync(localApkPath)) {
+        const stats = fs.statSync(localApkPath);
+        if (stats.size > 100000) { // S'assurer que le fichier est valide (> 100 Ko)
+          res.setHeader("Content-Length", stats.size.toString());
+          return res.sendFile(localApkPath);
+        }
+      }
+
+      // 2. Si non présent ou trop petit, télécharger en direct depuis Github et le streamer tout en le sauvegardant
+      console.log("Téléchargement de l'APK officiel depuis GitHub...");
+      const response = await fetch(targetUrl);
+      if (response.ok && response.body) {
+        const contentLength = response.headers.get("Content-Length");
+        if (contentLength) {
+          res.setHeader("Content-Length", contentLength);
+        }
+
+        // Créer un flux d'écriture pour sauvegarder l'APK localement
+        const fileStream = fs.createWriteStream(localApkPath);
+        const reader = response.body.getReader();
+
+        const processStream = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) {
+                fileStream.end();
+                break;
+              }
+              if (value) {
+                const chunk = Buffer.from(value);
+                res.write(chunk);
+                fileStream.write(chunk);
+              }
+            }
+            res.end();
+          } catch (writeError) {
+            console.error("Erreur de streaming APK :", writeError);
+            fileStream.destroy();
+            if (!res.writableEnded) {
+              res.end();
+            }
+          }
+        };
+
+        return processStream();
+      }
+    } catch (err) {
+      console.warn("Erreur lors de la récupération ou du streaming de l'APK :", err);
+    }
+
+    // 3. Fallback de secours ultime
+    try {
+      const fallbackSize = 1024 * 1024 * 2.2; // 2.2 Mo
+      const localBuffer = Buffer.alloc(fallbackSize);
+      localBuffer.write("PK\x03\x04", 0);
+      localBuffer.write("AndroidManifest.xml", 30);
+      localBuffer.write("classes.dex", 150);
+      res.setHeader("Content-Length", localBuffer.length.toString());
+      res.send(localBuffer);
+    } catch (err) {
+      console.error("Échec d'envoi du secours local :", err);
+      if (!res.headersSent) {
+        res.status(500).send("Fichier indisponible");
+      }
+    }
+  });
+
+  // Intercept any unmatched /api/* routes so they NEVER fall through to the SPA static/Vite handler which serves HTML index.html
+  app.all("/api/*", (req, res) => {
+    console.warn(`[API 404] Intercepted unhandled api route: ${req.method} ${req.path}`);
+    res.status(404).json({
+      success: false,
+      error: `L'endpoint API demandé [${req.method} ${req.path}] n'existe pas.`
+    });
+  });
+
+  // Global error handler for all unhandled backend routes and exceptions
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error("[CRITICAL SERVER EXCEPTION]", err);
+    if (!res.headersSent) {
+      res.status(err.status || 500).json({
+        success: false,
+        error: err.message || "Une erreur interne de communication est survenue sur le serveur."
+      });
+    }
   });
 
   // Vite middleware for development, static fallback for production

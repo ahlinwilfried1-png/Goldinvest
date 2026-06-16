@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Deposit, Withdrawal, Investment, SystemNotification } from '../types';
+import { User, Deposit, Withdrawal, Investment, SystemNotification, Commission } from '../types';
 import { DataStore, syncWithBackend } from '../dataStore';
 import { 
   ArrowLeft, 
@@ -15,8 +15,9 @@ import {
   Clock,
   XCircle,
   Database,
+  Bell,
   Gift,
-  Bell
+  TrendingUp
 } from 'lucide-react';
 
 interface HistoriquePageProps {
@@ -25,21 +26,19 @@ interface HistoriquePageProps {
 }
 
 export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps) {
-  const [activeTab, setActiveTab] = useState<'recharge' | 'retrait' | 'achat'>('recharge');
+  const [activeTab, setActiveTab] = useState<'recharge' | 'retrait' | 'achat' | 'commission' | 'revenu'>('recharge');
   
   // Data lists corresponding to the types
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
   
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'active' | 'completed'>('all');
 
-  // Gift Code & Notifications states
-  const [giftCode, setGiftCode] = useState('');
-  const [applyingCode, setApplyingCode] = useState(false);
-  const [codeFeedback, setCodeFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  // Notifications state
   const [notifs, setNotifs] = useState<SystemNotification[]>([]);
   const [hashActive, setHashActive] = useState(window.location.hash);
 
@@ -56,9 +55,34 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
     const allInvs = DataStore.getInvestments().filter(i => i.userId === user.id);
     setInvestments(allInvs);
 
-    // 4. Notifications
+    // 4. Commissions
+    const allComms = DataStore.getCommissions().filter(c => c.userId === user.id);
+    setCommissions(allComms);
+
+    // 5. Notifications
     const allNotifs = DataStore.getNotifications().filter(n => n.userId === undefined || n.userId === user.id);
     setNotifs(allNotifs);
+  };
+
+  const getRevenuItems = () => {
+    const list: any[] = [];
+    investments.forEach(inv => {
+      const createdTime = new Date(inv.createdAt).getTime();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      for (let d = 1; d <= inv.daysPassed; d++) {
+        const claimTime = createdTime + d * oneDayMs;
+        list.push({
+          id: `rev-${inv.id}-${d}`,
+          investmentId: inv.id,
+          productName: inv.productName,
+          amount: inv.dailyReturn,
+          createdAt: new Date(claimTime).toISOString(),
+          dayNumber: d
+        });
+      }
+    });
+    // Trier par date décroissante
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   };
 
   useEffect(() => {
@@ -93,26 +117,6 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
-
-  const handleApplyCode = (e: React.FormEvent) => {
-    e.preventDefault();
-    const codeClean = giftCode.trim();
-    if (!codeClean) return;
-    setApplyingCode(true);
-    setCodeFeedback(null);
-    setTimeout(() => {
-      const res = DataStore.applyBonusCode(user.id, codeClean);
-      setApplyingCode(false);
-      if (res.success) {
-        setCodeFeedback({ message: `Félicitations ! ${res.message}`, type: 'success' });
-        setGiftCode('');
-        fetchTransactions();
-        window.dispatchEvent(new CustomEvent('gi_store_updated'));
-      } else {
-        setCodeFeedback({ message: res.message, type: 'error' });
-      }
-    }, 700);
-  };
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -169,7 +173,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
         const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
         return matchesType && matchesSearch && matchesStatus;
       });
-    } else {
+    } else if (activeTab === 'achat') {
       return investments.filter(item => {
         // Enforce the database type = achat
         const matchesType = true; // Implicitly investments are achats
@@ -179,6 +183,19 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                              (statusFilter === 'approved' && item.status === 'active') || 
                              (statusFilter === 'completed' && item.status === 'completed');
         return matchesType && matchesSearch && matchesStatus;
+      });
+    } else if (activeTab === 'commission') {
+      return commissions.filter(item => {
+        const matchesSearch = item.fromUserName.toLowerCase().includes(term) || 
+                             item.amount.toString().includes(term) ||
+                             `niveau ${item.level}`.includes(term);
+        return matchesSearch;
+      });
+    } else {
+      return getRevenuItems().filter(item => {
+        const matchesSearch = item.productName.toLowerCase().includes(term) || 
+                             item.amount.toString().includes(term);
+        return matchesSearch;
       });
     }
   };
@@ -215,152 +232,20 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         
-        {/* BALANCE HIGHLIGHT CARD */}
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-slate-700/50">
-          <div>
-            <span className="text-[11px] font-black uppercase text-slate-400 tracking-widest block mb-1">Solde Disponible</span>
-            <div className="flex items-baseline space-x-2">
-              <span className="text-3xl font-bold font-sans tracking-tight solde-bold">
-                {user.balance.toLocaleString()}
-              </span>
-              <span className="text-sm font-black text-orange-400 select-none">{getCurrency()}</span>
-            </div>
-            <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
-              <Database className="w-3.5 h-3.5 text-orange-500" />
-              Directement synchronisé avec la base Supabase Cloud.
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2 sm:self-center select-none">
-            <div className="bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-slate-700 text-xs flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Type: Utilisateur</span>
-            </div>
-            <div className="bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-slate-700 text-xs">
-              <span className="text-slate-400">Tel:</span> <span className="font-bold">{user.whatsapp}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION: CODE CADEAU & ANNOUNCEMENTS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          
-          {/* CARD A: ENTER GIFT CODE */}
-          <div 
-            id="code-cadeau"
-            className={`p-6 rounded-3xl border text-slate-850 text-left transition-all duration-500 bg-white shadow-sm ${
-              hashActive === '#code-cadeau' 
-                ? 'border-orange-400 ring-4 ring-orange-100 shadow-md scale-[1.01]' 
-                : 'border-orange-100/80 hover:border-orange-200'
-            }`}
-          >
-            <div className="flex items-center space-x-3 pb-3 border-b border-orange-50/50">
-              <div className="w-9 h-9 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center shrink-0">
-                <Gift className="w-5 h-5 stroke-[2.5]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-xs sm:text-sm font-sans font-black text-slate-800 uppercase tracking-wider truncate">Code Cadeau Bonus</h4>
-                <p className="text-[10px] text-slate-400 block font-bold truncate">Créditez instantanément votre solde</p>
-              </div>
-            </div>
-
-            <div className="pt-4 space-y-3">
-              <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">
-                Entrez votre code promotionnel ou numéro de carte bonus reçu lors d'événements AgriCapital ou partagé sur nos canaux officiels.
-              </p>
-              
-              <form onSubmit={handleApplyCode} className="flex gap-2 mr-0.5">
-                <input
-                  type="text"
-                  placeholder="Ex: AGRIGIFT2026, BONUSTG..."
-                  value={giftCode}
-                  onChange={(e) => setGiftCode(e.target.value)}
-                  className="flex-1 bg-slate-50 border border-slate-200 focus:border-orange-400 font-sans rounded-2xl py-2.5 px-3.5 text-xs font-semibold text-slate-900 placeholder-slate-400 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={applyingCode}
-                  className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-sans font-black text-[11px] uppercase tracking-wider rounded-2xl transition-all shadow cursor-pointer flex items-center justify-center shrink-0"
-                >
-                  {applyingCode ? 'Verification...' : 'Valider'}
-                </button>
-              </form>
-
-              {/* LOCAL FEEDBACK ALERT */}
-              {codeFeedback && (
-                <div className={`p-3.5 rounded-2xl border text-[11px] leading-relaxed font-bold flex items-center gap-2 animate-fade-in ${
-                  codeFeedback.type === 'success' 
-                    ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
-                    : 'bg-rose-50 border-rose-100 text-rose-700'
-                }`}>
-                  <span className="shrink-0">{codeFeedback.type === 'success' ? '✅' : '⚠️'}</span>
-                  <p className="flex-1">{codeFeedback.message}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* CARD B: NOTIFICATIONS / ANNOUNCEMENTS FEED */}
-          <div 
-            id="notifications"
-            className={`p-6 rounded-3xl border text-slate-850 text-left transition-all duration-500 bg-white shadow-sm ${
-              hashActive === '#notifications' 
-                ? 'border-orange-400 ring-4 ring-orange-100 shadow-md scale-[1.01]' 
-                : 'border-orange-100/80 hover:border-orange-200'
-            }`}
-          >
-            <div className="flex items-center space-x-3 pb-3 border-b border-orange-50/50">
-              <div className="w-9 h-9 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center shrink-0">
-                <Bell className="w-5 h-5 stroke-[2.5]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-xs sm:text-sm font-sans font-black text-slate-800 uppercase tracking-wider truncate">Notifications ({notifs.length})</h4>
-                <p className="text-[10px] text-slate-400 block font-bold truncate">Actu en direct de l'administration</p>
-              </div>
-            </div>
-
-            <div className="pt-4 space-y-3 max-h-[178px] overflow-y-auto pr-1">
-              {notifs.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-[11px] font-bold leading-relaxed">
-                  Aucune notification enregistrée sur votre compte.<br/>
-                  <span className="text-[9px] font-medium text-slate-400">Vos actus s'afficheront ici.</span>
-                </div>
-              ) : (
-                notifs.map((n) => (
-                  <div key={n.id} className="p-3 bg-slate-50 border border-slate-100/70 rounded-2xl flex flex-col gap-1 text-[11px] text-slate-800 shadow-sm leading-relaxed">
-                    <div className="flex justify-between items-center gap-1.5 border-b border-slate-200/40 pb-1">
-                      <span className="text-[9px] font-black text-orange-600 uppercase tracking-tight flex items-center gap-1 truncate">
-                        📢 {n.title || "COMMUNIQUÉ"}
-                      </span>
-                      <span className="text-[8px] text-slate-400 font-mono shrink-0">
-                        {formatDate(n.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-[10.5px] text-slate-600 leading-normal font-bold whitespace-pre-line mt-1">
-                      {n.message}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-        </div>
-
         {/* TABS SEPARATOR CATEGORIES */}
-        <div className="bg-white p-1.5 rounded-2xl border border-orange-100/80 shadow-sm grid grid-cols-3 gap-2">
+        <div className="bg-white p-1.5 rounded-2xl border border-orange-100/80 shadow-sm flex overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:grid md:grid-cols-5">
           <button
             onClick={() => {
               setActiveTab('recharge');
               setStatusFilter('all');
             }}
-            className={`py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-col sm:flex-row items-center justify-center gap-2.5 cursor-pointer ${
+            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'recharge' 
                 ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
             }`}
           >
-            <ArrowDownLeft className={`w-4.5 h-4.5 ${activeTab === 'recharge' ? 'text-white' : 'text-emerald-500'}`} />
+            <ArrowDownLeft className={`w-4 h-4 shrink-0 ${activeTab === 'recharge' ? 'text-white' : 'text-emerald-500'}`} />
             <span>1. Recharges</span>
           </button>
 
@@ -369,13 +254,13 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               setActiveTab('retrait');
               setStatusFilter('all');
             }}
-            className={`py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-col sm:flex-row items-center justify-center gap-2.5 cursor-pointer ${
+            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'retrait' 
                 ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
             }`}
           >
-            <ArrowUpRight className={`w-4.5 h-4.5 ${activeTab === 'retrait' ? 'text-white' : 'text-rose-500'}`} />
+            <ArrowUpRight className={`w-4 h-4 shrink-0 ${activeTab === 'retrait' ? 'text-white' : 'text-rose-500'}`} />
             <span>2. Retraits</span>
           </button>
 
@@ -384,14 +269,44 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               setActiveTab('achat');
               setStatusFilter('all');
             }}
-            className={`py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-col sm:flex-row items-center justify-center gap-2.5 cursor-pointer ${
+            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'achat' 
                 ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
             }`}
           >
-            <ShoppingBag className={`w-4.5 h-4.5 ${activeTab === 'achat' ? 'text-white' : 'text-purple-500'}`} />
+            <ShoppingBag className={`w-4 h-4 shrink-0 ${activeTab === 'achat' ? 'text-white' : 'text-purple-500'}`} />
             <span>3. Achats</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('commission');
+              setStatusFilter('all');
+            }}
+            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'commission' 
+                ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+            }`}
+          >
+            <Gift className={`w-4 h-4 shrink-0 ${activeTab === 'commission' ? 'text-white' : 'text-orange-500'}`} />
+            <span>4. Commissions</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('revenu');
+              setStatusFilter('all');
+            }}
+            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'revenu' 
+                ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+            }`}
+          >
+            <TrendingUp className={`w-4 h-4 shrink-0 ${activeTab === 'revenu' ? 'text-white' : 'text-blue-500'}`} />
+            <span>5. Revenus</span>
           </button>
         </div>
 
@@ -404,6 +319,8 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               placeholder={
                 activeTab === 'recharge' ? "Rechercher par opérateur, référence..." :
                 activeTab === 'retrait' ? "Rechercher par numéro, opérateur..." :
+                activeTab === 'achat' ? "Rechercher par formule..." :
+                activeTab === 'commission' ? "Rechercher par parrainage, filleul..." :
                 "Rechercher par formule..."
               }
               value={searchTerm}
@@ -418,19 +335,22 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               value={statusFilter}
               onChange={(e: any) => setStatusFilter(e.target.value)}
               className="bg-transparent border-none text-xs font-bold font-sans text-slate-700 focus:outline-none pr-3"
+              disabled={activeTab === 'commission' || activeTab === 'revenu'}
             >
               <option value="all">Statut: Tous</option>
-              {activeTab !== 'achat' ? (
+              {activeTab === 'recharge' || activeTab === 'retrait' ? (
                 <>
                   <option value="pending">En attente ⏳</option>
                   <option value="approved">Validé ✅</option>
                   <option value="rejected">Refusé ❌</option>
                 </>
-              ) : (
+              ) : activeTab === 'achat' ? (
                 <>
                   <option value="approved">Actif 🟢</option>
                   <option value="completed">Terminé ✔️</option>
                 </>
+              ) : (
+                <option value="all">Non applicable</option>
               )}
             </select>
           </div>
@@ -460,7 +380,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                 <thead>
                   <tr className="bg-slate-50 border-b border-orange-50 font-sans font-black text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest select-none">
                     <th className="py-4 px-4 sm:px-6">Date & ID</th>
-                    <th className="py-4 px-4">Détails de l’opération</th>
+                    {activeTab !== 'retrait' && activeTab !== 'recharge' && <th className="py-4 px-4">Détails de l’opération</th>}
                     <th className="py-4 px-4 text-right">Montant ({getCurrency()})</th>
                     <th className="py-4 px-4 sm:px-6 text-right">Statut / Type</th>
                   </tr>
@@ -476,17 +396,6 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                           <span className="font-mono font-medium text-[11px]">{formatDate(dep.createdAt)}</span>
                         </div>
                         <div className="font-mono text-[9px] text-slate-400">ID: {dep.id}</div>
-                      </td>
-                      <td className="py-4 px-4 space-y-1">
-                        <div className="font-sans font-bold text-slate-850 flex items-center gap-1.5">
-                          <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">
-                            type = recharge
-                          </span>
-                          <span>{dep.operator}</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 font-medium">
-                          Réf: <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-slate-700 text-[10px]">{dep.reference || 'Aucune'}</span>
-                        </div>
                       </td>
                       <td className="py-4 px-4 text-right">
                         <span className="font-mono font-black text-emerald-600 text-[13px]">
@@ -525,46 +434,6 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                           <span className="font-mono font-medium text-[11px]">{formatDate(wth.createdAt)}</span>
                         </div>
                         <div className="font-mono text-[9px] text-slate-400">ID: {wth.id}</div>
-                      </td>
-                      <td className="py-4 px-4 space-y-1">
-                        <div className="font-sans font-bold text-slate-850 flex items-center gap-1.5">
-                          <span className="bg-rose-50 text-rose-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">
-                            type = retrait
-                          </span>
-                          <span>{wth.operator}</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 font-medium">
-                          Compte: <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-slate-700 text-[10px]">{wth.number}</span>
-                        </div>
-                        {wth.fee && wth.fee > 0 ? (
-                          <div className="text-[10px] text-slate-400 font-medium">
-                            Frais: {wth.fee.toLocaleString()} F | Net payé: {wth.netAmount?.toLocaleString() || (wth.amount - wth.fee).toLocaleString()} F
-                          </div>
-                        ) : null}
-                        {wth.proof_file_url ? (
-                          <div className="pt-1.5 flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] text-slate-400 font-bold">Mon justificatif :</span>
-                            {wth.proof_file_url.startsWith("data:application/pdf") ? (
-                              <a 
-                                href={wth.proof_file_url} 
-                                download={`justificatif-${wth.id}.pdf`}
-                                className="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded text-[9px] font-black font-mono transition-all flex items-center gap-1 cursor-pointer"
-                                title="Télécharger Justificatif PDF"
-                              >
-                                📄 PDF
-                              </a>
-                            ) : (
-                              <a 
-                                href={wth.proof_file_url} 
-                                download={`justificatif-${wth.id}.png`}
-                                className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[9px] font-black font-mono transition-all flex items-center gap-1 cursor-pointer inline-flex"
-                                title="Télécharger Justificatif Image"
-                              >
-                                🖼️ Image
-                              </a>
-                            )}
-                          </div>
-                        ) : null}
                       </td>
                       <td className="py-4 px-4 text-right">
                         <span className="font-mono font-black text-rose-600 text-[13px]">
@@ -638,6 +507,76 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                     </tr>
                   ))}
 
+                  {/* COMMISSION TAB ROWS */}
+                  {activeTab === 'commission' && (filteredItems as Commission[]).map((comm) => (
+                    <tr key={comm.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-4 sm:px-6 space-y-1">
+                        <div className="flex items-center gap-1.5 text-slate-500">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span className="font-mono font-medium text-[11px]">{formatDate(comm.createdAt)}</span>
+                        </div>
+                        <div className="font-mono text-[9px] text-slate-400">ID: {comm.id}</div>
+                      </td>
+                      <td className="py-4 px-4 space-y-1">
+                        <div className="font-sans font-bold text-slate-850 flex items-center gap-1.5 flex-wrap">
+                          <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">
+                            type = commission
+                          </span>
+                          <span>Parrainage de {comm.fromUserName}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-bold">
+                          Filleul direct de <span className="text-orange-600 font-extrabold">Niveau {comm.level}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <span className="font-mono font-black text-orange-600 text-[13px]">
+                          +{comm.amount.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 sm:px-6 text-right">
+                        <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-black text-[10px] uppercase border border-emerald-100">
+                          <CheckCircle className="w-3 h-3 text-emerald-600" />
+                          Crédité
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {/* REVENU TAB ROWS */}
+                  {activeTab === 'revenu' && (filteredItems as any[]).map((rev) => (
+                    <tr key={rev.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-4 sm:px-6 space-y-1">
+                        <div className="flex items-center gap-1.5 text-slate-500">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span className="font-mono font-medium text-[11px]">{formatDate(rev.createdAt)}</span>
+                        </div>
+                        <div className="font-mono text-[9px] text-slate-400">ID: {rev.id}</div>
+                      </td>
+                      <td className="py-4 px-4 space-y-1">
+                        <div className="font-sans font-bold text-slate-850 flex items-center gap-1.5 flex-wrap">
+                          <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">
+                            type = revenu
+                          </span>
+                          <span>Formule {rev.productName}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-bold">
+                          Versement journalier : <span className="text-blue-600">Jour {rev.dayNumber}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <span className="font-mono font-black text-blue-600 text-[13px]">
+                          +{rev.amount.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 sm:px-6 text-right">
+                        <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-black text-[10px] uppercase border border-emerald-100">
+                          <CheckCircle className="w-3 h-3 text-emerald-600" />
+                          Récolté
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+
                 </tbody>
               </table>
             </div>
@@ -645,23 +584,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
 
         </div>
 
-        {/* SECURITY REASSURANCE BADGES */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs select-none">
-          <div className="bg-slate-100 rounded-2xl p-4.5 flex items-start gap-3.5 border border-slate-200/50">
-            <Wallet className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <h5 className="font-bold text-slate-800 font-sans uppercase text-[10px] tracking-wide">Intégrité des Transactions</h5>
-              <p className="text-slate-500 text-[11px] leading-relaxed">Toutes vos opérations sont sécurisées. Les recharges et les retraits de fonds sont validés individuellement par l'administrateur système.</p>
-            </div>
-          </div>
-          <div className="bg-orange-50/50 rounded-2xl p-4.5 flex items-start gap-3.5 border border-orange-100/50">
-            <RefreshCw className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <h5 className="font-bold text-slate-800 font-sans uppercase text-[10px] tracking-wide">Calcul des Gains Temporisés</h5>
-              <p className="text-slate-500 text-[11px] leading-relaxed">Les retours quotidiens sur vos achats de VIP tombent automatiquement toutes les 24 heures et sont ajoutés instantanément à votre balance de retrait.</p>
-            </div>
-          </div>
-        </div>
+        {/* SECURITY REASSURANCE BADGES MOVED OR REMOVED AT USER REQUEST */}
 
       </main>
     </div>

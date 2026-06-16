@@ -4,6 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>AgroCapital - Investissement Agro-Industriel</title>
+    
+    <!-- PWA Configurations -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#f97316" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AgroCapital" />
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/000000/sprout.png" />
+    
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => {
+              console.log('PWA Service Worker enregistré avec succès !', reg);
+            })
+            .catch(err => {
+              console.error('Échec de l\'enregistrement du Service Worker PWA :', err);
+            });
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

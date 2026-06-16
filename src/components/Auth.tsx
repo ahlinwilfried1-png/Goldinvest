@@ -15,7 +15,10 @@ import {
   Shield,
   Sprout,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Share,
+  X,
+  ChevronUp
 } from 'lucide-react';
 import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
@@ -187,31 +190,27 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative bg-gradient-to-b from-[#ffffff] to-[#fff6ed] overflow-hidden font-sans" id="auth-container">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative bg-[#fffaf5] overflow-hidden font-sans" id="auth-container">
+      {/* Background agricultural image with a bright, warm, soft overlay */}
+      <div className="absolute inset-0 z-0 select-none pointer-events-none">
+        <img 
+          src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1200&auto=format&fit=crop" 
+          alt="Agriculture Background"
+          className="w-full h-full object-cover filter brightness-[0.92] saturate-[1.05]"
+          referrerPolicy="no-referrer"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/45 via-orange-50/35 to-[#fffaf5]/90 backdrop-blur-[1.5px]" />
+      </div>
+
       {/* Background glow effects to create a prestigious tech-agricultural ambient depth */}
-      <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[0%] right-[-10%] w-[400px] h-[400px] bg-rose-500/8 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-[30%] left-[25%] w-[300px] h-[300px] bg-amber-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-orange-200/40 rounded-full blur-[120px] pointer-events-none z-1" />
+      <div className="absolute bottom-[0%] right-[-10%] w-[400px] h-[400px] bg-emerald-200/30 rounded-full blur-[140px] pointer-events-none z-1" />
 
       {/* Main Container Wrapper */}
-      <div className="w-full max-w-md flex flex-col items-center relative z-10">
-
-        {/* 1. Header Logo Block (Matches top of screenshot) */}
-        <div className="flex items-center gap-3.5 mb-6 self-start w-full px-1">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-orange-600 flex items-center justify-center shadow-lg text-white transform hover:rotate-3 transition-transform">
-            <Tractor className="w-6 h-6 stroke-[1.8]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-900 font-sans font-black text-2xl tracking-wide uppercase">AgroCapital</span>
-              <Sprout className="w-5 h-5 text-orange-500 fill-orange-500/10 shrink-0" />
-            </div>
-            <p className="text-[10px] text-orange-600 font-bold uppercase tracking-widest leading-none">Plateforme d’Investissement Agricole</p>
-          </div>
-        </div>
+      <div className="w-full max-w-sm flex flex-col items-center relative z-10">
 
         {/* 2. Main Card Form - Beautiful White & Orange theme */}
-        <div className="w-full bg-white border border-orange-200/60 rounded-3xl p-6 md:p-8 shadow-[0_20px_50px_rgba(249,115,22,0.08)] relative overflow-hidden" id="auth-card">
+        <div className="w-full bg-white border border-orange-200/60 rounded-3xl p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(249,115,22,0.18)] relative overflow-hidden" id="auth-card">
           
           {/* Decorative Top Accent Line */}
           <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500 opacity-90" />
@@ -428,7 +427,7 @@ export default function Auth({
 
                   {resetTip && (
                     <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[10px] font-bold text-amber-700 leading-relaxed text-left font-mono">
-                      💡 Pour réinitialiser votre compte d’investisseur, veuillez contacter l'assistance officielle AgroCapital via le support WhatsApp.
+                      💡 Pour réinitialiser votre compte d’investisseur, veuillez contacter l'assistance officielle AgroProfit via le support WhatsApp.
                     </div>
                   )}
 
@@ -481,7 +480,7 @@ export default function Auth({
           {/* 5. Under-form toggle action (Standard lowercase like photo but very polished) */}
           <div className="mt-6 pt-4 border-t border-orange-100/80 text-center font-sans">
             <button
-              id="auth-toggle-mode-btn"
+               id="auth-toggle-mode-btn"
               type="button"
               onClick={() => {
                 setIsRegister(!isRegister);

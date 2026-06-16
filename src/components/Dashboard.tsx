@@ -148,6 +148,7 @@ export default function Dashboard({
   const [confirmNewPassword, setConfirmNewPassword] = useState<string>('');
   const [pwdError, setPwdError] = useState<string>('');
   const [pwdSuccess, setPwdSuccess] = useState<string>('');
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
 
   const [chatMessageInput, setChatMessageInput] = useState<string>('');
 
@@ -170,17 +171,40 @@ export default function Dashboard({
   }, []);
 
   const [dismissedPermissionBanner, setDismissedPermissionBanner] = useState<boolean>(false);
-  const [isPwaInstallModalOpen, setIsPwaInstallModalOpen] = useState<boolean>(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  const [currentLiveNotif, setCurrentLiveNotif] = useState<{ message: string; type: string } | null>(null);
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    const LIVE_NOTIFS = [
+      { message: "Félicitations ! Aminata A. vient de retirer 25,000 F CFA avec succès. ✅", type: "success" },
+      { message: "Félix K. a investi dans le plan Serre Connectée et gagne désormais +1,200 F/jour. 🌱", type: "info" },
+      { message: "Rendement versé : +650 F CFA récoltés sur le projet Élevage VIP 1 par Kouadio. 🌾", type: "success" },
+      { message: "Nouveau membre : Bienvenue à Seydou B. (recharge +5,000 F CFA). 🎉", type: "info" },
+      { message: "Awa T. vient de retirer 18,500 F CFA via Orange Money ! 💰", type: "success" },
+      { message: "Gains de parrainage : +1,500 F CFA versés à Yasmine S. pour recommandation. 📈", type: "success" },
+      { message: "Plan VIP 2 activé : Kouadio S. commence à cultiver de grands rendements. 🚀", type: "info" },
+      { message: "Sécurité certifiée : AgroProfit a validé 142 retraits aujourd'hui avec zéro délai. 🛡️", type: "success" }
+    ];
+
+    const triggerRandomNotif = () => {
+      const randomItem = LIVE_NOTIFS[Math.floor(Math.random() * LIVE_NOTIFS.length)];
+      setCurrentLiveNotif(randomItem);
+      setTimeout(() => {
+        setCurrentLiveNotif(null);
+      }, 7000);
     };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    const initialTimer = setTimeout(() => {
+      triggerRandomNotif();
+    }, 6000);
+
+    const interval = setInterval(() => {
+      triggerRandomNotif();
+    }, 40000);
+
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      clearTimeout(initialTimer);
+      clearInterval(interval);
     };
   }, []);
 
@@ -226,7 +250,7 @@ export default function Dashboard({
         openAlert('Activé avec succès 🎉', 'Vous recevrez désormais des alertes instantanées dans Chrome à chaque fois qu\'une recharge est approuvée, qu\'un gain tombe ou qu\'une annonce officielle de l\'administrateur est diffusée.', 'success');
         try {
           new Notification("Vous avez reçu une nouvelle notification", {
-            body: "Notifications de bureau Chrome activées sur AgroCapital ! 🔔"
+            body: "Notifications de bureau Chrome activées sur AgroProfit ! 🔔"
           });
         } catch (e) {
           console.error(e);
@@ -743,19 +767,24 @@ export default function Dashboard({
           });
 
           if (response.ok) {
-            const res = await response.json();
-            if (res.success && res.url) {
-              apiSucceeded = true;
-              setDepositRedirectUrl(res.url);
-              const channelName = depositMethod === 'westpay' ? 'WestPay' : 'PayDunya';
-              setDepositSuccess(`Votre facture de recharge ${channelName} de ${amt.toLocaleString()} XOF a été créée. Veuillez cliquer sur le bouton ci-dessous pour finaliser votre paiement sur la passerelle sécurisée.`);
-              setDepositAmount('5000');
-              syncDashboardData();
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const res = await response.json();
+              if (res.success && res.url) {
+                apiSucceeded = true;
+                setDepositRedirectUrl(res.url);
+                const channelName = depositMethod === 'westpay' ? 'WestPay' : 'PayDunya';
+                setDepositSuccess(`Votre facture de recharge ${channelName} de ${amt.toLocaleString()} XOF a été créée. Veuillez cliquer sur le bouton ci-dessous pour finaliser votre paiement sur la passerelle sécurisée.`);
+                setDepositAmount('5000');
+                syncDashboardData();
 
-              // Open the payment direct checkout link in a new window automatically
-              window.open(res.url, '_blank', 'noopener,noreferrer');
+                // Open the payment direct checkout link in a new window automatically
+                window.open(res.url, '_blank', 'noopener,noreferrer');
+              } else {
+                console.warn("Payment API returned error:", res.error);
+              }
             } else {
-              console.warn("Payment API returned error:", res.error);
+              console.warn("Payment API returned non-JSON content-type:", contentType);
             }
           } else {
             console.warn("Payment API returned status:", response.status);
@@ -1137,7 +1166,7 @@ export default function Dashboard({
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   </div>
                   <p className="text-[10px] text-slate-500 font-semibold leading-tight truncate">
-                    Rejoignez la discussion officielle AgroCapital.
+                    Rejoignez la discussion officielle AgroProfit.
                   </p>
                 </div>
                 <a 
@@ -1169,6 +1198,33 @@ export default function Dashboard({
       
       {/* SHIMMER BACKGROUND DECORATIONS */}
       <div className="absolute top-0 left-0 w-full max-w-[800px] h-[500px] bg-white/5 blur-[150px] rounded-full pointer-events-none -z-10 animate-pulse" />  <div className="absolute top-0 left-0 w-full max-w-[800px] h-[500px] bg-white/5 blur-[150px] rounded-full pointer-events-none -z-10 animate-pulse" />
+
+      {/* APP REAL-TIME INCOME/PAYOUT FLOATING BANNER (iOS/Android Native Style) */}
+      <AnimatePresence>
+        {currentLiveNotif && (
+          <motion.div
+            initial={{ opacity: 0, y: -100, x: "-50%", scale: 0.9 }}
+            animate={{ opacity: 1, y: 16, x: "-50%", scale: 1 }}
+            exit={{ opacity: 0, y: -100, x: "-50%", scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 350, damping: 26 }}
+            className="fixed top-0 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-sm bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 shadow-[0_20px_45px_rgba(0,0,0,0.30)] flex items-start gap-3 text-white cursor-pointer select-none"
+            onClick={() => setCurrentLiveNotif(null)}
+          >
+            <div className="p-2 bg-gradient-to-tr from-emerald-500 to-orange-500 rounded-xl shrink-0">
+              <Bell className="w-5 h-5 text-white stroke-[2.5]" />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <div className="flex justify-between items-center mb-0.5">
+                <span className="text-[10px] font-sans font-black uppercase text-orange-400 tracking-wider">Alerte AgroProfit 🔔</span>
+                <span className="text-[8px] opacity-60 font-mono font-bold uppercase shrink-0">À l'instant</span>
+              </div>
+              <p className="text-[11.5px] font-bold text-slate-100 leading-snug break-words">
+                {currentLiveNotif.message}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* DASHBOARD TOP HEADER (STYLING OF SCREENSHOT) */}
       <div className="w-full bg-[#046fff] text-white p-4 pt-6 pb-6 flex items-center justify-between shadow-md relative z-40 select-none">
@@ -1284,25 +1340,22 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* 2x2 SECTIONS GRID: HISTORIQUE, SUPPORT, POINTAGE, PROMO CODE */}
-              <div id="dashboard-quick-actions" className="grid grid-cols-2 gap-4 pt-2">
+              {/* 3 SECTIONS GRID: HISTORIQUE, SUPPORT, POINTAGE */}
+              <div id="dashboard-quick-actions" className="grid grid-cols-3 gap-3 md:gap-4 pt-2">
                 {/* Historique Card */}
                 <div 
                   id="action-historique"
                   onClick={() => {
                     if (onNavigate) {
                       onNavigate('/historique');
-                    } else {
-                      setProfileHistoryTab('history');
-                      setActiveTab('profile');
                     }
                   }}
                   className="bg-white border border-orange-100/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
                 >
-                  <div className="w-12 h-12 bg-[#edf4ff] text-[#046fff] flex items-center justify-center rounded-full">
+                  <div className="w-12 h-12 bg-orange-50 text-orange-600 flex items-center justify-center rounded-full">
                     <Clock className="w-5.5 h-5.5 stroke-[2.5]" />
                   </div>
-                  <span className="font-sans font-black text-[11px] sm:text-xs text-slate-800 uppercase tracking-wide">Historique</span>
+                  <span className="font-sans font-black text-[10px] sm:text-xs text-slate-800 uppercase tracking-wide">Historique</span>
                 </div>
 
                 {/* Support Live Card */}
@@ -1319,7 +1372,7 @@ export default function Dashboard({
                   <div className="w-12 h-12 bg-[#edf4ff] text-[#046fff] flex items-center justify-center rounded-full">
                     <MessageSquare className="w-5.5 h-5.5 stroke-[2.5]" />
                   </div>
-                  <span className="font-sans font-black text-[11px] sm:text-xs text-slate-800 uppercase tracking-wide">Support live</span>
+                  <span className="font-sans font-black text-[10px] sm:text-xs text-slate-800 uppercase tracking-wide">Support live</span>
                 </div>
 
                 {/* Pointage Check-in Card */}
@@ -1331,44 +1384,7 @@ export default function Dashboard({
                   <div className="w-12 h-12 bg-[#fffaf0] text-orange-500 flex items-center justify-center rounded-full">
                     <Gift className="w-5.5 h-5.5 stroke-[2.5]" />
                   </div>
-                  <span className="font-sans font-black text-[11px] sm:text-xs text-slate-800 uppercase tracking-wide">Pointage</span>
-                </div>
-
-                {/* Promo Code Card */}
-                <div 
-                  id="action-promocode"
-                  onClick={() => {
-                    if (onNavigate) {
-                      onNavigate('/historique#code-cadeau');
-                    }
-                  }}
-                  className="bg-white border border-orange-100/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
-                >
-                  <div className="w-12 h-12 bg-[#edf4ff] text-[#046fff] flex items-center justify-center rounded-full">
-                    <TrendingUp className="w-5.5 h-5.5 stroke-[2.5]" />
-                  </div>
-                  <span className="font-sans font-black text-[11px] sm:text-xs text-slate-800 uppercase tracking-wide">Promo Code</span>
-                </div>
-              </div>
-
-              {/* RUNNING TICKER BANNER */}
-              <div className="w-full bg-white border border-orange-100/45 rounded-[28px] py-6 px-7 flex items-center space-x-5 mt-4 text-left shadow-sm select-none">
-                <div className="w-11 h-11 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 border border-orange-100/40">
-                  <Bell className="w-5.5 h-5.5 stroke-[2.5]" />
-                </div>
-                <div className="flex-1 overflow-hidden h-8 flex items-center">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={tickerIndex}
-                      initial={{ y: 15, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -15, opacity: 0 }}
-                      transition={{ duration: 0.35, ease: "easeInOut" }}
-                      className="text-sm sm:text-[15px] font-sans font-black text-slate-800 tracking-tight leading-none"
-                    >
-                      {TICKER_MESSAGES[tickerIndex]}
-                    </motion.div>
-                  </AnimatePresence>
+                  <span className="font-sans font-black text-[10px] sm:text-xs text-slate-800 uppercase tracking-wide">Pointage</span>
                 </div>
               </div>
 
@@ -1675,7 +1691,7 @@ export default function Dashboard({
                   </span>
                   <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Recharger mon compte</h3>
                   <p className="text-xs text-slate-500 font-bold mt-1">
-                    Saisissez le montant, choisissez votre méthode de paiement et rechargez instantanément votre compte.
+                    Saisissez le montant et accédez directement à Westpay pour recharger instantanément votre solde.
                   </p>
                 </div>
 
@@ -2025,7 +2041,7 @@ export default function Dashboard({
                   </div>
  
                   <div>
-                    <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Lien d'Inscription Agrocapital :</span>
+                    <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Lien d'Inscription Agroprofit :</span>
                     <div className="flex bg-slate-900 border border-slate-800 p-2 px-3 rounded-lg justify-between items-center gap-2">
                       <span className="font-mono text-xs font-bold text-slate-200 truncate flex-1">{referralURL}</span>
                       <button
@@ -2153,7 +2169,7 @@ export default function Dashboard({
                   <>
                     {level1Users.length === 0 ? (
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-center py-6 bg-slate-950/20 rounded-xl font-medium">
-                        Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) avec votre code de parrainage. Partagez votre lien d'inscription Agrocapital pour commencer !
+                        Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) avec votre code de parrainage. Partagez votre lien d'inscription Agroprofit pour commencer !
                       </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -2340,108 +2356,25 @@ export default function Dashboard({
                 >
                   <div className="flex items-center space-x-3.5">
                     <Clock className="w-5 h-5 text-slate-700 stroke-[2.5]" />
-                    <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">Historique transactions</span>
+                    <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">Historique des transactions</span>
                   </div>
                   <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                 </div>
 
-                {/* Saisir un Code Cadeau Bonus */}
-                <div 
-                  onClick={() => {
-                    if (onNavigate) {
-                      onNavigate('/historique#code-cadeau');
-                    }
-                  }}
-                  className="flex items-center justify-between py-4 px-5 bg-white border border-slate-200/80 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer select-none group shadow-sm"
-                >
-                  <div className="flex items-center space-x-3.5">
-                    <Gift className="w-5 h-5 text-slate-700 stroke-[2.5]" />
-                    <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">Saisir un Code Cadeau Bonus</span>
-                  </div>
-                  <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                </div>
 
-                {/* Mes notifications */}
-                <div 
-                  onClick={() => {
-                    if (onNavigate) {
-                      onNavigate('/historique#notifications');
-                    }
-                  }}
-                  className="flex items-center justify-between py-4 px-5 bg-white border border-slate-200/80 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer select-none group shadow-sm"
-                >
-                  <div className="flex items-center space-x-3.5">
-                    <Bell className="w-5 h-5 text-slate-700 stroke-[2.5]" />
-                    <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">
-                      Mes notifications ({notifications.length})
-                    </span>
-                  </div>
-                  <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                </div>
 
                 {/* À propos de nous */}
                 <div 
                   onClick={() => {
-                    triggerToast("🌱 AgroCapital - Investissez dans l'avenir de la production agricole moderne en Afrique.", "info");
+                    setIsAboutModalOpen(true);
                   }}
                   className="flex items-center justify-between py-4 px-5 bg-white border border-slate-200/80 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer select-none group shadow-sm"
                 >
                   <div className="flex items-center space-x-3.5">
                     <Info className="w-5 h-5 text-slate-700 stroke-[2.5]" />
-                    <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">À propos de nous (AgroCapital)</span>
+                    <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">À propos de nous (AgroProfit)</span>
                   </div>
                   <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </div>
-
-              {/* DEDICATED BOTTOM DOWNLOAD SECTION WITH GENEROUS SPACING */}
-              <div id="download-app-section" className="bg-[#fff9f3] border border-orange-100/90 rounded-[28px] p-6 text-slate-800 text-left shadow-sm space-y-4 mt-8">
-                <div className="flex items-center space-x-3 pb-1">
-                  <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">
-                    <Smartphone className="w-5 h-5 stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-sans font-black text-slate-800 uppercase tracking-wider">
-                      Installer l’application Mobile
-                    </h4>
-                    <span className="text-[11px] text-slate-450 block mt-0.5">
-                      Profitez d’une rapidité et d’un confort de navigation accrus
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-650 leading-relaxed font-semibold">
-                  Notre application mobile est entièrement optimisée sous forme de <strong className="text-orange-600">PWA (Progressive Web App)</strong>. Elle est sécurisée, certifiée sans virus et s'installe en 3 secondes directement depuis votre navigateur Google Chrome ou Safari, sans aucun avertissement critique ni téléchargement d'APK à risque ou corrompus.
-                </p>
-
-                <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={() => {
-                      if (deferredPrompt) {
-                        try {
-                          deferredPrompt.prompt();
-                        } catch (err) {
-                          setIsPwaInstallModalOpen(true);
-                        }
-                      } else {
-                        setIsPwaInstallModalOpen(true);
-                      }
-                    }}
-                    className="flex-1 py-3.5 px-5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl text-xs font-sans font-black uppercase tracking-wider text-center flex items-center justify-center space-x-2.5 shadow-md shadow-orange-500/10 hover:opacity-95 active:scale-98 transition-all cursor-pointer"
-                  >
-                    <Download className="w-4.5 h-4.5" />
-                    <span>Installer Mobile (Sécurisé)</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setIsPwaInstallModalOpen(true);
-                    }}
-                    className="flex-1 py-3.5 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-sans font-black uppercase tracking-wider text-center flex items-center justify-center space-x-2.5 shadow-md active:scale-98 transition-all cursor-pointer"
-                  >
-                    <HelpCircle className="w-4.5 h-4.5" />
-                    <span>Guide d'installation</span>
-                  </button>
                 </div>
               </div>
 
@@ -2564,7 +2497,7 @@ export default function Dashboard({
 
               {/* Telegram option */}
               <a 
-                href="https://t.me/agrocapital_official"
+                href="https://t.me/agroprofit_official"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsSupportMenuOpen(false)}
@@ -2619,7 +2552,7 @@ export default function Dashboard({
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border border-slate-900 animate-pulse"></span>
                   </div>
                   <div>
-                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support AgroCapital</h4>
+                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support AgroProfit</h4>
                     <span className="text-[9px] font-bold text-slate-100/90 block mt-1 uppercase tracking-wide">Réponse sous 2H maximum</span>
                   </div>
                 </div>
@@ -2644,7 +2577,7 @@ export default function Dashboard({
                         Discuter en ligne !
                       </h5>
                       <p className="text-[11px] text-slate-500 font-semibold max-w-[240px] leading-relaxed mx-auto">
-                        Écrivez votre message ci-dessous. Un conseiller AgroCapital vous répondra directement ici.
+                        Écrivez votre message ci-dessous. Un conseiller AgroProfit vous répondra directement ici.
                       </p>
                     </div>
                   </div>
@@ -2804,168 +2737,213 @@ export default function Dashboard({
           </div>
         </div>
       )}
-      
-      {/* GORGEOUS MODAL: GUIDE & INSTALLATION DES APPLICATIONS MOBILE PROGRESSIVES */}
+
+      {/* MONTSERRAT BOLD PREMIUM "À PROPOS DE NOUS" MODAL */}
       <AnimatePresence>
-        {isPwaInstallModalOpen && (
-          <div 
-            onClick={() => setIsPwaInstallModalOpen(false)}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4 cursor-pointer"
+        {isAboutModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] bg-[#fffaf5]/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setIsAboutModalOpen(false)}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
-              className="bg-white border border-slate-150 rounded-[32px] p-6 max-w-md w-full shadow-2xl relative text-left cursor-default"
+            <motion.div 
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white border-2 border-orange-200/60 rounded-[32px] w-full max-w-lg p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(249,115,22,0.12)] relative overflow-hidden flex flex-col max-h-[90vh]"
+              id="agro-about-modal"
             >
-              <button
-                onClick={() => setIsPwaInstallModalOpen(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer"
-                title="Fermer"
-              >
-                <X className="w-5 h-5 stroke-[2.5]" />
-              </button>
-
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-xl font-bold">
-                  <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
-                </div>
-                <div>
-                  <h3 className="text-md font-sans font-black text-slate-900 uppercase tracking-wider">
-                    Installation Sécurisée
-                  </h3>
-                  <span className="text-[10px] text-emerald-600 block font-semibold uppercase tracking-widest mt-0.5">
-                    Certifié sans virus & sans fichiers à risque
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 rounded-2xl p-4 mb-5 border border-slate-100 text-xs text-slate-600 leading-relaxed space-y-2">
-                <p className="font-semibold">
-                  ⚠️ <strong className="text-red-600 font-bold">Pourquoi le fichier .apk indique "dangereux" ?</strong>
-                </p>
-                <p className="text-[11px] text-slate-500 font-medium">
-                  Le système Android de Google affiche un avertissement de sécurité pour tous les fichiers d'installation (.apk) téléchargés depuis un navigateur internet en dehors du Play Store. C'est une sécurité standard de Google.
-                </p>
-                <p className="font-semibold text-emerald-600 flex items-center gap-1.5 pt-1">
-                  <span>🚀</span>
-                  <span>Notre Solution : L'Application Officielle Web (PWA)</span>
-                </p>
-                <p className="text-[11px] text-slate-500 font-medium">
-                  Notre plateforme mobile officielle est une application web certifiée de nouvelle génération (PWA). Elle s'installe sans fichiers d'installation corrompus, sans publicité, et place l'icône AgroCapital sur votre écran d'accueil d'un simple clic sûr.
-                </p>
-              </div>
-
-              {/* STEPS FOR MOBILE DEVICES */}
-              <div className="space-y-4">
-                <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest border-b border-slate-100 pb-2">
-                  Comment procéder à l'installation ?
-                </h4>
-
-                {/* Android / Chrome */}
-                <div className="space-y-3">
-                  <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <span className="bg-orange-100 text-orange-600 px-2.5 py-0.5 rounded-full text-[9px] font-black font-sans uppercase">ANDROID / CHROME</span>
+              {/* Top Accent Gradient Bar */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500" />
+              
+              {/* Header */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100/60 flex items-center justify-center text-orange-600 border border-orange-200/50 shrink-0">
+                    <Info className="w-5 h-5 stroke-[2.5]" />
                   </div>
-                  <ol className="space-y-2 pl-2 text-xs text-slate-650 font-medium">
-                    <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">1</span>
-                      <span>Ouvrez le menu de Google Chrome <strong className="text-slate-950">(les 3 points verticaux ⋮)</strong> en haut à droite.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">2</span>
-                      <span>Sélectionnez <strong className="text-orange-600">"Installer l'application"</strong> ou <strong className="text-orange-600">"Ajouter à l'écran d'accueil"</strong>.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">3</span>
-                      <span>Validez l'étape pour installer l'application sur votre écran d'accueil de façon sécurisée ! 📱</span>
-                    </li>
-                  </ol>
-                </div>
-
-                {/* iPhone / Safari */}
-                <div className="space-y-3 pt-3 border-t border-slate-100">
-                  <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <span className="bg-blue-100 text-blue-600 px-2.5 py-0.5 rounded-full text-[9px] font-black font-sans uppercase">IPHONE / SAFARI</span>
+                  <div>
+                    <h3 className="font-sans font-black text-sm uppercase tracking-wider text-slate-800" style={{ fontWeight: '900' }}>
+                      À Propos de Nous
+                    </h3>
+                    <p className="text-[9px] text-[#ea580c] font-black uppercase tracking-wider font-mono">
+                      Fonctionnement AgroProfit
+                    </p>
                   </div>
-                  <ol className="space-y-2 pl-2 text-xs text-slate-650 font-medium">
-                    <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">1</span>
-                      <span>Appuyez sur le bouton de <strong className="text-slate-950">Partage (l'icône carrée avec la flèche vers le haut <Share className="inline-block w-3.5 h-3.5 stroke-[2.5] text-blue-500 mx-0.5" />)</strong> en bas de l'écran Safari.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">2</span>
-                      <span>Faites défiler vers le bas et sélectionnez <strong className="text-slate-950">"Sur l'écran d'accueil"</strong>.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-[10px] shrink-0 mt-0.5">3</span>
-                      <span>Validez en cliquant sur <strong className="text-slate-950">Ajouter</strong> en haut à droite.</span>
-                    </li>
-                  </ol>
                 </div>
-              </div>
-
-              {/* MODAL CLOSE */}
-              <div className="mt-6">
-                <button
-                  onClick={async () => {
-                    setIsPwaInstallModalOpen(false);
-                    if (deferredPrompt) {
-                      try {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        if (outcome === 'accepted') {
-                          setDeferredPrompt(null);
-                          triggerToast("🎉 Bravo ! Installation initiée.", "success");
-                        }
-                      } catch (err) {
-                        console.error(err);
-                      }
-                    } else {
-                      triggerToast("📱 Guide d'installation compris ! Suivez les étapes pour votre navigateur.", "info");
-                    }
-                  }}
-                  className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-sans font-black uppercase tracking-wider text-center transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-2"
+                <button 
+                  onClick={() => setIsAboutModalOpen(false)}
+                  className="p-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-500 transition-colors cursor-pointer border border-slate-200"
+                  id="agro-about-close-btn"
                 >
-                  {deferredPrompt ? (
-                    <span>🚀 DÉMARRER L'INSTALLATION AUTOMATIQUE</span>
-                  ) : (
-                    <span>J'AI COMPRIS LES INSTRUCTIONS 🚀</span>
-                  )}
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Main Content Div (Scrollable inside the modal) */}
+              <div className="flex-1 overflow-y-auto pr-1 space-y-6 text-slate-700 text-left" id="agro-about-scrollable">
+                
+                {/* Intro paragraph */}
+                <div className="space-y-2">
+                  <span className="text-[10px] sm:text-xs font-black text-orange-600 block uppercase tracking-widest">PROPULSER LE CAPITALISME AGRICOLE EN AFRIQUE 🌱</span>
+                  <p className="text-[11.5px] leading-relaxed text-slate-600 font-medium">
+                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>AgroProfit</strong> est la première interface d'investissement agri-technologique en ligne conçue pour démocratiser l'exploitation industrielle moderne en Afrique de l'Ouest (Togo, Bénin, Burkina Faso). Nous canalisons votre épargne vers des projets réels – serres automatisées, parcs de tracteurs connectés, stations solaires de pompage d'eau – afin de générer pour vous des profits stables de manière continue.
+                  </p>
+                </div>
+
+                {/* HOW IT WORKS / FONCTIONNEMENT - Clean Steps layout with Montserrat bold */}
+                <div className="space-y-4">
+                  <h4 className="font-sans font-black text-xs uppercase tracking-widest text-[#ea580c] border-b border-orange-100/55 pb-1.5" style={{ fontWeight: '900' }}>
+                    COMMENT FONCTIONNE NOTRE SYSTÈME INTERACTIF ?
+                  </h4>
+
+                  <div className="space-y-3.5">
+                    {/* Step 1 */}
+                    <div className="flex gap-3.5 items-start bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl" id="about-step-1">
+                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                        1
+                      </div>
+                      <div className="space-y-0.5">
+                        <h5 className="text-[11px] sm:text-xs font-black uppercase text-slate-800 tracking-wider" style={{ fontWeight: '800' }}>
+                          Inscription Directe & Sécurisée
+                        </h5>
+                        <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
+                          Créez votre compte investisseur instantanément avec votre numéro WhatsApp actif. Aucun frais d'entrée ! Obtenez immédiatement votre bonus de départ de 200 FCFA.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="flex gap-3.5 items-start bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl" id="about-step-2">
+                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                        2
+                      </div>
+                      <div className="space-y-0.5">
+                        <h5 className="text-[11px] sm:text-xs font-black uppercase text-slate-800 tracking-wider" style={{ fontWeight: '800' }}>
+                          Recharge de Portefeuille & Choix du Plan Agricole (VIP)
+                        </h5>
+                        <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
+                          Alimentez votre compte de manière instantanée par Mobile Money (MTN, Moov, Celtiis, Orange). Activez la location de votre équipement de production via la section "Produits" (VIP Bronze à Titanium) adapté à votre capital disponible.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="flex gap-3.5 items-start bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl" id="about-step-3">
+                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                        3
+                      </div>
+                      <div className="space-y-0.5">
+                        <h5 className="text-[11px] sm:text-xs font-black uppercase text-slate-800 tracking-wider" style={{ fontWeight: '800' }}>
+                          Génération Automatique de Rendements Journaliers
+                        </h5>
+                        <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
+                          Les équipements loués entrent en service réel. Vos gains sont calculés chaque 24h avec un taux d'intérêt quotidien spectaculaire (jusqu'à 15% par jour). Vous récoltez l'argent en direct sur votre balance.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div className="flex gap-3.5 items-start bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl" id="about-step-4">
+                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                        4
+                      </div>
+                      <div className="space-y-0.5">
+                        <h5 className="text-[11px] sm:text-xs font-black uppercase text-slate-800 tracking-wider" style={{ fontWeight: '800' }}>
+                          Retraits Automatisés Instantanés vers votre Mobile Money
+                        </h5>
+                        <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
+                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. AgroProfit valide les flux financiers intelligemment pour créditer votre compte sans délai !
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 5 */}
+                    <div className="flex gap-3.5 items-start bg-amber-550/5 border border-amber-550/10 p-3 rounded-2xl" id="about-step-5">
+                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                        5
+                      </div>
+                      <div className="space-y-0.5">
+                        <h5 className="text-[11px] sm:text-xs font-black uppercase text-slate-800 tracking-wider" style={{ fontWeight: '800' }}>
+                          Expansion MLM & Doublement des Gains de Commission
+                        </h5>
+                        <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
+                          Copiez votre lien de parrainage exclusif et partagez-le. Touchez instantanément des royalties d'exploitation de {mlmRates.level1}% pour vos filleuls directs de Niveau 1, {mlmRates.level2}% pour le Niveau 2, et {mlmRates.level3}% pour le Niveau 3 !
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trust and Certify Badge Section */}
+                <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/15 border border-orange-200/55 p-4 rounded-2xl flex items-center gap-3 select-none">
+                  <ShieldCheck className="w-8 h-8 text-orange-600 shrink-0" />
+                  <div>
+                    <span className="text-[10.5px] font-black text-slate-800 uppercase block tracking-wider" style={{ fontWeight: '900' }}>SÉCURITÉ & LIQUIDITÉ CERTIFIÉES v2.6</span>
+                    <p className="text-[9.5px] text-slate-500 font-medium leading-relaxed uppercase mt-0.5">
+                      Tous les dépôts d'actifs physiques de nos investisseurs font l'objet d'une couverture d'assurance intégrale contre les intempéries agro-climatiques, garantissant le versement ininterrompu de vos intérêts journaliers quoi qu'il arrive !
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+              
+              {/* Footer */}
+              <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between">
+                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">AgroProfit &copy; 2026. Tous droits réservés.</span>
+                <button 
+                  onClick={() => setIsAboutModalOpen(false)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-95 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                  style={{ fontWeight: '900' }}
+                >
+                  Fermer
                 </button>
               </div>
 
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* FLOATING TOAST NOTIFICATIONS */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-sm px-4 pointer-events-none">
         <AnimatePresence>
-          {toasts.map((toast) => (
-            <motion.div
-              key={toast.id}
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -15, scale: 0.95, transition: { duration: 0.2 } }}
-              className="pointer-events-auto w-full bg-[#0a0f1d]/95 backdrop-blur-md border-2 border-[#1b64d9]/50 rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 select-none"
-            >
-              <div className="text-lg shrink-0 leading-none">
-                {toast.type === 'success' ? '✨' : 'ℹ️'}
-              </div>
-              <div className="flex-1 text-[11px] font-black text-slate-100 uppercase tracking-widest leading-relaxed">
-                {toast.message}
-              </div>
-              <button
-                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0 mt-0.5"
+          {toasts.map((toast) => {
+            const isSuccess = toast.type === 'success';
+            const isError = toast.type === 'error';
+            return (
+              <motion.div
+                key={toast.id}
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.95, transition: { duration: 0.2 } }}
+                className={`pointer-events-auto w-full bg-white/98 border-2 rounded-2xl p-4 shadow-xl flex items-start gap-3.5 select-none ${
+                  isSuccess 
+                    ? 'border-emerald-500/30' 
+                    : isError 
+                      ? 'border-rose-500/30' 
+                      : 'border-blue-500/30'
+                }`}
               >
-                <X className="w-4 h-4" />
-              </button>
-            </motion.div>
-          ))}
+                <div className="text-lg shrink-0 leading-none">
+                  {isSuccess ? '✨' : isError ? '⚠️' : 'ℹ️'}
+                </div>
+                <div className="flex-1 text-[11px] font-black text-slate-800 uppercase tracking-widest leading-relaxed">
+                  {toast.message}
+                </div>
+                <button
+                  onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                  className="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer shrink-0 mt-0.5"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 

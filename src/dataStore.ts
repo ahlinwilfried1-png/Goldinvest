@@ -300,21 +300,21 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
   // Try to use the standard backend first (getApiUrl)
   try {
     const response = await fetch(url, init);
+    const contentType = response.headers.get('content-type') || "";
     
-    // If the response is protected by google proxy (which returns a login page or redirect), 
-    // it will have response.redirected = true or content-type text/html.
-    if (response.ok && !response.redirected) {
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('text/html') && url.includes('/api/')) {
-        console.warn(`[apiFetch] Received HTML from API call, likely Google Login redirect proxy. Falling back to direct Supabase cloud sync for URL: ${url}`);
-      } else {
-        return response;
-      }
+    // If the response is protected by google proxy or returned as text/html from unhandled errors,
+    // protect the caller from trying to parse HTML as JSON.
+    if (response.ok && !response.redirected && !contentType.includes('text/html')) {
+      return response;
     } else {
-      console.warn(`[apiFetch] API call returned non-OK status: ${response.status} for URL: ${url}. Triggering direct Supabase cloud sync fallback.`);
+      if (contentType.includes('text/html')) {
+        console.warn(`[apiFetch] Received HTML from API call for URL: ${url}. Triggering local fallback to prevent JSON parsing error.`);
+      } else {
+        console.warn(`[apiFetch] API call returned non-OK status: ${response.status} for URL: ${url}. Triggering fallback.`);
+      }
     }
   } catch (error) {
-    console.warn(`[apiFetch] API fetch threw error: ${error instanceof Error ? error.message : String(error)} for URL: ${url}. Triggering direct Supabase cloud sync fallback.`);
+    console.warn(`[apiFetch] API fetch threw error: ${error instanceof Error ? error.message : String(error)} for URL: ${url}. Triggering fallback.`);
   }
 
   // --- DIRECT SUPABASE Sync FALLBACK ---
@@ -342,7 +342,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
         console.warn(`[apiFetch Fallback] Supabase direct get-store returned status ${resp.status}`);
       }
     } catch (e) {
-      console.error('[apiFetch Fallback] Supabase direct get-store failed:', e);
+      console.warn('[apiFetch Fallback] Supabase direct get-store failed gracefully (using local storage fallback instead):', e);
     }
     // Return empty state or what's in local memory
     return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -441,7 +441,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
       }
       return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } catch (e) {
-      console.error('[apiFetch Fallback] Supabase direct save-store failed:', e);
+      console.warn('[apiFetch Fallback] Supabase direct save-store failed gracefully:', e);
     }
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
@@ -1203,7 +1203,7 @@ export class DataStore {
     notifications.unshift({
       id: `not-${Date.now()}`,
       userId: newUser.id,
-      title: 'Bienvenue sur AgroCapital !',
+      title: 'Bienvenue sur AgroProfit !',
       message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
       type: 'bonus',
       createdAt: new Date().toISOString(),
