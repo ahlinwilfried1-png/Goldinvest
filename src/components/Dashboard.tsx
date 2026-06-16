@@ -994,7 +994,6 @@ export default function Dashboard({
         const res = await DataStore.buyProduct(userState.id, product.id);
         if (res.success) {
           triggerToast('✅ Félicitations ! Votre produit a été activé avec succès.', 'success');
-          openPurchaseSuccessAlert('Félicitations ! 🎉', res.message);
         } else {
           openAlert('Achat Échoué', res.message, 'error');
         }
@@ -2497,7 +2496,7 @@ export default function Dashboard({
 
               {/* Telegram option */}
               <a 
-                href="https://t.me/agroprofit_official"
+                href="https://t.me/+3rskeL7g0qM1M2Nk"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsSupportMenuOpen(false)}
