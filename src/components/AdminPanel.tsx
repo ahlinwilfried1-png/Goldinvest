@@ -386,6 +386,20 @@ export default function AdminPanel({
     syncLocalStates();
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (userId === currentUser.id) {
+      alert("Erreur : Vous ne pouvez pas supprimer votre propre compte Administrateur !");
+      return;
+    }
+    if (window.confirm(`⚠️ ATTENTION CRITIQUE : Êtes-vous sûr de vouloir supprimer définitivement le compte de ${userName} ? Toutes ses données associées seront retirées. Cette opération est totalement irréversible.`)) {
+      await DataStore.deleteUser(userId);
+      syncLocalStates();
+      if (typeof executeDirectCentralSync === 'function') {
+        executeDirectCentralSync();
+      }
+    }
+  };
+
   const openEditUserModal = (user: User) => {
     setEditingUser(user);
     setEditBalance(user.balance);
@@ -1671,6 +1685,13 @@ export default function AdminPanel({
                                 title={user.isBlocked ? "Débloquer le compte" : "Bloquer l'investisseur"}
                               >
                                 {user.isBlocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(user.id, user.name || user.id)}
+                                className="w-7 h-7 bg-slate-950 hover:bg-red-950/40 border border-slate-800 hover:border-red-900 flex items-center justify-center rounded duration-150 group"
+                                title="Supprimer définitivement le compte"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-red-500 transition-colors" />
                               </button>
                             </div>
                           </td>

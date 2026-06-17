@@ -38,6 +38,7 @@ import {
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage, WithdrawalProof } from '../types';
 import { DataStore, syncWithBackend, getApiUrl } from '../dataStore';
 import AdminPanel from './AdminPanel';
+import CountdownTimer from './CountdownTimer';
 
 
 const compressImage = (file: File, maxWidth: number = 500, quality: number = 0.45): Promise<string> => {
@@ -1627,6 +1628,13 @@ export default function Dashboard({
                           </div>
                         </div>
 
+                        {/* Chronomètre / Countdown Timer */}
+                        <CountdownTimer 
+                          createdAt={p.createdAt} 
+                          daysPassed={p.daysPassed} 
+                          durationDays={p.durationDays} 
+                        />
+
                         <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl text-xs border border-slate-100">
                           <div>
                             <span className="text-slate-400 text-[10px] block uppercase font-bold">Revenu / Jour</span>
@@ -2736,11 +2744,11 @@ export default function Dashboard({
               {/* PRIMARY GOLD/CREAM CARD OF SCREENSHOT */}
               <div id="agro-profile-header-card" className="bg-[#fcf5eb] border border-[#eee4d5] rounded-[30px] p-6 shadow-sm flex items-center gap-4 text-slate-800 text-left">
                 <div className="w-14 h-14 bg-[#f3a401] text-white flex items-center justify-center rounded-full font-black text-lg shadow-sm shrink-0 uppercase">
-                  IN
+                  {userState.name ? userState.name.trim().slice(0, 2).toUpperCase() : "US"}
                 </div>
                 <div className="text-left font-sans">
                   <h3 className="text-sm sm:text-base font-sans font-black text-slate-800 tracking-tight leading-tight uppercase">
-                    INVESTISSEUR {userState.whatsapp ? userState.whatsapp.replace(/\D/g, '') : userState.id}
+                    {userState.name}
                   </h3>
                   <span className="text-[10.5px] text-slate-400 block font-bold mt-1 uppercase tracking-wider">
                     {userState.country || "TOGO"} • MEMBRE DEPUIS {userState.createdAt ? new Date(userState.createdAt).toLocaleDateString('fr-FR') : "15/06/2026"}

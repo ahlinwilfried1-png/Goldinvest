@@ -2377,6 +2377,31 @@ export class DataStore {
     }
   }
 
+  // Delete user account
+  static async deleteUser(userId: string): Promise<boolean> {
+    const users = this.getUsers();
+    const nextUsers = users.filter(u => u.id !== userId);
+    this.saveUsers(nextUsers);
+
+    // If the current user is this user, sign them out
+    const current = this.getCurrentUser();
+    if (current && current.id === userId) {
+      this.saveCurrentUser(null);
+    }
+
+    try {
+      const response = await apiFetch(getApiUrl('/api/admin/delete-user'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      return response.ok;
+    } catch (e) {
+      console.error('Failed to notify backend of user deletion:', e);
+      return false;
+    }
+  }
+
   // Modify user balances
   static updateUserBalance(userId: string, data: { balance: number, bonus: number, role: 'user' | 'admin', password?: string, referredBy?: string | null, withdrawBlocked?: boolean }): void {
     const users = this.getUsers();
