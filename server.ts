@@ -56,7 +56,7 @@ async function startServer() {
         continue;
       }
 
-      const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes";
+      const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
       if (shouldMerge) {
         const mergedMap = new Map<string, any>();
         
@@ -168,7 +168,41 @@ async function startServer() {
       "gi_mlm_level2_rate": 3,
       "gi_mlm_level3_rate": 1,
       "gi_withdrawals_blocked_global": false,
-      "gi_referral_domain": ""
+      "gi_referral_domain": "",
+      "gi_withdrawal_proofs": [
+        {
+          id: 'proof-1',
+          userId: 'u-1',
+          userName: 'Koffi Kouamé',
+          userCountry: 'Côte d’Ivoire',
+          amount: 25000,
+          message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
+          image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
+          likes: ['u-2', 'u-3'],
+          createdAt: '2026-06-15T10:12:00Z'
+        },
+        {
+          id: 'proof-2',
+          userId: 'u-2',
+          userName: 'Aïcha Diallo',
+          userCountry: 'Sénégal',
+          amount: 15400,
+          message: 'Franchement c’est le meilleur service de l’année. Mes retours journaliers accumulés et retirés via Wave sans aucun problème. 😎💪',
+          image: 'https://images.unsplash.com/photo-1563013544-824ae1d704d3?q=80&w=600&auto=format&fit=crop',
+          likes: ['u-1'],
+          createdAt: '2026-06-15T14:30:00Z'
+        },
+        {
+          id: 'proof-3',
+          userId: 'u-3',
+          userName: 'Yao Mensah',
+          userCountry: 'Togo',
+          amount: 8500,
+          message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement AgroProfit à tout mon entourage.',
+          likes: ['u-1', 'u-2', 'u-admin'],
+          createdAt: '2026-06-16T02:05:00Z'
+        }
+      ]
     };
 
     let modified = false;
@@ -291,106 +325,103 @@ async function startServer() {
     }
   }
 
-  function saveStore(specificKeys?: string[]) {
+  async function saveStore(specificKeys?: string[]): Promise<void> {
     saveStoreLocal();
     if (!supabase) return;
     
-    // Asynchronously upsert modified state keys to Supabase 'store' table in background
-    Promise.resolve().then(async () => {
-      try {
-        const keys = specificKeys || Object.keys(storeData);
-        for (const key of keys) {
-          const localVal = storeData[key];
-          if (localVal === undefined) continue;
-          
-          let valToSave = localVal;
-          const isMergeableArray = Array.isArray(localVal) && key !== "gi_products" && key !== "gi_bonus_codes";
-          
-          if (isMergeableArray) {
-            try {
-              const { data: remoteRow, error: fetchErr } = await supabase
-                .from('store')
-                .select('value')
-                .eq('key', key)
-                .maybeSingle();
-                
-              if (!fetchErr && remoteRow && remoteRow.value) {
-                const remoteVal = remoteRow.value;
-                if (Array.isArray(remoteVal)) {
-                  // Merge remote array and local array to avoid losing any items from other phones
-                  const mergedMap = new Map<string, any>();
-                  for (const item of remoteVal) {
-                    if (item && typeof item === "object") {
-                      const id = item.id || item.code;
-                      if (id) mergedMap.set(String(id), item);
-                    }
+    try {
+      const keys = specificKeys || Object.keys(storeData);
+      for (const key of keys) {
+        const localVal = storeData[key];
+        if (localVal === undefined) continue;
+        
+        let valToSave = localVal;
+        const isMergeableArray = Array.isArray(localVal) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
+        
+        if (isMergeableArray) {
+          try {
+            const { data: remoteRow, error: fetchErr } = await supabase
+              .from('store')
+              .select('value')
+              .eq('key', key)
+              .maybeSingle();
+              
+            if (!fetchErr && remoteRow && remoteRow.value) {
+              const remoteVal = remoteRow.value;
+              if (Array.isArray(remoteVal)) {
+                // Merge remote array and local array to avoid losing any items from other phones
+                const mergedMap = new Map<string, any>();
+                for (const item of remoteVal) {
+                  if (item && typeof item === "object") {
+                    const id = item.id || item.code;
+                    if (id) mergedMap.set(String(id), item);
                   }
-                  
-                  for (const item of localVal) {
-                    if (item && typeof item === "object") {
-                      const id = item.id || item.code;
-                      if (id) {
-                        const idStr = String(id);
-                        if (!mergedMap.has(idStr)) {
-                          if (key !== "gi_users" || item.role === "admin") {
-                            mergedMap.set(idStr, item);
-                          }
+                }
+                
+                for (const item of localVal) {
+                  if (item && typeof item === "object") {
+                    const id = item.id || item.code;
+                    if (id) {
+                      const idStr = String(id);
+                      if (!mergedMap.has(idStr)) {
+                        if (key !== "gi_users" || item.role === "admin") {
+                          mergedMap.set(idStr, item);
+                        }
+                      } else {
+                        const existingItem = mergedMap.get(idStr);
+                        const existingTime = existingItem.lastModified || 0;
+                        const incomingTime = item.lastModified || 0;
+                        
+                        if (key === "gi_users") {
+                          const useIncoming = incomingTime > existingTime;
+                          const mergedUser = {
+                            ...(useIncoming ? item : existingItem),
+                            balance: (useIncoming ? item.balance : existingItem.balance) ?? 0,
+                            dailyEarnings: (useIncoming ? item.dailyEarnings : existingItem.dailyEarnings) ?? 0,
+                            totalEarnings: (useIncoming ? item.totalEarnings : existingItem.totalEarnings) ?? 0,
+                            bonus: (useIncoming ? item.bonus : existingItem.bonus) ?? 0,
+                            role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
+                            isBlocked: (useIncoming ? item.isBlocked : existingItem.isBlocked) ?? false,
+                            lastModified: Math.max(existingTime, incomingTime)
+                          };
+                          mergedMap.set(idStr, mergedUser);
                         } else {
-                          const existingItem = mergedMap.get(idStr);
-                          const existingTime = existingItem.lastModified || 0;
-                          const incomingTime = item.lastModified || 0;
-                          
-                          if (key === "gi_users") {
-                            const useIncoming = incomingTime > existingTime;
-                            const mergedUser = {
-                              ...(useIncoming ? item : existingItem),
-                              balance: (useIncoming ? item.balance : existingItem.balance) ?? 0,
-                              dailyEarnings: (useIncoming ? item.dailyEarnings : existingItem.dailyEarnings) ?? 0,
-                              totalEarnings: (useIncoming ? item.totalEarnings : existingItem.totalEarnings) ?? 0,
-                              bonus: (useIncoming ? item.bonus : existingItem.bonus) ?? 0,
-                              role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
-                              isBlocked: (useIncoming ? item.isBlocked : existingItem.isBlocked) ?? false,
-                              lastModified: Math.max(existingTime, incomingTime)
-                            };
-                            mergedMap.set(idStr, mergedUser);
-                          } else {
-                            if (incomingTime >= existingTime) {
-                              mergedMap.set(idStr, item);
-                            }
+                          if (incomingTime >= existingTime) {
+                            mergedMap.set(idStr, item);
                           }
                         }
                       }
                     }
                   }
-                  valToSave = Array.from(mergedMap.values());
-                  storeData[key] = valToSave; // Keep server runtime cache completely unified!
                 }
+                valToSave = Array.from(mergedMap.values());
+                storeData[key] = valToSave; // Keep server runtime cache completely unified!
               }
-            } catch (e) {
-              console.error(`[SUPABASE MERGE ERROR] Failed to fetch and merge existing remote key "${key}":`, e);
             }
-          }
-          
-          const { error } = await supabase.from('store').upsert({
-            key: key,
-            value: valToSave,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'key' });
-
-          if (error) {
-            // Quietly abort loop if the store table doesn't exist to prevent terminal noise
-            if (error.message && error.message.includes('relation "store" does not exist')) {
-              break;
-            }
-            console.error(`[SUPABASE ERROR] Failed to upsert key "${key}":`, error);
+          } catch (e) {
+            console.error(`[SUPABASE MERGE ERROR] Failed to fetch and merge existing remote key "${key}":`, e);
           }
         }
-        console.log("[SUPABASE] Cloud database synced with local modifications.");
-        saveStoreLocal(); // Reflux changes back to disk
-      } catch (e) {
-        console.error("[SUPABASE ERROR] Failed to upsert store changes to database table:", e);
+        
+        const { error } = await supabase.from('store').upsert({
+          key: key,
+          value: valToSave,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' });
+
+        if (error) {
+          // Quietly abort loop if the store table doesn't exist to prevent terminal noise
+          if (error.message && error.message.includes('relation "store" does not exist')) {
+            break;
+          }
+          console.error(`[SUPABASE ERROR] Failed to upsert key "${key}":`, error);
+        }
       }
-    });
+      console.log("[SUPABASE] Cloud database synced with local modifications.");
+      saveStoreLocal(); // Reflux changes back to disk
+    } catch (e) {
+      console.error("[SUPABASE ERROR] Failed to upsert store changes to database table:", e);
+    }
   }
 
   function processAutomaticDailyInstallmentsServer(): void {
@@ -645,7 +676,7 @@ async function startServer() {
     res.json(storeData);
   });
 
-  app.post("/api/save-store", (req, res) => {
+  app.post("/api/save-store", async (req, res) => {
     const body = req.body;
     if (body && typeof body === "object") {
       let modified = false;
@@ -666,7 +697,7 @@ async function startServer() {
           }
         }
 
-        const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes";
+        const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
         if (shouldMerge) {
           // Merge arrays by ID or Code and choose the item with the higher lastModified
           const mergedMap = new Map<string, any>();
@@ -739,7 +770,7 @@ async function startServer() {
       }
 
       if (modified) {
-        saveStore();
+        await saveStore();
       }
     }
     res.json({ success: true });

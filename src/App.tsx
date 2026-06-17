@@ -9,7 +9,7 @@ export default function App() {
   // Navigation Path & URL Syncing
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
   const [isRegisterFlow, setIsRegisterFlow] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => DataStore.getCurrentUser());
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {

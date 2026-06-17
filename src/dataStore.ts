@@ -246,7 +246,8 @@ const INITIAL_PROOFS: WithdrawalProof[] = [
     userName: 'Koffi Kouamé',
     userCountry: 'Côte d’Ivoire',
     amount: 25000,
-    message: 'Retrait de 25 000 XOF bien reçu sur Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
+    message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
+    image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
     likes: ['u-2', 'u-3'],
     createdAt: '2026-06-15T10:12:00Z'
   },
@@ -257,6 +258,7 @@ const INITIAL_PROOFS: WithdrawalProof[] = [
     userCountry: 'Sénégal',
     amount: 15400,
     message: 'Franchement c’est le meilleur service de l’année. Mes retours journaliers accumulés et retirés via Wave sans aucun problème. 😎💪',
+    image: 'https://images.unsplash.com/photo-1563013544-824ae1d704d3?q=80&w=600&auto=format&fit=crop',
     likes: ['u-1'],
     createdAt: '2026-06-15T14:30:00Z'
   },
@@ -390,7 +392,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
           const localVal = bodyData[key];
           let valToSave = localVal;
           
-          const isMergeableArray = Array.isArray(localVal) && key !== "gi_products" && key !== "gi_bonus_codes";
+          const isMergeableArray = Array.isArray(localVal) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
           if (isMergeableArray) {
             try {
               const fetchResp = await fetch(`${SUPABASE_URL}/rest/v1/store?key=eq.${key}&select=value`, {
@@ -556,6 +558,11 @@ export const setToStore = <T>(key: string, value: T): void => {
       // Silently fall back to inMemoryStore if sandboxed context rejects write
     }
 
+    // Dispatch event for other views/components to react immediately in real-time
+    try {
+      window.dispatchEvent(new Event('gi_store_updated'));
+    } catch (e) {}
+
     // Asynchronously send update to central Express database or KVdb
     apiFetch(getApiUrl('/api/save-store'), {
       method: 'POST',
@@ -688,7 +695,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
         if (remoteData !== undefined && remoteData !== null) {
           let mergedVal = remoteData;
           
-          const isMergeableArray = Array.isArray(remoteData) && Array.isArray(localData) && key !== "gi_products" && key !== "gi_bonus_codes";
+          const isMergeableArray = Array.isArray(remoteData) && Array.isArray(localData) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
           if (isMergeableArray) {
             // Merge remote array and local array to avoid losing any offline changes or registrations!
             const mergedMap = new Map<string, any>();
@@ -717,12 +724,12 @@ export const syncWithBackend = async (): Promise<boolean> => {
                       const useIncoming = incomingTime > existingTime;
                       const mergedUser = {
                         ...(useIncoming ? item : existingItem),
-                        balance: existingItem.balance !== undefined ? existingItem.balance : (item.balance || 0),
-                        dailyEarnings: existingItem.dailyEarnings !== undefined ? existingItem.dailyEarnings : (item.dailyEarnings || 0),
-                        totalEarnings: existingItem.totalEarnings !== undefined ? existingItem.totalEarnings : (item.totalEarnings || 0),
-                        bonus: existingItem.bonus !== undefined ? existingItem.bonus : (item.bonus || 0),
+                        balance: (useIncoming ? item.balance : existingItem.balance) ?? 0,
+                        dailyEarnings: (useIncoming ? item.dailyEarnings : existingItem.dailyEarnings) ?? 0,
+                        totalEarnings: (useIncoming ? item.totalEarnings : existingItem.totalEarnings) ?? 0,
+                        bonus: (useIncoming ? item.bonus : existingItem.bonus) ?? 0,
                         role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
-                        isBlocked: existingItem.isBlocked !== undefined ? existingItem.isBlocked : (item.isBlocked || false),
+                        isBlocked: (useIncoming ? item.isBlocked : existingItem.isBlocked) ?? false,
                         lastModified: Math.max(existingTime, incomingTime)
                       };
                       if (JSON.stringify(existingItem) !== JSON.stringify(mergedUser)) {
@@ -2143,6 +2150,7 @@ export class DataStore {
       message,
       image,
       likes: [],
+      status: 'pending',
       createdAt: new Date().toISOString(),
       lastModified: Date.now()
     };
@@ -2202,8 +2210,6 @@ export class DataStore {
     const proofs = this.getWithdrawalProofs();
     const filtered = proofs.filter(p => p.id !== proofId);
     if (filtered.length !== proofs.length) {
-      this.saveWithdrawalProofs(filtered);
-      window.dispatchEvent(new Event('gi_store_updated'));
       try {
         await apiFetch(getApiUrl('/api/save-store'), {
           method: 'POST',
@@ -2211,8 +2217,37 @@ export class DataStore {
           body: JSON.stringify({ gi_withdrawal_proofs: filtered })
         });
       } catch (e) {
-        console.warn('Failed to sync deleted proof:', e);
+        console.warn('Failed to sync deleted proof to server:', e);
       }
+      this.saveWithdrawalProofs(filtered);
+      window.dispatchEvent(new Event('gi_store_updated'));
+      return true;
+    }
+    return false;
+  }
+
+  static async updateWithdrawalProofStatus(proofId: string, status: 'approved' | 'rejected'): Promise<boolean> {
+    const proofs = this.getWithdrawalProofs();
+    let updated = false;
+    const nextProofs = proofs.map(p => {
+      if (p.id === proofId) {
+        updated = true;
+        return { ...p, status, lastModified: Date.now() };
+      }
+      return p;
+    });
+    if (updated) {
+      try {
+        await apiFetch(getApiUrl('/api/save-store'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gi_withdrawal_proofs: nextProofs })
+        });
+      } catch (e) {
+        console.warn('Failed to sync updated proof status to server:', e);
+      }
+      this.saveWithdrawalProofs(nextProofs);
+      window.dispatchEvent(new Event('gi_store_updated'));
       return true;
     }
     return false;
@@ -2265,6 +2300,7 @@ export class DataStore {
         inv.daysPassed = expectedDays;
         inv.totalReturnClaimed += totalPayout;
         inv.lastClaimDate = new Date().toISOString();
+        inv.lastModified = Date.now();
 
         if (inv.daysPassed >= inv.durationDays) {
           inv.status = 'completed';

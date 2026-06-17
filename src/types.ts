@@ -132,6 +132,7 @@ export interface WithdrawalProof {
   message: string;
   image?: string; // Base64 or standard asset url
   likes: string[]; // List of user IDs who liked it
+  status?: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   lastModified?: number;
 }

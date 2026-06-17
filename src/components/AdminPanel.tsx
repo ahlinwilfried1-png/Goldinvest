@@ -21,7 +21,7 @@ import {
   Search,
   RefreshCw
 } from 'lucide-react';
-import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment, SupportMessage } from '../types';
+import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment, SupportMessage, WithdrawalProof } from '../types';
 import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl, apiFetch } from '../dataStore';
 
 interface AdminPanelProps {
@@ -43,8 +43,20 @@ export default function AdminPanel({
   const [bonusCodes, setBonusCodes] = useState<BonusCode[]>(() => DataStore.getBonusCodes());
   const [investments, setInvestments] = useState<Investment[]>(() => DataStore.getInvestments());
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>(() => DataStore.getSupportMessages());
+  const [withdrawalProofs, setWithdrawalProofs] = useState<WithdrawalProof[]>(() => DataStore.getWithdrawalProofs());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [adminReplyInput, setAdminReplyInput] = useState('');
+
+  // Confirmation and Notification overlay states for sandboxed iframe safety
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   // Manual synchronizing state feedback 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -59,8 +71,66 @@ export default function AdminPanel({
   } | null>(null);
 
   // Navigation tab
-  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions' | 'support'>('deposits');
+  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions' | 'support' | 'proofs'>('deposits');
   const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
+
+  const handleDeleteProof = (proofId: string) => {
+    setConfirmConfig({
+      title: "🔴 SUPPRIMER LA PREUVE DE RETRAIT",
+      message: "Voulez-vous vraiment supprimer définitivement cette preuve de retrait ? Elle ne sera plus affichée dans la liste des preuves pour tous les utilisateurs.",
+      onConfirm: async () => {
+        try {
+          const success = await DataStore.deleteWithdrawalProof(proofId);
+          if (success) {
+            // Filter out from local state
+            setWithdrawalProofs(prev => prev.filter(p => p.id !== proofId));
+            setNotification({
+              message: "🗑️ Preuve de retrait supprimée avec succès !",
+              type: "success"
+            });
+            onRefreshData();
+          } else {
+            setNotification({
+              message: "Erreur lors de la suppression de la preuve.",
+              type: "error"
+            });
+          }
+        } catch (err: any) {
+          console.error("Error deleting proof:", err);
+          setNotification({
+            message: "Erreur: " + err.message,
+            type: "error"
+          });
+        }
+      }
+    });
+  };
+
+  const handleUpdateProofStatus = async (proofId: string, status: 'approved' | 'rejected') => {
+    try {
+      const success = await DataStore.updateWithdrawalProofStatus(proofId, status);
+      if (success) {
+        // Update local state
+        setWithdrawalProofs(prev => prev.map(p => p.id === proofId ? { ...p, status } : p));
+        setNotification({
+          message: `✨ Statut de la preuve mis à jour avec succès : ${status === 'approved' ? 'APPROUVÉE' : 'REJETÉE'} !`,
+          type: "success"
+        });
+        onRefreshData();
+      } else {
+        setNotification({
+          message: "Erreur lors de la mise à jour du statut.",
+          type: "error"
+        });
+      }
+    } catch (err: any) {
+      console.error("Error updating proof status:", err);
+      setNotification({
+        message: "Erreur: " + err.message,
+        type: "error"
+      });
+    }
+  };
 
   // Search filter query for users tab
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -98,6 +168,7 @@ export default function AdminPanel({
           if (Array.isArray(data['gi_commissions'])) setCommissions(data['gi_commissions']);
           if (Array.isArray(data['gi_investments'])) setInvestments(data['gi_investments']);
           if (Array.isArray(data['gi_support_messages'])) setSupportMessages(data['gi_support_messages']);
+          if (Array.isArray(data['gi_withdrawal_proofs'])) setWithdrawalProofs(data['gi_withdrawal_proofs']);
           
           // 2. Keep local storage safe inside a try-catch to prevent iframe/sandboxed crashes
           try {
@@ -154,6 +225,16 @@ export default function AdminPanel({
   React.useEffect(() => {
     executeDirectCentralSync();
   }, [activeAdminTab]);
+
+  // Auto-dismiss custom notifications after 4 seconds
+  React.useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   // Force clean non-admin user accounts
   const [isCleaning, setIsCleaning] = useState(false);
@@ -830,6 +911,10 @@ export default function AdminPanel({
             <span>ESPACE SÉCURISÉ ADMIN</span>
           </div>
           <h2 className="text-xl font-display font-medium text-white">Console d'Administration Globale</h2>
+          <div className="flex items-center space-x-1.5 mt-1 text-[11px] text-emerald-400 font-bold uppercase tracking-wider font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Synchro automatique instantanée (Toutes les 4s)</span>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -986,6 +1071,17 @@ export default function AdminPanel({
           {supportMessages.filter(m => m.sender === 'user' && m.status === 'unread').length > 0 && (
             <span className="bg-emerald-500 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-full animate-bounce">
               {supportMessages.filter(m => m.sender === 'user' && m.status === 'unread').length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveAdminTab('proofs')}
+          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors flex items-center space-x-2 ${activeAdminTab === 'proofs' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <span>📸 Preuves</span>
+          {withdrawalProofs.length > 0 && (
+            <span className="bg-amber-500 text-slate-950 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full">
+              {withdrawalProofs.length}
             </span>
           )}
         </button>
@@ -2618,6 +2714,190 @@ export default function AdminPanel({
           </div>
         );
       })()}
+
+      {/* PROOFS TAB - MODERATION DES PREUVES DE RETRAIT */}
+      {activeAdminTab === 'proofs' && (() => {
+        return (
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="font-display font-black text-lg text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>📸 Modération des Preuves de Retrait</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Gérez, vérifiez et supprimez les captures d'écran et messages publiés par vos utilisateurs sur le canal public.
+                </p>
+              </div>
+              <div className="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300">
+                Total Preuves: <span className="text-yellow-400 font-bold">{withdrawalProofs.length}</span>
+              </div>
+            </div>
+
+            {withdrawalProofs.length === 0 ? (
+              <div className="text-center py-12 px-4 rounded-2xl bg-slate-950/40 border border-dashed border-slate-850">
+                <p className="text-slate-400 text-xs">Aucune preuve de retrait n'a été publiée pour le moment par les utilisateurs.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {withdrawalProofs.map((proof) => {
+                  return (
+                    <div 
+                      key={proof.id} 
+                      className="bg-slate-950 border border-slate-850 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-800 transition-all space-y-3"
+                    >
+                      <div className="space-y-3">
+                        {/* Upper row: User & Details */}
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <span className="font-sans font-black text-xs text-slate-100 block">
+                              {proof.userName}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              📍 {proof.userCountry || 'Inconnu'} • {new Date(proof.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-lg text-[10px] font-black font-mono">
+                            +{proof.amount.toLocaleString('en-US')} F
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                          <span className="text-slate-500">Statut :</span>
+                          {proof.status === 'rejected' ? (
+                            <span className="bg-rose-500/10 text-rose-450 border border-rose-500/20 px-2 py-0.5 rounded font-bold uppercase text-[9px]">Rejetée ❌</span>
+                          ) : proof.status === 'approved' || !proof.status ? (
+                            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase text-[9px]">Approuvée & Publique ✅</span>
+                          ) : (
+                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-bold uppercase text-[9px] animate-pulse">En attente ⏳</span>
+                          )}
+                        </div>
+
+                        {/* Public message */}
+                        {proof.message && (
+                          <div className="bg-slate-900/60 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 italic leading-relaxed">
+                            "{proof.message}"
+                          </div>
+                        )}
+
+                        {/* Image screenshot if exists */}
+                        {proof.image ? (
+                          <div className="relative group rounded-xl overflow-hidden border border-slate-800 h-48 bg-slate-900 flex justify-center items-center">
+                            <img 
+                              src={proof.image} 
+                              alt="Preuve" 
+                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
+                              referrerPolicy="no-referrer"
+                            />
+                            <button
+                              onClick={() => setLightboxImg(proof.image || '')}
+                              className="absolute top-2 right-2 bg-slate-950/80 hover:bg-slate-900 p-1.5 rounded-lg text-slate-300 border border-slate-800"
+                              title="Agrandir l'image"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="bg-slate-900/30 rounded-xl p-3 border border-slate-850/40 text-[10px] text-slate-500 text-center uppercase tracking-wider font-mono">
+                            Pas de média joint
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions for moderation */}
+                      <div className="border-t border-slate-850/60 pt-3 space-y-2">
+                        {/* Status change actions */}
+                        <div className="flex gap-2">
+                          {(proof.status === 'rejected' || proof.status === 'pending') && (
+                            <button
+                              onClick={() => handleUpdateProofStatus(proof.id, 'approved')}
+                              className="flex-1 py-1.5 bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 hover:border-transparent rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1"
+                            >
+                              <span>Approuver</span>
+                            </button>
+                          )}
+                          {(proof.status === 'approved' || !proof.status || proof.status === 'pending') && (
+                            <button
+                              onClick={() => handleUpdateProofStatus(proof.id, 'rejected')}
+                              className="flex-1 py-1.5 bg-amber-500/10 hover:bg-amber-600 text-amber-450 hover:text-white border border-amber-500/20 hover:border-transparent rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1"
+                            >
+                              <span>Rejeter</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Delete moderation button */}
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-500 font-mono text-[9px]">{proof.id}</span>
+                          <button
+                            onClick={() => handleDeleteProof(proof.id)}
+                            className="px-2.5 py-1.5 bg-rose-600/10 text-rose-450 hover:bg-rose-600 hover:text-white border border-rose-600/20 hover:border-transparent rounded-lg font-bold transition-all flex items-center space-x-1"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Supprimer</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Custom Confirmation Modal */}
+      {confirmConfig && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 relative shadow-2xl">
+            <h3 className="font-sans font-black text-sm uppercase tracking-wider text-rose-500 mb-2">
+              {confirmConfig.title}
+            </h3>
+            <p className="text-xs text-slate-300 leading-relaxed mb-6 font-sans">
+              {confirmConfig.message}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmConfig(null)}
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  const onConf = confirmConfig.onConfirm;
+                  setConfirmConfig(null);
+                  await onConf();
+                }}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg hover:shadow-rose-600/20"
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Notification Toast */}
+      {notification && (
+        <div className="fixed bottom-6 right-6 z-[9999] max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">
+              {notification.type === 'success' ? '✅' : '⚠️'}
+            </span>
+            <span className="text-xs font-medium text-slate-200">
+              {notification.message}
+            </span>
+          </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="text-slate-500 hover:text-slate-300 text-xs font-bold leading-none p-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -39,6 +39,53 @@ import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotif
 import { DataStore, syncWithBackend, getApiUrl } from '../dataStore';
 import AdminPanel from './AdminPanel';
 
+
+const compressImage = (file: File, maxWidth: number = 500, quality: number = 0.45): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxWidth) {
+            width = Math.round((width * maxWidth) / height);
+            height = maxWidth;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        } else {
+          resolve(event.target?.result as string);
+        }
+      };
+      img.onerror = () => {
+        resolve(event.target?.result as string);
+      };
+    };
+    reader.onerror = () => {
+      resolve('');
+    };
+  });
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -163,12 +210,75 @@ export default function Dashboard({
   const [pwdError, setPwdError] = useState<string>('');
   const [pwdSuccess, setPwdSuccess] = useState<string>('');
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
+  
+  // PWA installation state and hooks
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState<boolean>(false);
+  const [isStandalone, setIsStandalone] = useState<boolean>(false);
+  const [deviceOS, setDeviceOS] = useState<'ios' | 'android' | 'other'>('other');
+
+  useEffect(() => {
+    // Detect standalone mode
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+    setIsStandalone(isStandaloneMode);
+
+    // Detect OS
+    const ua = navigator.userAgent.toLowerCase();
+    if (/iphone|ipad|ipod/.test(ua)) {
+      setDeviceOS('ios');
+    } else if (/android/.test(ua)) {
+      setDeviceOS('android');
+    }
+
+    // Intercept standard PWA prompt
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    const handleAppInstalled = () => {
+      setIsStandalone(true);
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    };
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const triggerPwaInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsStandalone(true);
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    }
+  };
 
   const [chatMessageInput, setChatMessageInput] = useState<string>('');
 
   // Clipboard copies
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+  const handleCopyPageUrl = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
 
   const [productErrors, setProductErrors] = useState<Record<string, string>>({});
 
@@ -188,38 +298,9 @@ export default function Dashboard({
 
   const [currentLiveNotif, setCurrentLiveNotif] = useState<{ message: string; type: string } | null>(null);
 
+  // Note: Disabled random ticker popups at user request to avoid visual pollution on site
   useEffect(() => {
-    const LIVE_NOTIFS = [
-      { message: "Félicitations ! Aminata A. vient de retirer 25,000 F CFA avec succès. ✅", type: "success" },
-      { message: "Félix K. a investi dans le plan Serre Connectée et gagne désormais +1,200 F/jour. 🌱", type: "info" },
-      { message: "Rendement versé : +650 F CFA récoltés sur le projet Élevage VIP 1 par Kouadio. 🌾", type: "success" },
-      { message: "Nouveau membre : Bienvenue à Seydou B. (recharge +5,000 F CFA). 🎉", type: "info" },
-      { message: "Awa T. vient de retirer 18,500 F CFA via Orange Money ! 💰", type: "success" },
-      { message: "Gains de parrainage : +1,500 F CFA versés à Yasmine S. pour recommandation. 📈", type: "success" },
-      { message: "Plan VIP 2 activé : Kouadio S. commence à cultiver de grands rendements. 🚀", type: "info" },
-      { message: "Sécurité certifiée : AgroProfit a validé 142 retraits aujourd'hui avec zéro délai. 🛡️", type: "success" }
-    ];
-
-    const triggerRandomNotif = () => {
-      const randomItem = LIVE_NOTIFS[Math.floor(Math.random() * LIVE_NOTIFS.length)];
-      setCurrentLiveNotif(randomItem);
-      setTimeout(() => {
-        setCurrentLiveNotif(null);
-      }, 7000);
-    };
-
-    const initialTimer = setTimeout(() => {
-      triggerRandomNotif();
-    }, 6000);
-
-    const interval = setInterval(() => {
-      triggerRandomNotif();
-    }, 40000);
-
-    return () => {
-      clearTimeout(initialTimer);
-      clearInterval(interval);
-    };
+    // Disabled at user request
   }, []);
 
   const [chromeNotifPermission, setChromeNotifPermission] = useState<string>(() => {
@@ -580,7 +661,7 @@ export default function Dashboard({
     const msgs = DataStore.getSupportMessages().filter(m => m.userId === currentUser.id);
     setSupportMessages(msgs);
 
-    const pfs = DataStore.getWithdrawalProofs();
+    const pfs = DataStore.getWithdrawalProofs().filter(p => !p.status || p.status === 'approved');
     setWithdrawalProofs(pfs);
   };
 
@@ -740,14 +821,19 @@ export default function Dashboard({
 
   // Deposit events
   // Simulate drop / select image as Base64 for receipt
-  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReceiptChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReceiptBase64(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file, 500, 0.45);
+        setReceiptBase64(compressed);
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setReceiptBase64(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -1132,6 +1218,7 @@ export default function Dashboard({
   return (
     <div className="min-h-screen bg-transparent text-white flex flex-col font-sans w-full max-w-full relative overflow-x-hidden">
       
+
       {showAnnouncementDismissible && (
         <div 
           onClick={() => {
@@ -1370,6 +1457,8 @@ export default function Dashboard({
           {activeTab === 'dashboard' && (
             <div className="space-y-4">
 
+
+
               {/* PRIMARY WHITE CARD OF SCREENSHOT */}
               <div id="agro-primary-balance-card" className="bg-white border border-orange-100/55 rounded-[30px] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-slate-800 text-left">
                 <div className="flex justify-between items-center pb-2">
@@ -1445,10 +1534,7 @@ export default function Dashboard({
                 <div 
                   id="action-support"
                   onClick={() => {
-                    setActiveTab('profile');
-                    setTimeout(() => {
-                      chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-                    }, 400);
+                    setIsLiveChatOpen(true);
                   }}
                   className="bg-white border border-orange-100/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
                 >
@@ -2069,17 +2155,22 @@ export default function Dashboard({
                                 setIsDraggingProof(true);
                               }}
                               onDragLeave={() => setIsDraggingProof(false)}
-                              onDrop={(e) => {
+                              onDrop={async (e) => {
                                 e.preventDefault();
                                 setIsDraggingProof(false);
                                 if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                                   const file = e.dataTransfer.files[0];
                                   setProofImageFileName(file.name);
-                                  const reader = new FileReader();
-                                  reader.readAsDataURL(file);
-                                  reader.onload = () => {
-                                    setProofImage(reader.result as string);
-                                  };
+                                  try {
+                                    const compressed = await compressImage(file, 500, 0.45);
+                                    setProofImage(compressed);
+                                  } catch (err) {
+                                    const reader = new FileReader();
+                                    reader.readAsDataURL(file);
+                                    reader.onload = () => {
+                                      setProofImage(reader.result as string);
+                                    };
+                                  }
                                 }
                               }}
                               className={`border-2 border-dashed rounded-xl p-3 text-center flex items-center justify-center gap-3 transition-all duration-150 relative ${
@@ -2093,15 +2184,20 @@ export default function Dashboard({
                               <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => {
+                                onChange={async (e) => {
                                   if (e.target.files && e.target.files[0]) {
                                     const file = e.target.files[0];
                                     setProofImageFileName(file.name);
-                                    const reader = new FileReader();
-                                    reader.readAsDataURL(file);
-                                    reader.onload = () => {
-                                      setProofImage(reader.result as string);
-                                    };
+                                    try {
+                                      const compressed = await compressImage(file, 500, 0.45);
+                                      setProofImage(compressed);
+                                    } catch (err) {
+                                      const reader = new FileReader();
+                                      reader.readAsDataURL(file);
+                                      reader.onload = () => {
+                                        setProofImage(reader.result as string);
+                                      };
+                                    }
                                   }
                                 }}
                                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
@@ -3252,6 +3348,8 @@ export default function Dashboard({
           </motion.div>
         )}
       </AnimatePresence>
+
+
 
       {/* FLOATING TOAST NOTIFICATIONS */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-sm px-4 pointer-events-none">

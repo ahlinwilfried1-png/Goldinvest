@@ -11,8 +11,13 @@ import {
   ChevronRight, 
   CheckCircle,
   Clock,
-  PiggyBank
+  PiggyBank,
+  X,
+  Download,
+  Share,
+  Check
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface HomeProps {
   onNavigateToAuth: (isRegister: boolean) => void;
@@ -37,9 +42,41 @@ export default function Home({
   // Quick select calculator amounts
   const fastAmounts = [5000, 10000, 25000, 50000, 100000, 250000];
 
+  // PWA & Iframe Installation logic
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
+  const [isStandalone, setIsStandalone] = useState<boolean>(false);
+  const [deviceOS, setDeviceOS] = useState<'ios' | 'android' | 'other'>('other');
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  React.useEffect(() => {
+    // Detect standalone mode
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+    setIsStandalone(isStandaloneMode);
+
+    // Detect OS
+    const ua = navigator.userAgent.toLowerCase();
+    if (/iphone|ipad|ipod/.test(ua)) {
+      setDeviceOS('ios');
+    } else if (/android/.test(ua)) {
+      setDeviceOS('android');
+    }
+  }, []);
+
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
   return (
     <div id="home-root" className="w-full min-h-screen bg-slate-50 text-slate-800 flex flex-col items-center justify-start p-0 m-0 relative overflow-x-hidden font-sans antialiased selection:bg-orange-500 selection:text-white pb-16">
       
+
+
       {/* Background aesthetic blobs */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-orange-500/10 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
       <div className="absolute top-[40%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
@@ -220,35 +257,7 @@ export default function Home({
           </div>
         </section>
 
-        {/* official app download / PWA notice card */}
-        <section id="app-features" className="w-full bg-gradient-to-tr from-orange-50 to-amber-50 border border-orange-100 rounded-3xl p-5.5 relative overflow-hidden mb-6">
-          <div className="absolute top-[-20px] right-[-20px] w-28 h-28 bg-orange-200/20 rounded-full blur-xl pointer-events-none" />
-          
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-200/50">
-              <Smartphone className="w-6 h-6 text-orange-600 stroke-[2.5] animate-bounce" />
-            </div>
-            <div className="flex-1">
-              <h4 className="font-sans font-black text-slate-900 text-[13px] uppercase tracking-tight">
-                COMPATIBILITÉ MOBILE EXTRÊME
-              </h4>
-              <p className="text-[10.5px] font-bold text-slate-500 mt-0.5 uppercase tracking-wide">
-                APPLICATION DIRECTE INSTANTANÉE
-              </p>
-              <p className="text-[11px] text-slate-600 font-semibold mt-2 leading-relaxed">
-                Notre application s'installe directement via le bouton d'installation ou par fichier APK. Fini les fichiers volumineux, les ouvertures WPS Office compliquées ou les bugs de téléchargements !
-              </p>
-              
-              <div className="flex items-center gap-2 mt-3 text-[10.5px] font-black text-orange-600 uppercase tracking-wider">
-                <span>Sécurisé</span>
-                <span>•</span>
-                <span>Léger</span>
-                <span>•</span>
-                <span>Notifications directes</span>
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* Security & Partner Badge */}
         <div id="security-foot" className="flex flex-col items-center justify-center gap-1 opacity-70 mt-4">
