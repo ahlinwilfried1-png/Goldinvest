@@ -210,13 +210,13 @@ export default function Auth({
       {/* Main Container Wrapper */}
       <div className="w-full max-w-sm flex flex-col items-center relative z-10">
 
-        {/* LOGO PROFESSIONNEL AGROPROFIT */}
+        {/* LOGO PROFESSIONNEL AGROCAPITAL */}
         <div className="flex flex-col items-center mb-6 text-center select-none animate-fade-in">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-orange-500 flex items-center justify-center shadow-xl shadow-orange-500/10 mb-2 transform hover:rotate-6 transition-transform">
             <Tractor className="w-8 h-8 text-white stroke-[2]" />
           </div>
           <h1 className="text-[22px] font-sans font-black tracking-tight text-slate-900 uppercase">
-            Agro<span className="text-orange-500">Profit</span>
+            Agro<span className="text-orange-500">capital</span>
           </h1>
           <span className="text-[9.5px] text-emerald-700 font-extrabold tracking-widest uppercase block mt-1">
             L'excellence agro-technologique
@@ -441,7 +441,7 @@ export default function Auth({
 
                   {resetTip && (
                     <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[10px] font-bold text-amber-700 leading-relaxed text-left font-mono">
-                      💡 Pour réinitialiser votre compte d’investisseur, veuillez contacter l'assistance officielle AgroProfit via le support WhatsApp.
+                      💡 Pour réinitialiser votre compte d’investisseur, veuillez contacter l'assistance officielle Agrocapital via le support WhatsApp.
                     </div>
                   )}
 

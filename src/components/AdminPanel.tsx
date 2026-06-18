@@ -668,7 +668,7 @@ export default function AdminPanel({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `agroprofit_coordonnees_membres_google.csv`);
+    link.setAttribute("download", `agrocapital_coordonnees_membres_google.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -708,7 +708,7 @@ export default function AdminPanel({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `agroprofit_retraits_coordonnees_google.csv`);
+    link.setAttribute("download", `agrocapital_retraits_coordonnees_google.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -844,6 +844,46 @@ export default function AdminPanel({
                   placeholder="Modifier le mot de passe"
                   className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:border-yellow-500/40"
                 />
+              </div>
+
+              {/* Plans et Produits payés par l'utilisateur */}
+              <div className="pt-4 border-t border-slate-800">
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Plans payés / Produits souscrits ({investments.filter(i => i.userId === editingUser.id).length})
+                </label>
+                {investments.filter(i => i.userId === editingUser.id).length === 0 ? (
+                  <p className="text-[11px] text-slate-500 font-medium italic">Aucun plan d'investissement souscrit.</p>
+                ) : (
+                  <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                    {investments.filter(i => i.userId === editingUser.id).map(inv => (
+                      <div key={inv.id} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div className="min-w-0 flex-1 pr-2">
+                          <p className="font-bold text-amber-500 uppercase tracking-wide truncate">{inv.productName}</p>
+                          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-mono mt-0.5">
+                            <span>{inv.price.toLocaleString()} F</span>
+                            <span>•</span>
+                            <span>{inv.daysPassed}/{inv.durationDays} J</span>
+                            <span>•</span>
+                            <span className={inv.status === 'active' ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                              {inv.status === 'active' ? 'ACTIF ⚡' : 'ÉCHU 🏁'}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingUser(null);
+                            handleDeleteInvestment(inv.id);
+                          }}
+                          className="px-2.5 py-1.5 bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-650/20 hover:border-transparent rounded-lg font-bold duration-150 text-[10px] shrink-0"
+                          title="Supprimer définitivement ce produit payé"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 flex gap-3">
@@ -2064,7 +2104,7 @@ export default function AdminPanel({
             </h3>
 
             <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur AgroProfit.
+              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur Agrocapital.
             </p>
 
             <form onSubmit={handleSendGlobalAlert} className="space-y-4">

@@ -246,7 +246,7 @@ const INITIAL_PROOFS: WithdrawalProof[] = [
     userName: 'Koffi Kouamé',
     userCountry: 'Côte d’Ivoire',
     amount: 25000,
-    message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
+    message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci Agrocapital ! 🌾✨',
     image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
     likes: ['u-2', 'u-3'],
     createdAt: '2026-06-15T10:12:00Z'
@@ -268,7 +268,7 @@ const INITIAL_PROOFS: WithdrawalProof[] = [
     userName: 'Yao Mensah',
     userCountry: 'Togo',
     amount: 8500,
-    message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement AgroProfit à tout mon entourage.',
+    message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement Agrocapital à tout mon entourage.',
     likes: ['u-1', 'u-2', 'u-admin'],
     createdAt: '2026-06-16T02:05:00Z'
   }
@@ -408,10 +408,18 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
                   const remoteVal = rows[0].value;
                   if (Array.isArray(remoteVal)) {
                     const mergedMap = new Map<string, any>();
+                    const deletedUsers = getFromStore<string[]>('gi_deleted_users', []);
+                    const deletedInvestments = getFromStore<string[]>('gi_deleted_investments', []);
+
                     for (const item of remoteVal) {
                       if (item && typeof item === 'object') {
                         const id = item.id || item.code;
-                        if (id) mergedMap.set(String(id), item);
+                        if (id) {
+                          const idStr = String(id);
+                          if (key === 'gi_users' && deletedUsers.includes(idStr)) continue;
+                          if (key === 'gi_investments' && deletedInvestments.includes(idStr)) continue;
+                          mergedMap.set(idStr, item);
+                        }
                       }
                     }
                     for (const item of localVal) {
@@ -419,6 +427,8 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
                         const id = item.id || item.code;
                         if (id) {
                           const idStr = String(id);
+                          if (key === 'gi_users' && deletedUsers.includes(idStr)) continue;
+                          if (key === 'gi_investments' && deletedInvestments.includes(idStr)) continue;
                           if (!mergedMap.has(idStr)) {
                             mergedMap.set(idStr, item);
                           } else {
@@ -1254,7 +1264,7 @@ export class DataStore {
     notifications.unshift({
       id: `not-${Date.now()}`,
       userId: newUser.id,
-      title: 'Bienvenue sur AgroProfit !',
+      title: 'Bienvenue sur Agrocapital !',
       message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
       type: 'bonus',
       createdAt: new Date().toISOString(),
@@ -2383,6 +2393,13 @@ export class DataStore {
     const inv = investments.find(i => i.id === investmentId);
     if (!inv) return false;
 
+    // Track deleted investment locally to prevent sync resurrection
+    const deletedInvestments = getFromStore<string[]>('gi_deleted_investments', []);
+    if (!deletedInvestments.includes(investmentId)) {
+      deletedInvestments.push(investmentId);
+      setToStore<string[]>('gi_deleted_investments', deletedInvestments);
+    }
+
     // Filter out the deleted investment
     const updatedInvestments = investments.filter(i => i.id !== investmentId);
     this.saveInvestments(updatedInvestments);
@@ -2408,15 +2425,33 @@ export class DataStore {
 
     // Notify backend
     try {
-      await apiFetch(getApiUrl('/api/save-store'), {
+      const response = await apiFetch(getApiUrl('/api/admin/delete-investment'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          gi_investments: updatedInvestments,
-          gi_users: users
-        })
+        body: JSON.stringify({ investmentId })
       });
-      return true;
+      const data = await response.json();
+      if (data && data.success) {
+        if (data.investments) {
+          this.saveInvestments(data.investments);
+        }
+        if (data.users) {
+          this.saveUsers(data.users);
+          
+          // Sync current logged in user details if they match
+          const current = this.getCurrentUser();
+          if (current) {
+            const upToDateUser = data.users.find((u: any) => u.id === current.id);
+            if (upToDateUser) {
+              const mergedCurrent = { ...current, ...upToDateUser };
+              this.saveCurrentUser(mergedCurrent);
+            }
+          }
+        }
+        window.dispatchEvent(new Event('gi_store_updated'));
+        return true;
+      }
+      return false;
     } catch (e) {
       console.error('Failed to sync deleted investment:', e);
       return false;
@@ -2428,6 +2463,23 @@ export class DataStore {
     const users = this.getUsers();
     const nextUsers = users.filter(u => u.id !== userId);
     this.saveUsers(nextUsers);
+
+    // Track deleted user locally to prevent sync resurrection
+    const deletedUsers = getFromStore<string[]>('gi_deleted_users', []);
+    if (!deletedUsers.includes(userId)) {
+      deletedUsers.push(userId);
+      setToStore<string[]>('gi_deleted_users', deletedUsers);
+    }
+
+    // Clean up dependent local stores
+    const investments = this.getInvestments().filter(i => i.userId !== userId);
+    this.saveInvestments(investments);
+
+    const deposits = this.getDeposits().filter(d => d.userId !== userId);
+    this.saveDeposits(deposits);
+
+    const withdrawals = this.getWithdrawals().filter(w => w.userId !== userId);
+    this.saveWithdrawals(withdrawals);
 
     // If the current user is this user, sign them out
     const current = this.getCurrentUser();

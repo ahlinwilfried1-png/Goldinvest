@@ -1,7 +1,7 @@
-// Service Worker de l'application AgroProfit v2.5
+// Service Worker de l'application Agrocapital v2.5
 // Version ultra-légère et rapide pour une fluidité native complète
 
-const CACHE_NAME = 'agroprofit-cache-v2.5';
+const CACHE_NAME = 'agrocapital-cache-v2.5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

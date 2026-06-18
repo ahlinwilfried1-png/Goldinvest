@@ -176,7 +176,7 @@ async function startServer() {
           userName: 'Koffi Kouamé',
           userCountry: 'Côte d’Ivoire',
           amount: 25000,
-          message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
+          message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci Agrocapital ! 🌾✨',
           image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
           likes: ['u-2', 'u-3'],
           createdAt: '2026-06-15T10:12:00Z'
@@ -198,7 +198,7 @@ async function startServer() {
           userName: 'Yao Mensah',
           userCountry: 'Togo',
           amount: 8500,
-          message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement AgroProfit à tout mon entourage.',
+          message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement Agrocapital à tout mon entourage.',
           likes: ['u-1', 'u-2', 'u-admin'],
           createdAt: '2026-06-16T02:05:00Z'
         }
@@ -351,10 +351,22 @@ async function startServer() {
               if (Array.isArray(remoteVal)) {
                 // Merge remote array and local array to avoid losing any items from other phones
                 const mergedMap = new Map<string, any>();
+                const deletedUsers = storeData["gi_deleted_users"] || [];
+                const deletedInvestments = storeData["gi_deleted_investments"] || [];
+
                 for (const item of remoteVal) {
                   if (item && typeof item === "object") {
                     const id = item.id || item.code;
-                    if (id) mergedMap.set(String(id), item);
+                    if (id) {
+                      const idStr = String(id);
+                      if (key === "gi_users" && deletedUsers.includes(idStr)) {
+                        continue; // Already deleted
+                      }
+                      if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
+                        continue; // Already deleted
+                      }
+                      mergedMap.set(idStr, item);
+                    }
                   }
                 }
                 
@@ -363,6 +375,12 @@ async function startServer() {
                     const id = item.id || item.code;
                     if (id) {
                       const idStr = String(id);
+                      if (key === "gi_users" && deletedUsers.includes(idStr)) {
+                        continue; // Already deleted
+                      }
+                      if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
+                        continue; // Already deleted
+                      }
                       if (!mergedMap.has(idStr)) {
                         if (key !== "gi_users" || item.role === "admin") {
                           mergedMap.set(idStr, item);
@@ -918,7 +936,7 @@ async function startServer() {
       notifications.unshift({
         id: `not-${Date.now()}`,
         userId: newUser.id,
-        title: 'Bienvenue sur AgroProfit !',
+        title: 'Bienvenue sur Agrocapital !',
         message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
         type: 'bonus',
         createdAt: new Date().toISOString(),
@@ -1404,7 +1422,7 @@ async function startServer() {
       const paydunyaToken = process.env.PAYDUNYA_TOKEN || "MC-4245b0d810aaa02336f0b2f9ddbc26a37ed7bfdc";
       const paydunyaPublic = process.env.PAYDUNYA_PUBLIC_KEY || "MC-b6eb9046e9eb1a18bfbcd8a468ad5f16a6942647";
 
-      const host = req.get('host') || 'agroprofit.online';
+      const host = req.get('host') || 'agrocapital.online';
       const protocol = req.headers['x-forwarded-proto'] === 'http' ? 'http' : 'https';
       const baseUrl = `${protocol}://${host}`;
 
@@ -1418,10 +1436,10 @@ async function startServer() {
       const payload = {
         invoice: {
           total_amount: amt,
-          description: `Recharge de compte AgroProfit - Utilisateur: ${user.name}`
+          description: `Recharge de compte Agrocapital - Utilisateur: ${user.name}`
         },
         store: {
-          name: "AgroProfit",
+          name: "Agrocapital",
           website_url: baseUrl
         },
         actions: {
@@ -2239,10 +2257,82 @@ async function startServer() {
 
   app.post("/api/admin/delete-user", (req, res) => {
     const { userId } = req.body;
+    
+    // Track deleted user id
+    let deletedUsers = storeData["gi_deleted_users"] || [];
+    if (!deletedUsers.includes(userId)) {
+      deletedUsers.push(userId);
+      storeData["gi_deleted_users"] = deletedUsers;
+    }
+
     let users = storeData["gi_users"] || [];
     storeData["gi_users"] = users.filter((u: any) => u.id !== userId);
+
+    let investments = storeData["gi_investments"] || [];
+    // Track deleted investments for this user
+    const userInvs = investments.filter((i: any) => i.userId === userId);
+    let deletedInvestments = storeData["gi_deleted_investments"] || [];
+    for (const inv of userInvs) {
+      if (!deletedInvestments.includes(inv.id)) {
+        deletedInvestments.push(inv.id);
+      }
+    }
+    storeData["gi_deleted_investments"] = deletedInvestments;
+    
+    storeData["gi_investments"] = investments.filter((i: any) => i.userId !== userId);
+
+    if (storeData["gi_deposits"]) {
+      storeData["gi_deposits"] = storeData["gi_deposits"].filter((d: any) => d.userId !== userId);
+    }
+    if (storeData["gi_withdrawals"]) {
+      storeData["gi_withdrawals"] = storeData["gi_withdrawals"].filter((w: any) => w.userId !== userId);
+    }
+    if (storeData["gi_commissions"]) {
+      storeData["gi_commissions"] = storeData["gi_commissions"].filter((c: any) => c.userId !== userId && c.fromUserId !== userId);
+    }
+    if (storeData["gi_support_messages"]) {
+      storeData["gi_support_messages"] = storeData["gi_support_messages"].filter((m: any) => m.userId !== userId);
+    }
+    if (storeData["gi_withdrawal_proofs"]) {
+      storeData["gi_withdrawal_proofs"] = storeData["gi_withdrawal_proofs"].filter((p: any) => p.userId !== userId);
+    }
+
     saveStore();
     res.json({ success: true });
+  });
+
+  app.post("/api/admin/delete-investment", (req, res) => {
+    const { investmentId } = req.body;
+    let investments = storeData["gi_investments"] || [];
+    let users = storeData["gi_users"] || [];
+
+    const inv = investments.find((i: any) => i.id === investmentId);
+    if (!inv) {
+      return res.status(404).json({ error: "Investissement ou produit payé introuvable" });
+    }
+
+    // Filter out the deleted investment from database
+    investments = investments.filter((i: any) => i.id !== investmentId);
+    storeData["gi_investments"] = investments;
+
+    // Track deleted investment id
+    let deletedInvestments = storeData["gi_deleted_investments"] || [];
+    if (!deletedInvestments.includes(investmentId)) {
+      deletedInvestments.push(investmentId);
+      storeData["gi_deleted_investments"] = deletedInvestments;
+    }
+
+    // Recalculate daily earnings for the associated user
+    const uIdx = users.findIndex((u: any) => u.id === inv.userId);
+    if (uIdx !== -1) {
+      const activeInvs = investments.filter((i: any) => i.userId === inv.userId && i.status === 'active');
+      users[uIdx].dailyEarnings = activeInvs.reduce((sum: number, i: any) => sum + i.dailyReturn, 0);
+      users[uIdx].lastModified = Date.now();
+      storeData["gi_users"] = users;
+    }
+
+    saveStore();
+    res.json({ success: true, investments, users });
   });
 
   app.post("/api/admin/update-mlm", (req, res) => {
@@ -2368,9 +2458,9 @@ async function startServer() {
   app.get("/manifest.json", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(JSON.stringify({
-      "name": "AgroProfit",
-      "short_name": "AgroProfit",
-      "description": "Investissement Agro-Industriel Sécurisé - AgroProfit",
+      "name": "Agrocapital",
+      "short_name": "Agrocapital",
+      "description": "Investissement Agro-Industriel Sécurisé - Agrocapital",
       "start_url": "/",
       "display": "standalone",
       "background_color": "#020617",
@@ -2397,7 +2487,7 @@ async function startServer() {
   app.get("/sw.js", (req, res) => {
     res.setHeader("Content-Type", "application/javascript");
     res.send(`
-const CACHE_NAME = 'agroprofit-cache-v1';
+const CACHE_NAME = 'agrocapital-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html'
@@ -2420,9 +2510,9 @@ self.addEventListener('fetch', event => {
   });
 
   // Servir un fichier APK réel, signé et valide pour l'installation directe
-  app.get(["/AgroProfit.apk", "/AgroCapital.apk"], async (req, res) => {
-    const localApkPath = path.join(process.cwd(), "public", "AgroProfit.apk");
-    const tempApkPath = path.join(process.cwd(), "public", "AgroProfit.apk.tmp");
+  app.get(["/AgroProfit.apk", "/AgroCapital.apk", "/Agrocapital.apk", "/agrocapital.apk"], async (req, res) => {
+    const localApkPath = path.join(process.cwd(), "public", "Agrocapital.apk");
+    const tempApkPath = path.join(process.cwd(), "public", "Agrocapital.apk.tmp");
     const targetUrl = "https://github.com/anthonycr/Lightning-Browser/releases/download/v5.1.0/Lightning-v5.1.0-release.apk";
 
     try {
@@ -2430,7 +2520,7 @@ self.addEventListener('fetch', event => {
       if (fs.existsSync(localApkPath)) {
         const stats = fs.statSync(localApkPath);
         if (stats.size > 4000000) { 
-          res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
+          res.setHeader("Content-Disposition", 'attachment; filename="Agrocapital.apk"');
           res.setHeader("Content-Type", "application/vnd.android.package-archive");
           res.setHeader("Content-Length", stats.size.toString());
           return res.sendFile(localApkPath);
@@ -2452,7 +2542,7 @@ self.addEventListener('fetch', event => {
       if (response.ok && response.body) {
         const contentLength = response.headers.get("Content-Length");
         
-        res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
+        res.setHeader("Content-Disposition", 'attachment; filename="Agrocapital.apk"');
         res.setHeader("Content-Type", "application/vnd.android.package-archive");
         if (contentLength) {
           res.setHeader("Content-Length", contentLength);
