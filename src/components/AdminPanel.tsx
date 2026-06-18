@@ -776,16 +776,64 @@ export default function AdminPanel({
             <h3 className="font-display font-bold text-lg text-white mb-4 shrink-0">Modifier l'Investisseur</h3>
             <div className="flex-1 overflow-y-auto pr-1 space-y-4 my-2 scrollbar-thin scrollbar-thumb-slate-800">
               <div>
-                <span className="text-xs text-slate-400 block uppercase font-semibold">Nom de l'utilisateur</span>
+                <span className="text-xs text-slate-400 block uppercase font-semibold text-[10px]">Nom de l'utilisateur</span>
                 <span className="text-sm font-semibold text-white mt-1 block">{editingUser.name} ({editingUser.whatsapp})</span>
                 {(() => {
+                  const approvedDeps = deposits
+                    .filter(d => d.userId === editingUser.id && (d.status === 'approved' || d.status === 'completed' || d.status === 'success'))
+                    .reduce((sum, d) => sum + d.amount, 0);
+
+                  const pendingDeps = deposits
+                    .filter(d => d.userId === editingUser.id && d.status === 'pending')
+                    .reduce((sum, d) => sum + d.amount, 0);
+
+                  const approvedWiths = withdrawals
+                    .filter(w => w.userId === editingUser.id && (w.status === 'approved' || w.status === 'completed' || w.status === 'success'))
+                    .reduce((sum, w) => sum + w.amount, 0);
+
+                  const pendingWiths = withdrawals
+                    .filter(w => w.userId === editingUser.id && w.status === 'pending')
+                    .reduce((sum, w) => sum + w.amount, 0);
+
                   const commSum = commissions
                     .filter(c => c.userId === editingUser.id)
                     .reduce((sum, c) => sum + (c.amount || 0), 0);
+                  
+                  const dailyRev = editingUser.dailyEarnings || 0;
+
                   return (
-                    <div className="mt-2 flex items-center space-x-1.5 text-xs text-emerald-400 font-mono font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-xl w-fit">
-                      <span>💵 Commissions reçues :</span>
-                      <span>+{commSum.toLocaleString()} F</span>
+                    <div className="mt-3.5 p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
+                      <span className="text-[10px] text-yellow-500 uppercase tracking-wider font-bold block border-b border-slate-800/80 pb-1.5">
+                        📊 Aperçu Financier de l'Investisseur
+                      </span>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="p-2 bg-slate-900/80 border border-slate-800/40 rounded-xl">
+                          <span className="text-[9px] text-slate-400 uppercase font-medium block">⚡ Gain Quotidien</span>
+                          <span className="text-emerald-400 font-mono font-bold block mt-0.5">+{dailyRev.toLocaleString()} F / j</span>
+                        </div>
+
+                        <div className="p-2 bg-slate-900/80 border border-slate-800/40 rounded-xl">
+                          <span className="text-[9px] text-slate-400 uppercase font-medium block">🎁 Commissions</span>
+                          <span className="text-emerald-400 font-mono font-bold block mt-0.5">+{commSum.toLocaleString()} F</span>
+                        </div>
+
+                        <div className="p-2 bg-slate-900/80 border border-slate-800/40 rounded-xl">
+                          <span className="text-[9px] text-slate-400 uppercase font-medium block flex items-center gap-1">📥 Dépôts <span className="text-green-400">(App.)</span></span>
+                          <span className="text-green-400 font-mono font-bold block mt-0.5">+{approvedDeps.toLocaleString()} F</span>
+                          {pendingDeps > 0 && (
+                            <span className="text-[8px] text-yellow-500 font-mono block mt-0.5" title="En attente de validation">⏳ Attente: +{pendingDeps.toLocaleString()} F</span>
+                          )}
+                        </div>
+
+                        <div className="p-2 bg-slate-900/80 border border-slate-800/40 rounded-xl">
+                          <span className="text-[9px] text-slate-400 uppercase font-medium block flex items-center gap-1">📤 Retraits <span className="text-red-400">(App.)</span></span>
+                          <span className="text-red-400 font-mono font-bold block mt-0.5">-{approvedWiths.toLocaleString()} F</span>
+                          {pendingWiths > 0 && (
+                            <span className="text-[8px] text-yellow-500 font-mono block mt-0.5" title="En attente de validation">⏳ Attente: -{pendingWiths.toLocaleString()} F</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   );
                 })()}
