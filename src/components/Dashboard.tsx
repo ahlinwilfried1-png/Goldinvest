@@ -112,22 +112,164 @@ const cardVariants = {
 const getVipImage = (vipLevel: number) => {
   switch (vipLevel) {
     case 1:
-      return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=400';
+      // VIP 1: Fresh Corn/Maize field
+      return 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&q=80&w=400';
     case 2:
-      return 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=400';
+      // VIP 2: Tomato cultivation
+      return 'https://images.unsplash.com/photo-1592841208221-a530807da27a?auto=format&fit=crop&q=80&w=400';
     case 3:
-      return 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?auto=format&fit=crop&q=80&w=400';
+      // VIP 3: Green rice terraces / cultivation
+      return 'https://images.unsplash.com/photo-1536257130722-1d1db7466222?auto=format&fit=crop&q=80&w=400';
     case 4:
-      return 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=400';
+      // VIP 4: Cotton plantation
+      return 'https://images.unsplash.com/photo-1594488880534-118e77843820?auto=format&fit=crop&q=80&w=400';
     case 5:
-      return 'https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?auto=format&fit=crop&q=80&w=400';
+      // VIP 5: Cocoa pods on tree
+      return 'https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&q=80&w=400';
     case 6:
-      return 'https://images.unsplash.com/photo-1610312278520-bcc893a3ff1d?auto=format&fit=crop&q=80&w=400';
+      // VIP 6: Palm tree plantation (oil palms)
+      return 'https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&q=80&w=400';
     case 7:
-      return 'https://images.unsplash.com/photo-1589758438368-0ad531db3366?auto=format&fit=crop&q=80&w=400';
+      // VIP 7: Modern agricultural harvest tractor
+      return 'https://images.unsplash.com/photo-1534723452202-444f8b2158fe?auto=format&fit=crop&q=80&w=400';
     default:
-      return 'https://images.unsplash.com/photo-1518186285589-2f7649de83e0?auto=format&fit=crop&q=80&w=400';
+      return 'https://images.unsplash.com/photo-1464226184884-fa280b87c3a9?auto=format&fit=crop&q=80&w=400';
   }
+};
+
+const getVipCropDetails = (level: number) => {
+  switch (level) {
+    case 1:
+      return {
+        name: "Culture de Maïs Écologique 🌽",
+        desc: "Champ fertile de maïs hybride avec système d'irrigation par aspersion."
+      };
+    case 2:
+      return {
+        name: "Ferme Maraîchère de Tomates 🍅",
+        desc: "Production hors-sol moderne protégeant des bio-agresseurs avec fort rendement."
+      };
+    case 3:
+      return {
+        name: "Riziculture Saélienne Irriguée 🌾",
+        desc: "Coopérative de rizière de haut rendement avec gestion solaire de l'eau."
+      };
+    case 4:
+      return {
+        name: "Champs de Coton Biologique ☁️",
+        desc: "Culture de coton de qualité supérieure certifiée écologiquement responsable."
+      };
+    case 5:
+      return {
+        name: "Grande Plantation de Cacao 🍫",
+        desc: "Verger d'arbres de cacao d'Afrique de l'Ouest produisant des fèves fines."
+      };
+    case 6:
+      return {
+        name: "Palmeraie Industrielle Durable 🌴",
+        desc: "Production d'huile de palme brute certifiée RSPO à haute performance."
+      };
+    case 7:
+      return {
+        name: "Complexe Agro-Technologique Élite 🚜",
+        desc: "Optimisation de la récolte par des machines de pointe à suivi satellite."
+      };
+    default:
+      return {
+        name: "Culture Maraîchère Agro-Écologique 🥦",
+        desc: "Projet pilote de cultures diversifiées et de maraîchage biologique fertile."
+      };
+  }
+};
+
+const ProductImage = ({ 
+  vipLevel, 
+  alt, 
+  className = "w-full h-full object-cover",
+  isMini = false 
+}: { 
+  vipLevel: number; 
+  alt: string; 
+  className?: string;
+  isMini?: boolean;
+}) => {
+  const level = Number(vipLevel) || 1;
+  const [errorCount, setErrorCount] = useState(0);
+
+  const getVipImageAlternate = (lvl: number, attempt: number) => {
+    if (attempt === 0) {
+      switch (lvl) {
+        case 1: return 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&q=80&w=400';
+        case 2: return 'https://images.unsplash.com/photo-1592841208221-a530807da27a?auto=format&fit=crop&q=80&w=400';
+        case 3: return 'https://images.unsplash.com/photo-1536257130722-1d1db7466222?auto=format&fit=crop&q=80&w=400';
+        case 4: return 'https://images.unsplash.com/photo-1594488880534-118e77843820?auto=format&fit=crop&q=80&w=400';
+        case 5: return 'https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&q=80&w=400';
+        case 6: return 'https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&q=80&w=400';
+        case 7: return 'https://images.unsplash.com/photo-1534723452202-444f8b2158fe?auto=format&fit=crop&q=80&w=400';
+        default: return 'https://images.unsplash.com/photo-1464226184884-fa280b87c3a9?auto=format&fit=crop&q=80&w=400';
+      }
+    } else if (attempt === 1) {
+      switch (lvl) {
+        case 1: return 'https://images.unsplash.com/photo-1530011405077-e6f40778a46b?auto=format&fit=crop&q=60&w=400';
+        case 2: return 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=60&w=400';
+        case 3: return 'https://images.unsplash.com/photo-1501250987900-211872527eaa?auto=format&fit=crop&q=60&w=400';
+        case 4: return 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&q=60&w=400';
+        case 5: return 'https://images.unsplash.com/photo-1511381939415-e44015466834?auto=format&fit=crop&q=60&w=400';
+        case 6: return 'https://images.unsplash.com/photo-1528183429752-a97d0bf99b5a?auto=format&fit=crop&q=60&w=400';
+        case 7: return 'https://images.unsplash.com/photo-1472141521881-95d0e87e2e39?auto=format&fit=crop&q=60&w=400';
+        default: return 'https://images.unsplash.com/photo-1550147760-44c9966d6bc7?auto=format&fit=crop&q=60&w=400';
+      }
+    }
+    return '';
+  };
+
+  const cropDetails = getVipCropDetails(level);
+  const emoji = cropDetails.name.split(' ').pop() || '🌾';
+
+  const getFallbackStyle = (lvl: number) => {
+    switch (lvl) {
+      case 1: return "from-amber-100 to-yellow-105 text-yellow-800 border-yellow-200/50";
+      case 2: return "from-red-100 to-orange-105 text-orange-850 border-orange-200/50";
+      case 3: return "from-emerald-100 to-green-105 text-emerald-850 border-green-200/50";
+      case 4: return "from-cyan-100 to-blue-105 text-blue-805 border-blue-200/50";
+      case 5: return "from-amber-200/50 to-orange-200/50 text-amber-900 border-amber-300";
+      case 6: return "from-indigo-100 to-purple-105 text-indigo-805 border-indigo-200/50";
+      case 7: return "from-emerald-200 to-yellow-105 text-[#0f5132] border-emerald-300/40";
+      default: return "from-emerald-50 to-teal-55 text-emerald-805 border-emerald-100";
+    }
+  };
+
+  if (errorCount >= 2) {
+    return (
+      <div className={`w-full h-full bg-gradient-to-br ${getFallbackStyle(level)} flex flex-col items-center justify-center p-3 text-center border overflow-hidden`}>
+        <span className={`${isMini ? 'text-xl animate-pulse' : 'text-3xl animate-pulse'} select-none`} role="img" aria-label={cropDetails.name}>
+          {emoji}
+        </span>
+        {!isMini && (
+          <div className="mt-1 font-sans">
+            <h5 className="font-black text-[9px] uppercase tracking-wider text-slate-800 leading-tight">
+              {cropDetails.name.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '')}
+            </h5>
+            <span className="text-[7px] font-black uppercase text-emerald-600 block tracking-widest mt-0.5 leading-none">
+              PROJET AGRÉÉ 🌾
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={getVipImageAlternate(level, errorCount)}
+      alt={alt}
+      className={className}
+      onError={() => {
+        setErrorCount(prev => prev + 1);
+      }}
+      referrerPolicy="no-referrer"
+    />
+  );
 };
 
 const TICKER_MESSAGES = [
@@ -168,6 +310,7 @@ export default function Dashboard({
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>([]);
   const [withdrawalProofs, setWithdrawalProofs] = useState<WithdrawalProof[]>([]);
+  const [bannerImageError, setBannerImageError] = useState<boolean>(false);
 
   // Form states
   const [depositAmount, setDepositAmount] = useState<string>('5000');
@@ -1495,6 +1638,29 @@ export default function Dashboard({
                   </div>
                 </div>
 
+                {/* IMAGE AGRICOLE SOUS LE SOLDE PRÉCISÉMENT */}
+                <div className="mb-5 rounded-[22px] overflow-hidden relative h-28 sm:h-36 shadow-sm border border-emerald-100/50 bg-[#00bd74]">
+                  {!bannerImageError ? (
+                    <img 
+                      src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80" 
+                      alt="AgroProfit Agriculture" 
+                      className="w-full h-full object-cover"
+                      onError={() => setBannerImageError(true)}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-emerald-950 flex items-center justify-center">
+                      <span className="text-4xl animate-pulse select-none">🌾🌱🌽</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-black/20 to-transparent flex flex-col justify-end p-4 text-left">
+                    <span className="text-[9px] font-sans font-black text-[#00bd74] uppercase tracking-wider block">PROJET NATURE ET RENDEMENT 🌾</span>
+                    <h4 className="text-white text-xs sm:text-sm font-sans font-black uppercase tracking-tight mt-0.5 leading-snug">
+                      INVESTIR AUJOURD'HUI, RÉCOLTER DEMAIN
+                    </h4>
+                  </div>
+                </div>
+
                 {/* Substats block */}
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 pb-5">
                   <div className="text-left font-sans">
@@ -1624,31 +1790,70 @@ export default function Dashboard({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {activeInvestments.filter(i => i.status === 'active').map((p) => (
-                      <div 
-                        key={p.id}
-                        className="bg-white border border-slate-200 rounded-3xl p-5 flex flex-col justify-between text-left space-y-4 shadow-sm relative overflow-hidden"
-                      >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full pointer-events-none -mr-8 -mt-8" />
-                        
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-[9px] text-white font-black uppercase bg-emerald-500 px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                                VIP ACTIF
-                              </span>
-                              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                                Jour {p.daysPassed}/{p.durationDays}
-                              </span>
+                    {activeInvestments.filter(i => i.status === 'active').map((p) => {
+                      // Safe utility to find the proper vipLevel for the image
+                      const getVipLevelFromActive = (item: any) => {
+                        if (item.vipLevel) return item.vipLevel;
+                        if (item.productId) {
+                          const match = String(item.productId).match(/\d+/);
+                          if (match) return parseInt(match[0], 10);
+                        }
+                        if (item.productName) {
+                          const match = String(item.productName).match(/\d+/);
+                          if (match) return parseInt(match[0], 10);
+                          const nameLower = String(item.productName).toLowerCase();
+                          if (nameLower.includes('bronze')) return 1;
+                          if (nameLower.includes('silver')) return 2;
+                          if (nameLower.includes('gold')) return 3;
+                          if (nameLower.includes('platinum')) return 4;
+                          if (nameLower.includes('diamond')) return 5;
+                          if (nameLower.includes('titanium')) return 6;
+                          if (nameLower.includes('crown')) return 7;
+                        }
+                        return 1;
+                      };
+
+                      const currentLevel = getVipLevelFromActive(p);
+
+                      return (
+                        <div 
+                          key={p.id}
+                          className="bg-white border border-slate-200 rounded-3xl p-5 flex flex-col justify-between text-left space-y-4 shadow-sm relative overflow-hidden animate-fade-in"
+                        >
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full pointer-events-none -mr-8 -mt-8" />
+                          
+                          <div className="flex justify-between items-start gap-2.5">
+                            <div className="flex items-start gap-3">
+                              {/* MINI CROP THUMBNAIL */}
+                              <div className="w-13 h-13 rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-50 select-none shadow-xs">
+                                <ProductImage 
+                                  vipLevel={currentLevel}
+                                  alt={p.productName}
+                                  className="w-full h-full object-cover"
+                                  isMini={true}
+                                />
+                              </div>
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-[9px] text-white font-black uppercase bg-emerald-500 px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                    VIP ACTIF
+                                  </span>
+                                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                                    Jour {p.daysPassed}/{p.durationDays}
+                                  </span>
+                                </div>
+                                <h5 className="font-sans font-black text-xs sm:text-sm text-slate-800 mt-2 leading-tight uppercase tracking-tight">{p.productName}</h5>
+                                <span className="text-[10px] text-emerald-600 font-bold font-sans block mt-0.5">
+                                  {getVipCropDetails(currentLevel).name}
+                                </span>
+                              </div>
                             </div>
-                            <h5 className="font-sans font-black text-sm text-slate-800 mt-3 leading-tight uppercase tracking-tight">{p.productName}</h5>
+                            <div className="text-right shrink-0">
+                              <span className="text-[9px] text-slate-400 block uppercase font-bold">Investi</span>
+                              <strong className="text-sm text-[#046fff] font-black leading-tight font-sans">{p.price.toLocaleString()} F</strong>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <span className="text-[9px] text-slate-400 block uppercase font-bold">Investi</span>
-                            <strong className="text-sm text-[#046fff] font-black leading-tight font-sans">{p.price.toLocaleString()} F</strong>
-                          </div>
-                        </div>
 
                         {/* Progress bar */}
                         <div className="space-y-1">
@@ -1682,8 +1887,9 @@ export default function Dashboard({
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
+                </div>
                 )}
               </div>
 
@@ -1775,7 +1981,7 @@ export default function Dashboard({
                   return (
                     <div 
                       key={p.id}
-                      className={`w-full relative bg-[#f1f4fc] border border-slate-200/50 rounded-[28px] p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-lg ${isBlocked ? 'opacity-70 pointer-events-none' : ''}`}
+                      className={`w-full relative bg-[#f1f4fc] border border-slate-300 rounded-[28px] p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-lg ${isBlocked ? 'opacity-70 pointer-events-none' : ''}`}
                     >
                       {/* TOP BADGES ROW */}
                       <div className="absolute top-4 right-5 flex flex-col items-end space-y-1.5 z-10 text-right">
@@ -1794,14 +2000,34 @@ export default function Dashboard({
                         </span>
                       </div>
 
+                      {/* PRODUCT IMAGE CARD THUMBNAIL */}
+                      <div className="w-full h-36 rounded-[20px] overflow-hidden mb-3.5 relative shadow-sm border border-slate-200/60 bg-slate-100 select-none">
+                        <ProductImage 
+                          vipLevel={p.vipLevel || (index + 1)}
+                          alt={displayName}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+                        />
+                        <div className="absolute bottom-2 left-2.5 bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[9px] font-sans font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                          <span>{getVipCropDetails(p.vipLevel || (index + 1)).name}</span>
+                        </div>
+                      </div>
+
                       {/* PRODUCT HEADER */}
                       <div className="text-left mt-1.5">
-                        <span className="text-[11px] font-sans font-bold text-[#1b64d9] tracking-wider uppercase">
-                          PLAN VIP {p.vipLevel || (index + 1)}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-sans font-bold text-[#1b64d9] tracking-wider uppercase">
+                            PLAN VIP {p.vipLevel || (index + 1)}
+                          </span>
+                          <span className="text-[10px] text-emerald-600 font-bold font-sans">
+                            {getVipCropDetails(p.vipLevel || (index + 1)).name.split(' ').pop()} Projet Actif
+                          </span>
+                        </div>
                         <h4 className="font-sans font-black text-base sm:text-lg text-slate-800 leading-tight uppercase tracking-tight mt-0.5">
                           {displayName}
                         </h4>
+                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1">
+                          {getVipCropDetails(p.vipLevel || (index + 1)).desc}
+                        </p>
                         
                         {/* PRICE WITH LOCATION CAPTION */}
                         <div className="mt-2.5 flex items-baseline space-x-1.5">
