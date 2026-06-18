@@ -1,6 +1,6 @@
 {
-  "name": "Agrocapital Mobile App",
-  "short_name": "Agrocapital",
+  "name": "AgroProfit Mobile App",
+  "short_name": "AgroProfit",
   "description": "Plateforme d'investissement agro-industriel moderne, sécurisée et professionnelle.",
   "start_url": "/",
   "display": "standalone",

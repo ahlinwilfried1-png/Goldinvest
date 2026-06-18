@@ -176,7 +176,7 @@ async function startServer() {
           userName: 'Koffi Kouamé',
           userCountry: 'Côte d’Ivoire',
           amount: 25000,
-          message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci Agrocapital ! 🌾✨',
+          message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
           image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
           likes: ['u-2', 'u-3'],
           createdAt: '2026-06-15T10:12:00Z'
@@ -198,7 +198,7 @@ async function startServer() {
           userName: 'Yao Mensah',
           userCountry: 'Togo',
           amount: 8500,
-          message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement Agrocapital à tout mon entourage.',
+          message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement AgroProfit à tout mon entourage.',
           likes: ['u-1', 'u-2', 'u-admin'],
           createdAt: '2026-06-16T02:05:00Z'
         }
@@ -936,7 +936,7 @@ async function startServer() {
       notifications.unshift({
         id: `not-${Date.now()}`,
         userId: newUser.id,
-        title: 'Bienvenue sur Agrocapital !',
+        title: 'Bienvenue sur AgroProfit !',
         message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
         type: 'bonus',
         createdAt: new Date().toISOString(),
@@ -1422,7 +1422,7 @@ async function startServer() {
       const paydunyaToken = process.env.PAYDUNYA_TOKEN || "MC-4245b0d810aaa02336f0b2f9ddbc26a37ed7bfdc";
       const paydunyaPublic = process.env.PAYDUNYA_PUBLIC_KEY || "MC-b6eb9046e9eb1a18bfbcd8a468ad5f16a6942647";
 
-      const host = req.get('host') || 'agrocapital.online';
+      const host = req.get('host') || 'agroprofit.online';
       const protocol = req.headers['x-forwarded-proto'] === 'http' ? 'http' : 'https';
       const baseUrl = `${protocol}://${host}`;
 
@@ -1436,10 +1436,10 @@ async function startServer() {
       const payload = {
         invoice: {
           total_amount: amt,
-          description: `Recharge de compte Agrocapital - Utilisateur: ${user.name}`
+          description: `Recharge de compte AgroProfit - Utilisateur: ${user.name}`
         },
         store: {
-          name: "Agrocapital",
+          name: "AgroProfit",
           website_url: baseUrl
         },
         actions: {
@@ -2458,9 +2458,9 @@ async function startServer() {
   app.get("/manifest.json", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(JSON.stringify({
-      "name": "Agrocapital",
-      "short_name": "Agrocapital",
-      "description": "Investissement Agro-Industriel Sécurisé - Agrocapital",
+      "name": "AgroProfit",
+      "short_name": "AgroProfit",
+      "description": "Investissement Agro-Industriel Sécurisé - AgroProfit",
       "start_url": "/",
       "display": "standalone",
       "background_color": "#020617",
@@ -2487,7 +2487,7 @@ async function startServer() {
   app.get("/sw.js", (req, res) => {
     res.setHeader("Content-Type", "application/javascript");
     res.send(`
-const CACHE_NAME = 'agrocapital-cache-v1';
+const CACHE_NAME = 'agroprofit-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html'
@@ -2511,8 +2511,8 @@ self.addEventListener('fetch', event => {
 
   // Servir un fichier APK réel, signé et valide pour l'installation directe
   app.get(["/AgroProfit.apk", "/AgroCapital.apk", "/Agrocapital.apk", "/agrocapital.apk"], async (req, res) => {
-    const localApkPath = path.join(process.cwd(), "public", "Agrocapital.apk");
-    const tempApkPath = path.join(process.cwd(), "public", "Agrocapital.apk.tmp");
+    const localApkPath = path.join(process.cwd(), "public", "AgroProfit.apk");
+    const tempApkPath = path.join(process.cwd(), "public", "AgroProfit.apk.tmp");
     const targetUrl = "https://github.com/anthonycr/Lightning-Browser/releases/download/v5.1.0/Lightning-v5.1.0-release.apk";
 
     try {
@@ -2520,7 +2520,7 @@ self.addEventListener('fetch', event => {
       if (fs.existsSync(localApkPath)) {
         const stats = fs.statSync(localApkPath);
         if (stats.size > 4000000) { 
-          res.setHeader("Content-Disposition", 'attachment; filename="Agrocapital.apk"');
+          res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
           res.setHeader("Content-Type", "application/vnd.android.package-archive");
           res.setHeader("Content-Length", stats.size.toString());
           return res.sendFile(localApkPath);
@@ -2542,7 +2542,7 @@ self.addEventListener('fetch', event => {
       if (response.ok && response.body) {
         const contentLength = response.headers.get("Content-Length");
         
-        res.setHeader("Content-Disposition", 'attachment; filename="Agrocapital.apk"');
+        res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
         res.setHeader("Content-Type", "application/vnd.android.package-archive");
         if (contentLength) {
           res.setHeader("Content-Length", contentLength);

@@ -354,7 +354,7 @@ export default function Dashboard({
         openAlert('Activé avec succès 🎉', 'Vous recevrez désormais des alertes instantanées dans Chrome à chaque fois qu\'une recharge est approuvée, qu\'un gain tombe ou qu\'une annonce officielle de l\'administrateur est diffusée.', 'success');
         try {
           new Notification("Vous avez reçu une nouvelle notification", {
-            body: "Notifications de bureau Chrome activées sur Agrocapital ! 🔔"
+            body: "Notifications de bureau Chrome activées sur AgroProfit ! 🔔"
           });
         } catch (e) {
           console.error(e);
@@ -1356,7 +1356,7 @@ export default function Dashboard({
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   </div>
                   <p className="text-[10px] text-slate-500 font-semibold leading-tight truncate">
-                    Rejoignez la discussion officielle Agrocapital.
+                    Rejoignez la discussion officielle AgroProfit.
                   </p>
                 </div>
                 <a 
@@ -1405,7 +1405,7 @@ export default function Dashboard({
             </div>
             <div className="flex-1 text-left min-w-0">
               <div className="flex justify-between items-center mb-0.5">
-                <span className="text-[10px] font-sans font-black uppercase text-orange-400 tracking-wider">Alerte Agrocapital 🔔</span>
+                <span className="text-[10px] font-sans font-black uppercase text-orange-400 tracking-wider">Alerte AgroProfit 🔔</span>
                 <span className="text-[8px] opacity-60 font-mono font-bold uppercase shrink-0">À l'instant</span>
               </div>
               <p className="text-[11.5px] font-bold text-slate-100 leading-snug break-words">
@@ -2139,7 +2139,7 @@ export default function Dashboard({
                       Preuves de Retrait
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                      Découvrez les reçus réels reçus et publiés en direct par nos investisseurs Agrocapital.
+                      Découvrez les reçus réels reçus et publiés en direct par nos investisseurs AgroProfit.
                     </p>
                   </div>
 
@@ -2518,7 +2518,7 @@ export default function Dashboard({
                   </div>
  
                   <div>
-                    <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Lien d'Inscription Agrocapital :</span>
+                    <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Lien d'Inscription AgroProfit :</span>
                     <div className="flex bg-slate-900 border border-slate-800 p-2 px-3 rounded-lg justify-between items-center gap-2">
                       <span className="font-mono text-xs font-bold text-slate-200 truncate flex-1">{referralURL}</span>
                       <button
@@ -2646,7 +2646,7 @@ export default function Dashboard({
                   <>
                     {level1Users.length === 0 ? (
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-center py-6 bg-slate-950/20 rounded-xl font-medium">
-                        Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) avec votre code de parrainage. Partagez votre lien d'inscription Agrocapital pour commencer !
+                        Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) avec votre code de parrainage. Partagez votre lien d'inscription AgroProfit pour commencer !
                       </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -2849,7 +2849,7 @@ export default function Dashboard({
                 >
                   <div className="flex items-center space-x-3.5">
                     <Info className="w-5 h-5 text-slate-700 stroke-[2.5]" />
-                    <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">À propos de nous (Agrocapital)</span>
+                    <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">À propos de nous (AgroProfit)</span>
                   </div>
                   <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                 </div>
@@ -3042,7 +3042,7 @@ export default function Dashboard({
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border border-slate-900 animate-pulse"></span>
                   </div>
                   <div>
-                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support Agrocapital</h4>
+                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support AgroProfit</h4>
                     <span className="text-[9px] font-bold text-slate-100/90 block mt-1 uppercase tracking-wide">Réponse sous 2H maximum</span>
                   </div>
                 </div>
@@ -3067,7 +3067,7 @@ export default function Dashboard({
                         Discuter en ligne !
                       </h5>
                       <p className="text-[11px] text-slate-500 font-semibold max-w-[240px] leading-relaxed mx-auto">
-                        Écrivez votre message ci-dessous. Un conseiller Agrocapital vous répondra directement ici.
+                        Écrivez votre message ci-dessous. Un conseiller AgroProfit vous répondra directement ici.
                       </p>
                     </div>
                   </div>
@@ -3261,7 +3261,7 @@ export default function Dashboard({
                       À Propos de Nous
                     </h3>
                     <p className="text-[9px] text-[#ea580c] font-black uppercase tracking-wider font-mono">
-                      Fonctionnement Agrocapital
+                      Fonctionnement AgroProfit
                     </p>
                   </div>
                 </div>
@@ -3281,7 +3281,7 @@ export default function Dashboard({
                 <div className="space-y-2">
                   <span className="text-[10px] sm:text-xs font-black text-orange-600 block uppercase tracking-widest">PROPULSER LE CAPITALISME AGRICOLE EN AFRIQUE 🌱</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-600 font-medium">
-                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Agrocapital</strong> est la première interface d'investissement agri-technologique en ligne conçue pour démocratiser l'exploitation industrielle moderne en Afrique de l'Ouest (Côte d'Ivoire, Togo, Bénin, Burkina Faso). Nous canalisons votre épargne vers des projets réels – serres automatisées, parcs de tracteurs connectés, stations solaires de pompage d'eau – afin de générer pour vous des profits stables de manière continue.
+                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>AgroProfit</strong> est la première interface d'investissement agri-technologique en ligne conçue pour démocratiser l'exploitation industrielle moderne en Afrique de l'Ouest (Côte d'Ivoire, Togo, Bénin, Burkina Faso). Nous canalisons votre épargne vers des projets réels – serres automatisées, parcs de tracteurs connectés, stations solaires de pompage d'eau – afin de générer pour vous des profits stables de manière continue.
                   </p>
                 </div>
 
@@ -3347,7 +3347,7 @@ export default function Dashboard({
                           Retraits Automatisés Instantanés vers votre Mobile Money
                         </h5>
                         <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
-                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. Agrocapital valide les flux financiers intelligemment pour créditer votre compte sans délai !
+                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. AgroProfit valide les flux financiers intelligemment pour créditer votre compte sans délai !
                         </p>
                       </div>
                     </div>
@@ -3384,7 +3384,7 @@ export default function Dashboard({
               
               {/* Footer */}
               <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between">
-                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Agrocapital &copy; 2026. Tous droits réservés.</span>
+                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">AgroProfit &copy; 2026. Tous droits réservés.</span>
                 <button 
                   onClick={() => setIsAboutModalOpen(false)}
                   className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-95 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"

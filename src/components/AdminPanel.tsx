@@ -668,7 +668,7 @@ export default function AdminPanel({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `agrocapital_coordonnees_membres_google.csv`);
+    link.setAttribute("download", `agroprofit_coordonnees_membres_google.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -708,7 +708,7 @@ export default function AdminPanel({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `agrocapital_retraits_coordonnees_google.csv`);
+    link.setAttribute("download", `agroprofit_retraits_coordonnees_google.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -2104,7 +2104,7 @@ export default function AdminPanel({
             </h3>
 
             <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur Agrocapital.
+              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur AgroProfit.
             </p>
 
             <form onSubmit={handleSendGlobalAlert} className="space-y-4">

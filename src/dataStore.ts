@@ -246,7 +246,7 @@ const INITIAL_PROOFS: WithdrawalProof[] = [
     userName: 'Koffi Kouamé',
     userCountry: 'Côte d’Ivoire',
     amount: 25000,
-    message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci Agrocapital ! 🌾✨',
+    message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
     image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
     likes: ['u-2', 'u-3'],
     createdAt: '2026-06-15T10:12:00Z'
@@ -268,7 +268,7 @@ const INITIAL_PROOFS: WithdrawalProof[] = [
     userName: 'Yao Mensah',
     userCountry: 'Togo',
     amount: 8500,
-    message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement Agrocapital à tout mon entourage.',
+    message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement AgroProfit à tout mon entourage.',
     likes: ['u-1', 'u-2', 'u-admin'],
     createdAt: '2026-06-16T02:05:00Z'
   }
@@ -1264,7 +1264,7 @@ export class DataStore {
     notifications.unshift({
       id: `not-${Date.now()}`,
       userId: newUser.id,
-      title: 'Bienvenue sur Agrocapital !',
+      title: 'Bienvenue sur AgroProfit !',
       message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
       type: 'bonus',
       createdAt: new Date().toISOString(),

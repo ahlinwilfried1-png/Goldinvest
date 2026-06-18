@@ -33,7 +33,7 @@ export default function Home({
   // Calculator state
   const [calcAmount, setCalcAmount] = useState<number>(10000);
   
-  // Custom ROI formulas based on standard Agrocapital products
+  // Custom ROI formulas based on standard AgroProfit products
   const dailyRate = 0.085; // 8.5% daily average
   const calcDaily = Math.round(calcAmount * dailyRate);
   const calcWeekly = Math.round(calcAmount * dailyRate * 7);
@@ -265,7 +265,7 @@ export default function Home({
         <div id="security-foot" className="flex flex-col items-center justify-center gap-1 opacity-70 mt-4">
           <div className="flex items-center gap-1.5 text-[9.5px] font-black uppercase text-slate-400 tracking-widest">
             <Award className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-            <span>AGROCAPITAL CERTIFICATION v2.5</span>
+            <span>AGROPROFIT CERTIFICATION v2.5</span>
           </div>
           <span className="text-[8px] font-extrabold uppercase text-slate-350 tracking-widest">
             Cryptage Militaire SSL 256 Bits
