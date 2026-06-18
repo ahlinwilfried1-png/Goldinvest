@@ -766,18 +766,29 @@ export default function AdminPanel({
       {/* Editing user modal overlay */}
       {editingUser && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[99] flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-yellow-500/30 rounded-3xl p-6 md:p-8 relative">
+          <div className="w-full max-w-md bg-slate-900 border border-yellow-500/30 rounded-3xl p-6 md:p-8 relative max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setEditingUser(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white z-10"
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="font-display font-bold text-lg text-white mb-6">Modifier l'Investisseur</h3>
-            <div className="space-y-4">
+            <h3 className="font-display font-bold text-lg text-white mb-4 shrink-0">Modifier l'Investisseur</h3>
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4 my-2 scrollbar-thin scrollbar-thumb-slate-800">
               <div>
                 <span className="text-xs text-slate-400 block uppercase font-semibold">Nom de l'utilisateur</span>
                 <span className="text-sm font-semibold text-white mt-1 block">{editingUser.name} ({editingUser.whatsapp})</span>
+                {(() => {
+                  const commSum = commissions
+                    .filter(c => c.userId === editingUser.id)
+                    .reduce((sum, c) => sum + (c.amount || 0), 0);
+                  return (
+                    <div className="mt-2 flex items-center space-x-1.5 text-xs text-emerald-400 font-mono font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-xl w-fit">
+                      <span>💵 Commissions reçues :</span>
+                      <span>+{commSum.toLocaleString()} F</span>
+                    </div>
+                  );
+                })()}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Solde Principal (XOF)</label>
@@ -885,21 +896,21 @@ export default function AdminPanel({
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="pt-4 flex gap-3">
-                <button
-                  onClick={() => setEditingUser(null)}
-                  className="flex-1 py-3 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-800"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleSaveUser}
-                  className="flex-1 py-3 text-xs font-bold rounded-xl gold-bg-gradient text-slate-950 shadow-md shadow-yellow-500/10"
-                >
-                  Enregistrer les modifications
-                </button>
-              </div>
+            <div className="pt-4 flex gap-3 border-t border-slate-800 shrink-0 mt-2">
+              <button
+                onClick={() => setEditingUser(null)}
+                className="flex-1 py-3 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-800"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveUser}
+                className="flex-1 py-3 text-xs font-bold rounded-xl gold-bg-gradient text-slate-950 shadow-md shadow-yellow-500/10"
+              >
+                Enregistrer les modifications
+              </button>
             </div>
           </div>
         </div>
@@ -908,16 +919,16 @@ export default function AdminPanel({
       {/* Editing product modal overlay */}
       {editingProduct && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[99] flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-yellow-500/30 rounded-3xl p-6 md:p-8 relative">
+          <div className="w-full max-w-md bg-slate-900 border border-yellow-500/30 rounded-3xl p-6 md:p-8 relative max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setEditingProduct(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white z-10"
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="font-display font-bold text-lg text-white mb-6">⚙️ Modifier le Produit VIP</h3>
+            <h3 className="font-display font-bold text-lg text-white mb-4 shrink-0">⚙️ Modifier le Produit VIP</h3>
             
-            <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4 my-2 scrollbar-thin scrollbar-thumb-slate-800">
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau VIP (Indice)</label>
                 <input
@@ -979,21 +990,21 @@ export default function AdminPanel({
                   className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
                 />
               </div>
+            </div>
 
-              <div className="pt-4 flex gap-3">
-                <button
-                  onClick={() => setEditingProduct(null)}
-                  className="flex-1 py-3 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-800"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleSaveProduct}
-                  className="flex-1 py-3 text-xs font-bold rounded-xl gold-bg-gradient text-slate-950 shadow-md shadow-yellow-500/10"
-                >
-                  Enregistrer les modifications
-                </button>
-              </div>
+            <div className="pt-4 flex gap-3 border-t border-slate-800 shrink-0 mt-2">
+              <button
+                onClick={() => setEditingProduct(null)}
+                className="flex-1 py-3 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-800"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveProduct}
+                className="flex-1 py-3 text-xs font-bold rounded-xl gold-bg-gradient text-slate-950 shadow-md shadow-yellow-500/10"
+              >
+                Enregistrer les modifications
+              </button>
             </div>
           </div>
         </div>
@@ -1660,6 +1671,10 @@ export default function AdminPanel({
                       const activeUserPlans = investments.filter(i => i.userId === user.id && i.status === 'active');
                       const activeUserPlansValue = activeUserPlans.reduce((sum, i) => sum + i.price, 0);
 
+                      const userTotalCommission = commissions
+                        .filter(c => c.userId === user.id)
+                        .reduce((sum, c) => sum + (c.amount || 0), 0);
+
                       return (
                         <tr key={user.id} className={`hover:bg-slate-900/20 ${user.isBlocked ? 'bg-red-500/5' : ''}`}>
                           <td className="p-3">
@@ -1724,12 +1739,12 @@ export default function AdminPanel({
                           <td className="p-3 text-right space-y-1">
                             <div>
                               <span className="text-[9px] text-slate-400 block font-semibold uppercase">Solde :</span>
-                              <span className="font-bold font-mono text-yellow-405 text-xs">{user.balance.toLocaleString()} F</span>
+                              <span className="font-bold font-mono text-yellow-500 text-xs">{user.balance.toLocaleString()} F</span>
                             </div>
                             <div className="flex items-center justify-end gap-1.5 text-[9px] font-mono">
                               <span className="text-green-400" title="Total Dépôts Approuvés">📥 +{userApprovedDepositsNum.toLocaleString()} F</span>
                               <span className="text-slate-700">|</span>
-                              <span className="text-red-400" title="Total Retraits Approuvés">📤 -{userApprovedWithdrawalsNum.toLocaleString()} F</span>
+                              <span className="text-red-400" title="Total Retraits Approuvés">📤 -{userApprovedWithdrawalsNum.toLocaleString()} F</span><div className="pt-1 border-t border-slate-800/60 mt-1"><span className="text-[8px] text-emerald-500 block font-semibold uppercase text-right">Commissions :</span><span className={`font-bold font-mono text-[10px] block text-right ${userTotalCommission > 0 ? "text-emerald-400" : "text-slate-500"}`} title="Total des commissions de parrainage reçues">🎁 +{userTotalCommission.toLocaleString()} F</span></div>
                             </div>
                           </td>
                           <td className="p-3 text-center">

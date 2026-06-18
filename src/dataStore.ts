@@ -651,7 +651,9 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_mlm_level3_rate',
           'gi_withdrawals_blocked_global',
           'gi_referral_domain',
-          'gi_withdrawal_proofs'
+          'gi_withdrawal_proofs',
+          'gi_deleted_investments',
+          'gi_deleted_users'
         ];
         
         // Ensure standard keys are read with their default fallback if they are not in local storage yet
@@ -709,14 +711,24 @@ export const syncWithBackend = async (): Promise<boolean> => {
         if (remoteData !== undefined && remoteData !== null) {
           let mergedVal = remoteData;
           
-          const isMergeableArray = Array.isArray(remoteData) && Array.isArray(localData) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
+          const isMergeableArray = Array.isArray(remoteData) && Array.isArray(localData) && 
+            key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
+            key !== "gi_deleted_investments" && key !== "gi_deleted_users";
           if (isMergeableArray) {
             // Merge remote array and local array to avoid losing any offline changes or registrations!
             const mergedMap = new Map<string, any>();
+            const deletedInvs = key === "gi_investments" ? (data["gi_deleted_investments"] || getFromStore<string[]>('gi_deleted_investments', [])) : [];
+            const deletedUsers = key === "gi_users" ? (data["gi_deleted_users"] || getFromStore<string[]>('gi_deleted_users', [])) : [];
+
             for (const item of remoteData) {
               if (item && typeof item === 'object') {
                 const id = item.id || item.code;
-                if (id) mergedMap.set(String(id), item);
+                if (id) {
+                  const idStr = String(id);
+                  if (key === "gi_investments" && deletedInvs.includes(idStr)) continue;
+                  if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
+                  mergedMap.set(idStr, item);
+                }
               }
             }
             
@@ -726,6 +738,8 @@ export const syncWithBackend = async (): Promise<boolean> => {
                 const id = item.id || item.code;
                 if (id) {
                   const idStr = String(id);
+                  if (key === "gi_investments" && deletedInvs.includes(idStr)) continue;
+                  if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
                   if (!mergedMap.has(idStr)) {
                     mergedMap.set(idStr, item);
                     localHasNewItems = true;
@@ -808,6 +822,8 @@ export const syncWithBackend = async (): Promise<boolean> => {
 export class DataStore {
   static getUsers(): User[] {
     let list = getFromStore<User[]>('gi_users', INITIAL_USERS);
+    const deletedUsers = getFromStore<string[]>('gi_deleted_users', []);
+    list = list.filter(u => u && u.id && !deletedUsers.includes(u.id));
     // Ensure the default administrative account has the updated credentials in existing local storage
     let changed = false;
     let updated = list.map(u => {
@@ -886,7 +902,9 @@ export class DataStore {
   }
 
   static saveUsers(users: User[]): void {
-    setToStore<User[]>('gi_users', users);
+    const deletedUsers = getFromStore<string[]>('gi_deleted_users', []);
+    const filtered = users.filter(u => u && u.id && !deletedUsers.includes(u.id));
+    setToStore<User[]>('gi_users', filtered);
   }
 
   static getMLMRates(): { level1: number, level2: number, level3: number } {
@@ -967,11 +985,15 @@ export class DataStore {
   }
 
   static getInvestments(): Investment[] {
-    return getFromStore<Investment[]>('gi_investments', INITIAL_INVESTMENTS);
+    let list = getFromStore<Investment[]>('gi_investments', INITIAL_INVESTMENTS);
+    const deletedInvestments = getFromStore<string[]>('gi_deleted_investments', []);
+    return list.filter(i => i && i.id && !deletedInvestments.includes(i.id));
   }
 
   static saveInvestments(investments: Investment[]): void {
-    setToStore<Investment[]>('gi_investments', investments);
+    const deletedInvestments = getFromStore<string[]>('gi_deleted_investments', []);
+    const filtered = investments.filter(i => i && i.id && !deletedInvestments.includes(i.id));
+    setToStore<Investment[]>('gi_investments', filtered);
   }
 
   static getCommissions(): Commission[] {

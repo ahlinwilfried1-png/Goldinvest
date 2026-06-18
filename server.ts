@@ -699,8 +699,28 @@ async function startServer() {
     if (body && typeof body === "object") {
       let modified = false;
       for (const key of Object.keys(body)) {
-        const newVal = body[key];
-        const oldVal = storeData[key];
+        let newVal = body[key];
+        let oldVal = storeData[key];
+
+        // Filter and scrub deleted investments or users from incoming payload
+        if (key === "gi_investments" && Array.isArray(newVal)) {
+          const deletedInvs = storeData["gi_deleted_investments"] || [];
+          newVal = newVal.filter((i: any) => i && i.id && !deletedInvs.includes(String(i.id)));
+        }
+        if (key === "gi_users" && Array.isArray(newVal)) {
+          const deletedUsrs = storeData["gi_deleted_users"] || [];
+          newVal = newVal.filter((u: any) => u && u.id && !deletedUsrs.includes(String(u.id)));
+        }
+
+        // Filter and scrub deleted investments or users from current old database value
+        if (key === "gi_investments" && Array.isArray(oldVal)) {
+          const deletedInvs = storeData["gi_deleted_investments"] || [];
+          oldVal = oldVal.filter((i: any) => i && i.id && !deletedInvs.includes(String(i.id)));
+        }
+        if (key === "gi_users" && Array.isArray(oldVal)) {
+          const deletedUsrs = storeData["gi_deleted_users"] || [];
+          oldVal = oldVal.filter((u: any) => u && u.id && !deletedUsrs.includes(String(u.id)));
+        }
 
         console.log(`[DEBUG SAVE-STORE] Client requested update for key: "${key}". Incoming value duration/type: ${Array.isArray(newVal) ? `Array of length ${newVal.length}` : typeof newVal}. Existing server value: ${Array.isArray(oldVal) ? `Array of length ${oldVal.length}` : typeof oldVal}.`);
 
@@ -715,7 +735,9 @@ async function startServer() {
           }
         }
 
-        const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
+        const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && 
+          key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
+          key !== "gi_deleted_investments" && key !== "gi_deleted_users";
         if (shouldMerge) {
           // Merge arrays by ID or Code and choose the item with the higher lastModified
           const mergedMap = new Map<string, any>();
