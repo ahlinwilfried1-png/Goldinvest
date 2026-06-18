@@ -23,6 +23,7 @@ import {
 import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
+  { name: "Côte d'Ivoire", code: '+225', flag: '🇨🇮' },
   { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
   { name: 'Togo', code: '+228', flag: '🇹🇬' },
   { name: 'Bénin', code: '+229', flag: '🇧🇯' }
@@ -48,8 +49,8 @@ export default function Auth({
   // Sign up fields
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [selectedCode, setSelectedCode] = useState('+226');
-  const [country, setCountry] = useState('Burkina Faso');
+  const [selectedCode, setSelectedCode] = useState('+225');
+  const [country, setCountry] = useState("Côte d'Ivoire");
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
@@ -63,7 +64,7 @@ export default function Auth({
   }, []);
 
   // Sign in fields
-  const [loginSelectedCode, setLoginSelectedCode] = useState('+226');
+  const [loginSelectedCode, setLoginSelectedCode] = useState('+225');
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [resetTip, setResetTip] = useState(false);
@@ -208,6 +209,19 @@ export default function Auth({
 
       {/* Main Container Wrapper */}
       <div className="w-full max-w-sm flex flex-col items-center relative z-10">
+
+        {/* LOGO PROFESSIONNEL AGROPROFIT */}
+        <div className="flex flex-col items-center mb-6 text-center select-none animate-fade-in">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-orange-500 flex items-center justify-center shadow-xl shadow-orange-500/10 mb-2 transform hover:rotate-6 transition-transform">
+            <Tractor className="w-8 h-8 text-white stroke-[2]" />
+          </div>
+          <h1 className="text-[22px] font-sans font-black tracking-tight text-slate-900 uppercase">
+            Agro<span className="text-orange-500">Profit</span>
+          </h1>
+          <span className="text-[9.5px] text-emerald-700 font-extrabold tracking-widest uppercase block mt-1">
+            L'excellence agro-technologique
+          </span>
+        </div>
 
         {/* 2. Main Card Form - Beautiful White & Orange theme */}
         <div className="w-full bg-white border border-orange-200/60 rounded-3xl p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(249,115,22,0.18)] relative overflow-hidden" id="auth-card">

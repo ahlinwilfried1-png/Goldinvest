@@ -71,8 +71,48 @@ export default function AdminPanel({
   } | null>(null);
 
   // Navigation tab
-  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions' | 'support' | 'proofs'>('deposits');
+  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions' | 'support' | 'proofs' | 'investments'>('deposits');
   const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
+
+  const handleDeleteInvestment = (investmentId: string) => {
+    const inv = investments.find(i => i.id === investmentId);
+    if (!inv) return;
+
+    setConfirmConfig({
+      title: "🔴 SUPPRIMER UN PRODUIT PAYÉ",
+      message: `Voulez-vous vraiment annuler et supprimer cet achat ${inv.productName} (${inv.price.toLocaleString()} F) pour l'utilisateur qui l'a acheté ? Cela recalculera également ses revenus journaliers.`,
+      onConfirm: async () => {
+        try {
+          const success = await DataStore.deleteInvestment(investmentId);
+          if (success) {
+            // Update local states
+            setInvestments(prev => prev.filter(i => i.id !== investmentId));
+            // Trigger refresh
+            onRefreshData();
+            
+            // Reload users if they changed
+            setUsers(DataStore.getUsers());
+
+            setNotification({
+              message: "🗑️ Produid souscrit supprimé avec succès !",
+              type: "success"
+            });
+          } else {
+            setNotification({
+              message: "Erreur lors de la suppression du produit payé.",
+              type: "error"
+            });
+          }
+        } catch (err: any) {
+          console.error("Error deleting investment:", err);
+          setNotification({
+            message: "Erreur: " + err.message,
+            type: "error"
+          });
+        }
+      }
+    });
+  };
 
   const handleDeleteProof = (proofId: string) => {
     setConfirmConfig({
@@ -134,6 +174,8 @@ export default function AdminPanel({
 
   // Search filter query for users tab
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [investSearchQuery, setInvestSearchQuery] = useState('');
+  const [investStatusFilter, setInvestStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
 
   // Custom backend input state for Vercel CORS synchronization
   const [customBackendInput, setCustomBackendInput] = useState(() => {
@@ -1064,6 +1106,12 @@ export default function AdminPanel({
           className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors ${activeAdminTab === 'products' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
         >
           <span>Produits d'Investissement</span>
+        </button>
+        <button
+          onClick={() => setActiveAdminTab('investments')}
+          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors flex items-center space-x-2 ${activeAdminTab === 'investments' ? 'border-yellow-500 text-yellow-500' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <span>🛡️ Produits payés ({investments.length})</span>
         </button>
         <button
           onClick={() => setActiveAdminTab('platform')}
@@ -2862,6 +2910,182 @@ export default function AdminPanel({
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* INVESTMENTS TAB - GESTION DES PRÉCOMPTES / PRODUITS PAYÉS PAR LES UTILISATEURS */}
+      {activeAdminTab === 'investments' && (() => {
+        // Filter investments based on query and status limiters
+        const filteredInvestments = investments.filter((inv) => {
+          // Resolve buyer name/whatsapp for thorough matching
+          const buyer = users.find(u => u.id === inv.userId);
+          const buyerName = buyer ? buyer.name.toLowerCase() : '';
+          const buyerPhone = buyer ? buyer.whatsapp.toLowerCase() : '';
+          
+          const matchQuery = 
+            inv.productName.toLowerCase().includes(investSearchQuery.toLowerCase()) ||
+            inv.userId.toLowerCase().includes(investSearchQuery.toLowerCase()) ||
+            buyerName.includes(investSearchQuery.toLowerCase()) ||
+            buyerPhone.includes(investSearchQuery.toLowerCase());
+
+          const matchStatus = 
+            investStatusFilter === 'all' || 
+            inv.status === investStatusFilter;
+
+          return matchQuery && matchStatus;
+        });
+
+        return (
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="font-display font-black text-lg text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>🛡️ Produits Payés par les Utilisateurs (VIP)</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Consultez, recherchez et gérez tous les forfaits d'investissement actifs et complets achetés par vos membres. Vous pouvez annuler/supprimer n'importe quel produit payé.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <div className="bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300">
+                  Total Souscrits: <span className="text-yellow-400 font-bold">{investments.length}</span>
+                </div>
+                <div className="bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20 text-[11px] font-mono text-emerald-400">
+                  Actifs: <span className="font-bold">{investments.filter(i => i.status === 'active').length}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* FILTERS PANEL */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Search text field */}
+              <div className="relative col-span-2">
+                <Search className="absolute left-3.5 top-3.5 text-slate-500 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Rechercher par membre, numéro, ID de l'utilisateur ou nom de pack..."
+                  value={investSearchQuery}
+                  onChange={(e) => setInvestSearchQuery(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-850 focus:border-yellow-500 focus:outline-none rounded-xl text-xs text-white pl-10 pr-4 py-3 font-medium transition-colors"
+                />
+              </div>
+
+              {/* Status filter select */}
+              <div>
+                <select
+                  value={investStatusFilter}
+                  onChange={(e) => setInvestStatusFilter(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-850 focus:border-yellow-500 focus:outline-none rounded-xl text-xs text-white px-4 py-3 font-medium transition-colors cursor-pointer"
+                >
+                  <option value="all">Tous les statuts (Actifs & Terminés)</option>
+                  <option value="active">Actifs (Génération de revenus journaliers)</option>
+                  <option value="completed">Terminés (Durée de validité échue)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* LOGS LIST */}
+            {filteredInvestments.length === 0 ? (
+              <div className="text-center py-12 px-4 rounded-2xl bg-slate-950/40 border border-dashed border-slate-850">
+                <p className="text-slate-400 text-xs">Aucun produit payé ou souscrit ne correspond à votre recherche actuelle.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto overflow-y-hidden">
+                <table className="w-full text-left text-xs text-slate-200 min-w-[800px]">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                      <th className="pb-3 pl-4">Acheteur / Titulaire</th>
+                      <th className="pb-3">Pack Souscrit</th>
+                      <th className="pb-3">Prix d'Achat</th>
+                      <th className="pb-3 text-center">Revenu / Jour</th>
+                      <th className="pb-3 text-center">Progression Cycle</th>
+                      <th className="pb-3 text-center">Gains Cumulés</th>
+                      <th className="pb-3">Date de Début</th>
+                      <th className="pb-3 text-center">Statut</th>
+                      <th className="pb-3 pr-4 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850/60">
+                    {filteredInvestments.map((inv) => {
+                      const buyer = users.find(u => u.id === inv.userId);
+
+                      return (
+                        <tr key={inv.id} className="hover:bg-slate-950/40 transition-colors">
+                          <td className="py-4 pl-4">
+                            {buyer ? (
+                              <div className="space-y-0.5">
+                                <span className="font-sans font-black text-slate-100 block">{buyer.name}</span>
+                                <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                                  📞 {buyer.whatsapp} • <span className="text-yellow-500/85">ID: {buyer.id}</span>
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="space-y-0.5">
+                                <span className="font-sans font-black text-rose-450 italic block">Utilisateur supprimé</span>
+                                <span className="text-[10px] text-slate-500 font-mono">ID: {inv.userId}</span>
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-4">
+                            <span className="font-display font-medium text-amber-500 tracking-wide text-xs">
+                              🏆 {inv.productName}
+                            </span>
+                            <span className="text-[10px] text-slate-500 block font-mono">ID: {inv.id}</span>
+                          </td>
+                          <td className="py-4 font-bold font-mono text-slate-200">
+                            {inv.price.toLocaleString('en-US')} F
+                          </td>
+                          <td className="py-4 text-center font-bold font-mono text-cyan-400">
+                            {inv.dailyReturn.toLocaleString('en-US')} F
+                          </td>
+                          <td className="py-4 text-center">
+                            <div className="inline-flex flex-col items-center">
+                              <span className="font-mono font-bold text-slate-300">
+                                {inv.daysPassed} / {inv.durationDays} Jours
+                              </span>
+                              <div className="w-20 bg-slate-800 rounded-full h-1 mt-1 overflow-hidden">
+                                <div 
+                                  className="bg-yellow-500 h-full rounded-full" 
+                                  style={{ width: `${Math.min(100, Math.round((inv.daysPassed / inv.durationDays) * 100))}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 text-center font-bold font-mono text-emerald-400">
+                            {inv.totalReturnClaimed.toLocaleString('en-US')} F
+                          </td>
+                          <td className="py-4 text-slate-400">
+                            <span>{new Date(inv.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          </td>
+                          <td className="py-4 text-center font-sans">
+                            {inv.status === 'active' ? (
+                              <span className="bg-emerald-550/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-full font-sans font-black uppercase text-[9px] inline-block animate-pulse">
+                                Actif ⚡
+                              </span>
+                            ) : (
+                              <span className="bg-slate-705 text-slate-400 border border-slate-700 px-2 py-1 rounded-full font-sans font-bold uppercase text-[9px] inline-block">
+                                Échu 🏁
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-4 pr-4 text-center">
+                            <button
+                              onClick={() => handleDeleteInvestment(inv.id)}
+                              className="px-2.5 py-1.5 bg-rose-600/10 hover:bg-rose-600 text-rose-450 hover:text-white border border-rose-600/20 hover:border-transparent rounded-lg font-bold transition-all flex items-center space-x-1"
+                              title="Annuler & Supprimer"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Supprimer</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

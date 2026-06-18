@@ -14,16 +14,51 @@
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/000000/sprout.png" />
     
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => {
-              console.log('PWA Service Worker enregistré avec succès !', reg);
-            })
-            .catch(err => {
-              console.error('Échec de l\'enregistrement du Service Worker PWA :', err);
-            });
-        });
+      // Détecter si l'application tourne dans un iframe (AISTUDIO Preview) ou en développement
+      const isIframe = window.self !== window.top;
+      const isDev = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.hostname.endsWith('.run.app');
+
+      if (isIframe || isDev) {
+        console.log('[PWA] Mode développement ou iframe détecté. Désactivation préventive du cache SW.');
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            let unregisteredAny = false;
+            for (const reg of registrations) {
+              reg.unregister();
+              unregisteredAny = true;
+            }
+            if (unregisteredAny) {
+              console.log('[PWA] Service Workers obsolètes désenregistrés.');
+              if ('caches' in window) {
+                caches.keys().then(names => {
+                  for (const name of names) {
+                    caches.delete(name);
+                  }
+                });
+              }
+              // Éviter une boucle de rechargement infinie en utilisant un flag de session unique
+              if (!sessionStorage.getItem('pwa_cleaned_reload')) {
+                sessionStorage.setItem('pwa_cleaned_reload', 'true');
+                setTimeout(() => {
+                  window.location.reload();
+                }, 150);
+              }
+            }
+          });
+        }
+      } else {
+        // Enregistrer le Service Worker uniquement en production isolée
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(reg => {
+                console.log('PWA Service Worker enregistré avec succès !', reg);
+              })
+              .catch(err => {
+                console.error('Échec de l\'enregistrement du Service Worker PWA :', err);
+              });
+          });
+        }
       }
     </script>
   </head>

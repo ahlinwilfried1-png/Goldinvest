@@ -4,34 +4,33 @@
       "id": "u-admin",
       "name": "Administrateur Principal",
       "role": "admin",
-      "bonus": 10050,
-      "balance": 12800,
+      "bonus": 5000,
+      "balance": 1250000,
       "country": "Cameroun",
       "password": "agro777",
       "whatsapp": "+237600000000",
       "createdAt": "2026-05-10T10:00:00Z",
       "isBlocked": false,
-      "lastModified": 1781675802532,
-      "referralCode": "AGRO777",
+      "lastModified": 1781767328926,
+      "referralCode": "AGR72",
       "dailyEarnings": 2100,
-      "totalEarnings": 19100,
-      "withdrawBlocked": false
+      "totalEarnings": 0
     },
     {
       "id": "u-1779950958295",
       "name": "Kodjo ",
       "role": "admin",
-      "bonus": 650,
-      "balance": 850,
+      "bonus": 700,
+      "balance": 1200,
       "country": "Togo",
       "password": "admin",
       "whatsapp": "70903319",
       "createdAt": "2026-05-28T06:49:18.295Z",
       "isBlocked": false,
-      "lastModified": 1781675802532,
+      "lastModified": 1781776092638,
       "referralCode": "KODJO180",
       "dailyEarnings": 300,
-      "totalEarnings": 1500,
+      "totalEarnings": 1800,
       "withdrawBlocked": false
     },
     {
@@ -40,16 +39,16 @@
       "role": "admin",
       "bonus": 200,
       "device": "Android",
-      "balance": 3500,
+      "balance": 1500,
       "country": "Burkina Faso",
       "password": "123456",
       "whatsapp": "+22670903319",
       "createdAt": "2026-06-08T20:57:38.969Z",
       "isBlocked": false,
-      "lastModified": 1781675802532,
+      "lastModified": 1781767328926,
       "referralCode": "QOA63",
-      "dailyEarnings": 500,
-      "totalEarnings": 3500,
+      "dailyEarnings": 680,
+      "totalEarnings": 4000,
       "withdrawBlocked": false
     }
   ],
@@ -338,13 +337,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-02T10:55:03.487Z",
       "productId": "vip-1",
-      "daysPassed": 14,
+      "daysPassed": 15,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1781607309970,
-      "lastClaimDate": "2026-06-16T10:55:09.970Z",
-      "totalReturnClaimed": 4200
+      "lastModified": 1781696902482,
+      "lastClaimDate": "2026-06-17T11:48:22.482Z",
+      "totalReturnClaimed": 4500
     },
     {
       "id": "inv-1780744789286",
@@ -353,13 +352,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T11:19:49.294Z",
       "productId": "vip-1",
-      "daysPassed": 10,
+      "daysPassed": 11,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1781608790901,
-      "lastClaimDate": "2026-06-16T11:19:50.901Z",
-      "totalReturnClaimed": 3000
+      "lastModified": 1781696902483,
+      "lastClaimDate": "2026-06-17T11:48:22.483Z",
+      "totalReturnClaimed": 3300
     },
     {
       "id": "inv-1780755294947",
@@ -368,13 +367,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T14:14:54.947Z",
       "productId": "vip-1",
-      "daysPassed": 10,
+      "daysPassed": 11,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781619299021,
-      "lastClaimDate": "2026-06-16T14:14:59.021Z",
-      "totalReturnClaimed": 5000
+      "lastModified": 1781705721225,
+      "lastClaimDate": "2026-06-17T14:15:21.224Z",
+      "totalReturnClaimed": 5500
     },
     {
       "id": "inv-1780832997559",
@@ -383,13 +382,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T11:49:57.559Z",
       "productId": "vip-1",
-      "daysPassed": 9,
+      "daysPassed": 10,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781610604282,
-      "lastClaimDate": "2026-06-16T11:50:04.282Z",
-      "totalReturnClaimed": 4500
+      "lastModified": 1781696998808,
+      "lastClaimDate": "2026-06-17T11:49:58.808Z",
+      "totalReturnClaimed": 5000
     },
     {
       "id": "inv-1780841270273",
@@ -398,13 +397,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T14:07:50.275Z",
       "productId": "vip-1",
-      "daysPassed": 9,
+      "daysPassed": 10,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781618871531,
-      "lastClaimDate": "2026-06-16T14:07:51.531Z",
-      "totalReturnClaimed": 4500
+      "lastModified": 1781705721225,
+      "lastClaimDate": "2026-06-17T14:15:21.224Z",
+      "totalReturnClaimed": 5000
     },
     {
       "id": "inv-1780952684130",
@@ -413,13 +412,13 @@
       "userId": "u-1780952258969",
       "createdAt": "2026-06-08T21:04:44.130Z",
       "productId": "vip-1",
-      "daysPassed": 8,
+      "daysPassed": 9,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781675802532,
-      "lastClaimDate": "2026-06-17T05:56:42.532Z",
-      "totalReturnClaimed": 4000
+      "lastModified": 1781767328921,
+      "lastClaimDate": "2026-06-18T07:22:08.920Z",
+      "totalReturnClaimed": 4500
     },
     {
       "id": "inv-1781195123001",
@@ -428,13 +427,28 @@
       "userId": "u-1779950958295",
       "createdAt": "2026-06-11T16:25:23.001Z",
       "productId": "vip-1",
-      "daysPassed": 5,
+      "daysPassed": 6,
       "dailyReturn": 300,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1781639120965,
-      "lastClaimDate": "2026-06-16T19:45:20.963Z",
-      "totalReturnClaimed": 1500
+      "lastModified": 1781713620172,
+      "lastClaimDate": "2026-06-17T16:27:00.171Z",
+      "totalReturnClaimed": 1800
+    },
+    {
+      "id": "inv-1781718245565",
+      "price": 2500,
+      "status": "active",
+      "userId": "u-1780952258969",
+      "createdAt": "2026-06-17T17:44:05.565Z",
+      "productId": "vip-1",
+      "daysPassed": 0,
+      "dailyReturn": 180,
+      "productName": "STARTER",
+      "durationDays": 365,
+      "lastModified": 1781718245566,
+      "lastClaimDate": "2026-06-17T17:44:05.565Z",
+      "totalReturnClaimed": 0
     },
     {
       "id": "inv-301",
@@ -1809,6 +1823,96 @@
       "read": false
     },
     {
+      "id": "not-autodrop-srv-1781696902483-inv-1780744789286-10",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-17T11:48:22.483Z",
+      "lastModified": 1781696902483
+    },
+    {
+      "id": "not-autodrop-srv-1781696902347-inv-1780397703473-14",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-17T11:48:22.482Z",
+      "lastModified": 1781696902482
+    },
+    {
+      "id": "not-autodrop-srv-1781696998807-inv-1780832997559-9",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-17T11:49:58.807Z",
+      "lastModified": 1781696998807
+    },
+    {
+      "id": "not-autodrop-1781705721224-inv-1780841270273-9",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-17T14:15:21.224Z",
+      "lastModified": 1781705721237
+    },
+    {
+      "id": "not-autodrop-1781705721224-inv-1780755294947-10",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-17T14:15:21.224Z",
+      "lastModified": 1781705721237
+    },
+    {
+      "id": "not-autodrop-1781713620164-inv-1781195123001-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-17T16:27:00.164Z",
+      "lastModified": 1781713620177
+    },
+    {
+      "id": "not-plan-1781718245569",
+      "read": false,
+      "type": "plan",
+      "title": "Plan activé avec succès !",
+      "userId": "u-1780952258969",
+      "message": "Votre investissement de 2 500 XOF dans le plan STARTER a bien été pris en compte. Vous gagnerez 180 XOF chaque jour.",
+      "createdAt": "2026-06-17T17:44:05.569Z",
+      "lastModified": 1781718245576
+    },
+    {
+      "id": "not-autodrop-1781767328920-inv-1780952684130-8",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-18T07:22:08.920Z",
+      "lastModified": 1781767328928
+    },
+    {
+      "id": "not-daily-1781776092638",
+      "userId": "u-1779950958295",
+      "title": "Récompense journalière obtenue",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "type": "bonus",
+      "lastModified": 1781776092638,
+      "createdAt": "2026-06-18T09:48:12.638Z",
+      "read": false
+    },
+    {
       "id": "not-autodrop-1780284755142-inv-301-9",
       "read": false,
       "type": "plan",
@@ -2066,25 +2170,25 @@
       "id": "vip-1",
       "tag": "STATER",
       "name": "STARTER",
-      "price": 3000,
+      "price": 2500,
       "vipLevel": 1,
       "isBlocked": false,
-      "dailyReturn": 300,
-      "totalReturn": 109500,
+      "dailyReturn": 180,
+      "totalReturn": 65700,
       "durationDays": 365,
-      "lastModified": 1781639499378
+      "lastModified": 1781713661528
     },
     {
       "id": "vip-2",
       "tag": "STANDARD",
       "name": "STANDARD",
-      "price": 8000,
+      "price": 6000,
       "vipLevel": 2,
       "isBlocked": false,
-      "dailyReturn": 900,
-      "totalReturn": 328500,
+      "dailyReturn": 360,
+      "totalReturn": 131400,
       "durationDays": 365,
-      "lastModified": 1781642153766
+      "lastModified": 1781713739255
     },
     {
       "id": "vip-3",
@@ -2092,46 +2196,46 @@
       "name": "PREMIUM",
       "price": 15000,
       "vipLevel": 3,
-      "dailyReturn": 1600,
-      "totalReturn": 584000,
+      "dailyReturn": 744,
+      "totalReturn": 271560,
       "durationDays": 365,
-      "lastModified": 1781678317697
+      "lastModified": 1781713758042
     },
     {
       "id": "vip-4",
       "tag": "BUSINESS",
       "name": "BUSINESS",
-      "price": 30000,
+      "price": 32000,
       "vipLevel": 4,
       "isBlocked": false,
-      "dailyReturn": 3100,
-      "totalReturn": 1131500,
+      "dailyReturn": 1544,
+      "totalReturn": 563560,
       "durationDays": 365,
-      "lastModified": 1781678328511
+      "lastModified": 1781713775486
     },
     {
       "id": "vip-5",
       "tag": "AGOBUSI",
       "name": "AGOBUSI ",
-      "price": 50000,
+      "price": 70000,
       "vipLevel": 5,
-      "isBlocked": false,
-      "dailyReturn": 5000,
-      "totalReturn": 1825000,
+      "isBlocked": true,
+      "dailyReturn": 3000,
+      "totalReturn": 1095000,
       "durationDays": 365,
-      "lastModified": 1781678339049
+      "lastModified": 1781713867259
     },
     {
       "id": "vip-6",
       "tag": "AGOBUSI1",
       "name": "AGOBUSI1",
-      "price": 75000,
+      "price": 100000,
       "vipLevel": 6,
       "isBlocked": true,
-      "dailyReturn": 8000,
-      "totalReturn": 2920000,
+      "dailyReturn": 5000,
+      "totalReturn": 1825000,
       "durationDays": 365,
-      "lastModified": 1781642000406,
+      "lastModified": 1781713861021,
       "reopenDateTime": "2026-06-20T00:00:00.000Z"
     },
     {
@@ -2141,10 +2245,10 @@
       "price": 120000,
       "vipLevel": 7,
       "isBlocked": true,
-      "dailyReturn": 15000,
-      "totalReturn": 5475000,
+      "dailyReturn": 8000,
+      "totalReturn": 2920000,
       "durationDays": 365,
-      "lastModified": 1781642059153
+      "lastModified": 1781713887839
     },
     {
       "id": "vip-1781528385161",
@@ -2153,10 +2257,10 @@
       "price": 220000,
       "vipLevel": 8,
       "isBlocked": true,
-      "dailyReturn": 25000,
-      "totalReturn": 9125000,
+      "dailyReturn": 15000,
+      "totalReturn": 5475000,
       "durationDays": 365,
-      "lastModified": 1781642066587
+      "lastModified": 1781713934898
     },
     {
       "id": "vip-1781528444528",
@@ -2165,10 +2269,10 @@
       "price": 500000,
       "vipLevel": 9,
       "isBlocked": true,
-      "dailyReturn": 60000,
-      "totalReturn": 21900000,
+      "dailyReturn": 50000,
+      "totalReturn": 18250000,
       "durationDays": 365,
-      "lastModified": 1781642078153
+      "lastModified": 1781713909533
     },
     {
       "id": "vip-1781528502913",
@@ -2177,10 +2281,10 @@
       "price": 1000000,
       "vipLevel": 10,
       "isBlocked": true,
-      "dailyReturn": 60000,
-      "totalReturn": 21900000,
+      "dailyReturn": 100000,
+      "totalReturn": 36500000,
       "durationDays": 365,
-      "lastModified": 1781528580536
+      "lastModified": 1781713950760
     }
   ],
   "gi_mlm_level1_rate": 20,

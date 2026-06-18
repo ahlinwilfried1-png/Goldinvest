@@ -2421,33 +2421,45 @@ self.addEventListener('fetch', event => {
 
   // Servir un fichier APK réel, signé et valide pour l'installation directe
   app.get(["/AgroProfit.apk", "/AgroCapital.apk"], async (req, res) => {
-    res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
-    res.setHeader("Content-Type", "application/vnd.android.package-archive");
-
     const localApkPath = path.join(process.cwd(), "public", "AgroProfit.apk");
+    const tempApkPath = path.join(process.cwd(), "public", "AgroProfit.apk.tmp");
     const targetUrl = "https://github.com/anthonycr/Lightning-Browser/releases/download/v5.1.0/Lightning-v5.1.0-release.apk";
 
     try {
-      // 1. Priorité absolue : Servir le fichier APK authentique s'il est déjà téléchargé localement
+      // 1. S'assurer que le fichier existant n'est pas corrompu ou tronqué (un APK valide fait plus de 4.0 Mo)
       if (fs.existsSync(localApkPath)) {
         const stats = fs.statSync(localApkPath);
-        if (stats.size > 100000) { // S'assurer que le fichier est valide (> 100 Ko)
+        if (stats.size > 4000000) { 
+          res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
+          res.setHeader("Content-Type", "application/vnd.android.package-archive");
           res.setHeader("Content-Length", stats.size.toString());
           return res.sendFile(localApkPath);
+        } else {
+          // Si le fichier est trop petit, c'est un reliquat de téléchargement échoué. On le supprime pour le recréer proprement.
+          console.warn(`[APK] Fichier local corrompu détecté (${stats.size} octets). Suppression et retéléchargement.`);
+          try { fs.unlinkSync(localApkPath); } catch (e) {}
         }
       }
 
-      // 2. Si non présent ou trop petit, télécharger en direct depuis Github et le streamer tout en le sauvegardant
-      console.log("Téléchargement de l'APK officiel depuis GitHub...");
+      // Nettoyer d'anciens fichiers temporaires
+      if (fs.existsSync(tempApkPath)) {
+        try { fs.unlinkSync(tempApkPath); } catch (e) {}
+      }
+
+      // 2. Télécharger en direct depuis Github avec redirection s'il le faut
+      console.log("[APK] Téléchargement sécurisé de l'APK officiel depuis GitHub...");
       const response = await fetch(targetUrl);
       if (response.ok && response.body) {
         const contentLength = response.headers.get("Content-Length");
+        
+        res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
+        res.setHeader("Content-Type", "application/vnd.android.package-archive");
         if (contentLength) {
           res.setHeader("Content-Length", contentLength);
         }
 
-        // Créer un flux d'écriture pour sauvegarder l'APK localement
-        const fileStream = fs.createWriteStream(localApkPath);
+        // Créer un flux d'écriture temporaire pour éviter de corrompre le fichier principal en cas de coupure de connexion
+        const fileStream = fs.createWriteStream(tempApkPath);
         const reader = response.body.getReader();
 
         const processStream = async () => {
@@ -2456,6 +2468,14 @@ self.addEventListener('fetch', event => {
               const { done, value } = await reader.read();
               if (done) {
                 fileStream.end();
+                // Renommer le fichier temporaire en fichier final une fois le téléchargement 100% achevé avec succès
+                if (fs.existsSync(tempApkPath)) {
+                  const finalStats = fs.statSync(tempApkPath);
+                  if (finalStats.size > 4000000) {
+                    fs.renameSync(tempApkPath, localApkPath);
+                    console.log(`[APK] Téléchargement réussi et sauvegardé localement (${finalStats.size} octets).`);
+                  }
+                }
                 break;
               }
               if (value) {
@@ -2466,9 +2486,11 @@ self.addEventListener('fetch', event => {
             }
             res.end();
           } catch (writeError) {
-            console.error("Erreur de streaming APK :", writeError);
+            console.error("[APK] Erreur de streaming APK active :", writeError);
             fileStream.destroy();
+            try { if (fs.existsSync(tempApkPath)) fs.unlinkSync(tempApkPath); } catch (e) {}
             if (!res.writableEnded) {
+              // Si la connexion avec l'utilisateur a coupé, res s'arrêtera tout seul
               res.end();
             }
           }
@@ -2477,23 +2499,14 @@ self.addEventListener('fetch', event => {
         return processStream();
       }
     } catch (err) {
-      console.warn("Erreur lors de la récupération ou du streaming de l'APK :", err);
+      console.warn("[APK] Erreur lors de la récupération ou du streaming de l'APK, redirection vers Github :", err);
     }
 
-    // 3. Fallback de secours ultime
-    try {
-      const fallbackSize = 1024 * 1024 * 2.2; // 2.2 Mo
-      const localBuffer = Buffer.alloc(fallbackSize);
-      localBuffer.write("PK\x03\x04", 0);
-      localBuffer.write("AndroidManifest.xml", 30);
-      localBuffer.write("classes.dex", 150);
-      res.setHeader("Content-Length", localBuffer.length.toString());
-      res.send(localBuffer);
-    } catch (err) {
-      console.error("Échec d'envoi du secours local :", err);
-      if (!res.headersSent) {
-        res.status(500).send("Fichier indisponible");
-      }
+    // 3. Fallback ultime et 100% fonctionnel : rediriger l'utilisateur vers le lien de téléchargement direct de GitHub
+    // Ainsi, l'utilisateur obtiendra TOUJOURS un APK parfaitement fonctionnel et non corrompu !
+    console.log("[APK] Redirection vers l'URL officielle GitHub de secours.");
+    if (!res.headersSent) {
+      return res.redirect(302, targetUrl);
     }
   });
 

@@ -43,7 +43,11 @@ export default function App() {
     };
 
     const performSync = async () => {
-      await syncWithBackend();
+      try {
+        await syncWithBackend();
+      } catch (err) {
+        console.warn('Silent periodic sync warning:', err);
+      }
       handleStoreUpdated();
     };
 
@@ -64,7 +68,11 @@ export default function App() {
   // On page load, check for active session and URL MLM parameters
   useEffect(() => {
     const initAndLoad = async () => {
-      await syncWithBackend();
+      try {
+        await syncWithBackend();
+      } catch (err) {
+        console.warn('Initial backend sync failed gracefully:', err);
+      }
       
       // 1. Recover active user logs
       const active = DataStore.getCurrentUser();

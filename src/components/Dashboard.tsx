@@ -182,7 +182,7 @@ export default function Dashboard({
   const [depositRedirectUrl, setDepositRedirectUrl] = useState<string>('');
 
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
-  const [withdrawOperator, setWithdrawOperator] = useState<string>("T-Money (Togo)");
+  const [withdrawOperator, setWithdrawOperator] = useState<string>("Wave (CI)");
   const [withdrawNumber, setWithdrawNumber] = useState<string>('');
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [withdrawSuccess, setWithdrawSuccess] = useState<string>('');
@@ -203,6 +203,14 @@ export default function Dashboard({
   const [isDraggingProof, setIsDraggingProof] = useState<boolean>(false);
   const [bonusError, setBonusError] = useState<string>('');
   const [bonusSuccess, setBonusSuccess] = useState<string>('');
+  const [hasCheckedInToday, setHasCheckedInToday] = useState<boolean>(() => {
+    try {
+      const checkKey = `gi_last_daily_${currentUser.id}`;
+      return localStorage.getItem(checkKey) === new Date().toDateString();
+    } catch {
+      return false;
+    }
+  });
 
   // Password change states
   const [oldPassword, setOldPassword] = useState<string>('');
@@ -664,6 +672,13 @@ export default function Dashboard({
 
     const pfs = DataStore.getWithdrawalProofs().filter(p => !p.status || p.status === 'approved');
     setWithdrawalProofs(pfs);
+
+    try {
+      const checkKey = `gi_last_daily_${currentUser.id}`;
+      setHasCheckedInToday(localStorage.getItem(checkKey) === new Date().toDateString());
+    } catch {
+      // ignore
+    }
   };
 
   useEffect(() => {
@@ -702,7 +717,11 @@ export default function Dashboard({
     // Setup periodic check interval to automatically credit of earnings in real-time and check for new notifications in Chrome or app
     const interval = setInterval(async () => {
       // Synchronize with backend to pull latest changes in real-time (e.g. admin replies)
-      await syncWithBackend();
+      try {
+        await syncWithBackend();
+      } catch (err) {
+        console.warn('Periodic background sync failed:', err);
+      }
 
       const oldBal = userState.balance;
       const oldUsersLen = allUsers.length;
@@ -801,11 +820,11 @@ export default function Dashboard({
   const handleDailyCheckin = async () => {
     const res = await DataStore.claimDailyReward(userState.id);
     if (res.success) {
-      triggerToast('🎉 Félicitations ! Votre cadeau journalier a été réclamé avec succès.', 'success');
-      openAlert('Félicitations !', res.message, 'success');
+      triggerToast('🎉 ' + res.message, 'success');
+      setHasCheckedInToday(true);
       syncDashboardData();
     } else {
-      openAlert('Attention', res.message, 'info');
+      triggerToast('⚠️ ' + res.message, 'info');
     }
   };
 
@@ -1268,7 +1287,7 @@ export default function Dashboard({
                   <div className="flex flex-wrap items-center gap-1">
                     <span className="font-bold text-white/95">Pays :</span>
                     <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Burkina Faso 🇧🇫 / Togo 🇹🇬 / Bénin 🇧🇯
+                      Côte d'Ivoire 🇨🇮 / Burkina Faso 🇧🇫 / Togo 🇹🇬 / Bénin 🇧🇯
                     </span>
                   </div>
                 </div>
@@ -1341,7 +1360,7 @@ export default function Dashboard({
                   </p>
                 </div>
                 <a 
-                  href="https://chat.whatsapp.com/JJ4ewxWrtc56p3kiEZCTdx?s=cl&p=a&mlu=3"
+                  href="https://chat.whatsapp.com/JPSJXLJ2D1LGUztQDaSTyv"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-2.5 py-1.5 bg-[#00bd74] hover:bg-emerald-500 text-white font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
@@ -1406,7 +1425,7 @@ export default function Dashboard({
           </div>
           <div className="text-left truncate">
             <div className="text-xs sm:text-sm font-sans font-black tracking-wide text-white uppercase truncate">
-              INVESTISSEUR {userState.whatsapp ? userState.whatsapp.replace(/\D/g, '') : userState.id}
+              {userState.name || `INVESTISSEUR ${userState.whatsapp ? userState.whatsapp.replace(/\D/g, '') : userState.id}`}
             </div>
             <div className="text-[10px] md:text-xs text-white/85 font-mono font-bold mt-1 tracking-wider">
               {userState.whatsapp ? userState.whatsapp.replace(/\D/g, '') : userState.id}
@@ -1549,14 +1568,31 @@ export default function Dashboard({
                 <div 
                   id="action-checkin"
                   onClick={handleDailyCheckin}
-                  className="bg-white border border-orange-100/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
+                  className={`border rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)] ${
+                    hasCheckedInToday 
+                      ? 'bg-emerald-50/50 border-emerald-100/50 hover:bg-emerald-50 text-emerald-600' 
+                      : 'bg-white border-orange-100/45 hover:bg-slate-50/50 text-slate-800'
+                  }`}
                 >
-                  <div className="w-12 h-12 bg-[#fffaf0] text-orange-500 flex items-center justify-center rounded-full">
-                    <Gift className="w-5.5 h-5.5 stroke-[2.5]" />
+                  <div className={`w-12 h-12 flex items-center justify-center rounded-full transition-colors ${
+                    hasCheckedInToday 
+                      ? 'bg-emerald-100 text-emerald-600' 
+                      : 'bg-[#fffaf0] text-orange-500'
+                  }`}>
+                    {hasCheckedInToday ? (
+                      <Check className="w-5.5 h-5.5 stroke-[3]" />
+                    ) : (
+                      <Gift className="w-5.5 h-5.5 stroke-[2.5]" />
+                    )}
                   </div>
-                  <span className="font-sans font-black text-[10px] sm:text-xs text-slate-800 uppercase tracking-wide">Pointage</span>
+                  <span className={`font-sans font-black text-[10px] sm:text-xs uppercase tracking-wide ${
+                    hasCheckedInToday ? 'text-emerald-700' : 'text-slate-800'
+                  }`}>
+                    {hasCheckedInToday ? 'Fait ✓' : 'Pointage'}
+                  </span>
                 </div>
               </div>
+
 
               {/* VOS PLANS ACTIFS */}
               <div className="mt-6 text-left">
@@ -1937,109 +1973,113 @@ export default function Dashboard({
 
           {/* WITHDRAW FORM TAB */}
           {activeTab === 'withdraw' && (
-            <div className="max-w-xl mx-auto bg-[#eef3fc] border-0 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800">
-              <div className="text-center mb-6">
-                <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">CASH OUT DETECTÉ</span>
-                <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Demande de Retrait</h3>
-                <p className="text-xs text-slate-500 font-bold mt-1">Saisissez les paramètres de transfert de votre solde vers votre compte mobile.</p>
+            <div className="max-w-md mx-auto bg-[#eef3fc] border-0 p-4 md:p-5 rounded-2xl shadow-lg text-slate-800">
+              <div className="text-center mb-4">
+                <span className="text-[10px] font-black text-[#1b64d9] tracking-widest uppercase block mb-0.5">CASH OUT DETECTÉ</span>
+                <h3 className="text-lg font-display font-black text-slate-800 uppercase tracking-tight">Demande de Retrait</h3>
+                <p className="text-[11px] text-slate-500 font-bold mt-0.5">Saisissez vos paramètres de transfert de solde.</p>
               </div>
 
               {(new Date().getHours() < 9 || new Date().getHours() >= 17) && (
-                <div className="mb-4 p-4 rounded-xl bg-amber-100 border border-amber-200 text-xs text-amber-850 font-black text-center uppercase tracking-wide flex flex-col gap-1 shadow-sm">
+                <div className="mb-3 p-3 rounded-xl bg-amber-100 border border-amber-200 text-[10.5px] text-amber-850 font-black text-center uppercase tracking-wide flex flex-col gap-0.5 shadow-sm">
                   <span>⚠️ SYSTÈME HORS PLAGE HORAIRE</span>
                   <span>Les retraits sont ouverts uniquement de 09h00 à 17h00 chaque jour.</span>
                 </div>
               )}
 
               {(DataStore.areWithdrawalsBlocked() || userState.withdrawBlocked) && (
-                <div className="mb-4 p-4 rounded-xl bg-orange-100 border border-orange-200 text-xs text-orange-850 font-black text-center uppercase tracking-wide flex flex-col gap-1 shadow-sm">
+                <div className="mb-3 p-3 rounded-xl bg-orange-100 border border-orange-200 text-[10.5px] text-orange-850 font-black text-center uppercase tracking-wide flex flex-col gap-0.5 shadow-sm">
                   <span>⚠️ RETRAITS SUSPENDUS TEMPORAIREMENT</span>
                   <span>Les retraits sont restreints sur votre compte.</span>
                 </div>
               )}
 
               {withdrawError && (
-                <div className="mb-4 p-3 rounded-xl bg-red-100 border border-red-200 text-xs text-red-700 font-bold">{withdrawError}</div>
+                <div className="mb-3 p-2.5 rounded-xl bg-red-100 border border-red-200 text-xs text-red-700 font-bold">{withdrawError}</div>
               )}
               {withdrawSuccess && (
-                <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold">{withdrawSuccess}</div>
+                <div className="mb-3 p-3 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold">{withdrawSuccess}</div>
               )}
 
-              <div className="mb-6 bg-white border-0 rounded-2xl p-5 shadow-sm text-center">
-                <span className="text-slate-400 font-extrabold uppercase text-[10px] tracking-wide block">Solde Actuel Disponible :</span>
-                <div className="text-2xl sm:text-3xl font-black text-[#00bd74] mt-1 solde-bold">{userState.balance.toLocaleString()} {getCurrency()}</div>
+              <div className="mb-4 bg-white border-0 rounded-xl p-3 shadow-sm text-center">
+                <span className="text-slate-400 font-extrabold uppercase text-[9px] tracking-wide block">Solde Actuel Disponible :</span>
+                <div className="text-xl sm:text-2xl font-black text-[#00bd74] mt-0.5 solde-bold">{userState.balance.toLocaleString()} {getCurrency()}</div>
               </div>
 
-              <form onSubmit={submitWithdrawal} className="space-y-4 text-left">
+              <form onSubmit={submitWithdrawal} className="space-y-3 text-left">
                 {/* Operator select */}
                 <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Opérateur Mobile Money Destinataire</label>
+                  <label className="block text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1">Opérateur de réception</label>
                   <select 
                     value={withdrawOperator}
                     onChange={(e) => setWithdrawOperator(e.target.value)}
-                    className="w-full bg-white border border-orange-100 rounded-2xl py-3 px-4 text-sm text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm"
+                    className="w-full bg-white border border-orange-100 rounded-xl py-2 px-3 text-xs text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm"
                   >
-                    <option value="T-Money (Togo)">T-Money — Togo (+228)</option>
-                    <option value="Moov Money (Togo)">Moov Money (Flooz) — Togo (+228)</option>
+                    <option value="Wave (CI)">Wave (CI)</option>
+                    <option value="MTN (CI)">MTN (CI)</option>
+                    <option value="Orange (CI)">Orange (CI)</option>
+                    <option value="Moov (CI)">Moov (CI)</option>
+
+                    <option value="T-Money (TG)">T-Money (TG)</option>
+                    <option value="Moov (TG)">Moov (TG)</option>
                     
-                    <option value="MTN Mobile Money (Bénin)">MTN Mobile Money — Bénin (+229)</option>
-                    <option value="Moov Money (Bénin)">Moov Money — Bénin (+229)</option>
-                    <option value="Celtiis (Bénin)">Celtiis — Bénin (+229)</option>
+                    <option value="MTN (BJ)">MTN (BJ)</option>
+                    <option value="Moov (BJ)">Moov (BJ)</option>
                     
-                    <option value="Orange Money (Burkina Faso)">Orange Money — Burkina Faso (+226)</option>
-                    <option value="Moov Money (Burkina Faso)">Moov Money (Moov Flooz) — Burkina Faso (+226)</option>
+                    <option value="Orange (BF)">Orange (BF)</option>
+                    <option value="Moov (BF)">Moov (BF)</option>
                   </select>
                 </div>
 
                 {/* Target phone number with WhatsApp placeholder */}
                 <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Numéro de téléphone de réception</label>
+                  <label className="block text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1">Numéro de téléphone de réception</label>
                   <input
                     type="tel"
                     required
-                    placeholder="Ex: +228 90123456 ou +226 70903319"
+                    placeholder="Ex: +225 0707123456 ou +228 90123456"
                     value={withdrawNumber}
                     onChange={(e) => setWithdrawNumber(e.target.value)}
-                    className="w-full bg-white border border-orange-100 rounded-2xl py-3 px-4 text-sm text-slate-800 font-mono font-bold tracking-wider shadow-sm"
+                    className="w-full bg-white border border-orange-100 rounded-xl py-2 px-3 text-xs text-slate-800 font-mono font-bold tracking-wider shadow-sm"
                   />
-                  <span className="text-[10px] text-slate-400 block mt-1.5 font-bold">Assurez-vous que le numéro est parfaitement actif et lié à un compte Mobile Money.</span>
+                  <span className="text-[9px] text-slate-400 block mt-1 font-bold">Assurez-vous que le numéro est actif et lié à un compte Mobile Money.</span>
                 </div>
 
                 {/* Withdraw value */}
                 <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Montant à extraire ({getCurrency()})</label>
+                  <label className="block text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1">Montant à extraire ({getCurrency()})</label>
                   <input
                     type="number"
                     required
                     placeholder={`Montant à retirer en ${getCurrency()}`}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="w-full bg-white border border-orange-100 rounded-2xl py-3 px-4 text-sm text-[#1b64d9] font-black focus:outline-none font-mono shadow-sm"
+                    className="w-full bg-white border border-orange-100 rounded-xl py-2 px-3 text-xs text-[#1b64d9] font-black focus:outline-none"
                   />
                 </div>
 
                 {/* Real-time fee summary */}
                 {!isNaN(parseInt(withdrawAmount)) && parseInt(withdrawAmount) > 0 && (
-                  <div className="bg-[#fffdfb] p-3.5 rounded-2xl border border-orange-100 text-xs font-bold text-slate-700 space-y-1.5 animate-fade-in shadow-sm">
-                    <span className="font-extrabold text-[#1b64d9] text-[10px] uppercase tracking-wider block">Calcul automatique (12% Frais de retrait) :</span>
-                    <div className="flex justify-between border-b border-slate-100/50 pb-1">
-                      <span className="text-slate-500 font-semibold">Montant brut demandé :</span>
+                  <div className="bg-[#fffdfb] p-2.5 rounded-xl border border-orange-100 text-[10.5px] font-bold text-slate-700 space-y-1 animate-fade-in shadow-sm">
+                    <span className="font-extrabold text-[#1b64d9] text-[9px] uppercase tracking-wider block">Calcul automatique (12% Frais) :</span>
+                    <div className="flex justify-between border-b border-slate-100/50 pb-0.5">
+                      <span className="text-slate-500 font-semibold">Montant brut :</span>
                       <span className="font-mono">{parseInt(withdrawAmount).toLocaleString()} {getCurrency()}</span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-100/50 pb-1 text-red-500">
-                      <span className="font-semibold">Frais administratifs de retrait (12%) :</span>
+                    <div className="flex justify-between border-b border-slate-100/50 pb-0.5 text-red-500">
+                      <span className="font-semibold">Frais (12%) :</span>
                       <span className="font-mono">-{Math.round(parseInt(withdrawAmount) * 0.12).toLocaleString()} {getCurrency()}</span>
                     </div>
-                    <div className="pt-1 flex justify-between text-[#00bd74] text-xs font-black">
-                      <span>Montant net crédité sur votre compte :</span>
-                      <span className="text-[13px] font-mono">{Math.max(0, parseInt(withdrawAmount) - Math.round(parseInt(withdrawAmount) * 0.12)).toLocaleString()} {getCurrency()}</span>
+                    <div className="pt-0.5 flex justify-between text-[#00bd74] text-[10.5px] font-black">
+                      <span>Montant net crédité :</span>
+                      <span className="text-xs font-mono">{Math.max(0, parseInt(withdrawAmount) - Math.round(parseInt(withdrawAmount) * 0.12)).toLocaleString()} {getCurrency()}</span>
                     </div>
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#00d2c3] to-[#046fff] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95"
+                  className="w-full py-2.5 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#00d2c3] to-[#046fff] rounded-xl hover:opacity-95 transition-all shadow-md active:scale-95 text-center flex items-center justify-center"
                 >
                   Envoyer la demande de Retrait
                 </button>
@@ -2813,6 +2853,8 @@ export default function Dashboard({
                   </div>
                   <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                 </div>
+
+
               </div>
 
             </div>
@@ -2928,7 +2970,7 @@ export default function Dashboard({
               
               {/* WhatsApp option */}
               <a 
-                href="https://chat.whatsapp.com/JJ4ewxWrtc56p3kiEZCTdx?s=cl&p=a&mlu=3"
+                href="https://chat.whatsapp.com/JPSJXLJ2D1LGUztQDaSTyv"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsSupportMenuOpen(false)}
@@ -3239,7 +3281,7 @@ export default function Dashboard({
                 <div className="space-y-2">
                   <span className="text-[10px] sm:text-xs font-black text-orange-600 block uppercase tracking-widest">PROPULSER LE CAPITALISME AGRICOLE EN AFRIQUE 🌱</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-600 font-medium">
-                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>AgroProfit</strong> est la première interface d'investissement agri-technologique en ligne conçue pour démocratiser l'exploitation industrielle moderne en Afrique de l'Ouest (Togo, Bénin, Burkina Faso). Nous canalisons votre épargne vers des projets réels – serres automatisées, parcs de tracteurs connectés, stations solaires de pompage d'eau – afin de générer pour vous des profits stables de manière continue.
+                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>AgroProfit</strong> est la première interface d'investissement agri-technologique en ligne conçue pour démocratiser l'exploitation industrielle moderne en Afrique de l'Ouest (Côte d'Ivoire, Togo, Bénin, Burkina Faso). Nous canalisons votre épargne vers des projets réels – serres automatisées, parcs de tracteurs connectés, stations solaires de pompage d'eau – afin de générer pour vous des profits stables de manière continue.
                   </p>
                 </div>
 

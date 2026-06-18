@@ -2377,6 +2377,52 @@ export class DataStore {
     }
   }
 
+  // Delete purchased product (investment)
+  static async deleteInvestment(investmentId: string): Promise<boolean> {
+    const investments = this.getInvestments();
+    const inv = investments.find(i => i.id === investmentId);
+    if (!inv) return false;
+
+    // Filter out the deleted investment
+    const updatedInvestments = investments.filter(i => i.id !== investmentId);
+    this.saveInvestments(updatedInvestments);
+
+    // Recalculate daily earnings for the user
+    const users = this.getUsers();
+    const userIdx = users.findIndex(u => u.id === inv.userId);
+    if (userIdx !== -1) {
+      const activeInvs = updatedInvestments.filter(i => i.userId === inv.userId && i.status === 'active');
+      users[userIdx].dailyEarnings = activeInvs.reduce((sum, i) => sum + i.dailyReturn, 0);
+      users[userIdx].lastModified = Date.now();
+      this.saveUsers(users);
+
+      // If active user is this user, reload their state locally too
+      const current = this.getCurrentUser();
+      if (current && current.id === inv.userId) {
+        current.dailyEarnings = users[userIdx].dailyEarnings;
+        this.saveCurrentUser(current);
+      }
+    }
+
+    window.dispatchEvent(new Event('gi_store_updated'));
+
+    // Notify backend
+    try {
+      await apiFetch(getApiUrl('/api/save-store'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          gi_investments: updatedInvestments,
+          gi_users: users
+        })
+      });
+      return true;
+    } catch (e) {
+      console.error('Failed to sync deleted investment:', e);
+      return false;
+    }
+  }
+
   // Delete user account
   static async deleteUser(userId: string): Promise<boolean> {
     const users = this.getUsers();
