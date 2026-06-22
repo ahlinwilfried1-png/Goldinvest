@@ -156,13 +156,13 @@ async function startServer() {
       ],
       "gi_support_messages": [],
       "gi_products": [
-        { id: 'vip-1', vipLevel: 1, name: 'P1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'P1' },
-         { id: 'vip-2', vipLevel: 2, name: 'P2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'P2' },
-         { id: 'vip-3', vipLevel: 3, name: 'P3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'P3' },
-         { id: 'vip-4', vipLevel: 4, name: 'P4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'P4' },
-         { id: 'vip-5', vipLevel: 5, name: 'P5', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'P5' },
-         { id: 'vip-6', vipLevel: 6, name: 'P6', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'P6' },
-         { id: 'vip-7', vipLevel: 7, name: 'P7', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'P7' }
+        { id: 'vip-1', vipLevel: 1, name: 'P1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'P1', category: 'stability' },
+        { id: 'vip-2', vipLevel: 2, name: 'P2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'P2', category: 'stability' },
+        { id: 'vip-3', vipLevel: 3, name: 'P3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'P3', category: 'stability' },
+        { id: 'vip-4', vipLevel: 4, name: 'P4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'P4', category: 'stability' },
+        { id: 'vip-5', vipLevel: 5, name: 'P5', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'P5', category: 'stability' },
+        { id: 'vip-6', vipLevel: 6, name: 'P6', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'P6', category: 'stability' },
+        { id: 'vip-7', vipLevel: 7, name: 'P7', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'P7', category: 'stability' }
       ],
       "gi_mlm_level1_rate": 20,
       "gi_mlm_level2_rate": 3,
@@ -212,6 +212,8 @@ async function startServer() {
         modified = true;
       }
     }
+
+
 
     if (modified) {
       saveStoreLocal();
@@ -307,6 +309,8 @@ async function startServer() {
           if (Object.keys(kvData).length > 0) {
             console.log("[SERVER STARTUP] Merging Supabase cloud database keys into local runtime...");
             mergeData(kvData);
+
+
           }
           await cleanupNonAdminAccounts();
         }
@@ -442,11 +446,58 @@ async function startServer() {
     }
   }
 
+  function handleCyclicCompletion(inv: any, users: any[], products: any[], investments: any[], notifications: any[]) {
+    try {
+      const originalProduct = products.find((p: any) => p.id === inv.productId);
+      if (!originalProduct || !originalProduct.isCyclic || !originalProduct.generatedProductIds || !originalProduct.generatedProductIds.length) {
+        return;
+      }
+
+      originalProduct.generatedProductIds.forEach((childId: string) => {
+        const childProduct = products.find((p: any) => p.id === childId);
+        if (!childProduct) return;
+
+        const newInvId = `inv-cyc-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const newCycInv = {
+          id: newInvId,
+          userId: inv.userId,
+          productId: childProduct.id,
+          productName: `${childProduct.name} 🔄`,
+          price: 0,
+          dailyReturn: childProduct.dailyReturn,
+          daysPassed: 0,
+          durationDays: childProduct.durationDays,
+          totalReturnClaimed: 0,
+          lastClaimDate: new Date().toISOString(),
+          status: 'active',
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString()
+        };
+
+        investments.unshift(newCycInv);
+
+        notifications.unshift({
+          id: `not-cyc-${Date.now()}-${childId}-${Math.floor(Math.random() * 1000)}`,
+          userId: inv.userId,
+          title: `🔄 Plan Cyclique Complété : ${inv.productName}`,
+          message: `Félicitations ! Votre plan "${inv.productName}" de type cyclique a terminé son cycle complet. Le produit "${childProduct.name}" a été configuré et activé automatiquement pour vous sans aucun frais d'acquisition !`,
+          type: 'plan',
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString(),
+          read: false
+        });
+      });
+    } catch (e) {
+      console.error("[CYCLIC PROCESSING ERROR]", e);
+    }
+  }
+
   function processAutomaticDailyInstallmentsServer(): void {
     const now = Date.now();
     let users = storeData["gi_users"] || [];
     let investments = storeData["gi_investments"] || [];
     let notifications = storeData["gi_notifications"] || [];
+    let products = storeData["gi_products"] || [];
     let changed = false;
 
     investments = investments.map((inv: any) => {
@@ -464,37 +515,79 @@ async function startServer() {
 
       // If more days should have processed than currently tracked
       if (expectedDays > inv.daysPassed) {
-        const missingDays = expectedDays - inv.daysPassed;
-        const totalPayout = inv.dailyReturn * missingDays;
+        const isActivity = inv.category === 'activity' || inv.isCyclic;
 
-        // Find and credit the investor
-        const uIdx = users.findIndex((u: any) => u.id === inv.userId);
-        if (uIdx !== -1) {
-          users[uIdx].balance += totalPayout;
-          users[uIdx].totalEarnings += totalPayout;
-          
-          // Add a notifications alert to show the automatic payout
-          notifications.unshift({
-            id: `not-autodrop-srv-${Date.now()}-${inv.id}-${inv.daysPassed}`,
-            userId: inv.userId,
-            title: `💰 Gain automatique reçu (${inv.productName})`,
-            message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
-            type: 'plan',
-            lastModified: Date.now(),
-            createdAt: new Date().toISOString(),
-            read: false
-          });
+        if (isActivity) {
+          // No daily payout during active cycle for short-cycle activity products
+          if (expectedDays >= inv.durationDays) {
+            // End of complete cycle: payout is capital + profit (i.e. totalReturn)
+            const totalPayout = inv.totalReturn || (inv.price + (inv.dailyReturn * inv.durationDays));
+            const netProfit = totalPayout - inv.price;
+
+            const uIdx = users.findIndex((u: any) => u.id === inv.userId);
+            if (uIdx !== -1) {
+              users[uIdx].balance += totalPayout;
+              users[uIdx].totalEarnings += netProfit;
+
+              notifications.unshift({
+                id: `not-cyclecomplete-srv-${Date.now()}-${inv.id}`,
+                userId: inv.userId,
+                title: `⚡ Activité Terminée (${inv.productName})`,
+                message: `Félicitations ! Votre cycle d'activité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`,
+                type: 'plan',
+                lastModified: Date.now(),
+                createdAt: new Date().toISOString(),
+                read: false
+              });
+            }
+
+            inv.daysPassed = expectedDays;
+            inv.totalReturnClaimed = totalPayout;
+            inv.lastClaimDate = new Date().toISOString();
+            inv.lastModified = Date.now();
+            inv.status = 'completed';
+            changed = true;
+          } else {
+            // Just advance the counter of days passed
+            inv.daysPassed = expectedDays;
+            inv.lastModified = Date.now();
+            changed = true;
+          }
+        } else {
+          // Standard VIP stability plans (daily dividend credited daily)
+          const missingDays = expectedDays - inv.daysPassed;
+          const totalPayout = inv.dailyReturn * missingDays;
+
+          // Find and credit the investor
+          const uIdx = users.findIndex((u: any) => u.id === inv.userId);
+          if (uIdx !== -1) {
+            users[uIdx].balance += totalPayout;
+            users[uIdx].totalEarnings += totalPayout;
+            
+            // Add a notifications alert to show the automatic payout
+            notifications.unshift({
+              id: `not-autodrop-srv-${Date.now()}-${inv.id}-${inv.daysPassed}`,
+              userId: inv.userId,
+              title: `💰 Gain automatique reçu (${inv.productName})`,
+              message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
+              type: 'plan',
+              lastModified: Date.now(),
+              createdAt: new Date().toISOString(),
+              read: false
+            });
+          }
+
+          inv.daysPassed = expectedDays;
+          inv.totalReturnClaimed += totalPayout;
+          inv.lastClaimDate = new Date().toISOString();
+          inv.lastModified = Date.now();
+
+          if (inv.daysPassed >= inv.durationDays) {
+            inv.status = 'completed';
+            handleCyclicCompletion(inv, users, products, investments, notifications);
+          }
+          changed = true;
         }
-
-        inv.daysPassed = expectedDays;
-        inv.totalReturnClaimed += totalPayout;
-        inv.lastClaimDate = new Date().toISOString();
-        inv.lastModified = Date.now();
-
-        if (inv.daysPassed >= inv.durationDays) {
-          inv.status = 'completed';
-        }
-        changed = true;
       }
       return inv;
     });
@@ -502,7 +595,7 @@ async function startServer() {
     if (changed) {
       // Recalculate dailyEarnings for all users to match active investments status correctly
       users = users.map((u: any) => {
-        const userActiveInvs = investments.filter((inv: any) => inv.userId === u.id && inv.status === 'active');
+        const userActiveInvs = investments.filter((inv: any) => inv.userId === u.id && inv.status === 'active' && inv.category !== 'activity' && !inv.isCyclic);
         const activeDailyEarnings = userActiveInvs.reduce((sum: number, inv: any) => sum + inv.dailyReturn, 0);
         return {
           ...u,
@@ -896,6 +989,17 @@ async function startServer() {
         let referrerUser = users.find((u: any) => {
           if (u.referralCode && u.referralCode.toUpperCase() === codeClean) return true;
           if (u.id && u.id.toUpperCase() === codeClean) return true;
+          
+          // Fallback check by matching the last 8 digits of the cleaned WhatsApp phone numbers
+          if (digitsOnlyInput.length >= 8 && u.whatsapp) {
+            const uDigits = u.whatsapp.replace(/\D/g, '');
+            if (uDigits.length >= 8) {
+              const inputLast8 = digitsOnlyInput.slice(-8);
+              const uLast8 = uDigits.slice(-8);
+              if (inputLast8 === uLast8) return true;
+            }
+          }
+
           const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
           const sponsorNorm = normalizePhoneNumber(cleanInput, u.country);
           if (uNorm && sponsorNorm && uNorm === sponsorNorm) return true;
@@ -1050,8 +1154,12 @@ async function startServer() {
       return res.json({ success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} XOF.` });
     }
 
+    const isActivity = targetProduct.category === 'activity' || targetProduct.isCyclic;
+
     user.balance -= targetProduct.price;
-    user.dailyEarnings += targetProduct.dailyReturn;
+    if (!isActivity) {
+      user.dailyEarnings += targetProduct.dailyReturn;
+    }
     user.lastModified = Date.now();
 
     const newInvestment = {
@@ -1060,14 +1168,17 @@ async function startServer() {
       productId: targetProduct.id,
       productName: targetProduct.name,
       price: targetProduct.price,
-      dailyReturn: targetProduct.dailyReturn,
+      dailyReturn: isActivity ? 0 : targetProduct.dailyReturn,
       daysPassed: 0,
       durationDays: targetProduct.durationDays,
       totalReturnClaimed: 0,
       lastClaimDate: new Date().toISOString(),
       status: 'active',
       lastModified: Date.now(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      category: targetProduct.category || 'stability',
+      isCyclic: targetProduct.isCyclic || false,
+      totalReturn: targetProduct.totalReturn || (targetProduct.price + (targetProduct.dailyReturn * targetProduct.durationDays))
     };
     investments.unshift(newInvestment);
 
@@ -1097,6 +1208,7 @@ async function startServer() {
         const commAmtLvl1 = Math.round(targetProduct.price * (mlmRates.level1 / 100));
         parentUser.balance += commAmtLvl1;
         parentUser.bonus += commAmtLvl1;
+        parentUser.totalEarnings = (parentUser.totalEarnings || 0) + commAmtLvl1;
         parentUser.lastModified = Date.now();
 
         commissions.unshift({
@@ -1140,6 +1252,7 @@ async function startServer() {
             const commAmtLvl2 = Math.round(targetProduct.price * (mlmRates.level2 / 100));
             grandParentUser.balance += commAmtLvl2;
             grandParentUser.bonus += commAmtLvl2;
+            grandParentUser.totalEarnings = (grandParentUser.totalEarnings || 0) + commAmtLvl2;
             grandParentUser.lastModified = Date.now();
 
             commissions.unshift({
@@ -1183,6 +1296,7 @@ async function startServer() {
                 const commAmtLvl3 = Math.round(targetProduct.price * (mlmRates.level3 / 100));
                 greatGrandParentUser.balance += commAmtLvl3;
                 greatGrandParentUser.bonus += commAmtLvl3;
+                greatGrandParentUser.totalEarnings = (greatGrandParentUser.totalEarnings || 0) + commAmtLvl3;
                 greatGrandParentUser.lastModified = Date.now();
 
                 commissions.unshift({
@@ -1285,6 +1399,15 @@ async function startServer() {
       return res.json({ success: false, message: 'Cet investissement est déjà arrivé à terme.', amount: 0 });
     }
 
+    const isActivity = inv.category === 'activity' || inv.isCyclic;
+    if (isActivity) {
+      return res.json({
+        success: false,
+        message: `Les revenus de cette Activité de Cycle Court (${inv.productName}) vous seront versés automatiquement et en intégralité à la fin de son cycle de ${inv.durationDays} jours.`,
+        amount: 0
+      });
+    }
+
     const now = Date.now();
     const createdTime = new Date(inv.createdAt).getTime();
     const msDiff = now - createdTime;
@@ -1308,9 +1431,12 @@ async function startServer() {
       });
     }
 
+    let products = storeData["gi_products"] || [];
+
     if (inv.daysPassed >= inv.durationDays) {
       inv.status = 'completed';
       inv.lastModified = Date.now();
+      handleCyclicCompletion(inv, users, products, investments, notifications);
       saveStore();
       return res.json({ success: false, message: 'Ce plan est complété ! Tous les revenus ont été distribués.', amount: 0 });
     }
@@ -1322,6 +1448,7 @@ async function startServer() {
 
     if (inv.daysPassed >= inv.durationDays) {
       inv.status = 'completed';
+      handleCyclicCompletion(inv, users, products, investments, notifications);
     }
 
     const uIdx = users.findIndex((u: any) => u.id === userId);
@@ -2419,6 +2546,9 @@ async function startServer() {
       durationDays: p.durationDays || 10,
       totalReturn: (p.dailyReturn || 1000) * (p.durationDays || 10),
       tag: p.tag || 'Special Offer',
+      isCyclic: p.isCyclic || false,
+      generatedProductIds: p.generatedProductIds || [],
+      category: p.category || 'stability',
       lastModified: Date.now()
     });
     storeData["gi_products"] = list;

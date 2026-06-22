@@ -14,13 +14,17 @@ import {
 
 // Default mock configuration values
 export const DEFAULT_PRODUCTS: Product[] = [
-  { id: 'vip-1', vipLevel: 1, name: 'P1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'P1' },
-  { id: 'vip-2', vipLevel: 2, name: 'P2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'P2' },
-  { id: 'vip-3', vipLevel: 3, name: 'P3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'P3' },
-  { id: 'vip-4', vipLevel: 4, name: 'P4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'P4' },
-  { id: 'vip-5', vipLevel: 5, name: 'P5', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'P5' },
-  { id: 'vip-6', vipLevel: 6, name: 'P6', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'P6' },
-  { id: 'vip-7', vipLevel: 7, name: 'P7', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'P7' }
+  { id: 'vip-1', vipLevel: 1, name: 'P1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'P1', category: 'stability' },
+  { id: 'vip-2', vipLevel: 2, name: 'P2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'P2', category: 'stability' },
+  { id: 'vip-3', vipLevel: 3, name: 'P3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'P3', category: 'stability' },
+  { id: 'vip-4', vipLevel: 4, name: 'P4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'P4', category: 'stability' },
+  { id: 'vip-5', vipLevel: 5, name: 'P5', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'P5', category: 'stability' },
+  { id: 'vip-6', vipLevel: 6, name: 'P6', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'P6', category: 'stability' },
+  { id: 'vip-7', vipLevel: 7, name: 'P7', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'P7', category: 'stability' },
+  // Activités (Short-cycle products)
+  { id: 'activity-1', vipLevel: 1, name: 'A1', price: 5000, dailyReturn: 1000, durationDays: 7, totalReturn: 7000, tag: 'A1', category: 'activity' },
+  { id: 'activity-2', vipLevel: 2, name: 'A2', price: 12000, dailyReturn: 3000, durationDays: 5, totalReturn: 15000, tag: 'A2', category: 'activity' },
+  { id: 'activity-3', vipLevel: 3, name: 'A3', price: 25000, dailyReturn: 7500, durationDays: 4, totalReturn: 30000, tag: 'A3', category: 'activity' }
 ];
 
 const INITIAL_USERS: User[] = [
@@ -936,12 +940,66 @@ export class DataStore {
     }).catch(err => console.error("Error saving referral domain to server", err));
   }
 
+  static getWhatsAppGroup(): string {
+    const val = getFromStore<string>('gi_whatsapp_group', 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv').trim();
+    if (val === 'https://chat.whatsapp.com/JPSJXLJ2D1LGUztQDaSTyv' || !val) {
+      return 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv';
+    }
+    return val;
+  }
+
+  static saveWhatsAppGroup(link: string): void {
+    setToStore<string>('gi_whatsapp_group', link.trim());
+    apiFetch(getApiUrl('/api/save-store'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gi_whatsapp_group: link.trim()
+      })
+    }).catch(err => console.error("Error saving WhatsApp group link to server", err));
+  }
+
+  static getWhatsAppChannel(): string {
+    const val = getFromStore<string>('gi_whatsapp_channel', 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv').trim();
+    if (val === 'https://chat.whatsapp.com/JPSJXLJ2D1LGUztQDaSTyv' || val === 'https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k' || !val) {
+      return 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv';
+    }
+    return val;
+  }
+
+  static saveWhatsAppChannel(link: string): void {
+    setToStore<string>('gi_whatsapp_channel', link.trim());
+    apiFetch(getApiUrl('/api/save-store'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gi_whatsapp_channel: link.trim()
+      })
+    }).catch(err => console.error("Error saving WhatsApp channel link to server", err));
+  }
+
+  static getWhatsAppSupportNumber(): string {
+    return getFromStore<string>('gi_whatsapp_support_number', '+22670903319').trim();
+  }
+
+  static saveWhatsAppSupportNumber(numberStr: string): void {
+    setToStore<string>('gi_whatsapp_support_number', numberStr.trim());
+    apiFetch(getApiUrl('/api/save-store'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gi_whatsapp_support_number: numberStr.trim()
+      })
+    }).catch(err => console.error("Error saving WhatsApp support number to server", err));
+  }
+
   static getProducts(): Product[] {
     let list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
     
     // Auto-update to P1-P7 (365 days duration) if old database exists in visitor localstorage
-    const needsReset = list.length === 0 || !list.some(p => p.durationDays === 365) || list.some(p => p.name.includes('VIP Élixir') || p.name.includes('VIP Élixir 1'));
-    if (needsReset) {
+    const needsReset = list.length === 0 || list.some(p => p.name.includes('VIP Élixir') || p.name.includes('VIP Élixir 1'));
+    const hasActivity = list.some(p => p.category === 'activity');
+    if (needsReset || !hasActivity) {
       list = DEFAULT_PRODUCTS;
       this.saveProducts(list);
     }
@@ -1230,6 +1288,17 @@ export class DataStore {
       let referrerUser = users.find((u: any) => {
         if (u.referralCode && u.referralCode.toUpperCase() === codeClean) return true;
         if (u.id && u.id.toUpperCase() === codeClean) return true;
+        
+        // Fallback check by matching the last 8 digits of the cleaned WhatsApp phone numbers
+        if (digitsOnlyInput.length >= 8 && u.whatsapp) {
+          const uDigits = u.whatsapp.replace(/\D/g, '');
+          if (uDigits.length >= 8) {
+            const inputLast8 = digitsOnlyInput.slice(-8);
+            const uLast8 = uDigits.slice(-8);
+            if (inputLast8 === uLast8) return true;
+          }
+        }
+
         const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
         const sponsorNorm = normalizePhoneNumber(cleanInput, u.country);
         if (uNorm && sponsorNorm && uNorm === sponsorNorm) return true;
@@ -1655,8 +1724,12 @@ export class DataStore {
     }
 
     // Deduct balance and update properties
+    const isActivity = targetProduct.category === 'activity' || targetProduct.isCyclic;
+
     user.balance -= targetProduct.price;
-    user.dailyEarnings += targetProduct.dailyReturn;
+    if (!isActivity) {
+      user.dailyEarnings += targetProduct.dailyReturn;
+    }
     user.lastModified = Date.now();
     this.saveUsers(users);
 
@@ -1675,14 +1748,17 @@ export class DataStore {
       productId: targetProduct.id,
       productName: targetProduct.name,
       price: targetProduct.price,
-      dailyReturn: targetProduct.dailyReturn,
+      dailyReturn: isActivity ? 0 : targetProduct.dailyReturn,
       daysPassed: 0,
       durationDays: targetProduct.durationDays,
       totalReturnClaimed: 0,
       lastClaimDate: new Date().toISOString(),
       status: 'active' as const,
       createdAt: new Date().toISOString(),
-      lastModified: Date.now()
+      lastModified: Date.now(),
+      category: targetProduct.category || 'stability',
+      isCyclic: targetProduct.isCyclic || false,
+      totalReturn: targetProduct.totalReturn || (targetProduct.price + (targetProduct.dailyReturn * targetProduct.durationDays))
     };
     investments.unshift(newInvestment);
     this.saveInvestments(investments);
@@ -1711,6 +1787,7 @@ export class DataStore {
         const commAmtLvl1 = Math.round(targetProduct.price * (mlmRates.level1 / 100));
         parentUser.balance += commAmtLvl1;
         parentUser.bonus += commAmtLvl1;
+        parentUser.totalEarnings = (parentUser.totalEarnings || 0) + commAmtLvl1;
         parentUser.lastModified = Date.now();
 
         commissions.unshift({
@@ -1753,6 +1830,7 @@ export class DataStore {
             const commAmtLvl2 = Math.round(targetProduct.price * (mlmRates.level2 / 100));
             grandParentUser.balance += commAmtLvl2;
             grandParentUser.bonus += commAmtLvl2;
+            grandParentUser.totalEarnings = (grandParentUser.totalEarnings || 0) + commAmtLvl2;
             grandParentUser.lastModified = Date.now();
 
             commissions.unshift({
@@ -1795,6 +1873,7 @@ export class DataStore {
                 const commAmtLvl3 = Math.round(targetProduct.price * (mlmRates.level3 / 100));
                 greatGrandParentUser.balance += commAmtLvl3;
                 greatGrandParentUser.bonus += commAmtLvl3;
+                greatGrandParentUser.totalEarnings = (greatGrandParentUser.totalEarnings || 0) + commAmtLvl3;
                 greatGrandParentUser.lastModified = Date.now();
 
                 commissions.unshift({
@@ -1944,6 +2023,15 @@ export class DataStore {
     const inv = investments[invIdx];
     if (inv.status === 'completed') {
       return { success: false, message: 'Cet investissement est déjà arrivé à terme.', amount: 0 };
+    }
+
+    const isActivity = inv.category === 'activity' || (inv as any).isCyclic;
+    if (isActivity) {
+      return { 
+        success: false, 
+        message: `Les revenus de cette Activité de Cycle Court (${inv.productName}) vous seront versés automatiquement et en intégralité à la fin de son cycle de ${inv.durationDays} jours.`, 
+        amount: 0 
+      };
     }
 
     const now = Date.now();
@@ -2312,36 +2400,76 @@ export class DataStore {
 
       // If more days should have processed than currently tracked
       if (expectedDays > inv.daysPassed) {
-        const missingDays = expectedDays - inv.daysPassed;
-        const totalPayout = inv.dailyReturn * missingDays;
+        const isActivity = inv.category === 'activity' || (inv as any).isCyclic;
 
-        // Find and credit the investor
-        const uIdx = users.findIndex(u => u.id === inv.userId);
-        if (uIdx !== -1) {
-          users[uIdx].balance += totalPayout;
-          users[uIdx].totalEarnings += totalPayout;
-          
-          // Unshift a live system alert to showcase the automatic pay drop
-          notifications.unshift({
-            id: `not-autodrop-${Date.now()}-${inv.id}-${inv.daysPassed}`,
-            userId: inv.userId,
-            title: `💰 Gain automatique reçu (${inv.productName})`,
-            message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
-            type: 'plan',
-            createdAt: new Date().toISOString(),
-            read: false
-          });
+        if (isActivity) {
+          // No daily earnings credited during the cycle duration for short-cycle activity
+          if (expectedDays >= inv.durationDays) {
+            // End of complete cycle: payout is capital + profit (i.e. totalReturn)
+            const totalPayout = (inv as any).totalReturn || (inv.price + (inv.dailyReturn * inv.durationDays));
+            const netProfit = totalPayout - inv.price;
+
+            const uIdx = users.findIndex(u => u.id === inv.userId);
+            if (uIdx !== -1) {
+              users[uIdx].balance += totalPayout;
+              users[uIdx].totalEarnings += netProfit;
+
+              notifications.unshift({
+                id: `not-cyclecomplete-${Date.now()}-${inv.id}`,
+                userId: inv.userId,
+                title: `⚡ Activité Terminée (${inv.productName})`,
+                message: `Félicitations ! Votre cycle d'activité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`,
+                type: 'plan',
+                createdAt: new Date().toISOString(),
+                read: false
+              });
+            }
+
+            inv.daysPassed = expectedDays;
+            inv.totalReturnClaimed = totalPayout;
+            inv.lastClaimDate = new Date().toISOString();
+            inv.lastModified = Date.now();
+            inv.status = 'completed';
+            changed = true;
+          } else {
+            // Just advance the counter of days passed
+            inv.daysPassed = expectedDays;
+            inv.lastModified = Date.now();
+            changed = true;
+          }
+        } else {
+          // Standard VIP stability plans (daily dividend credited daily)
+          const missingDays = expectedDays - inv.daysPassed;
+          const totalPayout = inv.dailyReturn * missingDays;
+
+          // Find and credit the investor
+          const uIdx = users.findIndex(u => u.id === inv.userId);
+          if (uIdx !== -1) {
+            users[uIdx].balance += totalPayout;
+            users[uIdx].totalEarnings += totalPayout;
+            
+            // Unshift a live system alert to showcase the automatic pay drop
+            notifications.unshift({
+              id: `not-autodrop-${Date.now()}-${inv.id}-${inv.daysPassed}`,
+              userId: inv.userId,
+              title: `💰 Gain automatique reçu (${inv.productName})`,
+              message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
+              type: 'plan',
+              createdAt: new Date().toISOString(),
+              read: false
+            });
+          }
+
+          inv.daysPassed = expectedDays;
+          inv.totalReturnClaimed += totalPayout;
+          inv.lastClaimDate = new Date().toISOString();
+          inv.lastModified = Date.now();
+
+          if (inv.daysPassed >= inv.durationDays) {
+            inv.status = 'completed';
+          }
+          changed = true;
         }
-
-        inv.daysPassed = expectedDays;
-        inv.totalReturnClaimed += totalPayout;
-        inv.lastClaimDate = new Date().toISOString();
-        inv.lastModified = Date.now();
-
-        if (inv.daysPassed >= inv.durationDays) {
-          inv.status = 'completed';
-        }
-        changed = true;
       }
       return inv;
     });
@@ -2349,7 +2477,7 @@ export class DataStore {
     if (changed) {
       // Recalculate dailyEarnings for all users to match active investments status correctly
       users = users.map(u => {
-        const userActiveInvs = investments.filter(inv => inv.userId === u.id && inv.status === 'active');
+        const userActiveInvs = investments.filter(inv => inv.userId === u.id && inv.status === 'active' && inv.category !== 'activity' && !(inv as any).isCyclic);
         const activeDailyEarnings = userActiveInvs.reduce((sum, inv) => sum + inv.dailyReturn, 0);
         return {
           ...u,
@@ -2757,7 +2885,10 @@ export class DataStore {
       dailyReturn: (p as any).dailyReturn || 1000,
       durationDays: (p as any).durationDays || 10,
       totalReturn: ((p as any).dailyReturn || 1000) * ((p as any).durationDays || 10),
-      tag: (p as any).tag || 'Special Offer'
+      tag: (p as any).tag || 'Special Offer',
+      isCyclic: (p as any).isCyclic || false,
+      generatedProductIds: (p as any).generatedProductIds || [],
+      category: (p as any).category || 'stability'
     };
 
     list.push(newP);
@@ -2783,6 +2914,9 @@ export class DataStore {
       const tag = updatedP.tag !== undefined ? updatedP.tag : current.tag;
       const isBlocked = updatedP.isBlocked !== undefined ? updatedP.isBlocked : current.isBlocked;
       const reopenDateTime = updatedP.reopenDateTime !== undefined ? updatedP.reopenDateTime : current.reopenDateTime;
+      const isCyclic = updatedP.isCyclic !== undefined ? updatedP.isCyclic : current.isCyclic;
+      const generatedProductIds = updatedP.generatedProductIds !== undefined ? updatedP.generatedProductIds : current.generatedProductIds;
+      const category = updatedP.category !== undefined ? updatedP.category : current.category;
 
       list[idx] = {
         id: productId,
@@ -2794,7 +2928,10 @@ export class DataStore {
         totalReturn: dailyReturn * durationDays,
         tag,
         isBlocked,
-        reopenDateTime
+        reopenDateTime,
+        isCyclic,
+        generatedProductIds,
+        category
       };
       this.saveProducts(list);
     }

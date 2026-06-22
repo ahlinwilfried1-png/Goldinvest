@@ -191,7 +191,7 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative bg-[#fffaf5] overflow-hidden font-sans" id="auth-container">
+    <div className="min-h-screen flex flex-col items-center justify-start py-8 sm:py-12 p-4 relative bg-[#fffaf5] overflow-y-auto overflow-x-hidden font-sans" id="auth-container">
       {/* Background agricultural image with a bright, warm, soft overlay */}
       <div className="absolute inset-0 z-0 select-none pointer-events-none">
         <img 
@@ -508,6 +508,30 @@ export default function Auth({
                 {isRegister ? "déjà un compte? se connecter ➔" : "nouveau investisseur? s'inscrire ➔"}
               </span>
             </button>
+          </div>
+        </div>
+
+        {/* Beautiful fluid agricultural image below the main card */}
+        <div className="w-full mt-6 bg-white border border-orange-200/50 rounded-3xl p-3.5 shadow-[0_20px_50px_rgba(249,115,22,0.08)] overflow-hidden" id="auth-fluid-banner">
+          <div className="relative rounded-2xl overflow-hidden group">
+            <img 
+              src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=800&auto=format&fit=crop" 
+              alt="Exploitation Agricole AgroProfit"
+              className="w-full h-36 sm:h-44 object-cover filter saturate-[1.1] brightness-[0.92] group-hover:scale-105 transition-transform duration-700"
+              referrerPolicy="no-referrer"
+            />
+            {/* Elegant overlay gradient & description text */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent flex flex-col justify-end p-4 text-left">
+              <span className="text-[9px] font-sans font-black bg-emerald-500 text-white px-2 py-0.5 rounded-md uppercase tracking-wider w-fit mb-1.5 shadow-sm">
+                🌱 PROJETS RÉELS EN ACTIVITÉ
+              </span>
+              <p className="text-white font-sans font-black text-xs uppercase tracking-wider">
+                Exploitations AgroProfit
+              </p>
+              <p className="text-[10px] text-orange-200 font-bold mt-0.5 font-sans">
+                Participez au développement agricole durable et sécurisé.
+              </p>
+            </div>
           </div>
         </div>
       </div>

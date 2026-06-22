@@ -57,6 +57,9 @@ export interface Product {
   tag?: string;
   isBlocked?: boolean;
   reopenDateTime?: string;
+  isCyclic?: boolean;
+  generatedProductIds?: string[];
+  category?: 'stability' | 'activity';
   lastModified?: number;
 }
 
@@ -72,6 +75,7 @@ export interface Investment {
   totalReturnClaimed: number;
   lastClaimDate: string; // ISO string or short date
   status: 'active' | 'completed';
+  category?: 'stability' | 'activity' | string;
   createdAt: string;
   lastModified?: number;
 }

@@ -33,7 +33,8 @@ import {
   Share,
   Camera,
   ThumbsUp,
-  Trash2
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage, WithdrawalProof } from '../types';
 import { DataStore, syncWithBackend, getApiUrl } from '../dataStore';
@@ -137,7 +138,32 @@ const getVipImage = (vipLevel: number) => {
   }
 };
 
-const getVipCropDetails = (level: number) => {
+const getVipCropDetails = (level: number, category?: string) => {
+  if (category === 'activity') {
+    switch (level) {
+      case 1:
+        return {
+          name: "Opération Engrais Bio 🍃",
+          desc: "Projet de distribution événementielle de fertilisants biologiques à haute demande locale."
+        };
+      case 2:
+        return {
+          name: "Serre Hydroponique Temporaire 🍓",
+          desc: "Culture éclair de fraises hors-saison sous abri connecté à rotation ultra-rapide."
+        };
+      case 3:
+        return {
+          name: "Foire Agricole Internationale 🌾",
+          desc: "Financement participatif de l'approvisionnement en semences d'élite du salon régional."
+        };
+      default:
+        return {
+          name: "Achat de Semences Certifiées 🧪",
+          desc: "Campagne saisonnière de ravitaillement rapide en intrants pour rendements optimisés."
+        };
+    }
+  }
+
   switch (level) {
     case 1:
       return {
@@ -186,17 +212,32 @@ const ProductImage = ({
   vipLevel, 
   alt, 
   className = "w-full h-full object-cover",
-  isMini = false 
+  isMini = false,
+  category
 }: { 
   vipLevel: number; 
   alt: string; 
   className?: string;
   isMini?: boolean;
+  category?: string;
 }) => {
   const level = Number(vipLevel) || 1;
   const [errorCount, setErrorCount] = useState(0);
 
   const getVipImageAlternate = (lvl: number, attempt: number) => {
+    if (category === 'activity') {
+      if (attempt === 0) {
+        switch (lvl) {
+          case 1: return 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=400';
+          case 2: return 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=400';
+          case 3: return 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&q=80&w=400';
+          default: return 'https://images.unsplash.com/photo-1464226184884-fa280b87c3a9?auto=format&fit=crop&q=80&w=400';
+        }
+      } else {
+        return 'https://images.unsplash.com/photo-1550147760-44c9966d6bc7?auto=format&fit=crop&q=60&w=400';
+      }
+    }
+
     if (attempt === 0) {
       switch (lvl) {
         case 1: return 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&q=80&w=400';
@@ -223,7 +264,7 @@ const ProductImage = ({
     return '';
   };
 
-  const cropDetails = getVipCropDetails(level);
+  const cropDetails = getVipCropDetails(level, category);
   const emoji = cropDetails.name.split(' ').pop() || '🌾';
 
   const getFallbackStyle = (lvl: number) => {
@@ -299,11 +340,24 @@ export default function Dashboard({
   // Navigation tabs: 'dashboard', 'products', 'team', 'profile', 'deposit', 'withdraw'
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'team' | 'profile' | 'deposit' | 'withdraw'>('dashboard');
   const [referralListTab, setReferralListTab] = useState<'level1' | 'level2' | 'level3'>('level1');
+  const [productSubTab, setProductSubTab] = useState<'stability' | 'activity'>('stability');
 
   // Local lists
   const [userState, setUserState] = useState<User>(currentUser);
   const [products, setProducts] = useState<Product[]>(() => DataStore.getProducts());
   const [activeInvestments, setActiveInvestments] = useState<Investment[]>([]);
+
+  // Custom check for stability product activation
+  const hasStabilityActivation = activeInvestments.some(inv => {
+    const p = products.find(prod => prod.id === inv.productId || prod.name === inv.productName);
+    if (p) {
+      return p.category !== 'activity' && !p.isCyclic;
+    }
+    const idLower = (inv.productId || '').toLowerCase();
+    const nameLower = (inv.productName || '').toLowerCase();
+    return !idLower.includes('cyclic') && !idLower.includes('activity') && 
+           !nameLower.includes('cycle') && !nameLower.includes('promo') && !nameLower.includes('activity');
+  });
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [allDeposits, setAllDeposits] = useState<Deposit[]>([]);
   const [allWithdrawals, setAllWithdrawals] = useState<Withdrawal[]>([]);
@@ -311,6 +365,8 @@ export default function Dashboard({
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>([]);
   const [withdrawalProofs, setWithdrawalProofs] = useState<WithdrawalProof[]>([]);
   const [bannerImageError, setBannerImageError] = useState<boolean>(false);
+  const [showStabilityOrders, setShowStabilityOrders] = useState<boolean>(false);
+  const [showActivityOrders, setShowActivityOrders] = useState<boolean>(false);
 
   // Form states
   const [depositAmount, setDepositAmount] = useState<string>('5000');
@@ -585,6 +641,15 @@ export default function Dashboard({
   // MLM sponsorship dynamic calculation based on real user registration tree
   const [allUsers, setAllUsers] = useState<User[]>(() => DataStore.getUsers());
   const mlmRates = DataStore.getMLMRates();
+
+  const userStateRef = useRef(userState);
+  userStateRef.current = userState;
+
+  const allUsersRef = useRef(allUsers);
+  allUsersRef.current = allUsers;
+
+  const productsRef = useRef(products);
+  productsRef.current = products;
   
   const myIdUpper = userState.id.toUpperCase();
   const myCodeUpper = userState.referralCode ? userState.referralCode.trim().toUpperCase() : '';
@@ -866,12 +931,15 @@ export default function Dashboard({
         console.warn('Periodic background sync failed:', err);
       }
 
-      const oldBal = userState.balance;
-      const oldUsersLen = allUsers.length;
+      const oldBal = userStateRef.current.balance;
+      const oldUsersLen = allUsersRef.current.length;
+      const oldProductsStr = JSON.stringify(productsRef.current);
       DataStore.processAutomaticDailyInstallments();
       
       const fresh = DataStore.getCurrentUser();
       const freshUsers = DataStore.getUsers();
+      const freshProducts = DataStore.getProducts();
+      const freshProductsStr = JSON.stringify(freshProducts);
       
       // Pull real-time notifications
       const freshNotifs = DataStore.getNotifications().filter(n => n.userId === undefined || n.userId === currentUser.id);
@@ -883,7 +951,11 @@ export default function Dashboard({
           initialLoadedNotifIds.current.add(n.id);
         });
         syncDashboardData();
-      } else if ((fresh && fresh.balance !== oldBal) || freshUsers.length !== oldUsersLen) {
+      } else if (
+        (fresh && fresh.balance !== oldBal) || 
+        freshUsers.length !== oldUsersLen ||
+        freshProductsStr !== oldProductsStr
+      ) {
         syncDashboardData();
       }
 
@@ -917,7 +989,7 @@ export default function Dashboard({
       window.removeEventListener('gi_new_message', handleNewMessage);
       window.removeEventListener('gi_store_updated', handleStoreUpdated);
     };
-  }, [currentUser.id, userState.balance, allUsers.length]);
+  }, [currentUser.id]);
 
   useEffect(() => {
     // Scroll to bottom of support chat when opened or new messages spawn
@@ -1238,6 +1310,16 @@ export default function Dashboard({
       return;
     }
 
+    const isStability = product.category !== 'activity';
+    if (!isStability && !hasStabilityActivation) {
+      openAlert(
+        'Accès Restreint',
+        "Vous devez obligatoirement achetez et activer au moins un produit de la catégorie Stabilité avant d'avoir accès aux produits d'Activités.",
+        'error'
+      );
+      return;
+    }
+
     if (userState.balance < product.price) {
       setProductErrors(prev => ({
         ...prev,
@@ -1503,7 +1585,7 @@ export default function Dashboard({
                   </p>
                 </div>
                 <a 
-                  href="https://chat.whatsapp.com/JPSJXLJ2D1LGUztQDaSTyv"
+                  href={DataStore.getWhatsAppGroup()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-2.5 py-1.5 bg-[#00bd74] hover:bg-emerald-500 text-white font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
@@ -1620,6 +1702,13 @@ export default function Dashboard({
           {activeTab === 'dashboard' && (
             <div className="space-y-4">
 
+              {/* Warm Welcome text block */}
+              <div className="text-left px-2 pt-1 pb-1">
+                <span className="text-[9px] uppercase tracking-widest text-[#dc2626] font-extrabold block mb-0.5">ESPACE INVESTISSEUR</span>
+                <h3 className="text-2xl font-sans font-black text-slate-900 tracking-tight">
+                  Bienvenue, {userState.name || "Cher Investisseur"}
+                </h3>
+              </div>
 
 
               {/* PRIMARY WHITE CARD OF SCREENSHOT */}
@@ -1661,21 +1750,7 @@ export default function Dashboard({
                   </div>
                 </div>
 
-                {/* Substats block */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 pb-5">
-                  <div className="text-left font-sans">
-                    <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">REVENUS QUOTIDIENS</span>
-                    <span className="text-xs sm:text-sm font-sans font-black text-[#00bd74] mt-1 block">
-                      +{userState.dailyEarnings.toLocaleString()} F / jour
-                    </span>
-                  </div>
-                  <div className="text-left border-l border-slate-100 pl-4 font-sans">
-                    <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">CUMUL DES GAINS</span>
-                    <span className="text-xs sm:text-sm font-sans font-black text-slate-900 mt-1 block">
-                      {userState.totalEarnings.toLocaleString()} F
-                    </span>
-                  </div>
-                </div>
+
 
                 {/* Sub-buttons for recharging & withdrawing */}
                 <div className="grid grid-cols-2 gap-3.5 pt-2">
@@ -1760,138 +1835,8 @@ export default function Dashboard({
               </div>
 
 
-              {/* VOS PLANS ACTIFS */}
-              <div className="mt-6 text-left">
-                <div className="flex justify-between items-center mb-3 px-1">
-                  <h4 className="text-xs sm:text-sm font-sans font-black text-slate-800 uppercase tracking-wide">
-                    VOS PLANS ACTIFS ({activeInvestments.filter(i => i.status === 'active').length})
-                  </h4>
-                  <button 
-                    onClick={() => setActiveTab('products')}
-                    className="text-xs sm:text-sm text-orange-500 font-sans font-extrabold hover:underline"
-                  >
-                    Souscrire à un VIP +
-                  </button>
-                </div>
 
-                {activeInvestments.filter(i => i.status === 'active').length === 0 ? (
-                  /* Gray container matching screenshot */
-                  <div className="bg-[#8b9bb4] p-8 rounded-[24px] flex flex-col items-center justify-center text-center space-y-4 shadow-sm select-none">
-                    <p className="text-white/95 font-sans font-bold text-xs sm:text-sm max-w-xs leading-relaxed">
-                      Vous n'avez pas encore activé de plan d'investissement VIP.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('products')}
-                      className="border border-orange-400/80 bg-orange-500/10 text-orange-400 font-sans font-black text-[10px] sm:text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all hover:bg-orange-500 hover:text-white cursor-pointer"
-                    >
-                      VOIR LES PRODUITS VIP
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {activeInvestments.filter(i => i.status === 'active').map((p) => {
-                      // Safe utility to find the proper vipLevel for the image
-                      const getVipLevelFromActive = (item: any) => {
-                        if (item.vipLevel) return item.vipLevel;
-                        if (item.productId) {
-                          const match = String(item.productId).match(/\d+/);
-                          if (match) return parseInt(match[0], 10);
-                        }
-                        if (item.productName) {
-                          const match = String(item.productName).match(/\d+/);
-                          if (match) return parseInt(match[0], 10);
-                          const nameLower = String(item.productName).toLowerCase();
-                          if (nameLower.includes('bronze')) return 1;
-                          if (nameLower.includes('silver')) return 2;
-                          if (nameLower.includes('gold')) return 3;
-                          if (nameLower.includes('platinum')) return 4;
-                          if (nameLower.includes('diamond')) return 5;
-                          if (nameLower.includes('titanium')) return 6;
-                          if (nameLower.includes('crown')) return 7;
-                        }
-                        return 1;
-                      };
 
-                      const currentLevel = getVipLevelFromActive(p);
-
-                      return (
-                        <div 
-                          key={p.id}
-                          className="bg-white border border-slate-200 rounded-3xl p-5 flex flex-col justify-between text-left space-y-4 shadow-sm relative overflow-hidden animate-fade-in"
-                        >
-                          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full pointer-events-none -mr-8 -mt-8" />
-                          
-                          <div className="flex justify-between items-start gap-2.5">
-                            <div className="flex items-start gap-3">
-                              {/* MINI CROP THUMBNAIL */}
-                              <div className="w-13 h-13 rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-50 select-none shadow-xs">
-                                <ProductImage 
-                                  vipLevel={currentLevel}
-                                  alt={p.productName}
-                                  className="w-full h-full object-cover"
-                                  isMini={true}
-                                />
-                              </div>
-                              <div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-[9px] text-white font-black uppercase bg-emerald-500 px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                                    VIP ACTIF
-                                  </span>
-                                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                                    Jour {p.daysPassed}/{p.durationDays}
-                                  </span>
-                                </div>
-                                <h5 className="font-sans font-black text-xs sm:text-sm text-slate-800 mt-2 leading-tight uppercase tracking-tight">{p.productName}</h5>
-                                <span className="text-[10px] text-emerald-600 font-bold font-sans block mt-0.5">
-                                  {getVipCropDetails(currentLevel).name}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <span className="text-[9px] text-slate-400 block uppercase font-bold">Investi</span>
-                              <strong className="text-sm text-[#046fff] font-black leading-tight font-sans">{p.price.toLocaleString()} F</strong>
-                            </div>
-                          </div>
-
-                        {/* Progress bar */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                            <span>Progression</span>
-                            <span>{Math.round((p.daysPassed / p.durationDays) * 100)}%</span>
-                          </div>
-                          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div 
-                              className="bg-[#00bd74] h-full rounded-full transition-all duration-550" 
-                              style={{ width: `${Math.min(100, (p.daysPassed / p.durationDays) * 100)}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Chronomètre / Countdown Timer */}
-                        <CountdownTimer 
-                          createdAt={p.createdAt} 
-                          daysPassed={p.daysPassed} 
-                          durationDays={p.durationDays} 
-                        />
-
-                        <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl text-xs border border-slate-100">
-                          <div>
-                            <span className="text-slate-400 text-[10px] block uppercase font-bold">Revenu / Jour</span>
-                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm">+{p.dailyReturn.toLocaleString()} F</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 text-[10px] block uppercase font-bold">Déjà Récupéré</span>
-                            <span className="text-slate-800 font-black font-sans text-xs sm:text-sm">{(p.dailyReturn * p.daysPassed).toLocaleString()} F</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                )}
-              </div>
 
               {/* CONSEIL D'ÉQUIPE CARD */}
               <div className="bg-white border border-orange-100/45 rounded-[28px] p-5 shadow-[0_4px_15px_rgba(0,0,0,0.015)] text-left flex items-start space-x-4 mt-6">
@@ -1949,173 +1894,264 @@ export default function Dashboard({
                 </p>
               </div>
 
-              {/* PRODUCTS LIST */}
+              {/* Header description */}
+              <div className="text-center max-w-md mx-auto mb-8 select-none animate-fade-in px-4">
+                <h4 className="text-[12px] font-sans font-black text-slate-700 uppercase tracking-wider">
+                  📈 PLANS DE RENDEMENT DE STABILITÉ
+                </h4>
+                <p className="text-[10px] sm:text-[11px] text-slate-400 font-bold leading-normal mt-1.5">
+                  Investissements standards de long terme garantissant un taux de dividende journalier fixe et stable pour pérenniser votre épargne.
+                </p>
+              </div>
+
+              {/* DYNAMIC PRODUCTS CONTAINER LIST */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-                {products.map((p, index) => {
-                  const isBlocked = p.isBlocked === true;
-                  const formattedReopenTime = p.reopenDateTime 
-                    ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
-                    : null;
+                {products
+                  .filter((p) => {
+                    const isCyclic = p.isCyclic === true;
+                    if (isCyclic) return false; // Supprimer complètement les produits de bien-être (cycliques)
+                    return p.category !== 'activity';
+                  })
+                  .map((p, index) => {
+                    const isBlocked = p.isBlocked === true;
+                    const formattedReopenTime = p.reopenDateTime 
+                      ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+                      : null;
 
-                  // Custom displayName formatting matching screenshot
-                  const getVipDisplayName = (level: number, baseName: string) => {
-                    switch (level) {
-                      case 1: return "VIP BRONZE - STANDARD";
-                      case 2: return "VIP SILVER - PRO";
-                      case 3: return "VIP GOLD - PREMIUM";
-                      case 4: return "VIP PLATINUM - ULTIMATE";
-                      case 5: return "VIP DIAMOND - ELITE";
-                      case 6: return "VIP TITANIUM - SPECIALIST";
-                      case 7: return "VIP CROWN - SUPREME";
-                      default: return `VIP ${baseName.toUpperCase()} - SECURE`;
-                    }
-                  };
-
-                  const displayName = getVipDisplayName(p.vipLevel || (index + 1), p.name);
-                  const isPopular = p.vipLevel === 1 || index === 0;
-                  const isRecommended = p.vipLevel === 2 || index === 1;
-
-                  // Calculate user purchased limit counter
-                  const purchasedCount = activeInvestments.filter(i => i.productName === p.name || i.productId === p.id).length;
-
-                  return (
-                    <div 
-                      key={p.id}
-                      className={`w-full relative bg-[#f1f4fc] border border-slate-300 rounded-[28px] p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-lg ${isBlocked ? 'opacity-70 pointer-events-none' : ''}`}
-                    >
-                      {/* TOP BADGES ROW */}
-                      <div className="absolute top-4 right-5 flex flex-col items-end space-y-1.5 z-10 text-right">
-                        {isPopular && (
-                          <span className="text-[9px] text-white font-sans font-black uppercase bg-[#c39c36] px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
-                            POPULAIRE
-                          </span>
-                        )}
-                        {isRecommended && (
-                          <span className="text-[9px] text-white font-sans font-black uppercase bg-[#1b64d9] px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
-                            RECOMMANDÉ
-                          </span>
-                        )}
-                        <span className="text-[10px] text-[#1e7a5c] font-sans font-black uppercase bg-[#d7f1e9] px-2.5 py-0.5 rounded-md leading-relaxed">
-                          Achat: {purchasedCount}/3
-                        </span>
-                      </div>
-
-                      {/* PRODUCT IMAGE CARD THUMBNAIL */}
-                      <div className="w-full h-36 rounded-[20px] overflow-hidden mb-3.5 relative shadow-sm border border-slate-200/60 bg-slate-100 select-none">
-                        <ProductImage 
-                          vipLevel={p.vipLevel || (index + 1)}
-                          alt={displayName}
-                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
-                        />
-                        <div className="absolute bottom-2 left-2.5 bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[9px] font-sans font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                          <span>{getVipCropDetails(p.vipLevel || (index + 1)).name}</span>
-                        </div>
-                      </div>
-
-                      {/* PRODUCT HEADER */}
-                      <div className="text-left mt-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-sans font-bold text-[#1b64d9] tracking-wider uppercase">
-                            PLAN VIP {p.vipLevel || (index + 1)}
-                          </span>
-                          <span className="text-[10px] text-emerald-600 font-bold font-sans">
-                            {getVipCropDetails(p.vipLevel || (index + 1)).name.split(' ').pop()} Projet Actif
-                          </span>
-                        </div>
-                        <h4 className="font-sans font-black text-base sm:text-lg text-slate-800 leading-tight uppercase tracking-tight mt-0.5">
-                          {displayName}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1">
-                          {getVipCropDetails(p.vipLevel || (index + 1)).desc}
-                        </p>
-                        
-                        {/* PRICE WITH LOCATION CAPTION */}
-                        <div className="mt-2.5 flex items-baseline space-x-1.5">
-                          <span className="text-2xl sm:text-3xl font-sans font-black text-[#db4c20] tracking-tight leading-none">
-                            {p.price.toLocaleString()} {getCurrency()}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">
-                            prix fixe de location
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 3-COLUMN METRICS WITH BOTTOM AND TOP BORDERS */}
-                      <div className="grid grid-cols-3 gap-2 border-t border-b border-slate-200/60 py-3.5 my-4 text-left select-none">
-                        <div>
-                          <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">REVENUS / JOUR</span>
-                          <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm">
-                            +{p.dailyReturn.toLocaleString()} F
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">DURÉE CONTRAT</span>
-                          <span className="text-slate-800 font-black font-sans text-xs sm:text-sm">
-                            {p.durationDays} Jours
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">GAINS TOTAUX</span>
-                          <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm">
-                            {(p.dailyReturn * p.durationDays).toLocaleString()} F
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* ERRORS LOGIC */}
-                      {productErrors[p.id] && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-600 leading-normal text-left">
-                          <span className="text-red-700 block font-black mb-0.5">⚠️ SOLDE INSUFFISANT</span>
-                          <span>{productErrors[p.id]}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveTab('deposit');
-                            }}
-                            className="mt-2 block text-[#1b64d9] font-black underline uppercase tracking-wide cursor-pointer text-xs"
-                          >
-                            📥 Recharger mon compte maintenant
-                          </button>
-                        </div>
-                      )}
-
-                      {/* BOTTOM ROW: GUARANTEED DESIGN AT THE LEFT, BUY BUTTON AT THE RIGHT */}
-                      <div className="flex items-center justify-between mt-1 pt-1.5 space-x-3 text-left select-none">
-                        <div className="flex items-center space-x-2 text-slate-500">
-                          <span className="text-orange-500 text-base font-extrabold">⚡</span>
-                          <div className="leading-tight">
-                            <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 block uppercase tracking-tight">Rendement garanti</span>
-                            <span className="text-[10px] sm:text-[11px] font-black text-slate-600 leading-none">100%</span>
-                          </div>
-                        </div>
-
-                        {/* Buy action button styled following screenshot */}
-                        <button
-                          onClick={() => handleBuyProduct(p)}
-                          disabled={isBlocked}
-                          className={`py-3 px-5 rounded-[20px] text-xs font-black uppercase text-white transition-all shadow-md active:scale-95 flex items-center justify-center space-x-1 cursor-pointer min-w-[120px] shrink-0 ${isBlocked ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-[#db5129] hover:bg-[#c23f18]'}`}
-                        >
-                          <span>Activer le Plan</span>
-                          {!isBlocked && <span className="text-yellow-300">⚡</span>}
-                        </button>
-                      </div>
+                    // Custom displayName formatting based on type
+                    const getVipDisplayName = (prod: Product, defaultVipLevel: number) => {
+                      if (prod.isCyclic) {
+                        return `${prod.name.toUpperCase()} 🌸 (BIEN-ÊTRE)`;
+                      }
                       
-                      {isBlocked && (
-                        <div className="absolute inset-0 rounded-[28px] bg-slate-950/30 flex flex-col items-center justify-center p-3">
-                          <div className="bg-red-500 text-white font-bold text-xs uppercase px-2.5 py-1 rounded-lg shadow">
-                            Fermé / Suspendu
-                          </div>
-                          {formattedReopenTime && (
-                            <span className="text-[9px] text-white font-mono mt-1 bg-black/60 px-2 py-0.5 rounded">
-                              Ouvre à: {formattedReopenTime}
+                      if (prod.category === 'activity') {
+                        return `${prod.name.toUpperCase()} ⚡ (ACTIVITÉ)`;
+                      }
+
+                      switch (prod.vipLevel) {
+                        case 1: return "VIP BRONZE - STANDARD";
+                        case 2: return "VIP SILVER - PRO";
+                        case 3: return "VIP GOLD - PREMIUM";
+                        case 4: return "VIP PLATINUM - ULTIMATE";
+                        case 5: return "VIP DIAMOND - ELITE";
+                        case 6: return "VIP TITANIUM - SPECIALIST";
+                        case 7: return "VIP CROWN - SUPREME";
+                        default: return `VIP ${prod.name.toUpperCase()} - SECURE`;
+                      }
+                    };
+
+                    const displayName = getVipDisplayName(p, p.vipLevel || (index + 1));
+                    
+                    // Card accent styles
+                    const isCyclicCard = p.isCyclic === true;
+                    const isActivityCard = p.category === 'activity';
+                    
+                    let bgStyle = "bg-[#f1f4fc] border-slate-300";
+                    let badgeBg = "bg-[#1b64d9]";
+                    let btnColor = "bg-[#db5129] hover:bg-[#c23f18]";
+                    let statusLabel = "Rendement garanti";
+                    let statusIcon = "⚡";
+                    let statusLabelColor = "text-[#1b64d9]";
+                    
+                    if (isCyclicCard) {
+                      bgStyle = "bg-[#f1fcf9] border-emerald-200";
+                      badgeBg = "bg-emerald-600";
+                      btnColor = "bg-emerald-600 hover:bg-emerald-700";
+                      statusLabel = "Rendement Bien-être";
+                      statusIcon = "🌸";
+                      statusLabelColor = "text-emerald-700";
+                    } else if (isActivityCard) {
+                      bgStyle = "bg-[#fffcf4] border-[#ffe6bf]";
+                      badgeBg = "bg-amber-600";
+                      btnColor = "bg-amber-655 hover:bg-amber-700";
+                      statusLabel = "Rendement Événementiel";
+                      statusIcon = "🔥";
+                      statusLabelColor = "text-amber-700";
+                    }
+
+                    const isPopular = !p.isCyclic && (p.vipLevel === 1 || index === 0);
+                    const isRecommended = !p.isCyclic && (p.vipLevel === 2 || index === 1);
+                    const purchasedCount = activeInvestments.filter(i => i.productName === p.name || i.productId === p.id).length;
+
+                    return (
+                      <div 
+                        key={p.id}
+                        className={`w-full relative border rounded-[28px] p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-lg ${bgStyle} ${isBlocked ? 'opacity-70 pointer-events-none' : ''}`}
+                      >
+                        {/* TOP BADGES ROW */}
+                        <div className="absolute top-4 right-5 flex flex-col items-end space-y-1.5 z-10 text-right">
+                          {isPopular && (
+                            <span className="text-[9px] text-white font-sans font-black uppercase bg-[#c39c36] px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
+                              POPULAIRE
                             </span>
                           )}
+                          {isRecommended && (
+                            <span className="text-[9px] text-white font-sans font-black uppercase bg-[#1b64d9] px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
+                              RECOMMANDÉ
+                            </span>
+                          )}
+                          {isCyclicCard && (
+                            <span className="text-[9px] text-white font-sans font-black uppercase bg-emerald-600 px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
+                              BIEN-ÊTRE
+                            </span>
+                          )}
+                          {isActivityCard && (
+                            <span className="text-[9px] text-white font-sans font-black uppercase bg-amber-600 px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
+                              SPÉCIAL ACTIVITÉ
+                            </span>
+                          )}
+                          <span className="text-[10px] text-[#1e7a5c] font-sans font-black uppercase bg-[#d7f1e9] px-2.5 py-0.5 rounded-md leading-relaxed">
+                            Achat: {purchasedCount}/3
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+
+                        {/* PRODUCT IMAGE CARD THUMBNAIL */}
+                        <div className="w-full h-36 rounded-[20px] overflow-hidden mb-3.5 relative shadow-sm border border-slate-200/40 bg-slate-100 select-none">
+                          <ProductImage 
+                            vipLevel={p.vipLevel || (index + 1)}
+                            alt={displayName}
+                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+                            category={p.category}
+                          />
+                          <div className="absolute bottom-2 left-2.5 bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[9px] font-sans font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                            <span>{getVipCropDetails(p.vipLevel || (index + 1), p.category).name}</span>
+                          </div>
+                        </div>
+
+                        {/* PRODUCT HEADER */}
+                        <div className="text-left mt-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className={`text-[11px] font-sans font-bold tracking-wider uppercase ${statusLabelColor}`}>
+                              {isCyclicCard ? 'PLAN BIEN-ÊTRE' : isActivityCard ? 'PLAN ACTIVITÉS' : `PLAN VIP ${p.vipLevel || (index + 1)}`}
+                            </span>
+                            <span className="text-[10px] text-emerald-650 font-bold font-sans">
+                              {getVipCropDetails(p.vipLevel || (index + 1), p.category).name.split(' ').pop()} Projet Actif
+                            </span>
+                          </div>
+                          <h4 className="font-sans font-black text-base sm:text-lg text-slate-800 leading-tight uppercase tracking-tight mt-0.5">
+                            {displayName}
+                          </h4>
+                          <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1">
+                            {isCyclicCard ? "Faites fructifier vos fonds avec nos packages bien-être générateurs d'actifs." : getVipCropDetails(p.vipLevel || (index + 1), p.category).desc}
+                          </p>
+
+                          {/* DYNAMIC LIST OF TARGET GENERATED PRODUCTS FOR CYCLIC */}
+                          {isCyclicCard && p.generatedProductIds && p.generatedProductIds.length > 0 && (
+                            <div className="mt-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-3">
+                              <span className="text-[9px] text-emerald-700 font-black uppercase block mb-1.5">🚀 Produits générés à la complétion :</span>
+                              <div className="flex flex-wrap gap-1">
+                                {p.generatedProductIds.map(childId => {
+                                  const child = products.find(x => x.id === childId);
+                                  return (
+                                    <span key={childId} className="px-2 py-0.5 bg-white border border-emerald-100 text-emerald-705 font-black rounded text-[9px] leading-relaxed shadow-sm">
+                                      VIP {child ? child.vipLevel : ''} : {child ? child.name : childId}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* PRICE */}
+                          <div className="mt-2.5 flex items-baseline space-x-1.5">
+                            <span className="text-2xl sm:text-3xl font-sans font-black text-[#db4c20] tracking-tight leading-none">
+                              {p.price.toLocaleString()} {getCurrency()}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">
+                              {isCyclicCard ? "prix d'activation bien-être" : "prix fixe de location"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 3-COLUMN METRICS */}
+                        <div className="grid grid-cols-3 gap-2 border-t border-b border-slate-200/60 py-3.5 my-4 text-left select-none">
+                          <div>
+                            <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">REVENUS / JOUR</span>
+                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm">
+                              +{p.dailyReturn.toLocaleString()} F
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">DURÉE CONTRAT</span>
+                            <span className="text-slate-800 font-black font-sans text-xs sm:text-sm">
+                              {p.durationDays} Jours
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">GAINS TOTAUX</span>
+                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm">
+                              {(p.dailyReturn * p.durationDays).toLocaleString()} F
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* ERRORS LOGIC */}
+                        {productErrors[p.id] && (
+                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-600 leading-normal text-left">
+                            <span className="text-red-700 block font-black mb-0.5">⚠️ SOLDE INSUFFISANT</span>
+                            <span>{productErrors[p.id]}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveTab('deposit');
+                              }}
+                              className="mt-2 block text-[#1b64d9] font-black underline uppercase tracking-wide cursor-pointer text-xs"
+                            >
+                              📥 Recharger mon compte maintenant
+                            </button>
+                          </div>
+                        )}
+
+                        {/* BOTTOM ROW */}
+                        <div className="flex items-center justify-between mt-1 pt-1.5 space-x-3 text-left select-none">
+                          <div className="flex items-center space-x-2 text-slate-500">
+                            <span className="text-base font-extrabold">{statusIcon}</span>
+                            <div className="leading-tight">
+                              <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 block uppercase tracking-tight">{statusLabel}</span>
+                              <span className={`text-[10px] sm:text-[11px] font-black leading-none ${statusLabelColor}`}>100% active</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleBuyProduct(p)}
+                            disabled={isBlocked}
+                            className={`py-3 px-5 rounded-[20px] text-xs font-black uppercase text-white transition-all shadow-md active:scale-95 flex items-center justify-center space-x-1 cursor-pointer min-w-[125px] shrink-0 ${btnColor} disabled:opacity-50`}
+                          >
+                            <span>{isCyclicCard ? 'Activer le Cycle' : 'Activer le Plan'}</span>
+                            {!isBlocked && <span className="text-yellow-300">⚡</span>}
+                          </button>
+                        </div>
+                        
+                        {isBlocked && (
+                          <div className="absolute inset-0 rounded-[28px] bg-slate-950/30 flex flex-col items-center justify-center p-3">
+                            <div className="bg-red-500 text-white font-bold text-xs uppercase px-2.5 py-1 rounded-lg">
+                              Fermé / Suspendu
+                            </div>
+                            {formattedReopenTime && (
+                              <span className="text-[9px] text-white font-mono mt-1 bg-black/60 px-2 py-0.5 rounded">
+                                Ouvre à: {formattedReopenTime}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                {products.filter((p) => {
+                  const isCyclic = p.isCyclic === true;
+                  if (isCyclic) return false;
+                  return p.category !== 'activity';
+                }).length === 0 && (
+                  <div className="col-span-1 md:col-span-2 lg:col-span-3 py-16 px-4 text-center rounded-3xl bg-slate-50 border border-dashed border-slate-200/60 max-w-sm mx-auto">
+                    <span className="text-3xl">📭</span>
+                    <h5 className="font-sans font-black text-slate-700 uppercase tracking-wider text-xs mt-3">Aucun produit disponible</h5>
+                    <p className="text-[10px] text-slate-400 font-bold mt-1">
+                      Aucun plan d'investissement n'est actif dans cette catégorie pour le moment.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -3064,6 +3100,232 @@ export default function Dashboard({
                   <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                 </div>
 
+                {/* Suivi des Commandes Stabilité */}
+                <div 
+                  className="flex flex-col bg-white border border-slate-200/80 rounded-2xl overflow-hidden transition-all shadow-sm"
+                >
+                  <div 
+                    onClick={() => setShowStabilityOrders(!showStabilityOrders)}
+                    className="flex items-center justify-between py-4 px-5 hover:bg-slate-50 transition-all cursor-pointer select-none group"
+                  >
+                    <div className="flex items-center space-x-3.5">
+                      <Briefcase className="w-5 h-5 text-[#f3a401] stroke-[2.5]" />
+                      <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">Mes Commandes d'Investissement</span>
+                    </div>
+                    <ChevronRight className={`w-4.5 h-4.5 text-slate-400 transition-transform ${showStabilityOrders ? 'rotate-90' : ''}`} />
+                  </div>
+
+                  {showStabilityOrders && (
+                    <div className="px-5 pb-5 pt-1 space-y-3.5 border-t border-slate-100 bg-slate-50/55">
+                      {activeInvestments.filter((inv) => {
+                        const p = products.find((prod) => prod.id === inv.productId || prod.name === inv.productName);
+                        const isActivity = p ? (p.category === 'activity') : (inv.productId?.toLowerCase().includes('activity') || inv.productName?.toLowerCase().includes('activité'));
+                        const isCyclic = p ? (p.isCyclic === true) : (inv.productId?.toLowerCase().includes('cyclic') || inv.productName?.toLowerCase().includes('cycle'));
+                        return !isActivity && !isCyclic && inv.status === 'active';
+                      }).length === 0 ? (
+                        <div className="text-center py-6 text-slate-400 text-xs font-bold leading-normal">
+                          Aucune commande de stabilité active pour le moment.
+                        </div>
+                      ) : (
+                        <div className="space-y-3.5">
+                          {activeInvestments.filter((inv) => {
+                            const p = products.find((prod) => prod.id === inv.productId || prod.name === inv.productName);
+                            const isActivity = p ? (p.category === 'activity') : (inv.productId?.toLowerCase().includes('activity') || inv.productName?.toLowerCase().includes('activité'));
+                            const isCyclic = p ? (p.isCyclic === true) : (inv.productId?.toLowerCase().includes('cyclic') || inv.productName?.toLowerCase().includes('cycle'));
+                            return !isActivity && !isCyclic && inv.status === 'active';
+                          }).map((p) => {
+                            const getVipLevelFromActive = (item: any) => {
+                              if (item.vipLevel) return item.vipLevel;
+                              if (item.productId) {
+                                const match = String(item.productId).match(/\d+/);
+                                if (match) return parseInt(match[0], 10);
+                              }
+                              if (item.productName) {
+                                const match = String(item.productName).match(/\d+/);
+                                if (match) return parseInt(match[0], 10);
+                              }
+                              return 1;
+                            };
+                            const currentLevel = getVipLevelFromActive(p);
+                            const percent = Math.min(100, Math.round((p.daysPassed / p.durationDays) * 100));
+
+                            return (
+                              <div 
+                                key={p.id}
+                                className="bg-white border border-slate-200/70 rounded-2xl p-4 space-y-3.5 shadow-xs text-slate-800 text-left"
+                              >
+                                <div className="flex justify-between items-start gap-2.5">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-50 select-none flex items-center justify-center">
+                                      <span className="text-[#f3a401] font-black text-xs">VIP {currentLevel}</span>
+                                    </div>
+                                    <div>
+                                      <h5 className="font-sans font-extrabold text-xs text-slate-800 leading-tight uppercase tracking-tight">{p.productName}</h5>
+                                      <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">
+                                        Jour {p.daysPassed} sur {p.durationDays}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <span className="text-[9.5px] text-slate-400 block uppercase font-bold">Investi</span>
+                                    <strong className="text-xs text-indigo-600 font-black leading-tight font-sans">{p.price.toLocaleString()} F</strong>
+                                  </div>
+                                </div>
+
+                                {/* Progress bar */}
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                    <span>Évolution</span>
+                                    <span>{percent}%</span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div 
+                                      className="bg-emerald-500 h-full rounded-full transition-all duration-550" 
+                                      style={{ width: `${percent}%` }}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Countdown */}
+                                <CountdownTimer 
+                                  createdAt={p.createdAt} 
+                                  daysPassed={p.daysPassed} 
+                                  durationDays={p.durationDays} 
+                                />
+
+                                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl text-xs border border-slate-100/50">
+                                  <div>
+                                    <span className="text-slate-400 text-[9px] block uppercase font-black tracking-wide">Revenu / Jour</span>
+                                    <span className="text-emerald-600 font-black font-sans text-xs">+{p.dailyReturn.toLocaleString()} F</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-400 text-[9px] block uppercase font-black tracking-wide">Gains Récupérés</span>
+                                    <span className="text-indigo-600 font-black font-sans text-xs">{(p.dailyReturn * p.daysPassed).toLocaleString()} F</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Suivi des Activités de Cycle Court */}
+                <div 
+                  className="flex flex-col bg-white border border-[#00bd74]/30 rounded-2xl overflow-hidden transition-all shadow-sm"
+                >
+                  <div 
+                    onClick={() => setShowActivityOrders(!showActivityOrders)}
+                    className="flex items-center justify-between py-4 px-5 hover:bg-slate-50/50 transition-all cursor-pointer select-none group"
+                  >
+                    <div className="flex items-center space-x-3.5">
+                      <Activity className="w-5 h-5 text-[#00bd74] stroke-[2.5]" />
+                      <span className="font-sans font-extrabold text-xs sm:text-sm text-slate-800">Mes Activités de Cycle Court</span>
+                    </div>
+                    <ChevronRight className={`w-4.5 h-4.5 text-slate-400 transition-transform ${showActivityOrders ? 'rotate-90' : ''}`} />
+                  </div>
+
+                  {showActivityOrders && (
+                    <div className="px-5 pb-5 pt-1 space-y-3.5 border-t border-slate-100 bg-slate-50/55">
+                      {activeInvestments.filter((inv) => {
+                        const p = products.find((prod) => prod.id === inv.productId || prod.name === inv.productName);
+                        return p?.category === 'activity' || inv.productName?.toLowerCase().includes('activité') || inv.productId?.toLowerCase().includes('activity');
+                      }).length === 0 ? (
+                        <div className="text-center py-6 text-slate-400 text-xs font-bold leading-normal">
+                          Aucune activité de cycle court en cours.
+                        </div>
+                      ) : (
+                        <div className="space-y-3.5">
+                          {activeInvestments.filter((inv) => {
+                            const p = products.find((prod) => prod.id === inv.productId || prod.name === inv.productName);
+                            return p?.category === 'activity' || inv.productName?.toLowerCase().includes('activité') || inv.productId?.toLowerCase().includes('activity');
+                          }).map((p) => {
+                            const percent = Math.min(100, Math.round((p.daysPassed / p.durationDays) * 100));
+                            
+                            // Calculer la date de fin exacte du cycle
+                            const creationTime = new Date(p.createdAt).getTime();
+                            const durationMs = p.durationDays * 24 * 60 * 60 * 1000;
+                            const expiryDate = new Date(creationTime + durationMs);
+                            const formattedEndDate = expiryDate.toLocaleString('fr-FR', { 
+                              day: '2-digit', 
+                              month: '2-digit', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            });
+
+                            const totalReturnAmt = p.totalReturn || (p.price + p.dailyReturn);
+
+                            return (
+                              <div 
+                                key={p.id}
+                                className="bg-white border border-[#00bd74]/20 rounded-2xl p-4 space-y-3.5 shadow-xs text-slate-800 text-left"
+                              >
+                                <div className="flex justify-between items-start gap-2.5">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-[#00bd74]/10 select-none flex items-center justify-center">
+                                      <Activity className="w-4.5 h-4.5 text-[#00bd74]" strokeWidth={2.5} />
+                                    </div>
+                                    <div>
+                                      <h5 className="font-sans font-extrabold text-xs text-slate-800 leading-tight uppercase tracking-tight">{p.productName}</h5>
+                                      <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">
+                                        Cycle de {p.durationDays} Jours (Actuel : Jour {p.daysPassed})
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <span className="text-[9.5px] text-slate-400 block uppercase font-bold">Investi</span>
+                                    <strong className="text-xs text-[#00bd74] font-black leading-tight font-sans">{p.price.toLocaleString()} F</strong>
+                                  </div>
+                                </div>
+
+                                {/* Progress bar */}
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                    <span>Avancement</span>
+                                    <span>{percent}%</span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div 
+                                      className="bg-[#00bd74] h-full rounded-full transition-all duration-550" 
+                                      style={{ width: `${percent}%` }}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Date de fin et statut de versement */}
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[10.5px] space-y-1.5 leading-relaxed font-semibold text-slate-600">
+                                  <div className="flex justify-between font-bold text-slate-700">
+                                    <span>Date d'expiration :</span>
+                                    <span className="text-[#00bd74] font-mono font-bold">{formattedEndDate}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Bénéfice Net :</span>
+                                    <span className="text-green-600 font-bold font-mono">+{p.dailyReturn.toLocaleString()} F</span>
+                                  </div>
+                                  <div className="flex justify-between border-t border-slate-200/60 pt-1.5 mt-1.5 font-bold text-slate-850">
+                                    <span>Retour total de fin :</span>
+                                    <span className="text-[#00bd74] font-mono">{(totalReturnAmt).toLocaleString()} F</span>
+                                  </div>
+                                </div>
+
+                                {/* Notice de versement */}
+                                <div className="p-2.5 bg-green-50 border border-green-100 rounded-xl text-[9px] leading-relaxed font-bold text-green-800 flex items-start gap-1.5">
+                                  <span>🚀</span>
+                                  <span>
+                                    Aucun versement quotidien n'est émis pour cette activité. Le bénéfice total et votre capital vous seront reversés automatiquement le {formattedEndDate}.
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
 
                 {/* À propos de nous */}
@@ -3196,7 +3458,7 @@ export default function Dashboard({
               
               {/* WhatsApp option */}
               <a 
-                href="https://chat.whatsapp.com/JPSJXLJ2D1LGUztQDaSTyv"
+                href={DataStore.getWhatsAppGroup()}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsSupportMenuOpen(false)}
@@ -3211,19 +3473,19 @@ export default function Dashboard({
                 </div>
               </a>
 
-              {/* Telegram option */}
+              {/* Canal WhatsApp option */}
               <a 
-                href="https://t.me/+3rskeL7g0qM1M2Nk"
+                href={DataStore.getWhatsAppChannel()}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsSupportMenuOpen(false)}
-                className="w-full py-3.5 px-4 bg-[#0088cc] hover:bg-[#007cbd] text-white rounded-xl flex items-center space-x-3 transition-transform duration-100 hover:scale-[1.02] shadow-md shadow-blue-400/10 cursor-pointer select-none text-left"
+                className="w-full py-3.5 px-4 bg-[#075E54] hover:bg-[#128C7E] text-white rounded-2xl flex items-center space-x-3 transition-transform duration-100 hover:scale-[1.02] shadow-md shadow-emerald-600/10 cursor-pointer select-none text-left"
               >
                 <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-xl">
-                  ✈️
+                  📢
                 </div>
                 <div className="leading-tight flex-1">
-                  <span className="text-white font-sans font-black text-xs block uppercase tracking-wide">Canal Telegram</span>
+                  <span className="text-white font-sans font-black text-xs block uppercase tracking-wide">Canal WhatsApp</span>
                   <span className="text-[10px] text-white/90 font-bold block mt-0.5">Alertes & Infos 👉</span>
                 </div>
               </a>

@@ -6,10 +6,10 @@
   --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Montserrat", monospace;
   
-  --color-gold-luminous: #ffdb4d;
-  --color-gold-dark: #b8860b;
-  --color-night-blue: #070e24;
-  --color-night-blue-light: #101c42;
+  --color-gold-luminous: #facc15;
+  --color-gold-dark: #b45309;
+  --color-night-blue: #7f1d1d;
+  --color-night-blue-light: #9f1239;
   --color-dark-black: #000000;
   --color-premium-white: #ffffff;
 }
@@ -21,9 +21,9 @@
 
 /* Custom Gold and Deep Premium Styles */
 :root {
-  --gold-primary: #ffdb4d;
-  --gold-secondary: #FFDF00;
-  --dark-blue: #070e24;
+  --gold-primary: #facc15;
+  --gold-secondary: #eab308;
+  --dark-blue: #7f1d1d;
   --dark-black: #000000;
 }
 
@@ -113,13 +113,13 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #fafaf9 !important;
-  background-image: linear-gradient(180deg, #ffffff 0%, #fff6ed 100%) !important;
+  background-color: #fcfcfd !important;
+  background-image: linear-gradient(180deg, #ffffff 0%, #fffbf2 100%) !important; /* Subtle elite warm golden track */
   color: #1e293b !important;
   background-attachment: fixed !important;
 }
 
-/* Transform all dark/slate cards & panels to luxurious pure white cards with soft Orange/Amber borders */
+/* Transform all dark/slate cards & panels to luxurious pure white cards with soft Red-Gold premium borders */
 .bg-\[\#eef3fc\],
 .bg-slate-900\/60,
 .bg-slate-905\/40,
@@ -148,23 +148,23 @@ body {
   background: #ffffff !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(249, 115, 22, 0.22) !important;
+  border: 1px solid rgba(220, 38, 38, 0.15) !important; /* Elegant crimson border */
   color: #0f172a !important;
-  box-shadow: 0 12px 36px rgba(249, 115, 22, 0.04) !important;
+  box-shadow: 0 12px 36px rgba(220, 38, 38, 0.03) !important;
 }
 
 /* Force light background on all select/input fields inside these panels as well */
 input, select, textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  border: 1.5px solid rgba(249, 115, 22, 0.25) !important;
+  border: 1.5px solid rgba(220, 38, 38, 0.18) !important;
 }
 
 button {
-  border-color: rgba(249, 115, 22, 0.25) !important;
+  border-color: rgba(220, 38, 38, 0.2) !important;
 }
 
-/* Convert all dark modal/lightbox overlays (bg-black/90, bg-slate-950/80 etc) to beautiful translucent cream-orange instead of black */
+/* Convert all dark modal/lightbox overlays to beautiful translucent cream-yellow instead of black */
 .bg-black\/90,
 .bg-black\/80,
 .bg-black\/65,
@@ -172,46 +172,46 @@ button {
 .bg-black\/50,
 .bg-slate-950\/80,
 .bg-slate-900\/80 {
-  background-color: rgba(255, 248, 242, 0.92) !important;
+  background-color: rgba(255, 255, 255, 0.94) !important;
   backdrop-filter: blur(15px) !important;
   -webkit-backdrop-filter: blur(15px) !important;
 }
 
-/* Ensure child text elements within overridden panels are beautiful, clear dark colors (no white text invisible on white background) */
+/* Ensure child text elements within overridden panels are beautiful, clear dark colors */
 .bg-\[\#eef3fc\] .text-slate-800,
-.bg-\[\#eef3fc\] .text-slate-700,
-.bg-\[\#eef3fc\] .text-slate-600,
-.bg-\[\#eef3fc\] .text-slate-500,
+.bg-\[\#eef3fc\] .text-slate-705,
+.bg-\[\#eef3fc\] .text-slate-605,
+.bg-\[\#eef3fc\] .text-slate-505,
 .bg-slate-900\/60 span,
 .bg-slate-900\/60 p,
 .bg-slate-900\/60 h3,
 .bg-slate-900\/60 h4,
+.text-slate-201,
 .text-slate-205,
 .text-slate-300,
 .text-slate-450,
 .text-slate-400,
 .text-slate-200,
 .text-slate-100,
-.text-gray-100,
-.text-gray-200,
-.text-gray-300,
+.text-gray-105,
+.text-gray-205,
+.text-gray-305,
 .text-gray-400,
 .text-white,
 .text-zinc-400,
 .text-zinc-300,
 .text-zinc-200,
 .text-zinc-100 {
-  color: #1e293b !important; /* Force elegant dark slate text */
+  color: #1e293b !important;
 }
 
-/* For labels/headers in overridden panels */
 .text-slate-300,
 .text-slate-400,
 .text-slate-500 {
   color: #475569 !important;
 }
 
-/* Maintain light color on buttons/badges with special orange accents */
+/* Maintain light color on buttons/badges with special vibrant accents */
 .bg-gradient-to-r.from-orange-500.to-orange-700 .text-white,
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] .text-white,
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] span,
@@ -223,51 +223,61 @@ button {
 .bg-gradient-to-r.from-\[\#1b64d9\] span,
 .bg-gradient-to-r.from-\[\#1b64d9\] p,
 #auth-submit-btn span {
-  color: #ffffff !important; /* Keep brilliant white text only inside the bright orange gradient accent blocks! */
+  color: #ffffff !important;
 }
 
-/* Override the bank card style to rich professional prestigious ORANGE depth */
+/* Override the bank card style to rich professional prestigious RED depth with gold hints */
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] {
-  background-image: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
-  border: 1px solid rgba(249, 115, 22, 0.3) !important;
-  box-shadow: 0 20px 50px -15px rgba(249, 115, 22, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  background-image: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+  border: 1.5px solid #facc15 !important; /* Metallic yellow-gold border */
+  box-shadow: 0 20px 50px -15px rgba(220, 38, 38, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
   color: #ffffff !important;
 }
 
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] .text-white,
-.bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] .text-cyan-400,
+.bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] .text-cyan-404,
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] span,
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] p {
-  color: #ffffff !important; /* Prestigious white contrast on the orange card */
+  color: #ffffff !important; /* Prestigious white contrast on the card */
+}
+
+/* Balance in prestigious gold */
+.bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] .solde-display-number,
+.bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] [id="main-balance-text"] {
+  color: #facc15 !important;
+  text-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.35);
 }
 
 /* Ensure secondary buttons over the card stand out */
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] button {
-  box-shadow: 0 4px 12px rgba(194, 65, 12, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15) !important;
   background-color: #ffffff !important;
-  color: #ea580c !important;
+  color: #dc2626 !important;
+  border: 1px solid #facc15 !important;
 }
 
-/* Action buttons & daily check-in gradients to supreme Orange-gradient */
+/* Action buttons & daily check-in gradients to supreme Red premium gradient with gold lining */
 .from-\[\#1b64d9\].to-\[\#046fff\],
 .from-\[\#00d2c3\].to-\[\#046fff\],
 .bg-gradient-to-r.from-\[\#1b64d9\] {
-  background-image: linear-gradient(135deg, #fb923c 0%, #ea580c 100%) !important;
+  background-image: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
   color: #ffffff !important;
   font-weight: 800 !important;
+  border: 1px solid #facc15 !important;
 }
 
-/* Accent texts like blue/cyan are re-mapped to high-end orange / rich amber */
+/* Accent texts like blue/cyan/emerald are re-mapped to professional red */
 .text-\[\#1b64d9\],
-.text-cyan-400,
+.text-cyan-404,
 .text-\[\#38bdf8\] {
-  color: #ea580c !important;
+  color: #dc2626 !important;
 }
 
 .border-\[\#1b64d9\],
 .border-slate-800,
 .border-slate-900,
 .border-slate-850,
+.border-slate-205,
 .border-slate-200,
 .border-slate-300,
 .border-slate-150,
@@ -275,62 +285,66 @@ button {
 .border-slate-50,
 .border-zinc-200,
 .border-zinc-300,
+.border-gray-205,
+.border-gray-255,
 .border-gray-200,
+.border-gray-305,
 .border-gray-300,
 .border-orange-100 {
-  border-color: rgba(249, 115, 22, 0.18) !important;
+  border-color: rgba(220, 38, 38, 0.18) !important;
 }
 
 .bg-\[\#1b64d9\]\/10 {
-  background-color: rgba(249, 115, 22, 0.08) !important;
+  background-color: rgba(220, 38, 38, 0.08) !important;
 }
 
-/* Glassmorphism utility using warm glowing orange */
+/* Glassmorphism utility using warm glowing gold-red */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(249, 115, 22, 0.2);
+  border: 1px solid rgba(220, 38, 38, 0.15);
 }
 
 .glass-panel-hover {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glass-panel-hover:hover {
-  border-color: rgba(249, 115, 22, 0.4);
+  border-color: rgba(220, 38, 38, 0.35);
   background: #ffffff;
-  box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.1);
+  box-shadow: 0 10px 30px -10px rgba(220, 38, 38, 0.08);
 }
 
 .gold-gradient-text {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #9a3412 100%);
+  background: linear-gradient(135deg, #facc15 0%, #eab308 50%, #ca8a04 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gold-bg-gradient {
-  background: linear-gradient(135deg, #ffedd5 0%, #f97316 50%, #ea580c 100%);
+  background: linear-gradient(135deg, #fffbeb 0%, #facc15 50%, #eab308 100%);
 }
 
 .gold-border {
-  border: 1px solid #f97316;
+  border: 1.5px solid #facc15;
 }
 
-/* Custom scrollbar with orange theme colors */
+/* Custom scrollbar with red and yellow theme colors */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #fffdfa;
+  background: #fffdf5;
 }
 ::-webkit-scrollbar-thumb {
-  background: #ffedd5;
+  background: #fef08a; /* Warm gold track */
   border-radius: 999px;
+  border: 1px solid #facc15;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #f97316;
+  background: #dc2626; /* Cherry red on scroll hover */
 }
 
 /* Shine effect */
@@ -349,7 +363,7 @@ button {
     to bottom right,
     rgba(255, 255, 255, 0) 0%,
     rgba(255, 255, 255, 0) 40%,
-    rgba(249, 115, 22, 0.25) 50%,
+    rgba(250, 204, 21, 0.35) 50%,
     rgba(255, 255, 255, 0) 60%,
     rgba(255, 255, 255, 0) 100%
   );
@@ -362,9 +376,7 @@ button {
 }
 
 /* --- CUSTOM TYPOGRAPHY WEIGHT ADJUSTMENTS --- */
-/* The user requested to make everything normal weight, keeping only the "solde" (account balance) bold. */
-
-/* Step 1: Force normal/medium weight for font-bold, font-extrabold, font-black, and font-semibold elements in standard views */
+/* Force normal/medium weight for standard views to guarantee elegance */
 .font-bold, 
 .font-extrabold, 
 .font-black, 
@@ -375,18 +387,125 @@ button,
 th,
 span.font-black,
 div.font-black {
-  font-weight: 500 !important; /* normal/medium weighting */
+  font-weight: 500 !important;
 }
 
-/* Step 2: Keep only the actual account balance (solde) bold */
+/* Keep only the account balance (solde) bold */
 .solde-bold,
 .solde-bold *,
 [id="main-balance-text"],
 [id="main-balance-text"] *,
 .solde-display-number,
 .solde-display-number * {
-  font-weight: 900 !important; /* Keep only Solde bold! */
+  font-weight: 900 !important;
 }
 
+/* --- GLOBAL WHITE, RED & YELLOW THEME TRANSLATIONS --- */
 
+/* Text colors translated to rich amber yellow */
+.text-yellow-500,
+.text-yellow-400,
+.text-yellow-300,
+.text-yellow-600,
+.text-amber-500,
+.text-orange-500,
+.text-orange-600 {
+  color: #d97706 !important;
+}
 
+.text-yellow-705,
+.text-yellow-700,
+.text-amber-700,
+.text-orange-700,
+.text-amber-800 {
+  color: #b45309 !important;
+}
+
+/* Red values translation to override previous green overrides */
+.text-emerald-500,
+.text-emerald-600,
+.text-emerald-700 {
+  color: #dc2626 !important;
+}
+
+.bg-emerald-500,
+.bg-emerald-600,
+.bg-emerald-700 {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+/* Red background opacities */
+.bg-emerald-500\/10,
+.bg-emerald-500\/15,
+.bg-emerald-500\/20,
+.bg-emerald-500\/30,
+.bg-emerald-50,
+.bg-green-50,
+.bg-green-100 {
+  background-color: rgba(220, 38, 38, 0.08) !important;
+  color: #9f1239 !important;
+}
+
+/* Yellow background values */
+.bg-yellow-500,
+.bg-yellow-400,
+.bg-yellow-300,
+.bg-amber-500,
+.bg-orange-500,
+.bg-orange-600 {
+  background-color: #facc15 !important;
+  color: #1e293b !important;
+}
+
+/* Yellow background opacities */
+.bg-yellow-500\/10,
+.bg-yellow-500\/15,
+.bg-yellow-500\/20,
+.bg-yellow-500\/30,
+.bg-amber-500\/10,
+.bg-orange-500\/10,
+.bg-orange-500\/20 {
+  background-color: rgba(250, 204, 21, 0.12) !important;
+  color: #b45309 !important;
+}
+
+/* Borders */
+.border-yellow-500,
+.border-yellow-400,
+.border-yellow-500\/10,
+.border-yellow-500\/15,
+.border-yellow-500\/20,
+.border-yellow-500\/25,
+.border-yellow-500\/30,
+.border-yellow-500\/40,
+.border-orange-500,
+.border-orange-500\/20,
+.border-emerald-500,
+.border-emerald-500\/20,
+.focus\:border-yellow-500\/40:focus,
+.focus\:border-yellow-500:focus {
+  border-color: rgba(250, 204, 21, 0.3) !important;
+}
+
+.border-yellow-500 {
+  border-color: #facc15 !important;
+}
+
+.border-emerald-500 {
+  border-color: #dc2626 !important;
+}
+
+/* VIP Badge backgrounds or specific gradients */
+.from-amber-100.to-yellow-105 {
+  background-image: linear-gradient(to bottom right, #fffbeb, #fef9c3) !important;
+  color: #854d0e !important;
+}
+
+/* Hover effects */
+.hover\:border-yellow-500\/25:hover,
+.hover\:border-yellow-500\/20:hover,
+.hover\:text-yellow-400:hover {
+  border-color: rgba(250, 204, 21, 0.6) !important;
+  color: #b45309 !important;
+}

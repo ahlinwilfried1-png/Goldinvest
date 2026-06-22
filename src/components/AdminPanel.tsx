@@ -331,6 +331,9 @@ export default function AdminPanel({
   const [editProductDailyReturn, setEditProductDailyReturn] = useState<number>(1000);
   const [editProductDuration, setEditProductDuration] = useState<number>(10);
   const [editProductTag, setEditProductTag] = useState<string>('');
+  const [editVipIsCyclic, setEditVipIsCyclic] = useState<boolean>(false);
+  const [editVipGeneratedProductIds, setEditVipGeneratedProductIds] = useState<string[]>([]);
+  const [editVipCategory, setEditVipCategory] = useState<'stability' | 'activity'>('stability');
 
   // New product form state
   const [newVipLevel, setNewVipLevel] = useState(1);
@@ -339,6 +342,9 @@ export default function AdminPanel({
   const [newVipDaily, setNewVipDaily] = useState(1000);
   const [newVipDuration, setNewVipDuration] = useState(10);
   const [newVipTag, setNewVipTag] = useState('');
+  const [newVipIsCyclic, setNewVipIsCyclic] = useState<boolean>(false);
+  const [newVipGeneratedProductIds, setNewVipGeneratedProductIds] = useState<string[]>([]);
+  const [newVipCategory, setNewVipCategory] = useState<'stability' | 'activity'>('stability');
 
   // Global notify state
   const [globalNotifTitle, setGlobalNotifTitle] = useState('');
@@ -354,6 +360,9 @@ export default function AdminPanel({
   const [mlmRate2, setMlmRate2] = useState<number>(() => DataStore.getMLMRates().level2);
   const [mlmRate3, setMlmRate3] = useState<number>(() => DataStore.getMLMRates().level3);
   const [referralDomain, setReferralDomain] = useState<string>(() => DataStore.getReferralDomain());
+  const [whatsappGroup, setWhatsappGroup] = useState<string>(() => DataStore.getWhatsAppGroup());
+  const [whatsappChannel, setWhatsappChannel] = useState<string>(() => DataStore.getWhatsAppChannel());
+  const [whatsappSupportNumber, setWhatsappSupportNumber] = useState<string>(() => DataStore.getWhatsAppSupportNumber());
 
   const handleSaveMlmRates = (e: React.FormEvent) => {
     e.preventDefault();
@@ -363,7 +372,10 @@ export default function AdminPanel({
       level3: mlmRate3
     });
     DataStore.saveReferralDomain(referralDomain);
-    alert('Pourcentages de commission MLM et domaine de parrainage régulés avec succès !');
+    DataStore.saveWhatsAppGroup(whatsappGroup);
+    DataStore.saveWhatsAppChannel(whatsappChannel);
+    DataStore.saveWhatsAppSupportNumber(whatsappSupportNumber);
+    alert('Réglages système (MLM, domaine, WhatsApp, Support) enregistrés avec succès !');
   };
 
   // Picture receipt lightbox state
@@ -373,10 +385,25 @@ export default function AdminPanel({
   const [schedulingBlockProductId, setSchedulingBlockProductId] = useState<string | null>(null);
   const [blockReopenTime, setBlockReopenTime] = useState<string>('');
 
-  const handleToggleBlockProduct = (id: string, currentlyBlocked: boolean) => {
+  const handleToggleBlockProduct = async (id: string, currentlyBlocked: boolean) => {
     if (currentlyBlocked) {
-      DataStore.toggleBlockProduct(id, false);
-      syncLocalStates();
+      try {
+        const resp = await apiFetch(getApiUrl('/api/admin/product/toggle-block'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: id, isBlocked: false })
+        });
+        if (resp.ok) {
+          await executeDirectCentralSync();
+        } else {
+          DataStore.toggleBlockProduct(id, false);
+          syncLocalStates();
+        }
+      } catch (e) {
+        console.error("Failed server unblock, fallback local:", e);
+        DataStore.toggleBlockProduct(id, false);
+        syncLocalStates();
+      }
     } else {
       setSchedulingBlockProductId(id);
       const date = new Date();
@@ -387,11 +414,28 @@ export default function AdminPanel({
     }
   };
 
-  const handleConfirmProductBlock = (id: string, useSchedule: boolean) => {
+  const handleConfirmProductBlock = async (id: string, useSchedule: boolean) => {
     const reopenISO = useSchedule && blockReopenTime ? new Date(blockReopenTime).toISOString() : undefined;
-    DataStore.toggleBlockProduct(id, true, reopenISO);
+    
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/product/toggle-block'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: id, isBlocked: true, reopenDateTime: reopenISO })
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      } else {
+        DataStore.toggleBlockProduct(id, true, reopenISO);
+        syncLocalStates();
+      }
+    } catch (e) {
+      console.error("Failed server block, fallback local:", e);
+      DataStore.toggleBlockProduct(id, true, reopenISO);
+      syncLocalStates();
+    }
+    
     setSchedulingBlockProductId(null);
-    syncLocalStates();
   };
 
   // Refresh lists
@@ -565,28 +609,68 @@ export default function AdminPanel({
   };
 
   // Product actions
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVipName) return;
 
-    DataStore.addNewProduct({
+    const isActivity = newVipCategory === 'activity';
+    const payload = {
       vipLevel: newVipLevel,
       name: newVipName,
       price: newVipPrice,
       dailyReturn: newVipDaily,
       durationDays: newVipDuration,
-      tag: newVipTag || undefined
-    });
+      tag: newVipTag || undefined,
+      isCyclic: isActivity ? true : newVipIsCyclic,
+      generatedProductIds: newVipGeneratedProductIds,
+      category: newVipCategory,
+      totalReturn: isActivity ? (newVipPrice + newVipDaily) : (newVipDaily * newVipDuration)
+    };
+
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/product/create'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      } else {
+        DataStore.addNewProduct(payload);
+        syncLocalStates();
+      }
+    } catch (e) {
+      console.error("Failed server product creation, fallback is local:", e);
+      DataStore.addNewProduct(payload);
+      syncLocalStates();
+    }
 
     setNewVipName('');
     setNewVipTag('');
-    syncLocalStates();
+    setNewVipIsCyclic(false);
+    setNewVipGeneratedProductIds([]);
+    setNewVipCategory('stability');
   };
 
-  const handleDeleteProduct = (id: string) => {
+  const handleDeleteProduct = async (id: string) => {
     if (confirm('Voulez-vous vraiment supprimer définitivement ce package d\'investissement VIP ?')) {
-      DataStore.deleteProduct(id);
-      syncLocalStates();
+      try {
+        const resp = await apiFetch(getApiUrl('/api/admin/product/delete'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: id })
+        });
+        if (resp.ok) {
+          await executeDirectCentralSync();
+        } else {
+          DataStore.deleteProduct(id);
+          syncLocalStates();
+        }
+      } catch (e) {
+        console.error("Failed server product deletion, fallback local:", e);
+        DataStore.deleteProduct(id);
+        syncLocalStates();
+      }
     }
   };
 
@@ -598,20 +682,46 @@ export default function AdminPanel({
     setEditProductDailyReturn(product.dailyReturn);
     setEditProductDuration(product.durationDays);
     setEditProductTag(product.tag || '');
+    setEditVipIsCyclic(product.isCyclic || false);
+    setEditVipGeneratedProductIds(product.generatedProductIds || []);
+    setEditVipCategory(product.category || 'stability');
   };
 
-  const handleSaveProduct = () => {
+  const handleSaveProduct = async () => {
     if (editingProduct) {
-      DataStore.updateProduct(editingProduct.id, {
+      const isActivity = editVipCategory === 'activity';
+      const payload = {
         vipLevel: editProductVipLevel,
         name: editProductName,
         price: editProductPrice,
         dailyReturn: editProductDailyReturn,
         durationDays: editProductDuration,
-        tag: editProductTag || undefined
-      });
+        tag: editProductTag || undefined,
+        isCyclic: isActivity ? true : editVipIsCyclic,
+        generatedProductIds: editVipGeneratedProductIds,
+        category: editVipCategory,
+        totalReturn: isActivity ? (editProductPrice + editProductDailyReturn) : (editProductDailyReturn * editProductDuration)
+      };
+
+      try {
+        const resp = await apiFetch(getApiUrl('/api/admin/product/update'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: editingProduct.id, updatedP: payload })
+        });
+        if (resp.ok) {
+          await executeDirectCentralSync();
+        } else {
+          DataStore.updateProduct(editingProduct.id, payload);
+          syncLocalStates();
+        }
+      } catch (e) {
+        console.error("Failed server product update, fallback local:", e);
+        DataStore.updateProduct(editingProduct.id, payload);
+        syncLocalStates();
+      }
+
       setEditingProduct(null);
-      syncLocalStates();
     }
   };
 
@@ -974,9 +1084,24 @@ export default function AdminPanel({
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="font-display font-bold text-lg text-white mb-4 shrink-0">⚙️ Modifier le Produit VIP</h3>
+            <h3 className="font-display font-bold text-lg text-white mb-4 shrink-0">⚙️ Modifier le Produit</h3>
             
             <div className="flex-1 overflow-y-auto pr-1 space-y-4 my-2 scrollbar-thin scrollbar-thumb-slate-800">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Catégorie de Plan d'investissement</label>
+                <select
+                  value={editVipCategory}
+                  onChange={(e) => {
+                    const value = e.target.value as 'stability' | 'activity';
+                    setEditVipCategory(value);
+                  }}
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                >
+                  <option value="stability">Stabilité (VIP - Dividendes quotidiens)</option>
+                  <option value="activity">Activités (Cycle Court - Gain et capital à expiration)</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau VIP (Indice)</label>
                 <input
@@ -988,7 +1113,7 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nom du Plan</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nom du Plan d'investissement</label>
                 <input
                   type="text"
                   value={editProductName}
@@ -1009,7 +1134,9 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Rendement Journalier (XOF)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                  {editVipCategory === 'activity' ? "Bénéfice Net Total (XOF)" : "Rendement Journalier (XOF)"}
+                </label>
                 <input
                   type="number"
                   value={editProductDailyReturn}
@@ -1019,7 +1146,9 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Durée de l'effet (Jours)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                  {editVipCategory === 'activity' ? "Durée du cycle (Jours)" : "Durée de l'effet (Jours)"}
+                </label>
                 <input
                   type="number"
                   value={editProductDuration}
@@ -1038,9 +1167,10 @@ export default function AdminPanel({
                   className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
                 />
               </div>
-            </div>
 
-            <div className="pt-4 flex gap-3 border-t border-slate-800 shrink-0 mt-2">
+             </div>
+ 
+             <div className="pt-4 flex gap-3 border-t border-slate-800 shrink-0 mt-2">
               <button
                 onClick={() => setEditingProduct(null)}
                 className="flex-1 py-3 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-800"
@@ -1946,6 +2076,21 @@ export default function AdminPanel({
 
             <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Catégorie de Plan d'investissement</label>
+                <select
+                  value={newVipCategory}
+                  onChange={(e) => {
+                    const value = e.target.value as 'stability' | 'activity';
+                    setNewVipCategory(value);
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                >
+                  <option value="stability">Stabilité (VIP - Dividendes quotidiens)</option>
+                  <option value="activity">Activités (Cycle Court - Gain et capital à expiration)</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau VIP (Indice)</label>
                 <input
                   type="number"
@@ -1980,7 +2125,9 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Rendement Journalier (XOF)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                  {newVipCategory === 'activity' ? "Bénéfice Net Total (XOF)" : "Rendement Journalier (XOF)"}
+                </label>
                 <input
                   type="number"
                   required
@@ -1991,7 +2138,9 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Durée de l'effet (Jours)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                  {newVipCategory === 'activity' ? "Durée du cycle (Jours)" : "Durée de l'effet (Jours)"}
+                </label>
                 <input
                   type="number"
                   required
@@ -2025,133 +2174,276 @@ export default function AdminPanel({
           </div>
 
           {/* List of custom VIP packages */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((p) => {
-              const isCurrentlyBlocked = p.isBlocked === true;
-              const formattedReopenTime = p.reopenDateTime 
-                ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
-                : null;
+          <div className="space-y-8">
+            {/* 1. Plans Stabilité VIP */}
+            <div>
+              <h4 className="text-sm font-display font-bold text-yellow-500 uppercase tracking-widest mb-4">
+                💎 Plans Stabilité (VIP - Dividendes quotidiens)
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {products.filter(p => p.category !== 'activity').map((p) => {
+                  const isCurrentlyBlocked = p.isBlocked === true;
+                  const formattedReopenTime = p.reopenDateTime 
+                    ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+                    : null;
 
-              return (
-                <div key={p.id} className={`p-5 rounded-xl border flex flex-col justify-between ${isCurrentlyBlocked ? 'bg-red-950/20 border-red-900/40' : 'bg-slate-950 border-slate-800'}`}>
-                  <div>
-                    <div className="flex justify-between items-start">
+                  return (
+                    <div key={p.id} className={`p-5 rounded-xl border flex flex-col justify-between ${isCurrentlyBlocked ? 'bg-red-950/20 border-red-900/40' : 'bg-slate-950 border-slate-800'}`}>
                       <div>
-                        <div className="flex items-center space-x-1.5">
-                          <span className="text-[10px] text-yellow-500 font-mono uppercase font-bold">Niveau {p.vipLevel}</span>
-                          <span className={`w-1.5 h-1.5 rounded-full ${isCurrentlyBlocked ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></span>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[10px] text-yellow-500 font-mono uppercase font-bold">Niveau {p.vipLevel}</span>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isCurrentlyBlocked ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></span>
+                            </div>
+                            <h4 className="font-display font-medium text-white text-sm block mt-0.5">{p.name}</h4>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => openEditProductModal(p)}
+                              className="text-slate-350 hover:text-yellow-400 p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded duration-150"
+                              title="Modifier"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="text-red-400 hover:text-red-500 p-1.5 bg-red-500/10 rounded duration-150"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
-                        <h4 className="font-display font-medium text-white text-sm block mt-0.5">{p.name}</h4>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => openEditProductModal(p)}
-                          className="text-slate-350 hover:text-yellow-400 p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded duration-150"
-                          title="Modifier le VIP"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(p.id)}
-                          className="text-red-400 hover:text-red-500 p-1.5 bg-red-500/10 rounded duration-150"
-                          title="Supprimer le VIP"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
 
-                    <div className="space-y-1 mt-4 text-xs font-mono">
-                      <div className="flex justify-between text-slate-400">
-                        <span>Prix :</span>
-                        <span className="text-white font-bold">{p.price.toLocaleString()} XOF</span>
-                      </div>
-                      <div className="flex justify-between text-slate-400">
-                        <span>Dividendes :</span>
-                        <span className="text-green-400">+{p.dailyReturn.toLocaleString()} F / Jour</span>
-                      </div>
-                      <div className="flex justify-between text-slate-400">
-                        <span>Cycle :</span>
-                        <span className="text-yellow-400">{p.durationDays} Jours</span>
-                      </div>
-                      <div className="flex justify-between text-slate-400 font-bold border-t border-slate-900 pt-1.5 mt-1.5 font-mono">
-                        <span>Retour brut :</span>
-                        <span className="text-white">{(p.dailyReturn * p.durationDays).toLocaleString()} XOF</span>
-                      </div>
-                      
-                      {isCurrentlyBlocked && (
-                        <div className="bg-red-950/35 border border-red-900/30 rounded-lg p-2.5 mt-3 font-sans">
-                          <p className="text-[10px] text-red-400 font-bold flex items-center gap-1.5">
-                            <Lock className="w-3 h-3" />
-                            <span>INVESTISSEMENT BLOQUÉ</span>
-                          </p>
-                          {formattedReopenTime && (
-                            <p className="text-[9px] text-slate-300 mt-0.5 font-mono">
-                              Réouverture le : {formattedReopenTime}
-                            </p>
+                        <div className="space-y-1 mt-4 text-xs font-mono">
+                          <div className="flex justify-between text-slate-400">
+                            <span>Prix d'achat :</span>
+                            <span className="text-white font-bold">{p.price.toLocaleString()} XOF</span>
+                          </div>
+                          <div className="flex justify-between text-slate-400">
+                            <span>Dividendes :</span>
+                            <span className="text-green-400">+{p.dailyReturn.toLocaleString()} F / Jour</span>
+                          </div>
+                          <div className="flex justify-between text-slate-400">
+                            <span>Durée :</span>
+                            <span className="text-yellow-400">{p.durationDays} Jours</span>
+                          </div>
+                          <div className="flex justify-between text-slate-400 font-bold border-t border-slate-900 pt-1.5 mt-1.5 font-mono">
+                            <span>Retour brut :</span>
+                            <span className="text-white">{(p.dailyReturn * p.durationDays).toLocaleString()} XOF</span>
+                          </div>
+
+                          {isCurrentlyBlocked && (
+                            <div className="bg-red-950/35 border border-red-900/30 rounded-lg p-2.5 mt-3 font-sans">
+                              <p className="text-[10px] text-red-400 font-bold flex items-center gap-1.5">
+                                <Lock className="w-3 h-3" />
+                                <span>INVESTISSEMENT BLOQUÉ</span>
+                              </p>
+                              {formattedReopenTime && (
+                                <p className="text-[9px] text-slate-300 mt-0.5 font-mono">
+                                  Réouverture le : {formattedReopenTime}
+                                </p>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Block / Unblock Action triggers */}
-                  <div className="mt-5 pt-3 border-t border-slate-900">
-                    {schedulingBlockProductId === p.id ? (
-                      <div className="space-y-3 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-                        <div>
-                          <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">HEURE DE RÉOUVERTURE (OPTIONNELLE)</label>
-                          <input
-                            type="datetime-local"
-                            value={blockReopenTime}
-                            onChange={(e) => setBlockReopenTime(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 text-xs text-yellow-400 p-1.5 rounded focus:outline-none focus:border-yellow-500/40"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleConfirmProductBlock(p.id, false)}
-                            className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold uppercase transition-all"
-                          >
-                            Bloquer à vie
-                          </button>
-                          <button
-                            onClick={() => handleConfirmProductBlock(p.id, true)}
-                            className="flex-1 py-1.5 gold-bg-gradient text-slate-950 rounded text-[10px] font-bold uppercase transition-all"
-                            disabled={!blockReopenTime}
-                          >
-                            Planifier Heure
-                          </button>
-                        </div>
-                        <button
-                          onClick={() => setSchedulingBlockProductId(null)}
-                          className="w-full py-1 text-slate-500 hover:text-slate-400 text-[10px] uppercase font-bold text-center"
-                        >
-                          Annuler
-                        </button>
                       </div>
-                    ) : (
-                      <button
-                        onClick={() => handleToggleBlockProduct(p.id, isCurrentlyBlocked)}
-                        className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${isCurrentlyBlocked ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'}`}
-                      >
-                        {isCurrentlyBlocked ? (
-                          <>
-                            <Unlock className="w-3.5 h-3.5" />
-                            <span>Débloquer immédiatement</span>
-                          </>
+
+                      <div className="mt-5 pt-3 border-t border-slate-900">
+                        {schedulingBlockProductId === p.id ? (
+                          <div className="space-y-3 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">HEURE DE RÉOUVERTURE (OPTIONNELLE)</label>
+                              <input
+                                type="datetime-local"
+                                value={blockReopenTime}
+                                onChange={(e) => setBlockReopenTime(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-800 text-xs text-yellow-400 p-1.5 rounded focus:outline-none focus:border-yellow-500/40"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleConfirmProductBlock(p.id, false)}
+                                className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold uppercase transition-all"
+                              >
+                                Bloquer à vie
+                              </button>
+                              <button
+                                onClick={() => handleConfirmProductBlock(p.id, true)}
+                                className="flex-1 py-1.5 gold-bg-gradient text-slate-950 rounded text-[10px] font-bold uppercase transition-all"
+                                disabled={!blockReopenTime}
+                              >
+                                Planifier Heure
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => setSchedulingBlockProductId(null)}
+                              className="w-full py-1 text-slate-500 hover:text-slate-400 text-[10px] uppercase font-bold text-center"
+                            >
+                              Annuler
+                            </button>
+                          </div>
                         ) : (
-                          <>
-                            <Lock className="w-3.5 h-3.5" />
-                            <span>Bloquer / Planifier Heure</span>
-                          </>
+                          <button
+                            onClick={() => handleToggleBlockProduct(p.id, isCurrentlyBlocked)}
+                            className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${isCurrentlyBlocked ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'}`}
+                          >
+                            {isCurrentlyBlocked ? (
+                              <>
+                                <Unlock className="w-3.5 h-3.5" />
+                                <span>Débloquer immédiatement</span>
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="w-3.5 h-3.5" />
+                                <span>Bloquer / Planifier Heure</span>
+                              </>
+                            )}
+                          </button>
                         )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Plans d'Activités de Cycle Court */}
+            <div>
+              <h4 className="text-sm font-display font-bold text-green-400 uppercase tracking-widest mb-4">
+                ⚡ Activités (Cycle Court - Gain + Capital à expiration)
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {products.filter(p => p.category === 'activity').map((p) => {
+                  const isCurrentlyBlocked = p.isBlocked === true;
+                  const formattedReopenTime = p.reopenDateTime 
+                    ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+                    : null;
+                  const netProfit = p.dailyReturn; // Le profit net est stocké dans dailyReturn pour l'activité
+                  const totalRelease = p.totalReturn || (p.price + netProfit);
+
+                  return (
+                    <div key={p.id} className={`p-5 rounded-xl border flex flex-col justify-between ${isCurrentlyBlocked ? 'bg-red-950/20 border-red-900/40' : 'bg-slate-950 border-slate-800'}`}>
+                      <div>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[10px] text-green-400 font-mono uppercase font-bold">Activité VIP {p.vipLevel}</span>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isCurrentlyBlocked ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></span>
+                            </div>
+                            <h4 className="font-display font-medium text-white text-sm block mt-0.5">{p.name}</h4>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => openEditProductModal(p)}
+                              className="text-slate-350 hover:text-yellow-400 p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded duration-150"
+                              title="Modifier"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="text-red-400 hover:text-red-500 p-1.5 bg-red-500/10 rounded duration-150"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1 mt-4 text-xs font-mono">
+                          <div className="flex justify-between text-slate-400">
+                            <span>Prix :</span>
+                            <span className="text-white font-bold">{p.price.toLocaleString()} XOF</span>
+                          </div>
+                          <div className="flex justify-between text-slate-400">
+                            <span>Bénéfice Net :</span>
+                            <span className="text-green-400 font-bold font-mono">+{netProfit.toLocaleString()} XOF</span>
+                          </div>
+                          <div className="flex justify-between text-slate-400">
+                            <span>Cycle :</span>
+                            <span className="text-yellow-400">{p.durationDays} Jours</span>
+                          </div>
+                          <div className="flex justify-between text-slate-400 font-bold border-t border-slate-900 pt-1.5 mt-1.5 font-mono">
+                            <span>Retour total de fin :</span>
+                            <span className="text-white">{totalRelease.toLocaleString()} XOF</span>
+                          </div>
+
+                          {isCurrentlyBlocked && (
+                            <div className="bg-red-950/35 border border-red-900/30 rounded-lg p-2.5 mt-3 font-sans">
+                              <p className="text-[10px] text-red-400 font-bold flex items-center gap-1.5">
+                                <Lock className="w-3 h-3" />
+                                <span>ACTIVITÉ SUSPENDUE</span>
+                              </p>
+                              {formattedReopenTime && (
+                                <p className="text-[9px] text-slate-300 mt-0.5 font-mono">
+                                  Réouverture le : {formattedReopenTime}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-5 pt-3 border-t border-slate-900">
+                        {schedulingBlockProductId === p.id ? (
+                          <div className="space-y-3 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">HEURE DE RÉOUVERTURE (OPTIONNELLE)</label>
+                              <input
+                                type="datetime-local"
+                                value={blockReopenTime}
+                                onChange={(e) => setBlockReopenTime(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-800 text-xs text-yellow-400 p-1.5 rounded focus:outline-none focus:border-yellow-500/40"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleConfirmProductBlock(p.id, false)}
+                                className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold uppercase transition-all"
+                              >
+                                Suspendre à vie
+                              </button>
+                              <button
+                                onClick={() => handleConfirmProductBlock(p.id, true)}
+                                className="flex-1 py-1.5 gold-bg-gradient text-slate-950 rounded text-[10px] font-bold uppercase transition-all"
+                                disabled={!blockReopenTime}
+                              >
+                                Planifier Heure
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => setSchedulingBlockProductId(null)}
+                              className="w-full py-1 text-slate-500 hover:text-slate-400 text-[10px] uppercase font-bold text-center"
+                            >
+                              Annuler
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleToggleBlockProduct(p.id, isCurrentlyBlocked)}
+                            className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${isCurrentlyBlocked ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'}`}
+                          >
+                            {isCurrentlyBlocked ? (
+                              <>
+                                <Unlock className="w-3.5 h-3.5" />
+                                <span>Activer immédiatement</span>
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="w-3.5 h-3.5" />
+                                <span>Suspendre / Planifier</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -2352,11 +2644,62 @@ export default function AdminPanel({
                 </span>
               </div>
 
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <span className="text-green-500">💬</span>
+                  <span>Lien du Groupe WhatsApp</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: https://chat.whatsapp.com/..."
+                  value={whatsappGroup}
+                  onChange={(e) => setWhatsappGroup(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-green-400 font-mono focus:outline-none"
+                />
+                <span className="text-[10px] text-slate-500 mt-1.5 block leading-relaxed">
+                  Le lien officiel que les membres utiliseront pour rejoindre votre groupe de discussion WhatsApp.
+                </span>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <span className="text-emerald-500">📢</span>
+                  <span>Lien du Canal WhatsApp</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: https://whatsapp.com/channel/..."
+                  value={whatsappChannel}
+                  onChange={(e) => setWhatsappChannel(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-emerald-400 font-mono focus:outline-none"
+                />
+                <span className="text-[10px] text-slate-500 mt-1.5 block leading-relaxed">
+                  Le lien officiel pour s'abonner et recevoir les actualités & informations exclusives sur votre canal de diffusion WhatsApp.
+                </span>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <span className="text-blue-500">📞</span>
+                  <span>Numéro de Support WhatsApp (Direct)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: +22670903319"
+                  value={whatsappSupportNumber}
+                  onChange={(e) => setWhatsappSupportNumber(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-blue-400 font-mono focus:outline-none"
+                />
+                <span className="text-[10px] text-slate-500 mt-1.5 block leading-relaxed">
+                  Le numéro de téléphone WhatsApp direct auquel les clients seront redirigés pour une assistance personnalisée (lien d'ouverture de chat wa.me).
+                </span>
+              </div>
+
               <button
                 type="submit"
                 className="w-full py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
               >
-                💾 Enregistrer les réglages MLM et domaine
+                💾 Enregistrer les réglages système
               </button>
             </form>
           </div>
@@ -2762,9 +3105,10 @@ export default function AdminPanel({
                           </div>
 
                           {session.lastMsg && (
-                            <p className="text-[11px] text-slate-400 line-clamp-1 italic mt-2 border-t border-slate-800/40 pt-1.5 font-mono">
-                              {session.lastMsg.sender === 'admin' ? 'Vous : ' : ''}{session.lastMsg.message}
-                            </p>
+                            <div className="text-[11px] text-slate-300 !text-slate-300 line-clamp-1 italic mt-2 border-t border-slate-800/40 pt-1.5 font-sans font-medium" style={{ color: '#cbd5e1' }}>
+                              {session.lastMsg.sender === 'admin' ? <span className="text-yellow-400 font-bold">Vous : </span> : ''}
+                              <span>{session.lastMsg.message}</span>
+                            </div>
                           )}
 
                           {session.unreadCount > 0 && (
@@ -2821,12 +3165,12 @@ export default function AdminPanel({
                             key={m.id}
                             className={`flex flex-col max-w-[85%] ${isFromAdmin ? 'ml-auto items-end' : 'mr-auto items-start'}`}
                           >
-                            <div className={`p-3 rounded-lg text-xs leading-relaxed ${
+                            <div className={`p-4 rounded-xl text-xs leading-relaxed ${
                               isFromAdmin
                                 ? 'bg-yellow-500 text-slate-950 font-medium rounded-tr-none shadow-md shadow-yellow-500/5'
-                                : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700/60'
+                                : 'bg-[#1e293b] text-white font-extrabold rounded-tl-none border-2 border-slate-700/60'
                             }`}>
-                              <p className="whitespace-pre-line">{m.message}</p>
+                              <div className="whitespace-pre-line text-white !text-white font-black text-[13px] tracking-wide" style={{ color: '#ffffff' }}>{m.message}</div>
                             </div>
 
                             {/* Requirement 3 specifications display footer */}
