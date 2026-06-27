@@ -226,11 +226,11 @@ button {
   color: #ffffff !important;
 }
 
-/* Override the bank card style to rich professional prestigious RED depth with gold hints */
+/* Override the bank card style to rich professional prestigious SKY BLUE depth */
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] {
-  background-image: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
-  border: 1.5px solid #facc15 !important; /* Metallic yellow-gold border */
-  box-shadow: 0 20px 50px -15px rgba(220, 38, 38, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  background-image: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
+  border: 1.5px solid #38bdf8 !important; /* Sky blue border */
+  box-shadow: 0 20px 50px -15px rgba(14, 165, 233, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
   color: #ffffff !important;
 }
 
@@ -241,36 +241,36 @@ button {
   color: #ffffff !important; /* Prestigious white contrast on the card */
 }
 
-/* Balance in prestigious gold */
+/* Balance in prestigious bright sky blue */
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] .solde-display-number,
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] [id="main-balance-text"] {
-  color: #facc15 !important;
-  text-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.35);
+  color: #ffffff !important;
+  text-shadow: 0 1.5px 3px rgba(2, 132, 199, 0.35);
 }
 
 /* Ensure secondary buttons over the card stand out */
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] button {
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15) !important;
   background-color: #ffffff !important;
-  color: #dc2626 !important;
-  border: 1px solid #facc15 !important;
+  color: #0284c7 !important;
+  border: 1px solid #38bdf8 !important;
 }
 
-/* Action buttons & daily check-in gradients to supreme Red premium gradient with gold lining */
+/* Action buttons & daily check-in gradients to supreme Sky Blue premium gradient */
 .from-\[\#1b64d9\].to-\[\#046fff\],
 .from-\[\#00d2c3\].to-\[\#046fff\],
 .bg-gradient-to-r.from-\[\#1b64d9\] {
-  background-image: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+  background-image: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
   color: #ffffff !important;
   font-weight: 800 !important;
-  border: 1px solid #facc15 !important;
+  border: 1px solid #38bdf8 !important;
 }
 
-/* Accent texts like blue/cyan/emerald are re-mapped to professional red */
+/* Accent texts like blue/cyan/emerald are re-mapped to professional sky blue */
 .text-\[\#1b64d9\],
 .text-cyan-404,
 .text-\[\#38bdf8\] {
-  color: #dc2626 !important;
+  color: #0284c7 !important;
 }
 
 .border-\[\#1b64d9\],
@@ -291,28 +291,26 @@ button {
 .border-gray-305,
 .border-gray-300,
 .border-orange-100 {
-  border-color: rgba(220, 38, 38, 0.18) !important;
+  border-color: rgba(14, 165, 233, 0.18) !important;
 }
 
 .bg-\[\#1b64d9\]\/10 {
-  background-color: rgba(220, 38, 38, 0.08) !important;
+  background-color: rgba(14, 165, 233, 0.08) !important;
 }
 
-/* Glassmorphism utility using warm glowing gold-red */
+/* Glassmorphism utility using sky blue */
 .glass-panel {
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.15);
 }
 
 .glass-panel-hover {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.glass-panel-hover:hover {
-  border-color: rgba(220, 38, 38, 0.35);
+  border-color: rgba(14, 165, 233, 0.35);
   background: #ffffff;
-  box-shadow: 0 10px 30px -10px rgba(220, 38, 38, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.08);
 }
 
 .gold-gradient-text {
@@ -509,3 +507,23 @@ div.font-black {
   border-color: rgba(250, 204, 21, 0.6) !important;
   color: #b45309 !important;
 }
+
+/* Infinite Marquee Left to Right with Back and Forth (Va-et-vient) */
+@keyframes marquee-va-et-vient {
+  0% {
+    transform: translateX(0%);
+  }
+  50% {
+    transform: translateX(-40%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.animate-marquee-ltr {
+  display: flex;
+  width: max-content;
+  animation: marquee-va-et-vient 30s ease-in-out infinite;
+}
+

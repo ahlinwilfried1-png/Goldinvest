@@ -5,32 +5,32 @@
       "name": "Administrateur Principal",
       "role": "admin",
       "bonus": 5000,
-      "balance": 1266150,
+      "balance": 1274850,
       "country": "Cameroun",
       "password": "agro777",
       "whatsapp": "+237600000000",
       "createdAt": "2026-05-10T10:00:00Z",
       "isBlocked": false,
-      "lastModified": 1782128998456,
+      "lastModified": 1782456797173,
       "referralCode": "AGR72",
       "dailyEarnings": 2450,
-      "totalEarnings": 16150
+      "totalEarnings": 24850
     },
     {
       "id": "u-1779950958295",
       "name": "Kodjo ",
       "role": "admin",
-      "bonus": 800,
-      "balance": 1300,
+      "bonus": 850,
+      "balance": 2550,
       "country": "Togo",
       "password": "admin",
       "whatsapp": "70903319",
       "createdAt": "2026-05-28T06:49:18.295Z",
       "isBlocked": false,
-      "lastModified": 1782128998456,
+      "lastModified": 1782456797173,
       "referralCode": "KODJO180",
       "dailyEarnings": 300,
-      "totalEarnings": 3000,
+      "totalEarnings": 4200,
       "withdrawBlocked": false
     },
     {
@@ -39,16 +39,16 @@
       "role": "admin",
       "bonus": 200,
       "device": "Android",
-      "balance": 4220,
+      "balance": 6760,
       "country": "Burkina Faso",
       "password": "123456",
       "whatsapp": "+22670903319",
       "createdAt": "2026-06-08T20:57:38.969Z",
       "isBlocked": false,
-      "lastModified": 1782128998456,
+      "lastModified": 1782456797173,
       "referralCode": "QOA63",
       "dailyEarnings": 680,
-      "totalEarnings": 6720,
+      "totalEarnings": 9260,
       "withdrawBlocked": false
     },
     {
@@ -62,7 +62,7 @@
       "whatsapp": "+22670903319",
       "createdAt": "2026-05-31T14:25:46.721Z",
       "isBlocked": false,
-      "lastModified": 1782128998456,
+      "lastModified": 1782456797173,
       "referralCode": "GOLD772",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -283,6 +283,18 @@
       "createdAt": "2026-06-21T13:28:59.779Z",
       "reference": "WP-FB-1782048539612",
       "lastModified": 1782048539779,
+      "receiptImage": "automated_fallback"
+    },
+    {
+      "id": "dep-1782135013150",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-1779950958295",
+      "operator": "Westpay (Auto)",
+      "userName": "Kodjo ",
+      "createdAt": "2026-06-22T13:30:13.150Z",
+      "reference": "WP-FB-1782135012847",
+      "lastModified": 1782135013152,
       "receiptImage": "automated_fallback"
     },
     {
@@ -944,13 +956,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-02T10:55:03.487Z",
       "productId": "vip-1",
-      "daysPassed": 20,
+      "daysPassed": 23,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782125703952,
-      "lastClaimDate": "2026-06-22T10:55:03.952Z",
-      "totalReturnClaimed": 6000
+      "lastModified": 1782411444265,
+      "lastClaimDate": "2026-06-25T18:17:24.256Z",
+      "totalReturnClaimed": 6900
     },
     {
       "id": "inv-1780744789286",
@@ -959,13 +971,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T11:19:49.294Z",
       "productId": "vip-1",
-      "daysPassed": 16,
+      "daysPassed": 19,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782127190436,
-      "lastClaimDate": "2026-06-22T11:19:50.436Z",
-      "totalReturnClaimed": 4800
+      "lastModified": 1782411444265,
+      "lastClaimDate": "2026-06-25T18:17:24.257Z",
+      "totalReturnClaimed": 5700
     },
     {
       "id": "inv-1780755294947",
@@ -974,13 +986,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T14:14:54.947Z",
       "productId": "vip-1",
-      "daysPassed": 15,
+      "daysPassed": 19,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782051295118,
-      "lastClaimDate": "2026-06-21T14:14:55.117Z",
-      "totalReturnClaimed": 7500
+      "lastModified": 1782411444265,
+      "lastClaimDate": "2026-06-25T18:17:24.257Z",
+      "totalReturnClaimed": 9500
     },
     {
       "id": "inv-1780832997559",
@@ -989,13 +1001,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T11:49:57.559Z",
       "productId": "vip-1",
-      "daysPassed": 15,
+      "daysPassed": 18,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782128998456,
-      "lastClaimDate": "2026-06-22T11:49:58.456Z",
-      "totalReturnClaimed": 7500
+      "lastModified": 1782411444265,
+      "lastClaimDate": "2026-06-25T18:17:24.257Z",
+      "totalReturnClaimed": 9000
     },
     {
       "id": "inv-1780841270273",
@@ -1004,13 +1016,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T14:07:50.275Z",
       "productId": "vip-1",
-      "daysPassed": 14,
+      "daysPassed": 18,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782050874757,
-      "lastClaimDate": "2026-06-21T14:07:54.757Z",
-      "totalReturnClaimed": 7000
+      "lastModified": 1782411444265,
+      "lastClaimDate": "2026-06-25T18:17:24.258Z",
+      "totalReturnClaimed": 9000
     },
     {
       "id": "inv-1780952684130",
@@ -1019,13 +1031,13 @@
       "userId": "u-1780952258969",
       "createdAt": "2026-06-08T21:04:44.130Z",
       "productId": "vip-1",
-      "daysPassed": 13,
+      "daysPassed": 17,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782075895344,
-      "lastClaimDate": "2026-06-21T21:04:55.344Z",
-      "totalReturnClaimed": 6500
+      "lastModified": 1782422102503,
+      "lastClaimDate": "2026-06-25T21:15:02.498Z",
+      "totalReturnClaimed": 8500
     },
     {
       "id": "inv-1781195123001",
@@ -1034,13 +1046,13 @@
       "userId": "u-1779950958295",
       "createdAt": "2026-06-11T16:25:23.001Z",
       "productId": "vip-1",
-      "daysPassed": 10,
+      "daysPassed": 14,
       "dailyReturn": 300,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782059154903,
-      "lastClaimDate": "2026-06-21T16:25:54.902Z",
-      "totalReturnClaimed": 3000
+      "lastModified": 1782411444265,
+      "lastClaimDate": "2026-06-25T18:17:24.258Z",
+      "totalReturnClaimed": 4200
     },
     {
       "id": "inv-1781718245565",
@@ -1049,13 +1061,13 @@
       "userId": "u-1780952258969",
       "createdAt": "2026-06-17T17:44:05.565Z",
       "productId": "vip-1",
-      "daysPassed": 4,
+      "daysPassed": 8,
       "dailyReturn": 180,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782063894538,
-      "lastClaimDate": "2026-06-21T17:44:54.537Z",
-      "totalReturnClaimed": 720
+      "lastModified": 1782411444265,
+      "lastClaimDate": "2026-06-25T18:17:24.258Z",
+      "totalReturnClaimed": 1440
     },
     {
       "id": "inv-1780422657357",
@@ -1064,13 +1076,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-02T17:50:57.359Z",
       "productId": "vip-1",
-      "daysPassed": 19,
+      "daysPassed": 23,
       "dailyReturn": 350,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782064314387,
-      "lastClaimDate": "2026-06-21T17:51:54.387Z",
-      "totalReturnClaimed": 6650
+      "lastModified": 1782411444265,
+      "lastClaimDate": "2026-06-25T18:17:24.259Z",
+      "totalReturnClaimed": 8050
     },
     {
       "id": "inv-301",
@@ -1109,13 +1121,13 @@
       "userId": "u-1780266312773",
       "createdAt": "2026-05-31T23:49:39.540Z",
       "productId": "vip-2",
-      "daysPassed": 21,
+      "daysPassed": 25,
       "dailyReturn": 800,
       "productName": "P2",
       "durationDays": 365,
-      "lastModified": 1782116107786,
-      "lastClaimDate": "2026-06-22T08:15:07.786Z",
-      "totalReturnClaimed": 16800
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 20000
     },
     {
       "id": "inv-1780271358949",
@@ -1124,13 +1136,13 @@
       "userId": "u-1780266312773",
       "createdAt": "2026-05-31T23:49:18.963Z",
       "productId": "vip-1",
-      "daysPassed": 21,
+      "daysPassed": 25,
       "dailyReturn": 350,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782116107786,
-      "lastClaimDate": "2026-06-22T08:15:07.786Z",
-      "totalReturnClaimed": 7350
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 8750
     },
     {
       "id": "inv-1780422823474",
@@ -1139,13 +1151,13 @@
       "userId": "u-1780420718408",
       "createdAt": "2026-06-02T17:53:43.483Z",
       "productId": "vip-1",
-      "daysPassed": 19,
+      "daysPassed": 23,
       "dailyReturn": 350,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782116107786,
-      "lastClaimDate": "2026-06-22T08:15:07.786Z",
-      "totalReturnClaimed": 6650
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 8050
     },
     {
       "id": "inv-1781800126802",
@@ -1154,13 +1166,13 @@
       "userId": "u-1781800026126",
       "createdAt": "2026-06-18T16:28:46.802Z",
       "productId": "vip-1",
-      "daysPassed": 3,
+      "daysPassed": 7,
       "dailyReturn": 180,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782059334819,
-      "lastClaimDate": "2026-06-21T16:28:54.819Z",
-      "totalReturnClaimed": 540
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 1260
     },
     {
       "id": "inv-1781800137442",
@@ -1169,13 +1181,13 @@
       "userId": "u-1781800026126",
       "createdAt": "2026-06-18T16:28:57.442Z",
       "productId": "vip-2",
-      "daysPassed": 3,
+      "daysPassed": 7,
       "dailyReturn": 360,
       "productName": "STANDARD",
       "durationDays": 365,
-      "lastModified": 1782059394690,
-      "lastClaimDate": "2026-06-21T16:29:54.689Z",
-      "totalReturnClaimed": 1080
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 2520
     },
     {
       "id": "inv-1781800159296",
@@ -1184,13 +1196,13 @@
       "userId": "u-1781800026126",
       "createdAt": "2026-06-18T16:29:19.297Z",
       "productId": "vip-3",
-      "daysPassed": 3,
+      "daysPassed": 7,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782059394690,
-      "lastClaimDate": "2026-06-21T16:29:54.689Z",
-      "totalReturnClaimed": 2232
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 5208
     },
     {
       "id": "inv-1781938289392",
@@ -1199,13 +1211,13 @@
       "userId": "u-1781864442965",
       "createdAt": "2026-06-20T06:51:29.392Z",
       "productId": "vip-3",
-      "daysPassed": 2,
+      "daysPassed": 6,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782116107786,
-      "lastClaimDate": "2026-06-22T08:15:07.786Z",
-      "totalReturnClaimed": 1488
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 4464
     },
     {
       "id": "inv-1781939387587",
@@ -1214,13 +1226,13 @@
       "userId": "u-1781939068204",
       "createdAt": "2026-06-20T07:09:47.587Z",
       "productId": "vip-3",
-      "daysPassed": 2,
+      "daysPassed": 5,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782116107786,
-      "lastClaimDate": "2026-06-22T08:15:07.786Z",
-      "totalReturnClaimed": 1488
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 3720
     },
     {
       "id": "inv-1781939451027",
@@ -1229,13 +1241,13 @@
       "userId": "u-1781939277284",
       "createdAt": "2026-06-20T07:10:51.027Z",
       "productId": "vip-3",
-      "daysPassed": 2,
+      "daysPassed": 5,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782116107786,
-      "lastClaimDate": "2026-06-22T08:15:07.786Z",
-      "totalReturnClaimed": 1488
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 3720
     },
     {
       "id": "inv-1781945935744",
@@ -1244,13 +1256,13 @@
       "userId": "u-1781900067016",
       "createdAt": "2026-06-20T08:58:55.744Z",
       "productId": "vip-3",
-      "daysPassed": 2,
+      "daysPassed": 5,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782118778315,
-      "lastClaimDate": "2026-06-22T08:59:38.312Z",
-      "totalReturnClaimed": 1488
+      "lastModified": 1782456797172,
+      "lastClaimDate": "2026-06-26T06:53:17.172Z",
+      "totalReturnClaimed": 3720
     }
   ],
   "gi_commissions": [
@@ -3498,6 +3510,426 @@
       "lastModified": 1782128998455,
       "createdAt": "2026-06-22T11:49:58.455Z",
       "read": false
+    },
+    {
+      "id": "not-dep-1782135013180",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1779950958295",
+      "message": "Votre demande de dépôt de 5 000 XOF via Westpay (Auto) (Réf: WP-FB-1782135012847) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-22T13:30:13.180Z",
+      "lastModified": 1782135013182
+    },
+    {
+      "id": "not-autodrop-1782137651235-inv-1780841270273-14",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T14:14:11.235Z",
+      "lastModified": 1782137651299
+    },
+    {
+      "id": "not-autodrop-1782137698605-inv-1780755294947-15",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T14:14:58.605Z",
+      "lastModified": 1782137698629
+    },
+    {
+      "id": "not-autodrop-1782137698047-inv-1780755294947-15",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T14:14:58.048Z",
+      "lastModified": 1782137698076
+    },
+    {
+      "id": "not-autodrop-1782146436433-inv-1781195123001-10",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T16:40:36.433Z",
+      "lastModified": 1782146436452
+    },
+    {
+      "id": "not-autodrop-1782150360506-inv-1781718245565-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T17:46:00.506Z",
+      "lastModified": 1782150360531
+    },
+    {
+      "id": "not-autodrop-1782150672513-inv-1780422657357-19",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 350 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T17:51:12.514Z",
+      "lastModified": 1782150672549
+    },
+    {
+      "id": "not-autodrop-1782152087788-inv-1780422657357-19",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 350 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T18:14:47.788Z",
+      "lastModified": 1782152087809
+    },
+    {
+      "id": "not-autodrop-1782152087787-inv-1781718245565-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T18:14:47.788Z",
+      "lastModified": 1782152087809
+    },
+    {
+      "id": "not-autodrop-1782166853132-inv-1780952684130-13",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T22:20:53.132Z",
+      "lastModified": 1782166853184
+    },
+    {
+      "id": "not-autodrop-1782213893425-inv-1780744789286-16",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T11:24:53.425Z",
+      "lastModified": 1782213893456
+    },
+    {
+      "id": "not-autodrop-1782213893424-inv-1780397703473-20",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T11:24:53.425Z",
+      "lastModified": 1782213893456
+    },
+    {
+      "id": "not-autodrop-1782215659877-inv-1780832997559-15",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T11:54:19.877Z",
+      "lastModified": 1782215659893
+    },
+    {
+      "id": "not-autodrop-1782229770162-inv-1780841270273-15",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T15:49:30.162Z",
+      "lastModified": 1782229770181
+    },
+    {
+      "id": "not-autodrop-1782229770161-inv-1780755294947-16",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T15:49:30.161Z",
+      "lastModified": 1782229770181
+    },
+    {
+      "id": "not-autodrop-1782233702866-inv-1781195123001-11",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T16:55:02.867Z",
+      "lastModified": 1782233702880
+    },
+    {
+      "id": "not-autodrop-1782243453721-inv-1780422657357-20",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 350 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T19:37:33.722Z",
+      "lastModified": 1782243453739
+    },
+    {
+      "id": "not-autodrop-1782243453721-inv-1781718245565-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T19:37:33.721Z",
+      "lastModified": 1782243453739
+    },
+    {
+      "id": "not-autodrop-1782249600342-inv-1780952684130-14",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T21:20:00.342Z",
+      "lastModified": 1782249600390
+    },
+    {
+      "id": "not-autodrop-1782239242278-inv-1780422657357-20",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 350 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T18:27:22.279Z",
+      "lastModified": 1782239242304
+    },
+    {
+      "id": "not-autodrop-1782239242278-inv-1781718245565-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T18:27:22.278Z",
+      "lastModified": 1782239242304
+    },
+    {
+      "id": "not-autodrop-1782325116090-inv-1780422657357-21",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 350 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T18:18:36.090Z",
+      "lastModified": 1782325116140
+    },
+    {
+      "id": "not-autodrop-1782325116088-inv-1781718245565-6",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T18:18:36.089Z",
+      "lastModified": 1782325116140
+    },
+    {
+      "id": "not-autodrop-1782325116088-inv-1781195123001-12",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T18:18:36.088Z",
+      "lastModified": 1782325116140
+    },
+    {
+      "id": "not-autodrop-1782335107575-inv-1780952684130-15",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T21:05:07.575Z",
+      "lastModified": 1782335107624
+    },
+    {
+      "id": "not-daily-1782369380222",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1779950958295",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T06:36:20.222Z",
+      "lastModified": 1782369380225
+    },
+    {
+      "id": "not-autodrop-1782318327350-inv-1781195123001-12",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T16:25:27.351Z",
+      "lastModified": 1782318327474
+    },
+    {
+      "id": "not-autodrop-1782388240827-inv-1780832997559-17",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T11:50:40.827Z",
+      "lastModified": 1782388240864
+    },
+    {
+      "id": "not-autodrop-1782388240827-inv-1780744789286-18",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T11:50:40.827Z",
+      "lastModified": 1782388240864
+    },
+    {
+      "id": "not-autodrop-1782388240826-inv-1780397703473-22",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T11:50:40.827Z",
+      "lastModified": 1782388240864
+    },
+    {
+      "id": "not-autodrop-1782396471513-inv-1780841270273-17",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T14:07:51.514Z",
+      "lastModified": 1782396471685
+    },
+    {
+      "id": "not-autodrop-1782396897832-inv-1780755294947-18",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T14:14:57.832Z",
+      "lastModified": 1782396898070
+    },
+    {
+      "id": "not-autodrop-1782407768912-inv-1781195123001-13",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T17:16:08.912Z",
+      "lastModified": 1782407769070
+    },
+    {
+      "id": "not-autodrop-1782411444259-inv-1780422657357-22",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 350 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T18:17:24.259Z",
+      "lastModified": 1782411444301
+    },
+    {
+      "id": "not-autodrop-1782411444258-inv-1781718245565-7",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T18:17:24.258Z",
+      "lastModified": 1782411444301
+    },
+    {
+      "id": "not-autodrop-1782411444258-inv-1781195123001-13",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T18:17:24.258Z",
+      "lastModified": 1782411444301
+    },
+    {
+      "id": "not-autodrop-1782411444257-inv-1780841270273-17",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T18:17:24.257Z",
+      "lastModified": 1782411444301
+    },
+    {
+      "id": "not-autodrop-1782411444257-inv-1780832997559-17",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T18:17:24.257Z",
+      "lastModified": 1782411444301
+    },
+    {
+      "id": "not-autodrop-1782411444257-inv-1780755294947-18",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T18:17:24.257Z",
+      "lastModified": 1782411444301
+    },
+    {
+      "id": "not-autodrop-1782411444256-inv-1780744789286-18",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T18:17:24.257Z",
+      "lastModified": 1782411444301
+    },
+    {
+      "id": "not-autodrop-1782411444255-inv-1780397703473-22",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T18:17:24.256Z",
+      "lastModified": 1782411444301
+    },
+    {
+      "id": "not-autodrop-1782422102498-inv-1780952684130-16",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T21:15:02.498Z",
+      "lastModified": 1782422102539
     },
     {
       "id": "not-autodrop-1780284755142-inv-301-9",
@@ -7547,55 +7979,7 @@
   "gi_mlm_level3_rate": 1,
   "gi_withdrawals_blocked_global": false,
   "gi_referral_domain": "",
-  "gi_withdrawal_proofs": [
-    {
-      "id": "proof-1782123365869",
-      "image": "data:image/jpeg;base64,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",
-      "likes": [
-        "u-1779950958295",
-        "u-1781959197097"
-      ],
-      "amount": 1300,
-      "status": "approved",
-      "userId": "u-1779950958295",
-      "message": "Merci beaucoup 😘",
-      "userName": "Kodjo ",
-      "createdAt": "2026-06-22T10:16:05.869Z",
-      "userCountry": "Togo",
-      "lastModified": 1782129399199
-    },
-    {
-      "id": "proof-1782116211810",
-      "image": "",
-      "likes": [
-        "u-1779950958295"
-      ],
-      "amount": 4000,
-      "status": "approved",
-      "userId": "u-1781939581026",
-      "message": "C’est un meilleur plateforme investisser ",
-      "userName": "Traore",
-      "createdAt": "2026-06-22T08:16:51.810Z",
-      "userCountry": "Burkina Faso",
-      "lastModified": 1782127552744
-    },
-    {
-      "id": "proof-1781905953672",
-      "image": "",
-      "likes": [
-        "u-1782112609584",
-        "u-1781947129624",
-        "u-1781959197097"
-      ],
-      "amount": 1000,
-      "status": "approved",
-      "userId": "u-1781900067016",
-      "message": "c'est Vrai je viens de recevoir mon dépôt inscrivez vous également pour ne pas rater votre ultime chance de gagner    ",
-      "userName": "WHANNOU Ornel",
-      "createdAt": "2026-06-19T21:52:33.672Z",
-      "userCountry": "Bénin",
-      "lastModified": 1782129395010
-    }
-  ],
-  "gi_deleted_investments": []
+  "gi_withdrawal_proofs": [],
+  "gi_deleted_investments": [],
+  "gi_deleted_users": []
 }

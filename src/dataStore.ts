@@ -14,17 +14,17 @@ import {
 
 // Default mock configuration values
 export const DEFAULT_PRODUCTS: Product[] = [
-  { id: 'vip-1', vipLevel: 1, name: 'P1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'P1', category: 'stability' },
-  { id: 'vip-2', vipLevel: 2, name: 'P2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'P2', category: 'stability' },
-  { id: 'vip-3', vipLevel: 3, name: 'P3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'P3', category: 'stability' },
-  { id: 'vip-4', vipLevel: 4, name: 'P4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'P4', category: 'stability' },
-  { id: 'vip-5', vipLevel: 5, name: 'P5', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'P5', category: 'stability' },
-  { id: 'vip-6', vipLevel: 6, name: 'P6', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'P6', category: 'stability' },
-  { id: 'vip-7', vipLevel: 7, name: 'P7', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'P7', category: 'stability' },
+  { id: 'vip-1', vipLevel: 1, name: 'Airprods 1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'Airprods 1', category: 'stability' },
+  { id: 'vip-2', vipLevel: 2, name: 'Airprods 2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'Airprods 2', category: 'stability' },
+  { id: 'vip-3', vipLevel: 3, name: 'Airprods 3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'Airprods 3', category: 'stability' },
+  { id: 'vip-4', vipLevel: 4, name: 'Airprods 4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'Airprods 4', category: 'stability' },
+  { id: 'vip-5', vipLevel: 5, name: 'Airprods Pro', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'Airprods Pro', category: 'stability' },
+  { id: 'vip-6', vipLevel: 6, name: 'Airprods Pro 2', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'Airprods Pro 2', category: 'stability' },
+  { id: 'vip-7', vipLevel: 7, name: 'Airprods Max', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'Airprods Max', category: 'stability' },
   // Activités (Short-cycle products)
-  { id: 'activity-1', vipLevel: 1, name: 'A1', price: 5000, dailyReturn: 1000, durationDays: 7, totalReturn: 7000, tag: 'A1', category: 'activity' },
-  { id: 'activity-2', vipLevel: 2, name: 'A2', price: 12000, dailyReturn: 3000, durationDays: 5, totalReturn: 15000, tag: 'A2', category: 'activity' },
-  { id: 'activity-3', vipLevel: 3, name: 'A3', price: 25000, dailyReturn: 7500, durationDays: 4, totalReturn: 30000, tag: 'A3', category: 'activity' }
+  { id: 'activity-1', vipLevel: 1, name: 'Airprods Activité 1', price: 5000, dailyReturn: 1000, durationDays: 7, totalReturn: 7000, tag: 'Activité 1', category: 'activity' },
+  { id: 'activity-2', vipLevel: 2, name: 'Airprods Activité 2', price: 12000, dailyReturn: 3000, durationDays: 5, totalReturn: 15000, tag: 'Activité 2', category: 'activity' },
+  { id: 'activity-3', vipLevel: 3, name: 'Airprods Activité 3', price: 25000, dailyReturn: 7500, durationDays: 4, totalReturn: 30000, tag: 'Activité 3', category: 'activity' }
 ];
 
 const INITIAL_USERS: User[] = [
@@ -250,7 +250,7 @@ const INITIAL_PROOFS: WithdrawalProof[] = [
     userName: 'Koffi Kouamé',
     userCountry: 'Côte d’Ivoire',
     amount: 25000,
-    message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
+    message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci Aiprods ! 🌾✨',
     image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
     likes: ['u-2', 'u-3'],
     createdAt: '2026-06-15T10:12:00Z'
@@ -272,7 +272,7 @@ const INITIAL_PROOFS: WithdrawalProof[] = [
     userName: 'Yao Mensah',
     userCountry: 'Togo',
     amount: 8500,
-    message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement AgroProfit à tout mon entourage.',
+    message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement Aiprods à tout mon entourage.',
     likes: ['u-1', 'u-2', 'u-admin'],
     createdAt: '2026-06-16T02:05:00Z'
   }
@@ -997,7 +997,7 @@ export class DataStore {
     let list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
     
     // Auto-update to P1-P7 (365 days duration) if old database exists in visitor localstorage
-    const needsReset = list.length === 0 || list.some(p => p.name.includes('VIP Élixir') || p.name.includes('VIP Élixir 1'));
+    const needsReset = list.length === 0 || list.some(p => p.name.includes('VIP Élixir') || p.name.includes('VIP Élixir 1') || p.name === 'P1' || p.name === 'A1' || p.name.startsWith('P'));
     const hasActivity = list.some(p => p.category === 'activity');
     if (needsReset || !hasActivity) {
       list = DEFAULT_PRODUCTS;
@@ -1359,7 +1359,7 @@ export class DataStore {
     notifications.unshift({
       id: `not-${Date.now()}`,
       userId: newUser.id,
-      title: 'Bienvenue sur AgroProfit !',
+      title: 'Bienvenue sur Aiprods !',
       message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
       type: 'bonus',
       createdAt: new Date().toISOString(),

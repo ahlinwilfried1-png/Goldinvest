@@ -5,6 +5,8 @@ import {
   ArrowLeft, 
   ArrowDownLeft, 
   ArrowUpRight, 
+  PlusCircle,
+  ArrowUpCircle,
   ShoppingBag, 
   RefreshCw, 
   Calendar, 
@@ -233,7 +235,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         
         {/* TABS SEPARATOR CATEGORIES */}
-        <div className="bg-white p-1.5 rounded-2xl border border-orange-100/80 shadow-sm flex overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:grid md:grid-cols-5">
+        <div className="bg-white p-1.5 rounded-2xl border border-orange-100/80 shadow-sm flex overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:grid md:grid-cols-4">
           <button
             onClick={() => {
               setActiveTab('recharge');
@@ -245,7 +247,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
             }`}
           >
-            <ArrowDownLeft className={`w-4 h-4 shrink-0 ${activeTab === 'recharge' ? 'text-white' : 'text-emerald-500'}`} />
+            <PlusCircle className={`w-4 h-4 shrink-0 ${activeTab === 'recharge' ? 'text-white' : 'text-emerald-500'}`} />
             <span>1. Recharges</span>
           </button>
 
@@ -260,7 +262,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
             }`}
           >
-            <ArrowUpRight className={`w-4 h-4 shrink-0 ${activeTab === 'retrait' ? 'text-white' : 'text-rose-500'}`} />
+            <ArrowUpCircle className={`w-4 h-4 shrink-0 ${activeTab === 'retrait' ? 'text-white' : 'text-rose-500'}`} />
             <span>2. Retraits</span>
           </button>
 
@@ -281,21 +283,6 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
 
           <button
             onClick={() => {
-              setActiveTab('commission');
-              setStatusFilter('all');
-            }}
-            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'commission' 
-                ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-            }`}
-          >
-            <Gift className={`w-4 h-4 shrink-0 ${activeTab === 'commission' ? 'text-white' : 'text-orange-500'}`} />
-            <span>4. Commissions</span>
-          </button>
-
-          <button
-            onClick={() => {
               setActiveTab('revenu');
               setStatusFilter('all');
             }}
@@ -306,7 +293,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
             }`}
           >
             <TrendingUp className={`w-4 h-4 shrink-0 ${activeTab === 'revenu' ? 'text-white' : 'text-blue-500'}`} />
-            <span>5. Revenus</span>
+            <span>4. Revenus</span>
           </button>
         </div>
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Home from './components/Home';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import HistoriquePage from './components/HistoriquePage';
@@ -9,6 +10,7 @@ export default function App() {
   // Navigation Path & URL Syncing
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
   const [isRegisterFlow, setIsRegisterFlow] = useState(true);
+  const [showAuth, setShowAuth] = useState(false);
   const [user, setUser] = useState<User | null>(() => DataStore.getCurrentUser());
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -143,17 +145,13 @@ export default function App() {
                       getParamInsensitive('sponsor');
       if (refCode) {
         safeLocalStorage.setItem('gi_captured_ref', refCode.toUpperCase());
-        if (active) {
-          setUser(active);
-        } else {
-          // Bypass home landing page entirely for users coming via a referral/sponsor link
-          setIsRegisterFlow(true);
-        }
-      } else if (active) {
+      }
+
+      if (active) {
         setUser(active);
       } else {
-        // Force registration page on fresh visits by non-logged-in users
         setIsRegisterFlow(true);
+        setShowAuth(true);
       }
     };
 
@@ -197,19 +195,47 @@ export default function App() {
 
   const navigateToAuth = (isRegister: boolean) => {
     setIsRegisterFlow(isRegister);
+    setShowAuth(true);
     setUser(null);
     navigateTo('/');
   };
 
   return (
-    <div className="min-h-screen bg-[#fff6ed] font-sans tracking-tight leading-normal overflow-x-hidden select-none">
+    <div className="min-h-screen bg-transparent font-sans tracking-tight leading-normal overflow-x-hidden select-none relative text-slate-900">
+      
+      {/* Immersive White AirPods background image for the entire site */}
+      <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden select-none" id="site-global-brand-background">
+        <img 
+          src="https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&w=1600&q=85" 
+          alt="Site AirPods Background White" 
+          className="w-full h-full object-cover filter brightness-[1.04] contrast-[1.02]"
+          referrerPolicy="no-referrer"
+        />
+        {/* Soft elegant white overlays to blend it perfectly and guarantee high contrast */}
+        <div className="absolute inset-0 bg-white/25" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/45 via-white/10 to-white/50" />
+        
+        {/* Ambient colored highlights */}
+        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-[#ff7c00]/5 blur-[140px]" />
+      </div>
 
-      {/* 1. AUTHENTICATION SCREENS (REGISTRATION / LOGIN) */}
-      {!user && (
+      {/* 1. HOME SCREEN OR AUTH SCREENS */}
+      {!user && !showAuth && (
+        <Home 
+          onNavigateToAuth={(isRegister) => {
+            setIsRegisterFlow(isRegister);
+            setShowAuth(true);
+          }}
+          isLoggedIn={!!user}
+          onGoToDashboard={() => {}}
+        />
+      )}
+
+      {!user && showAuth && (
         <Auth 
           initialIsRegister={isRegisterFlow}
           onAuthSuccess={handleAuthSuccess}
-          onBackToHome={() => {}}
+          onBackToHome={() => setShowAuth(false)}
         />
       )}
 

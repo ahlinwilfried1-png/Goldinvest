@@ -1365,17 +1365,7 @@ export default function AdminPanel({
             </span>
           )}
         </button>
-        <button
-          onClick={() => setActiveAdminTab('proofs')}
-          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors flex items-center space-x-2 ${activeAdminTab === 'proofs' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
-        >
-          <span>📸 Preuves</span>
-          {withdrawalProofs.length > 0 && (
-            <span className="bg-amber-500 text-slate-950 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full">
-              {withdrawalProofs.length}
-            </span>
-          )}
-        </button>
+        {/* Preuves tab button removed */}
       </div>
 
       {/* SYSTEM DIAGNOSTICS & SYNC MONITOR */}
@@ -2459,7 +2449,7 @@ export default function AdminPanel({
             </h3>
 
             <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur AgroProfit.
+              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur Aiprods.
             </p>
 
             <form onSubmit={handleSendGlobalAlert} className="space-y-4">
@@ -3231,8 +3221,8 @@ export default function AdminPanel({
         );
       })()}
 
-      {/* PROOFS TAB - MODERATION DES PREUVES DE RETRAIT */}
-      {activeAdminTab === 'proofs' && (() => {
+      {/* PROOFS TAB REMOVED */}
+      {false && activeAdminTab === 'proofs' && (() => {
         return (
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-800">

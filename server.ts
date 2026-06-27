@@ -156,13 +156,13 @@ async function startServer() {
       ],
       "gi_support_messages": [],
       "gi_products": [
-        { id: 'vip-1', vipLevel: 1, name: 'P1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'P1', category: 'stability' },
-        { id: 'vip-2', vipLevel: 2, name: 'P2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'P2', category: 'stability' },
-        { id: 'vip-3', vipLevel: 3, name: 'P3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'P3', category: 'stability' },
-        { id: 'vip-4', vipLevel: 4, name: 'P4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'P4', category: 'stability' },
-        { id: 'vip-5', vipLevel: 5, name: 'P5', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'P5', category: 'stability' },
-        { id: 'vip-6', vipLevel: 6, name: 'P6', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'P6', category: 'stability' },
-        { id: 'vip-7', vipLevel: 7, name: 'P7', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'P7', category: 'stability' }
+        { id: 'vip-1', vipLevel: 1, name: 'Système Aiprods 1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'Aiprods 1', category: 'stability' },
+        { id: 'vip-2', vipLevel: 2, name: 'Système Aiprods 2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'Aiprods 2', category: 'stability' },
+        { id: 'vip-3', vipLevel: 3, name: 'Système Aiprods 3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'Aiprods 3', category: 'stability' },
+        { id: 'vip-4', vipLevel: 4, name: 'Système Aiprods 4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'Aiprods 4', category: 'stability' },
+        { id: 'vip-5', vipLevel: 5, name: 'Système Aiprods Pro', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'Aiprods Pro', category: 'stability' },
+        { id: 'vip-6', vipLevel: 6, name: 'Système Aiprods Pro 2', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'Aiprods Pro 2', category: 'stability' },
+        { id: 'vip-7', vipLevel: 7, name: 'Système Aiprods Max', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'Aiprods Max', category: 'stability' }
       ],
       "gi_mlm_level1_rate": 20,
       "gi_mlm_level2_rate": 3,
@@ -1062,7 +1062,7 @@ async function startServer() {
       notifications.unshift({
         id: `not-${Date.now()}`,
         userId: newUser.id,
-        title: 'Bienvenue sur AgroProfit !',
+        title: 'Bienvenue sur Aiprods !',
         message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
         type: 'bonus',
         createdAt: new Date().toISOString(),
@@ -1585,10 +1585,10 @@ async function startServer() {
       const payload = {
         invoice: {
           total_amount: amt,
-          description: `Recharge de compte AgroProfit - Utilisateur: ${user.name}`
+          description: `Recharge de compte Aiprods - Utilisateur: ${user.name}`
         },
         store: {
-          name: "AgroProfit",
+          name: "Aiprods",
           website_url: baseUrl
         },
         actions: {
@@ -2610,9 +2610,9 @@ async function startServer() {
   app.get("/manifest.json", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(JSON.stringify({
-      "name": "AgroProfit",
-      "short_name": "AgroProfit",
-      "description": "Investissement Agro-Industriel Sécurisé - AgroProfit",
+      "name": "Aiprods",
+      "short_name": "Aiprods",
+      "description": "Investissement Audio Connecté - Aiprods",
       "start_url": "/",
       "display": "standalone",
       "background_color": "#020617",
@@ -2620,13 +2620,13 @@ async function startServer() {
       "orientation": "portrait",
       "icons": [
         {
-          "src": "https://img.icons8.com/color/192/000000/sprout.png",
+          "src": "https://img.icons8.com/color/192/000000/headphones.png",
           "sizes": "192x192",
           "type": "image/png",
           "purpose": "any maskable"
         },
         {
-          "src": "https://img.icons8.com/color/512/000000/sprout.png",
+          "src": "https://img.icons8.com/color/512/000000/headphones.png",
           "sizes": "512x512",
           "type": "image/png",
           "purpose": "any maskable"
@@ -2662,9 +2662,9 @@ self.addEventListener('fetch', event => {
   });
 
   // Servir un fichier APK réel, signé et valide pour l'installation directe
-  app.get(["/AgroProfit.apk", "/AgroCapital.apk", "/Agrocapital.apk", "/agrocapital.apk"], async (req, res) => {
-    const localApkPath = path.join(process.cwd(), "public", "AgroProfit.apk");
-    const tempApkPath = path.join(process.cwd(), "public", "AgroProfit.apk.tmp");
+  app.get(["/AgroProfit.apk", "/AgroCapital.apk", "/Agrocapital.apk", "/agrocapital.apk", "/Aiprods.apk", "/aiprods.apk", "/Airprods.apk", "/airprods.apk"], async (req, res) => {
+    const localApkPath = path.join(process.cwd(), "public", "Aiprods.apk");
+    const tempApkPath = path.join(process.cwd(), "public", "Aiprods.apk.tmp");
     const targetUrl = "https://github.com/anthonycr/Lightning-Browser/releases/download/v5.1.0/Lightning-v5.1.0-release.apk";
 
     try {
@@ -2672,7 +2672,7 @@ self.addEventListener('fetch', event => {
       if (fs.existsSync(localApkPath)) {
         const stats = fs.statSync(localApkPath);
         if (stats.size > 4000000) { 
-          res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
+          res.setHeader("Content-Disposition", 'attachment; filename="Aiprods.apk"');
           res.setHeader("Content-Type", "application/vnd.android.package-archive");
           res.setHeader("Content-Length", stats.size.toString());
           return res.sendFile(localApkPath);
@@ -2694,7 +2694,7 @@ self.addEventListener('fetch', event => {
       if (response.ok && response.body) {
         const contentLength = response.headers.get("Content-Length");
         
-        res.setHeader("Content-Disposition", 'attachment; filename="AgroProfit.apk"');
+        res.setHeader("Content-Disposition", 'attachment; filename="Aiprods.apk"');
         res.setHeader("Content-Type", "application/vnd.android.package-archive");
         if (contentLength) {
           res.setHeader("Content-Length", contentLength);
