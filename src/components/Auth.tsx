@@ -27,13 +27,14 @@ export const eligibleCountries = [
   { name: "Côte d'Ivoire", code: '+225', flag: '🇨🇮' },
   { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
   { name: 'Togo', code: '+228', flag: '🇹🇬' },
-  { name: 'Bénin', code: '+229', flag: '🇧🇯' }
+  { name: 'Bénin', code: '+229', flag: '🇧🇯' },
+  { name: 'Cameroun', code: '+237', flag: '🇨🇲' }
 ];
 
 interface AuthProps {
   initialIsRegister?: boolean;
   onAuthSuccess: (user: any) => void;
-  onBackToHome: () => void;
+  onBackToHome?: () => void;
 }
 
 export default function Auth({ 
@@ -208,14 +209,18 @@ export default function Auth({
 
       {/* Top Navigation Bar containing Back and Language Selector */}
       <div className="w-full max-w-md mx-auto flex items-center justify-between relative z-10 mb-4 shrink-0">
-        <button
-          onClick={onBackToHome}
-          type="button"
-          className="w-10 h-10 rounded-full bg-white/85 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-800 transition-all active:scale-95 cursor-pointer shadow-sm"
-          title="Retour"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        {onBackToHome ? (
+          <button
+            onClick={onBackToHome}
+            type="button"
+            className="w-10 h-10 rounded-full bg-white/85 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-800 transition-all active:scale-95 cursor-pointer shadow-sm"
+            title="Retour"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        ) : (
+          <div className="w-10 h-10 invisible" />
+        )}
 
         {/* Brand label center */}
         <div className="flex items-center gap-1.5">

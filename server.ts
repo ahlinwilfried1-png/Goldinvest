@@ -162,7 +162,13 @@ async function startServer() {
         { id: 'vip-4', vipLevel: 4, name: 'Système Aiprods 4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'Aiprods 4', category: 'stability' },
         { id: 'vip-5', vipLevel: 5, name: 'Système Aiprods Pro', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'Aiprods Pro', category: 'stability' },
         { id: 'vip-6', vipLevel: 6, name: 'Système Aiprods Pro 2', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'Aiprods Pro 2', category: 'stability' },
-        { id: 'vip-7', vipLevel: 7, name: 'Système Aiprods Max', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'Aiprods Max', category: 'stability' }
+        { id: 'vip-7', vipLevel: 7, name: 'Système Aiprods Max', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'Aiprods Max', category: 'stability' },
+        { id: 'vip-8', vipLevel: 8, name: 'Système Aiprods Ultra', price: 1000000, dailyReturn: 70000, durationDays: 365, totalReturn: 25550000, tag: 'Aiprods Ultra', category: 'stability' },
+        { id: 'vip-9', vipLevel: 9, name: 'Système Aiprods Élite', price: 2000000, dailyReturn: 150000, durationDays: 365, totalReturn: 54750000, tag: 'Aiprods Élite', category: 'stability' },
+        // Activités (Short-cycle products)
+        { id: 'activity-1', vipLevel: 1, name: 'Airprods Activité 1', price: 5000, dailyReturn: 1000, durationDays: 7, totalReturn: 7000, tag: 'Activité 1', category: 'activity' },
+        { id: 'activity-2', vipLevel: 2, name: 'Airprods Activité 2', price: 12000, dailyReturn: 3000, durationDays: 5, totalReturn: 15000, tag: 'Activité 2', category: 'activity' },
+        { id: 'activity-3', vipLevel: 3, name: 'Airprods Activité 3', price: 25000, dailyReturn: 7500, durationDays: 4, totalReturn: 30000, tag: 'Activité 3', category: 'activity' }
       ],
       "gi_mlm_level1_rate": 20,
       "gi_mlm_level2_rate": 3,
@@ -211,6 +217,13 @@ async function startServer() {
         storeData[key] = defaultData[key];
         modified = true;
       }
+    }
+
+    // Auto-migrate server-side products if they are outdated (less than 12 products in database)
+    if (storeData["gi_products"] && Array.isArray(storeData["gi_products"]) && storeData["gi_products"].length < 12) {
+      console.log(`[MIGRATION] Outdated products list found (${storeData["gi_products"].length} items). Resetting to 12 products.`);
+      storeData["gi_products"] = defaultData["gi_products"];
+      modified = true;
     }
 
 

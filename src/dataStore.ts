@@ -21,6 +21,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
   { id: 'vip-5', vipLevel: 5, name: 'Airprods Pro', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'Airprods Pro', category: 'stability' },
   { id: 'vip-6', vipLevel: 6, name: 'Airprods Pro 2', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'Airprods Pro 2', category: 'stability' },
   { id: 'vip-7', vipLevel: 7, name: 'Airprods Max', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'Airprods Max', category: 'stability' },
+  { id: 'vip-8', vipLevel: 8, name: 'Airprods Ultra', price: 1000000, dailyReturn: 70000, durationDays: 365, totalReturn: 25550000, tag: 'Airprods Ultra', category: 'stability' },
+  { id: 'vip-9', vipLevel: 9, name: 'Airprods Élite', price: 2000000, dailyReturn: 150000, durationDays: 365, totalReturn: 54750000, tag: 'Airprods Élite', category: 'stability' },
   // Activités (Short-cycle products)
   { id: 'activity-1', vipLevel: 1, name: 'Airprods Activité 1', price: 5000, dailyReturn: 1000, durationDays: 7, totalReturn: 7000, tag: 'Activité 1', category: 'activity' },
   { id: 'activity-2', vipLevel: 2, name: 'Airprods Activité 2', price: 12000, dailyReturn: 3000, durationDays: 5, totalReturn: 15000, tag: 'Activité 2', category: 'activity' },
@@ -996,8 +998,8 @@ export class DataStore {
   static getProducts(): Product[] {
     let list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
     
-    // Auto-update to P1-P7 (365 days duration) if old database exists in visitor localstorage
-    const needsReset = list.length === 0 || list.some(p => p.name.includes('VIP Élixir') || p.name.includes('VIP Élixir 1') || p.name === 'P1' || p.name === 'A1' || p.name.startsWith('P'));
+    // Auto-update to P1-P9 (365 days duration) if old database exists in visitor localstorage
+    const needsReset = list.length < 12 || list.some(p => p.name.includes('VIP Élixir') || p.name.includes('VIP Élixir 1') || p.name === 'P1' || p.name === 'A1' || p.name.startsWith('P'));
     const hasActivity = list.some(p => p.category === 'activity');
     if (needsReset || !hasActivity) {
       list = DEFAULT_PRODUCTS;

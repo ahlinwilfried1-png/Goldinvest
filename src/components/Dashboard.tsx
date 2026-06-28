@@ -51,6 +51,7 @@ import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotif
 import { DataStore, syncWithBackend, getApiUrl } from '../dataStore';
 import AdminPanel from './AdminPanel';
 import CountdownTimer from './CountdownTimer';
+import { InvestmentItem } from './InvestmentItem';
 
 
 const compressImage = (file: File, maxWidth: number = 500, quality: number = 0.45): Promise<string> => {
@@ -204,6 +205,16 @@ const getVipCropDetails = (level: number, category?: string) => {
         name: "Aiprods Max 🎧",
         desc: "Le summum du luxe audio et de la performance financière sur la plateforme."
       };
+    case 8:
+      return {
+        name: "Aiprods Ultra 🎧",
+        desc: "L'équipement audio ultra-premium réservé aux investisseurs d'élite."
+      };
+    case 9:
+      return {
+        name: "Aiprods Élite 🎧",
+        desc: "Système audio suprême de prestige pour des gains journaliers spectaculaires."
+      };
     default:
       return {
         name: "Aiprods Élite 🎧",
@@ -229,91 +240,60 @@ const ProductImage = ({
   const [errorCount, setErrorCount] = useState(0);
 
   const getVipImageAlternate = (lvl: number, attempt: number) => {
-    if (category === 'activity') {
-      if (attempt === 0) {
+    // Attempt 0: Level-specific premium AirPods images
+    if (attempt === 0) {
+      if (category === 'activity') {
         switch (lvl) {
-          case 1: return 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&q=80&w=400';
-          case 2: return 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&q=80&w=400';
-          case 3: return 'https://images.unsplash.com/photo-1504274066654-fa55518f26ee?auto=format&fit=crop&q=80&w=400';
-          default: return 'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&q=80&w=400';
+          case 1: return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=400';
+          case 2: return 'https://images.unsplash.com/photo-1627989580309-bfaf3e58af6f?auto=format&fit=crop&q=80&w=400';
+          case 3: return 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=400';
+          default: return 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&q=80&w=400';
         }
       } else {
-        return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=60&w=400';
+        switch (lvl) {
+          case 1: return 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&q=80&w=400';
+          case 2: return 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=400';
+          case 3: return 'https://images.unsplash.com/photo-1592921894725-786faf336c17?auto=format&fit=crop&q=80&w=400';
+          case 4: return 'https://images.unsplash.com/photo-1627989580309-bfaf3e58af6f?auto=format&fit=crop&q=80&w=400';
+          case 5: return 'https://images.unsplash.com/photo-1610438235354-a6fa5523c584?auto=format&fit=crop&q=80&w=400';
+          case 6: return 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&q=80&w=400';
+          case 7: return 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=80&w=400';
+          case 8: return 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&q=80&w=400';
+          case 9: return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400';
+          default: return 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&q=80&w=400';
+        }
       }
     }
 
-    if (attempt === 0) {
-      switch (lvl) {
-        case 1: return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400';
-        case 2: return 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&q=80&w=400';
-        case 3: return 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&q=80&w=400';
-        case 4: return 'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&q=80&w=400';
-        case 5: return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=400';
-        case 6: return 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&q=80&w=400';
-        case 7: return 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=80&w=400';
-        default: return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400';
-      }
-    } else if (attempt === 1) {
-      switch (lvl) {
-        case 1: return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=60&w=400';
-        case 2: return 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&q=60&w=400';
-        case 3: return 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&q=60&w=400';
-        case 4: return 'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&q=60&w=400';
-        case 5: return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=60&w=400';
-        case 6: return 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&q=60&w=400';
-        case 7: return 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=60&w=400';
-        default: return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=60&w=400';
-      }
+    // Attempt 1: Safe fallback 1 (Highly reliable Airpods Pro image)
+    if (attempt === 1) {
+      return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=400';
     }
-    return '';
+
+    // Attempt 2: Safe fallback 2 (Airpods case image)
+    if (attempt === 2) {
+      return 'https://images.unsplash.com/photo-1592921894725-786faf336c17?auto=format&fit=crop&q=80&w=400';
+    }
+
+    // Attempt 3+: Ultimate reliable headphones/AirPods image
+    return 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&q=80&w=400';
   };
 
-  const cropDetails = getVipCropDetails(level, category);
-  const emoji = cropDetails.name.split(' ').pop() || '🌾';
-
-  const getFallbackStyle = (lvl: number) => {
-    switch (lvl) {
-      case 1: return "from-amber-100 to-yellow-105 text-yellow-800 border-yellow-200/50";
-      case 2: return "from-red-100 to-orange-105 text-orange-850 border-orange-200/50";
-      case 3: return "from-emerald-100 to-green-105 text-emerald-850 border-green-200/50";
-      case 4: return "from-cyan-100 to-blue-105 text-blue-805 border-blue-200/50";
-      case 5: return "from-amber-200/50 to-orange-200/50 text-amber-900 border-amber-300";
-      case 6: return "from-indigo-100 to-purple-105 text-indigo-805 border-indigo-200/50";
-      case 7: return "from-emerald-200 to-yellow-105 text-[#0f5132] border-emerald-300/40";
-      default: return "from-emerald-50 to-teal-55 text-emerald-805 border-emerald-100";
-    }
-  };
-
-  if (errorCount >= 2) {
-    return (
-      <div className={`w-full h-full bg-gradient-to-br ${getFallbackStyle(level)} flex flex-col items-center justify-center p-3 text-center border overflow-hidden`}>
-        <span className={`${isMini ? 'text-xl animate-pulse' : 'text-3xl animate-pulse'} select-none`} role="img" aria-label={cropDetails.name}>
-          {emoji}
-        </span>
-        {!isMini && (
-          <div className="mt-1 font-sans">
-            <h5 className="font-black text-[9px] uppercase tracking-wider text-slate-800 leading-tight">
-              {cropDetails.name.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '')}
-            </h5>
-            <span className="text-[7px] font-black uppercase text-emerald-600 block tracking-widest mt-0.5 leading-none">
-              PROJET AGRÉÉ 🌾
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  }
+  const currentSrc = getVipImageAlternate(level, errorCount);
 
   return (
-    <img
-      src={getVipImageAlternate(level, errorCount)}
-      alt={alt}
-      className={className}
-      onError={() => {
-        setErrorCount(prev => prev + 1);
-      }}
-      referrerPolicy="no-referrer"
-    />
+    <div className="w-full h-full bg-slate-100 flex items-center justify-center overflow-hidden relative">
+      <img
+        src={currentSrc}
+        alt={alt}
+        className={className}
+        onError={() => {
+          // Increment error count so we try fallback images instead of displaying blank or emoji
+          setErrorCount(prev => Math.min(prev + 1, 4));
+        }}
+        referrerPolicy="no-referrer"
+      />
+    </div>
   );
 };
 
@@ -1090,6 +1070,12 @@ export default function Dashboard({
     }
   }, [supportMessages, activeTab, isLiveChatOpen]);
 
+  useEffect(() => {
+    if (activeTab === 'dashboard') {
+      setShowAnnouncementDismissible(true);
+    }
+  }, [activeTab]);
+
   // Copy referral elements
   const getReferralBaseURL = () => {
     const configuredDomain = DataStore.getReferralDomain();
@@ -1110,15 +1096,50 @@ export default function Dashboard({
   const referralURL = `${getReferralBaseURL()}/?ref=${userState.referralCode}`;
   
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(referralURL);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(referralURL);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = referralURL;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopiedLink(true);
+      triggerToast('Lien de parrainage copié ! 🚀', 'success');
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy link', err);
+      triggerToast('Veuillez copier le lien manuellement dans la zone ci-dessous.', 'info');
+    }
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(userState.referralCode);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(userState.referralCode);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = userState.referralCode;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopiedCode(true);
+      triggerToast('Code sponsor copié ! 🔑', 'success');
+      setTimeout(() => setCopiedCode(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy code', err);
+    }
   };
 
   // Check-in helper
@@ -1570,13 +1591,13 @@ export default function Dashboard({
             setShowAnnouncementDismissible(false);
             try { localStorage.setItem('gi_announcement_dismissed_v2', 'true'); } catch(e){}
           }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto cursor-pointer"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-[4px] p-4 overflow-y-auto cursor-pointer"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border-2 border-slate-200 rounded-3xl p-6 text-left shadow-[0_25px_60px_rgba(0,0,0,0.85)] relative max-w-sm w-full overflow-hidden my-auto cursor-default text-slate-900"
+            className="communiqué-montserrat bg-white border-2 border-slate-200 rounded-3xl p-6 text-left shadow-[0_25px_60px_rgba(0,0,0,0.4)] relative max-w-sm w-full overflow-hidden my-auto cursor-default text-slate-900"
           >
             {/* Background glow decorator */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-[#1b64d9]/5 rounded-full blur-3xl pointer-events-none" />
@@ -1612,7 +1633,7 @@ export default function Dashboard({
                   <div className="flex flex-wrap items-center gap-1">
                     <span className="font-bold text-white/95">Pays :</span>
                     <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Côte d'Ivoire 🇨🇮 / Burkina Faso 🇧🇫 / Togo 🇹🇬 / Bénin 🇧🇯
+                      Côte d'Ivoire 🇨🇮 / Burkina Faso 🇧🇫 / Togo 🇹🇬 / Bénin 🇧🇯 / Cameroun 🇨🇲
                     </span>
                   </div>
                 </div>
@@ -1651,24 +1672,24 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* Referral Pillar con Écriture Blanche */}
-              <div className="bg-slate-900 p-3.5 border border-slate-800 rounded-xl space-y-2 text-white shadow-sm">
+              {/* Referral Pillar with High Contrast */}
+              <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-xl space-y-2 text-slate-800 shadow-sm">
                 <div className="flex items-center space-x-1.5">
                   <span className="text-xs select-none">🤝</span>
-                  <span className="font-bold text-white">Parrainage MLM :</span>
+                  <span className="font-bold text-slate-900">Parrainage MLM :</span>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 font-mono text-[8px] text-center">
-                  <span className="bg-white/5 text-white p-1.5 rounded-lg border border-white/10 flex flex-col items-center justify-center">
-                    <span className="opacity-90 mb-0.5 text-white/80 font-bold">🥇 Niv. 1</span>
-                    <span className="font-black text-[10px] text-white">20%</span>
+                  <span className="bg-white text-slate-800 p-1.5 rounded-lg border border-slate-100 flex flex-col items-center justify-center">
+                    <span className="opacity-90 mb-0.5 text-slate-500 font-bold">🥇 Niv. 1</span>
+                    <span className="font-black text-[10px] text-slate-900">20%</span>
                   </span>
-                  <span className="bg-white/5 text-white p-1.5 rounded-lg border border-white/10 flex flex-col items-center justify-center">
-                    <span className="opacity-90 mb-0.5 text-white/80 font-bold">🥈 Niv. 2</span>
-                    <span className="font-black text-[10px] text-white">3%</span>
+                  <span className="bg-white text-slate-800 p-1.5 rounded-lg border border-slate-100 flex flex-col items-center justify-center">
+                    <span className="opacity-90 mb-0.5 text-slate-500 font-bold">🥈 Niv. 2</span>
+                    <span className="font-black text-[10px] text-slate-900">3%</span>
                   </span>
-                  <span className="bg-white/5 text-white p-1.5 rounded-lg border border-white/10 flex flex-col items-center justify-center">
-                    <span className="opacity-90 mb-0.5 text-white/80 font-bold">🥉 Niv. 3</span>
-                    <span className="font-black text-[10px] text-white">1%</span>
+                  <span className="bg-white text-slate-800 p-1.5 rounded-lg border border-slate-100 flex flex-col items-center justify-center">
+                    <span className="opacity-90 mb-0.5 text-slate-500 font-bold">🥉 Niv. 3</span>
+                    <span className="font-black text-[10px] text-slate-900">1%</span>
                   </span>
                 </div>
               </div>
@@ -2504,8 +2525,11 @@ export default function Dashboard({
                         <div className="grid grid-cols-3 gap-2 border-t border-b border-slate-200/60 py-3.5 my-4 text-left select-none">
                           <div>
                             <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">REVENUS / JOUR</span>
-                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm">
+                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm block">
                               +{p.dailyReturn.toLocaleString()} F
+                            </span>
+                            <span className="text-orange-600 font-extrabold font-sans text-[10px] block mt-0.5">
+                              {((p.dailyReturn / p.price) * 100).toFixed(1)}% / jour
                             </span>
                           </div>
                           <div>
@@ -2516,8 +2540,11 @@ export default function Dashboard({
                           </div>
                           <div>
                             <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">GAINS TOTAUX</span>
-                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm">
+                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm block">
                               {(p.dailyReturn * p.durationDays).toLocaleString()} F
+                            </span>
+                            <span className="text-emerald-600 font-extrabold font-sans text-[10px] block mt-0.5">
+                              {Math.round(((p.dailyReturn * p.durationDays) / p.price) * 100)}% total
                             </span>
                           </div>
                         </div>
@@ -2684,6 +2711,7 @@ export default function Dashboard({
                       <option value="Burkina Faso 🇧🇫">Burkina Faso 🇧🇫</option>
                       <option value="Togo 🇹🇬">Togo 🇹🇬</option>
                       <option value="Bénin 🇧🇯">Bénin 🇧🇯</option>
+                      <option value="Cameroun 🇨🇲">Cameroun 🇨🇲</option>
                     </select>
                   </div>
 
@@ -2786,6 +2814,9 @@ export default function Dashboard({
                     
                     <option value="Orange (BF)">Orange (BF)</option>
                     <option value="Moov (BF)">Moov (BF)</option>
+
+                    <option value="MTN (CM)">MTN (CM)</option>
+                    <option value="Orange (CM)">Orange (CM)</option>
                   </select>
                 </div>
 
@@ -3260,31 +3291,171 @@ export default function Dashboard({
                 </div>
  
                 {/* Copy blocks */}
-                <div className="md:col-span-2 space-y-3 bg-slate-950/80 p-4 rounded-xl border border-slate-800/80 flex flex-col justify-center">
+                <div className="md:col-span-2 space-y-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800/80 flex flex-col justify-center">
                   <div>
                     <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Code Sponsor Unique :</span>
-                    <div className="flex bg-slate-900 border border-slate-800 p-2 px-3 rounded-lg justify-between items-center">
-                      <span className="font-mono text-sm font-black text-yellow-400">{userState.referralCode}</span>
+                    <div className="flex bg-slate-900 border border-slate-800 p-2.5 px-3 rounded-lg justify-between items-center relative">
+                      <span className="font-mono text-sm font-black text-yellow-400 select-all">{userState.referralCode}</span>
                       <button
                         onClick={handleCopyCode}
-                        className="p-1 px-2 text-slate-400 hover:text-white transition-colors"
+                        className="p-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white transition-colors text-slate-300 rounded-md flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
                         title="Copier le code"
                       >
-                        {copiedCode ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                        {copiedCode ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-green-400" />
+                            <span>Copié</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copier</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
  
-                  <div>
-                    <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Lien d'Inscription Aiprods :</span>
-                    <div className="flex bg-slate-900 border border-slate-800 p-2 px-3 rounded-lg justify-between items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-slate-200 truncate flex-1">{referralURL}</span>
-                      <button
-                        onClick={handleCopyLink}
-                        className="p-1 px-2 text-slate-400 hover:text-white transition-colors flex-shrink-0"
-                        title="Copier le lien"
+                  <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/5 p-4 rounded-xl border-2 border-yellow-500/30 space-y-3.5" id="referral-high-visibility-system">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-yellow-400 uppercase font-black tracking-wide block">
+                        🔗 LIEN DE PARRAINAGE EXCLUSIF
+                      </span>
+                      <span className="bg-yellow-500 text-slate-950 font-mono text-[8.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">
+                        Actif
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {/* Fully visible responsive URL box (untruncated, wrapping / break-all to avoid cutting) */}
+                      <div className="relative">
+                        <textarea
+                          readOnly
+                          rows={2}
+                          value={referralURL}
+                          onClick={(e) => {
+                            (e.target as HTMLTextAreaElement).select();
+                            handleCopyLink();
+                          }}
+                          className="w-full font-mono text-xs font-bold text-yellow-300 bg-slate-900 border border-yellow-500/30 hover:border-yellow-500 p-3 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 cursor-pointer shadow-inner transition-all select-all block resize-none text-center break-all"
+                        />
+                        <button
+                          onClick={handleCopyLink}
+                          className="absolute right-2.5 top-2.5 p-2 bg-yellow-500 hover:bg-yellow-400 active:scale-90 text-slate-950 rounded-lg transition-all flex items-center justify-center shadow-md cursor-pointer border-0"
+                          title="Copier le lien de parrainage"
+                        >
+                          {copiedLink ? <Check className="w-4 h-4 text-slate-950 font-bold" /> : <Copy className="w-4 h-4 text-slate-950" />}
+                        </button>
+                      </div>
+                      
+                      <p className="text-[10px] text-slate-300 text-center font-medium leading-tight">
+                        💡 <span className="text-yellow-400 font-black">Astuce :</span> Taper une fois sur la zone ci-dessus pour copier automatiquement !
+                      </p>
+                    </div>
+
+                    {/* QR Code section & big button */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                      <div className="bg-white p-1.5 rounded-lg flex-shrink-0 shadow-md">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=95x95&data=${encodeURIComponent(referralURL)}&color=0-14-38`}
+                          alt="QR Code Parrainage"
+                          className="w-[80px] h-[80px]"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="text-center sm:text-left flex-1 space-y-1.5 w-full">
+                        <h4 className="text-[11px] font-black text-white uppercase tracking-tight">Votre QR Code d'équipe</h4>
+                        <p className="text-[9.5px] text-slate-300 leading-tight">Laissez vos filleuls scanner ce QR code pour s'inscrire sous votre parrainage instantanément.</p>
+                        
+                        <button
+                          type="button"
+                          onClick={handleCopyLink}
+                          className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 active:scale-95 text-slate-950 font-black uppercase text-[10px] tracking-wider py-2 px-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-1.5 border-0 cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          {copiedLink ? 'Lien de Parrainage Copié !' : 'Copier le Lien Principal'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SOCIAL SHARING OPTIONS */}
+                  <div className="pt-3.5 border-t border-slate-800/80 mt-1">
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-2 text-left">Partager sur :</span>
+                    <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-2">
+                      {/* WhatsApp */}
+                      <a 
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Aiprods et gagnez des revenus quotidiens sécurisés ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#25D366] hover:bg-[#20ba59] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm text-center"
                       >
-                        {copiedLink ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+                          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.528 1.975 14.069 1.953 12.01 1.953c-5.438 0-9.863 4.372-9.867 9.802-.001 1.83.49 3.619 1.423 5.191l-.991 3.616 3.702-.971zm11.367-7.251c-.33-.164-1.952-.955-2.253-1.064-.3-.11-.52-.164-.74.164-.22.33-.85 1.064-1.04 1.283-.19.22-.38.246-.71.082-.33-.164-1.393-.51-2.653-1.627-.98-.868-1.64-1.94-1.83-2.268-.19-.33-.02-.508.145-.671.15-.148.33-.384.495-.576.16-.192.21-.33.32-.548.11-.219.05-.411-.02-.576-.07-.164-.74-1.765-1.01-2.422-.26-.632-.53-.547-.73-.557-.19-.01-.41-.01-.62-.01-.21 0-.55.08-.84.4-.29.32-1.12 1.083-1.12 2.641 0 1.558 1.14 3.065 1.3 3.282.16.218 2.24 3.393 5.43 4.757.76.324 1.35.518 1.81.662.76.241 1.45.207 2 .126.61-.09 1.95-.79 2.23-1.558.28-.767.28-1.422.2-1.558-.09-.137-.3-.21-.63-.375z" />
+                        </svg>
+                        <span>WhatsApp</span>
+                      </a>
+
+                      {/* Facebook */}
+                      <a 
+                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralURL)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#1877F2] hover:bg-[#166fe5] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm text-center"
+                      >
+                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                        <span>Facebook</span>
+                      </a>
+
+                      {/* Instagram */}
+                      <button 
+                        onClick={() => {
+                          handleCopyLink();
+                          openAlert('Partager sur Instagram', 'Le lien a été copié ! Collez-le dans votre bio, story ou messages directs sur Instagram.', 'info');
+                          setTimeout(() => {
+                            window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                          }, 1500);
+                        }}
+                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:brightness-110 active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border-0 cursor-pointer text-center"
+                      >
+                        <svg className="w-3.5 h-3.5 fill-none stroke-white stroke-[2]" viewBox="0 0 24 24">
+                          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                        </svg>
+                        <span>Instagram</span>
+                      </button>
+
+                      {/* Twitter (X) */}
+                      <a 
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Rejoignez Aiprods et gagnez des revenus quotidiens sécurisés ! Utilisez mon lien : `)}&url=${encodeURIComponent(referralURL)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#000000] border border-slate-800 hover:bg-[#111] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm text-center"
+                      >
+                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
+                        <span>Twitter</span>
+                      </a>
+
+                      {/* YouTube */}
+                      <button 
+                        onClick={() => {
+                          handleCopyLink();
+                          openAlert('Partager sur YouTube', 'Le lien de parrainage a été copié ! Collez-le dans la description ou les commentaires de votre vidéo/Short YouTube pour attirer des filleuls.', 'info');
+                          setTimeout(() => {
+                            window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
+                          }, 1500);
+                        }}
+                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#FF0000] hover:bg-[#e60000] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border-0 cursor-pointer text-center"
+                      >
+                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+                          <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.553a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11C4.482 20.5 12 20.5 12 20.5s7.518 0 9.388-.553a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                        </svg>
+                        <span>YouTube</span>
                       </button>
                     </div>
                   </div>
@@ -3643,38 +3814,13 @@ export default function Dashboard({
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {activeInvestments.map((p) => {
-                            const percent = Math.min(100, Math.round((p.daysPassed / p.durationDays) * 100));
-                            return (
-                              <div 
-                                key={p.id}
-                                className="bg-slate-50/70 backdrop-blur-sm rounded-2xl p-3.5 border border-slate-100/60 text-left space-y-2 text-xs"
-                              >
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <h5 className="font-sans font-black text-slate-800 text-[11.5px] uppercase">{p.productName}</h5>
-                                    <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">
-                                      Jour {p.daysPassed} sur {p.durationDays}
-                                    </span>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-slate-400 text-[9px] block uppercase font-bold">Investi</span>
-                                    <span className="text-[#0086ff] font-black">{p.price.toLocaleString()} F</span>
-                                  </div>
-                                </div>
-
-                                {/* Progress */}
-                                <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                                  <div className="bg-[#0086ff] h-full" style={{ width: `${percent}%` }} />
-                                </div>
-
-                                <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase pt-1">
-                                  <span>Gains: +{p.dailyReturn.toLocaleString()} F / jour</span>
-                                  <span>Total: {(p.dailyReturn * p.daysPassed).toLocaleString()} F</span>
-                                </div>
-                              </div>
-                            );
-                          })}
+                          {activeInvestments.map((p) => (
+                            <InvestmentItem 
+                              key={p.id}
+                              investment={p}
+                              onClaim={handleClaimReturn}
+                            />
+                          ))}
                         </div>
                       )}
                     </div>
@@ -3794,6 +3940,7 @@ export default function Dashboard({
             onClick={() => {
               setIsAdminMode(false);
               setActiveTab('dashboard');
+              setShowAnnouncementDismissible(true);
             }}
             className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'dashboard' && !isAdminMode ? 'text-orange-600 scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
@@ -4194,7 +4341,7 @@ export default function Dashboard({
                 <div className="space-y-2">
                   <span className="text-[10px] sm:text-xs font-black text-orange-600 block uppercase tracking-widest">PROPULSER LE COMMERCE TECHNOLOGIQUE EN AFRIQUE 🎧</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-600 font-medium">
-                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Aiprods</strong> est la première interface d'investissement technologique en ligne conçue pour démocratiser la distribution de systèmes audio haut de gamme modernes en Afrique de l'Ouest (Côte d'Ivoire, Togo, Bénin, Burkina Faso). Nous canalisons votre épargne vers des stocks réels d'Aiprods connectés de dernière génération afin de générer pour vous des profits stables de manière continue.
+                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Aiprods</strong> est la première interface d'investissement technologique en ligne conçue pour démocratiser la distribution de systèmes audio haut de gamme modernes en Afrique de l'Ouest et Centrale (Côte d'Ivoire, Togo, Bénin, Burkina Faso, Cameroun). Nous canalisons votre épargne vers des stocks réels d'Aiprods connectés de dernière génération afin de générer pour vous des profits stables de manière continue.
                   </p>
                 </div>
 

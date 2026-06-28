@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Home from './components/Home';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import HistoriquePage from './components/HistoriquePage';
@@ -10,7 +9,6 @@ export default function App() {
   // Navigation Path & URL Syncing
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
   const [isRegisterFlow, setIsRegisterFlow] = useState(true);
-  const [showAuth, setShowAuth] = useState(false);
   const [user, setUser] = useState<User | null>(() => DataStore.getCurrentUser());
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -151,7 +149,6 @@ export default function App() {
         setUser(active);
       } else {
         setIsRegisterFlow(true);
-        setShowAuth(true);
       }
     };
 
@@ -195,7 +192,6 @@ export default function App() {
 
   const navigateToAuth = (isRegister: boolean) => {
     setIsRegisterFlow(isRegister);
-    setShowAuth(true);
     setUser(null);
     navigateTo('/');
   };
@@ -219,23 +215,11 @@ export default function App() {
         <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-[#ff7c00]/5 blur-[140px]" />
       </div>
 
-      {/* 1. HOME SCREEN OR AUTH SCREENS */}
-      {!user && !showAuth && (
-        <Home 
-          onNavigateToAuth={(isRegister) => {
-            setIsRegisterFlow(isRegister);
-            setShowAuth(true);
-          }}
-          isLoggedIn={!!user}
-          onGoToDashboard={() => {}}
-        />
-      )}
-
-      {!user && showAuth && (
+      {/* 1. AUTHENTICATION & REGISTRATION SCREEN */}
+      {!user && (
         <Auth 
           initialIsRegister={isRegisterFlow}
           onAuthSuccess={handleAuthSuccess}
-          onBackToHome={() => setShowAuth(false)}
         />
       )}
 

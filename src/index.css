@@ -1,10 +1,12 @@
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700,800,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Montserrat", monospace;
+  --font-sans: "PP Neue Montreal", "Neue Montreal", "General Sans", "Plus Jakarta Sans", "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "PP Neue Montreal", "Neue Montreal", "General Sans", "Plus Jakarta Sans", "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "General Sans", monospace;
   
   --color-gold-luminous: #facc15;
   --color-gold-dark: #b45309;
@@ -14,9 +16,9 @@
   --color-premium-white: #ffffff;
 }
 
-/* Force Montserrat on everything to guarantee NO exception anywhere in the app */
+/* Force Montreal (General Sans / Plus Jakarta Sans) on everything to guarantee NO exception anywhere in the app */
 *, html, body, button, input, select, textarea, table, th, td, h1, h2, h3, h4, h5, h6, span, p, div, a, li, ul, ol, label, section, footer, header, main, nav, aside {
-  font-family: "Montserrat", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: "PP Neue Montreal", "Neue Montreal", "General Sans", "Plus Jakarta Sans", "Montserrat", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 /* Custom Gold and Deep Premium Styles */
@@ -181,34 +183,13 @@ button {
 .bg-\[\#eef3fc\] .text-slate-800,
 .bg-\[\#eef3fc\] .text-slate-705,
 .bg-\[\#eef3fc\] .text-slate-605,
-.bg-\[\#eef3fc\] .text-slate-505,
-.bg-slate-900\/60 span,
-.bg-slate-900\/60 p,
-.bg-slate-900\/60 h3,
-.bg-slate-900\/60 h4,
-.text-slate-201,
-.text-slate-205,
-.text-slate-300,
-.text-slate-450,
-.text-slate-400,
-.text-slate-200,
-.text-slate-100,
-.text-gray-105,
-.text-gray-205,
-.text-gray-305,
-.text-gray-400,
-.text-white,
-.text-zinc-400,
-.text-zinc-300,
-.text-zinc-200,
-.text-zinc-100 {
+.bg-\[\#eef3fc\] .text-slate-505 {
   color: #1e293b !important;
 }
 
-.text-slate-300,
-.text-slate-400,
-.text-slate-500 {
-  color: #475569 !important;
+/* Ensure white text is guaranteed white where specified */
+.text-white-force {
+  color: #ffffff !important;
 }
 
 /* Maintain light color on buttons/badges with special vibrant accents */
@@ -525,5 +506,11 @@ div.font-black {
   display: flex;
   width: max-content;
   animation: marquee-va-et-vient 30s ease-in-out infinite;
+}
+
+/* Specific override for the communiqué to use Montserrat font-family as requested */
+.communiqué-montserrat,
+.communiqué-montserrat * {
+  font-family: "Montserrat", sans-serif !important;
 }
 

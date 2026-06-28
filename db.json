@@ -5,32 +5,32 @@
       "name": "Administrateur Principal",
       "role": "admin",
       "bonus": 5000,
-      "balance": 1274850,
+      "balance": 1279750,
       "country": "Cameroun",
       "password": "agro777",
       "whatsapp": "+237600000000",
       "createdAt": "2026-05-10T10:00:00Z",
       "isBlocked": false,
-      "lastModified": 1782456797173,
+      "lastModified": 1782596853174,
       "referralCode": "AGR72",
       "dailyEarnings": 2450,
-      "totalEarnings": 24850
+      "totalEarnings": 29750
     },
     {
       "id": "u-1779950958295",
       "name": "Kodjo ",
       "role": "admin",
-      "bonus": 850,
-      "balance": 2550,
+      "bonus": 900,
+      "balance": 3200,
       "country": "Togo",
       "password": "admin",
       "whatsapp": "70903319",
       "createdAt": "2026-05-28T06:49:18.295Z",
       "isBlocked": false,
-      "lastModified": 1782456797173,
+      "lastModified": 1782596853174,
       "referralCode": "KODJO180",
       "dailyEarnings": 300,
-      "totalEarnings": 4200,
+      "totalEarnings": 4800,
       "withdrawBlocked": false
     },
     {
@@ -39,16 +39,16 @@
       "role": "admin",
       "bonus": 200,
       "device": "Android",
-      "balance": 6760,
+      "balance": 8120,
       "country": "Burkina Faso",
       "password": "123456",
       "whatsapp": "+22670903319",
       "createdAt": "2026-06-08T20:57:38.969Z",
       "isBlocked": false,
-      "lastModified": 1782456797173,
+      "lastModified": 1782596853174,
       "referralCode": "QOA63",
       "dailyEarnings": 680,
-      "totalEarnings": 9260,
+      "totalEarnings": 10620,
       "withdrawBlocked": false
     },
     {
@@ -62,7 +62,7 @@
       "whatsapp": "+22670903319",
       "createdAt": "2026-05-31T14:25:46.721Z",
       "isBlocked": false,
-      "lastModified": 1782456797173,
+      "lastModified": 1782596853174,
       "referralCode": "GOLD772",
       "dailyEarnings": 0,
       "totalEarnings": 0
@@ -812,6 +812,66 @@
       "reference": "WP-FB-1782124205695",
       "lastModified": 1782124205853,
       "receiptImage": "automated_fallback"
+    },
+    {
+      "id": "dep-1782179303692",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-1782136250876",
+      "operator": "Westpay (Auto)",
+      "userName": "Noé",
+      "createdAt": "2026-06-23T01:48:23.692Z",
+      "reference": "WP-FB-1782179303329",
+      "lastModified": 1782179303694,
+      "receiptImage": "automated_fallback"
+    },
+    {
+      "id": "dep-1782186053873",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-1782185861381",
+      "operator": "Westpay (Auto)",
+      "userName": "Bietidylan",
+      "createdAt": "2026-06-23T03:40:53.873Z",
+      "reference": "WP-FB-1782186053700",
+      "lastModified": 1782186053874,
+      "receiptImage": "automated_fallback"
+    },
+    {
+      "id": "dep-1782206843297",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-1782206783030",
+      "operator": "Westpay (Auto)",
+      "userName": "Kourayo",
+      "createdAt": "2026-06-23T09:27:23.297Z",
+      "reference": "WP-FB-1782206842657",
+      "lastModified": 1782206843298,
+      "receiptImage": "automated_fallback"
+    },
+    {
+      "id": "dep-1782249762942",
+      "amount": 3000,
+      "status": "pending",
+      "userId": "u-1782249599591",
+      "operator": "Westpay (Auto)",
+      "userName": "David KIEMDE",
+      "createdAt": "2026-06-23T21:22:42.942Z",
+      "reference": "WP-FB-1782249762790",
+      "lastModified": 1782249762944,
+      "receiptImage": "automated_fallback"
+    },
+    {
+      "id": "dep-1782325128472",
+      "amount": 5000,
+      "status": "pending",
+      "userId": "u-1781950763314",
+      "operator": "Westpay (Auto)",
+      "userName": "Boris",
+      "createdAt": "2026-06-24T18:18:48.473Z",
+      "reference": "WP-FB-1782325128319",
+      "lastModified": 1782325128474,
+      "receiptImage": "automated_fallback"
     }
   ],
   "gi_withdrawals": [
@@ -896,13 +956,13 @@
       "fee": 120,
       "amount": 1000,
       "number": "+2290151046824",
-      "status": "pending",
+      "status": "approved",
       "userId": "u-1781864442965",
       "operator": "MTN (BJ)",
       "userName": "King Jojo",
       "createdAt": "2026-06-20T08:49:38.738Z",
       "netAmount": 880,
-      "lastModified": 1781945378738,
+      "lastModified": 1782484563764,
       "proof_file_url": ""
     },
     {
@@ -924,13 +984,13 @@
       "fee": 120,
       "amount": 1000,
       "number": "99099065",
-      "status": "pending",
+      "status": "approved",
       "userId": "u-1781939068204",
       "operator": "Moov (TG)",
       "userName": "Leader Wilfried",
       "createdAt": "2026-06-20T09:13:47.196Z",
       "netAmount": 880,
-      "lastModified": 1781946827200,
+      "lastModified": 1782484562803,
       "proof_file_url": ""
     },
     {
@@ -938,13 +998,27 @@
       "fee": 240,
       "amount": 2000,
       "number": "0194047269",
-      "status": "pending",
+      "status": "approved",
       "userId": "u-1781864442965",
       "operator": "Moov (BJ)",
       "userName": "King Jojo",
       "createdAt": "2026-06-20T14:58:25.124Z",
       "netAmount": 1760,
-      "lastModified": 1781967505124,
+      "lastModified": 1782484562102,
+      "proof_file_url": ""
+    },
+    {
+      "id": "wth-1782381895696",
+      "fee": 360,
+      "amount": 3000,
+      "number": "0161655306",
+      "status": "approved",
+      "userId": "u-1781900067016",
+      "operator": "MTN (BJ)",
+      "userName": "WHANNOU Ornel",
+      "createdAt": "2026-06-25T10:04:55.696Z",
+      "netAmount": 2640,
+      "lastModified": 1782484561212,
       "proof_file_url": ""
     }
   ],
@@ -956,13 +1030,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-02T10:55:03.487Z",
       "productId": "vip-1",
-      "daysPassed": 23,
+      "daysPassed": 25,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782411444265,
-      "lastClaimDate": "2026-06-25T18:17:24.256Z",
-      "totalReturnClaimed": 6900
+      "lastModified": 1782560104082,
+      "lastClaimDate": "2026-06-27T11:35:04.076Z",
+      "totalReturnClaimed": 7500
     },
     {
       "id": "inv-1780744789286",
@@ -971,13 +1045,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T11:19:49.294Z",
       "productId": "vip-1",
-      "daysPassed": 19,
+      "daysPassed": 21,
       "dailyReturn": 300,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782411444265,
-      "lastClaimDate": "2026-06-25T18:17:24.257Z",
-      "totalReturnClaimed": 5700
+      "lastModified": 1782560104082,
+      "lastClaimDate": "2026-06-27T11:35:04.077Z",
+      "totalReturnClaimed": 6300
     },
     {
       "id": "inv-1780755294947",
@@ -986,13 +1060,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-06T14:14:54.947Z",
       "productId": "vip-1",
-      "daysPassed": 19,
+      "daysPassed": 21,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782411444265,
-      "lastClaimDate": "2026-06-25T18:17:24.257Z",
-      "totalReturnClaimed": 9500
+      "lastModified": 1782571540618,
+      "lastClaimDate": "2026-06-27T14:45:40.618Z",
+      "totalReturnClaimed": 10500
     },
     {
       "id": "inv-1780832997559",
@@ -1001,13 +1075,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T11:49:57.559Z",
       "productId": "vip-1",
-      "daysPassed": 18,
+      "daysPassed": 20,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782411444265,
-      "lastClaimDate": "2026-06-25T18:17:24.257Z",
-      "totalReturnClaimed": 9000
+      "lastModified": 1782571540618,
+      "lastClaimDate": "2026-06-27T14:45:40.618Z",
+      "totalReturnClaimed": 10000
     },
     {
       "id": "inv-1780841270273",
@@ -1016,13 +1090,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-07T14:07:50.275Z",
       "productId": "vip-1",
-      "daysPassed": 18,
+      "daysPassed": 20,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782411444265,
-      "lastClaimDate": "2026-06-25T18:17:24.258Z",
-      "totalReturnClaimed": 9000
+      "lastModified": 1782571540618,
+      "lastClaimDate": "2026-06-27T14:45:40.618Z",
+      "totalReturnClaimed": 10000
     },
     {
       "id": "inv-1780952684130",
@@ -1031,13 +1105,13 @@
       "userId": "u-1780952258969",
       "createdAt": "2026-06-08T21:04:44.130Z",
       "productId": "vip-1",
-      "daysPassed": 17,
+      "daysPassed": 19,
       "dailyReturn": 500,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782422102503,
-      "lastClaimDate": "2026-06-25T21:15:02.498Z",
-      "totalReturnClaimed": 8500
+      "lastModified": 1782596852097,
+      "lastClaimDate": "2026-06-27T21:47:32.097Z",
+      "totalReturnClaimed": 9500
     },
     {
       "id": "inv-1781195123001",
@@ -1046,13 +1120,13 @@
       "userId": "u-1779950958295",
       "createdAt": "2026-06-11T16:25:23.001Z",
       "productId": "vip-1",
-      "daysPassed": 14,
+      "daysPassed": 16,
       "dailyReturn": 300,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782411444265,
-      "lastClaimDate": "2026-06-25T18:17:24.258Z",
-      "totalReturnClaimed": 4200
+      "lastModified": 1782578397280,
+      "lastClaimDate": "2026-06-27T16:39:57.280Z",
+      "totalReturnClaimed": 4800
     },
     {
       "id": "inv-1781718245565",
@@ -1061,13 +1135,13 @@
       "userId": "u-1780952258969",
       "createdAt": "2026-06-17T17:44:05.565Z",
       "productId": "vip-1",
-      "daysPassed": 8,
+      "daysPassed": 10,
       "dailyReturn": 180,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782411444265,
-      "lastClaimDate": "2026-06-25T18:17:24.258Z",
-      "totalReturnClaimed": 1440
+      "lastModified": 1782582246284,
+      "lastClaimDate": "2026-06-27T17:44:06.284Z",
+      "totalReturnClaimed": 1800
     },
     {
       "id": "inv-1780422657357",
@@ -1076,13 +1150,13 @@
       "userId": "u-admin",
       "createdAt": "2026-06-02T17:50:57.359Z",
       "productId": "vip-1",
-      "daysPassed": 23,
+      "daysPassed": 25,
       "dailyReturn": 350,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782411444265,
-      "lastClaimDate": "2026-06-25T18:17:24.259Z",
-      "totalReturnClaimed": 8050
+      "lastModified": 1782596852097,
+      "lastClaimDate": "2026-06-27T21:47:32.097Z",
+      "totalReturnClaimed": 8750
     },
     {
       "id": "inv-301",
@@ -1121,13 +1195,13 @@
       "userId": "u-1780266312773",
       "createdAt": "2026-05-31T23:49:39.540Z",
       "productId": "vip-2",
-      "daysPassed": 25,
+      "daysPassed": 26,
       "dailyReturn": 800,
       "productName": "P2",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 20000
+      "lastModified": 1782571542700,
+      "lastClaimDate": "2026-06-27T14:45:42.700Z",
+      "totalReturnClaimed": 20800
     },
     {
       "id": "inv-1780271358949",
@@ -1136,13 +1210,13 @@
       "userId": "u-1780266312773",
       "createdAt": "2026-05-31T23:49:18.963Z",
       "productId": "vip-1",
-      "daysPassed": 25,
+      "daysPassed": 26,
       "dailyReturn": 350,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 8750
+      "lastModified": 1782571542700,
+      "lastClaimDate": "2026-06-27T14:45:42.700Z",
+      "totalReturnClaimed": 9100
     },
     {
       "id": "inv-1780422823474",
@@ -1151,13 +1225,13 @@
       "userId": "u-1780420718408",
       "createdAt": "2026-06-02T17:53:43.483Z",
       "productId": "vip-1",
-      "daysPassed": 23,
+      "daysPassed": 25,
       "dailyReturn": 350,
       "productName": "P1",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 8050
+      "lastModified": 1782596853174,
+      "lastClaimDate": "2026-06-27T21:47:33.174Z",
+      "totalReturnClaimed": 8750
     },
     {
       "id": "inv-1781800126802",
@@ -1166,13 +1240,13 @@
       "userId": "u-1781800026126",
       "createdAt": "2026-06-18T16:28:46.802Z",
       "productId": "vip-1",
-      "daysPassed": 7,
+      "daysPassed": 9,
       "dailyReturn": 180,
       "productName": "STARTER",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 1260
+      "lastModified": 1782578374117,
+      "lastClaimDate": "2026-06-27T16:39:34.115Z",
+      "totalReturnClaimed": 1620
     },
     {
       "id": "inv-1781800137442",
@@ -1181,13 +1255,13 @@
       "userId": "u-1781800026126",
       "createdAt": "2026-06-18T16:28:57.442Z",
       "productId": "vip-2",
-      "daysPassed": 7,
+      "daysPassed": 9,
       "dailyReturn": 360,
       "productName": "STANDARD",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 2520
+      "lastModified": 1782578374117,
+      "lastClaimDate": "2026-06-27T16:39:34.115Z",
+      "totalReturnClaimed": 3240
     },
     {
       "id": "inv-1781800159296",
@@ -1196,13 +1270,13 @@
       "userId": "u-1781800026126",
       "createdAt": "2026-06-18T16:29:19.297Z",
       "productId": "vip-3",
-      "daysPassed": 7,
+      "daysPassed": 9,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 5208
+      "lastModified": 1782578374117,
+      "lastClaimDate": "2026-06-27T16:39:34.115Z",
+      "totalReturnClaimed": 6696
     },
     {
       "id": "inv-1781938289392",
@@ -1211,13 +1285,13 @@
       "userId": "u-1781864442965",
       "createdAt": "2026-06-20T06:51:29.392Z",
       "productId": "vip-3",
-      "daysPassed": 6,
+      "daysPassed": 7,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 4464
+      "lastModified": 1782571542700,
+      "lastClaimDate": "2026-06-27T14:45:42.700Z",
+      "totalReturnClaimed": 5208
     },
     {
       "id": "inv-1781939387587",
@@ -1226,28 +1300,13 @@
       "userId": "u-1781939068204",
       "createdAt": "2026-06-20T07:09:47.587Z",
       "productId": "vip-3",
-      "daysPassed": 5,
+      "daysPassed": 7,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 3720
-    },
-    {
-      "id": "inv-1781939451027",
-      "price": 15000,
-      "status": "active",
-      "userId": "u-1781939277284",
-      "createdAt": "2026-06-20T07:10:51.027Z",
-      "productId": "vip-3",
-      "daysPassed": 5,
-      "dailyReturn": 744,
-      "productName": "PREMIUM",
-      "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 3720
+      "lastModified": 1782571542700,
+      "lastClaimDate": "2026-06-27T14:45:42.700Z",
+      "totalReturnClaimed": 5208
     },
     {
       "id": "inv-1781945935744",
@@ -1256,13 +1315,28 @@
       "userId": "u-1781900067016",
       "createdAt": "2026-06-20T08:58:55.744Z",
       "productId": "vip-3",
-      "daysPassed": 5,
+      "daysPassed": 7,
       "dailyReturn": 744,
       "productName": "PREMIUM",
       "durationDays": 365,
-      "lastModified": 1782456797172,
-      "lastClaimDate": "2026-06-26T06:53:17.172Z",
-      "totalReturnClaimed": 3720
+      "lastModified": 1782571542700,
+      "lastClaimDate": "2026-06-27T14:45:42.700Z",
+      "totalReturnClaimed": 5208
+    },
+    {
+      "id": "inv-1781939451027",
+      "price": 15000,
+      "status": "active",
+      "userId": "u-1781939277284",
+      "createdAt": "2026-06-20T07:10:51.027Z",
+      "productId": "vip-3",
+      "daysPassed": 7,
+      "dailyReturn": 744,
+      "productName": "PREMIUM",
+      "durationDays": 365,
+      "lastModified": 1782571542700,
+      "lastClaimDate": "2026-06-27T14:45:42.700Z",
+      "totalReturnClaimed": 5208
     }
   ],
   "gi_commissions": [
@@ -3930,6 +4004,186 @@
       "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
       "createdAt": "2026-06-25T21:15:02.498Z",
       "lastModified": 1782422102539
+    },
+    {
+      "id": "not-daily-1782467613894",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1779950958295",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-26T09:53:33.894Z",
+      "lastModified": 1782467613894
+    },
+    {
+      "id": "not-autodrop-srv-1782471304354-inv-1780397703473-23",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T10:55:04.371Z",
+      "lastModified": 1782471304371
+    },
+    {
+      "id": "not-autodrop-srv-1782472791028-inv-1780744789286-19",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T11:19:51.045Z",
+      "lastModified": 1782472791045
+    },
+    {
+      "id": "not-autodrop-srv-1782475605824-inv-1780832997559-18",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T12:06:45.840Z",
+      "lastModified": 1782475605840
+    },
+    {
+      "id": "not-autodrop-1782484370455-inv-1780841270273-18",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T14:32:50.455Z",
+      "lastModified": 1782484370494
+    },
+    {
+      "id": "not-autodrop-1782484370455-inv-1780755294947-19",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T14:32:50.455Z",
+      "lastModified": 1782484370494
+    },
+    {
+      "id": "not-autodrop-1782507885955-inv-1780952684130-17",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T21:04:45.956Z",
+      "lastModified": 1782507886096
+    },
+    {
+      "id": "not-autodrop-1782560104076-inv-1780744789286-20",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-27T11:35:04.077Z",
+      "lastModified": 1782560104166
+    },
+    {
+      "id": "not-autodrop-1782560104076-inv-1780397703473-24",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (P1)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-27T11:35:04.076Z",
+      "lastModified": 1782560104166
+    },
+    {
+      "id": "not-autodrop-srv-1782571540618-inv-1780841270273-19",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-27T14:45:40.618Z",
+      "lastModified": 1782571540618
+    },
+    {
+      "id": "not-autodrop-srv-1782571540618-inv-1780832997559-19",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-27T14:45:40.618Z",
+      "lastModified": 1782571540618
+    },
+    {
+      "id": "not-autodrop-srv-1782571540528-inv-1780755294947-20",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-admin",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-27T14:45:40.618Z",
+      "lastModified": 1782571540618
+    },
+    {
+      "id": "not-autodrop-srv-1782578397255-inv-1781195123001-15",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-27T16:39:57.280Z",
+      "lastModified": 1782578397280
+    },
+    {
+      "id": "not-autodrop-1782578374101-inv-1781195123001-15",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1779950958295",
+      "message": "Félicitations, votre gain quotidien de 300 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-27T16:39:34.101Z",
+      "lastModified": 1782578374181
+    },
+    {
+      "id": "not-autodrop-srv-1782582246264-inv-1781718245565-9",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1780952258969",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-27T17:44:06.284Z",
+      "lastModified": 1782582246284
+    },
+    {
+      "id": "not-autodrop-srv-1782596852097-inv-1780422657357-24",
+      "userId": "u-admin",
+      "title": "💰 Gain automatique reçu (P1)",
+      "message": "Félicitations, votre gain quotidien de 350 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "type": "plan",
+      "lastModified": 1782596852097,
+      "createdAt": "2026-06-27T21:47:32.097Z",
+      "read": false
+    },
+    {
+      "id": "not-autodrop-srv-1782596851995-inv-1780952684130-18",
+      "userId": "u-1780952258969",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "message": "Félicitations, votre gain quotidien de 500 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "type": "plan",
+      "lastModified": 1782596852097,
+      "createdAt": "2026-06-27T21:47:32.097Z",
+      "read": false
+    },
+    {
+      "id": "not-autodrop-1782582661353-inv-1780422657357-24",
+      "userId": "u-admin",
+      "title": "💰 Gain automatique reçu (P1)",
+      "message": "Félicitations, votre gain quotidien de 350 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "type": "plan",
+      "createdAt": "2026-06-27T17:51:01.354Z",
+      "read": false,
+      "lastModified": 1782582661427
     },
     {
       "id": "not-autodrop-1780284755142-inv-301-9",
@@ -7170,6 +7424,1156 @@
       "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
       "createdAt": "2026-06-22T11:36:40.931Z",
       "lastModified": 1782128200933
+    },
+    {
+      "id": "not-1782134299311",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782134299259",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-22T13:18:19.311Z",
+      "lastModified": 1782134299315
+    },
+    {
+      "id": "not-1782136250919",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782136250876",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-22T13:50:50.919Z",
+      "lastModified": 1782136250922
+    },
+    {
+      "id": "not-daily-1782136299482",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782136250876",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-22T13:51:39.482Z",
+      "lastModified": 1782136299484
+    },
+    {
+      "id": "not-ref-1782136582852",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1781800026126",
+      "message": "kouadio Julien kouad s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-22T13:56:22.852Z",
+      "lastModified": 1782136582853
+    },
+    {
+      "id": "not-1782136582852",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782136582828",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-22T13:56:22.852Z",
+      "lastModified": 1782136582853
+    },
+    {
+      "id": "not-1782140733000",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782140732911",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-22T15:05:33.000Z",
+      "lastModified": 1782140733005
+    },
+    {
+      "id": "not-ref-1782144328383",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1781800026126",
+      "message": "Salambantango s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-22T16:05:28.383Z",
+      "lastModified": 1782144328387
+    },
+    {
+      "id": "not-1782144328383",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782144328366",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-22T16:05:28.383Z",
+      "lastModified": 1782144328387
+    },
+    {
+      "id": "not-autodrop-1782146436436-inv-1781800159296-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T16:40:36.436Z",
+      "lastModified": 1782146436452
+    },
+    {
+      "id": "not-autodrop-1782146436436-inv-1781800137442-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STANDARD)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 360 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T16:40:36.436Z",
+      "lastModified": 1782146436452
+    },
+    {
+      "id": "not-autodrop-1782146436435-inv-1781800126802-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-22T16:40:36.436Z",
+      "lastModified": 1782146436452
+    },
+    {
+      "id": "not-ref-1782150159080",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1781939068204",
+      "message": "Emmanuel s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-22T17:42:39.080Z",
+      "lastModified": 1782150159082
+    },
+    {
+      "id": "not-1782150159080",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782150159065",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-22T17:42:39.080Z",
+      "lastModified": 1782150159082
+    },
+    {
+      "id": "not-1782150360200",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782150360180",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-22T17:46:00.200Z",
+      "lastModified": 1782150360202
+    },
+    {
+      "id": "not-daily-1782166860665",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781977362303",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-22T22:21:00.665Z",
+      "lastModified": 1782166860669
+    },
+    {
+      "id": "not-1782168096179",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782168096133",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-22T22:41:36.179Z",
+      "lastModified": 1782168096183
+    },
+    {
+      "id": "not-daily-1782168119403",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782168096133",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-22T22:41:59.403Z",
+      "lastModified": 1782168119406
+    },
+    {
+      "id": "not-daily-1782178381640",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782025712132",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T01:33:01.640Z",
+      "lastModified": 1782178381651
+    },
+    {
+      "id": "not-daily-1782179189553",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782136250876",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T01:46:29.553Z",
+      "lastModified": 1782179189556
+    },
+    {
+      "id": "not-dep-1782179303714",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1782136250876",
+      "message": "Votre demande de dépôt de 5 000 XOF via Westpay (Auto) (Réf: WP-FB-1782179303329) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-23T01:48:23.726Z",
+      "lastModified": 1782179303732
+    },
+    {
+      "id": "not-1782185861413",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782185861381",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T03:37:41.413Z",
+      "lastModified": 1782185861418
+    },
+    {
+      "id": "not-dep-1782186053907",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1782185861381",
+      "message": "Votre demande de dépôt de 5 000 XOF via Westpay (Auto) (Réf: WP-FB-1782186053700) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-23T03:40:53.907Z",
+      "lastModified": 1782186053912
+    },
+    {
+      "id": "not-daily-1782186506428",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782185861381",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T03:48:26.428Z",
+      "lastModified": 1782186506433
+    },
+    {
+      "id": "not-daily-1782194312961",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T05:58:32.961Z",
+      "lastModified": 1782194312969
+    },
+    {
+      "id": "not-daily-1782194312214",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T05:58:32.214Z",
+      "lastModified": 1782194312221
+    },
+    {
+      "id": "not-daily-1782194307652",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T05:58:27.657Z",
+      "lastModified": 1782194307685
+    },
+    {
+      "id": "not-autodrop-1782197840482-inv-1781938289392-2",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781864442965",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T06:57:20.482Z",
+      "lastModified": 1782197840505
+    },
+    {
+      "id": "not-daily-1782197842919",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781943334399",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T06:57:22.919Z",
+      "lastModified": 1782197842920
+    },
+    {
+      "id": "not-autodrop-1782199121664-inv-1781939451027-2",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781939277284",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T07:18:41.664Z",
+      "lastModified": 1782199121668
+    },
+    {
+      "id": "not-autodrop-1782199121663-inv-1781939387587-2",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781939068204",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T07:18:41.664Z",
+      "lastModified": 1782199121668
+    },
+    {
+      "id": "not-ref-1782199121496",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1781800026126",
+      "message": "Man s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-23T07:18:41.496Z",
+      "lastModified": 1782199121497
+    },
+    {
+      "id": "not-1782199121496",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782199121489",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T07:18:41.496Z",
+      "lastModified": 1782199121497
+    },
+    {
+      "id": "not-1782201509648",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782201509609",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T07:58:29.648Z",
+      "lastModified": 1782201509651
+    },
+    {
+      "id": "not-daily-1782203424846",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782201509609",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T08:30:24.846Z",
+      "lastModified": 1782203424847
+    },
+    {
+      "id": "not-daily-1782203697709",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782201509609",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T08:34:57.709Z",
+      "lastModified": 1782203697710
+    },
+    {
+      "id": "not-autodrop-1782206783575-inv-1781945935744-2",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781900067016",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T09:26:23.576Z",
+      "lastModified": 1782206783605
+    },
+    {
+      "id": "not-1782206783089",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782206783030",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T09:26:23.089Z",
+      "lastModified": 1782206783092
+    },
+    {
+      "id": "not-dep-1782206843321",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1782206783030",
+      "message": "Votre demande de dépôt de 5 000 XOF via Westpay (Auto) (Réf: WP-FB-1782206842657) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-23T09:27:23.321Z",
+      "lastModified": 1782206843324
+    },
+    {
+      "id": "not-autodrop-1782206003878-inv-1781945935744-2",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781900067016",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T09:13:23.878Z",
+      "lastModified": 1782206003986
+    },
+    {
+      "id": "not-ref-1782211901393",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1781800026126",
+      "message": "Coulibaly s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-23T10:51:41.393Z",
+      "lastModified": 1782211901398
+    },
+    {
+      "id": "not-1782211901393",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782211901344",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T10:51:41.393Z",
+      "lastModified": 1782211901398
+    },
+    {
+      "id": "not-daily-1782213898807",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940890147",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T11:24:58.807Z",
+      "lastModified": 1782213898812
+    },
+    {
+      "id": "not-ref-1782214547410",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1781800026126",
+      "message": "Ohin essen s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-23T11:35:47.410Z",
+      "lastModified": 1782214547416
+    },
+    {
+      "id": "not-1782214547410",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782214547341",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T11:35:47.410Z",
+      "lastModified": 1782214547416
+    },
+    {
+      "id": "not-daily-1782215003200",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782214547341",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T11:43:23.200Z",
+      "lastModified": 1782215003206
+    },
+    {
+      "id": "not-ref-1782215659417",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1781800026126",
+      "message": "Tchabirou seibou s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-23T11:54:19.417Z",
+      "lastModified": 1782215659419
+    },
+    {
+      "id": "not-1782215659417",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782215659363",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T11:54:19.417Z",
+      "lastModified": 1782215659419
+    },
+    {
+      "id": "not-daily-1782215762337",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782215659363",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T11:56:02.337Z",
+      "lastModified": 1782215762357
+    },
+    {
+      "id": "not-autodrop-1782233702867-inv-1781800159296-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T16:55:02.867Z",
+      "lastModified": 1782233702880
+    },
+    {
+      "id": "not-autodrop-1782233702867-inv-1781800137442-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STANDARD)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 360 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T16:55:02.867Z",
+      "lastModified": 1782233702880
+    },
+    {
+      "id": "not-autodrop-1782233702867-inv-1781800126802-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-23T16:55:02.867Z",
+      "lastModified": 1782233702880
+    },
+    {
+      "id": "not-1782233702578",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782233702537",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T16:55:02.578Z",
+      "lastModified": 1782233702581
+    },
+    {
+      "id": "not-ref-1782246644787",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-1781800026126",
+      "message": "Ouadraogo s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-06-23T20:30:44.787Z",
+      "lastModified": 1782246644789
+    },
+    {
+      "id": "not-1782246644786",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782246644753",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T20:30:44.786Z",
+      "lastModified": 1782246644789
+    },
+    {
+      "id": "not-1782249599655",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782249599591",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T21:19:59.655Z",
+      "lastModified": 1782249599661
+    },
+    {
+      "id": "not-dep-1782249762974",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1782249599591",
+      "message": "Votre demande de dépôt de 3 000 XOF via Westpay (Auto) (Réf: WP-FB-1782249762790) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-23T21:22:42.974Z",
+      "lastModified": 1782249762978
+    },
+    {
+      "id": "not-daily-1782239253355",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782239241744",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-23T18:27:33.355Z",
+      "lastModified": 1782239253357
+    },
+    {
+      "id": "not-1782239241779",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782239241744",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-23T18:27:21.779Z",
+      "lastModified": 1782239241784
+    },
+    {
+      "id": "not-daily-1782273542513",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781938962821",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T03:59:02.513Z",
+      "lastModified": 1782273542514
+    },
+    {
+      "id": "not-daily-1782277572938",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782201509609",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T05:06:12.938Z",
+      "lastModified": 1782277572940
+    },
+    {
+      "id": "not-1782287323718",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782287323676",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-24T07:48:43.718Z",
+      "lastModified": 1782287323719
+    },
+    {
+      "id": "not-autodrop-1782287323931-inv-1781939451027-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781939277284",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T07:48:43.931Z",
+      "lastModified": 1782287323943
+    },
+    {
+      "id": "not-autodrop-1782287323931-inv-1781939387587-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781939068204",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T07:48:43.931Z",
+      "lastModified": 1782287323943
+    },
+    {
+      "id": "not-autodrop-1782287323931-inv-1781938289392-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781864442965",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T07:48:43.931Z",
+      "lastModified": 1782287323943
+    },
+    {
+      "id": "not-daily-1782288048822",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782025712132",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T08:00:48.822Z",
+      "lastModified": 1782288048836
+    },
+    {
+      "id": "not-autodrop-1782291654280-inv-1781945935744-3",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781900067016",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T09:00:54.280Z",
+      "lastModified": 1782291654320
+    },
+    {
+      "id": "not-1782296544092",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782296544068",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-24T10:22:24.092Z",
+      "lastModified": 1782296544098
+    },
+    {
+      "id": "not-daily-1782310718331",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781941726442",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T14:18:38.331Z",
+      "lastModified": 1782310718333
+    },
+    {
+      "id": "not-autodrop-1782325116091-inv-1781800159296-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T18:18:36.091Z",
+      "lastModified": 1782325116140
+    },
+    {
+      "id": "not-autodrop-1782325116091-inv-1781800137442-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STANDARD)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 360 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T18:18:36.091Z",
+      "lastModified": 1782325116140
+    },
+    {
+      "id": "not-autodrop-1782325116090-inv-1781800126802-5",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-24T18:18:36.091Z",
+      "lastModified": 1782325116140
+    },
+    {
+      "id": "not-dep-1782325128521",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1781950763314",
+      "message": "Votre demande de dépôt de 5 000 XOF via Westpay (Auto) (Réf: WP-FB-1782325128319) est en cours de vérification par l'administration.",
+      "createdAt": "2026-06-24T18:18:48.521Z",
+      "lastModified": 1782325128527
+    },
+    {
+      "id": "not-daily-1782325183191",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782239241744",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T18:19:43.191Z",
+      "lastModified": 1782325183193
+    },
+    {
+      "id": "not-daily-1782327023378",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782136250876",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T18:50:23.378Z",
+      "lastModified": 1782327023390
+    },
+    {
+      "id": "not-daily-1782329785931",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782050842002",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T19:36:25.931Z",
+      "lastModified": 1782329785936
+    },
+    {
+      "id": "not-autodrop-1782466939574-inv-1781939451027-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781939277284",
+      "message": "Félicitations, votre gain quotidien de 1 488 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T09:42:19.574Z",
+      "lastModified": 1782466939615
+    },
+    {
+      "id": "not-autodrop-1782466939574-inv-1781945935744-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781900067016",
+      "message": "Félicitations, votre gain quotidien de 1 488 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T09:42:19.574Z",
+      "lastModified": 1782466939615
+    },
+    {
+      "id": "not-autodrop-1782466939574-inv-1781939387587-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781939068204",
+      "message": "Félicitations, votre gain quotidien de 1 488 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T09:42:19.574Z",
+      "lastModified": 1782466939615
+    },
+    {
+      "id": "not-autodrop-1782466939574-inv-1781938289392-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781864442965",
+      "message": "Félicitations, votre gain quotidien de 1 488 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T09:42:19.574Z",
+      "lastModified": 1782466939615
+    },
+    {
+      "id": "not-autodrop-1782466939573-inv-1781800159296-6",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T09:42:19.574Z",
+      "lastModified": 1782466939615
+    },
+    {
+      "id": "not-autodrop-1782466939573-inv-1781800137442-6",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STANDARD)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 360 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T09:42:19.573Z",
+      "lastModified": 1782466939615
+    },
+    {
+      "id": "not-autodrop-1782466939573-inv-1781800126802-6",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (STARTER)",
+      "userId": "u-1781800026126",
+      "message": "Félicitations, votre gain quotidien de 180 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-26T09:42:19.573Z",
+      "lastModified": 1782466939615
+    },
+    {
+      "id": "not-daily-1782466953134",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781977362303",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-26T09:42:33.134Z",
+      "lastModified": 1782466953139
+    },
+    {
+      "id": "not-1782340356706",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782340356664",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-24T22:32:36.706Z",
+      "lastModified": 1782340356710
+    },
+    {
+      "id": "not-1782341180840",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782341180796",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-24T22:46:20.840Z",
+      "lastModified": 1782341180842
+    },
+    {
+      "id": "not-daily-1782364876510",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782239241744",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T05:21:16.510Z",
+      "lastModified": 1782364876512
+    },
+    {
+      "id": "not-daily-1782365467339",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782341180796",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T05:31:07.339Z",
+      "lastModified": 1782365467354
+    },
+    {
+      "id": "not-daily-1782366495797",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781941726442",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T05:48:15.797Z",
+      "lastModified": 1782366495799
+    },
+    {
+      "id": "not-daily-1782369431802",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782201509609",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T06:37:11.802Z",
+      "lastModified": 1782369431804
+    },
+    {
+      "id": "not-daily-1782331102299",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T19:58:22.299Z",
+      "lastModified": 1782331102309
+    },
+    {
+      "id": "not-daily-1782331101545",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T19:58:21.545Z",
+      "lastModified": 1782331101555
+    },
+    {
+      "id": "not-daily-1782331100855",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T19:58:20.855Z",
+      "lastModified": 1782331100863
+    },
+    {
+      "id": "not-daily-1782331099971",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T19:58:19.971Z",
+      "lastModified": 1782331100065
+    },
+    {
+      "id": "not-daily-1782331099110",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T19:58:19.110Z",
+      "lastModified": 1782331099119
+    },
+    {
+      "id": "not-daily-1782331097718",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T19:58:17.718Z",
+      "lastModified": 1782331097734
+    },
+    {
+      "id": "not-daily-1782331096972",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-24T19:58:16.972Z",
+      "lastModified": 1782331096996
+    },
+    {
+      "id": "not-autodrop-1782372772928-inv-1781939451027-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781939277284",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T07:32:52.929Z",
+      "lastModified": 1782372772948
+    },
+    {
+      "id": "not-autodrop-1782372772928-inv-1781939387587-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781939068204",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T07:32:52.928Z",
+      "lastModified": 1782372772948
+    },
+    {
+      "id": "not-autodrop-1782372772920-inv-1781938289392-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781864442965",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T07:32:52.920Z",
+      "lastModified": 1782372772948
+    },
+    {
+      "id": "not-1782372772492",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782372772447",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-25T07:32:52.492Z",
+      "lastModified": 1782372772496
+    },
+    {
+      "id": "not-daily-1782372829598",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782372772447",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T07:33:49.598Z",
+      "lastModified": 1782372829600
+    },
+    {
+      "id": "not-daily-1782374992030",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T08:09:52.030Z",
+      "lastModified": 1782374992039
+    },
+    {
+      "id": "not-daily-1782374990829",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T08:09:50.829Z",
+      "lastModified": 1782374990919
+    },
+    {
+      "id": "not-daily-1782374989289",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T08:09:49.289Z",
+      "lastModified": 1782374989299
+    },
+    {
+      "id": "not-daily-1782374987697",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T08:09:47.697Z",
+      "lastModified": 1782374987767
+    },
+    {
+      "id": "not-daily-1782374984543",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T08:09:44.554Z",
+      "lastModified": 1782374984591
+    },
+    {
+      "id": "not-daily-1782374993124",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1781940888087",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T08:09:53.124Z",
+      "lastModified": 1782374993147
+    },
+    {
+      "id": "not-autodrop-1782378610207-inv-1781945935744-4",
+      "read": false,
+      "type": "plan",
+      "title": "💰 Gain automatique reçu (PREMIUM)",
+      "userId": "u-1781900067016",
+      "message": "Félicitations, votre gain quotidien de 744 XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.",
+      "createdAt": "2026-06-25T09:10:10.207Z",
+      "lastModified": 1782378610260
+    },
+    {
+      "id": "not-daily-1782378613756",
+      "read": false,
+      "type": "bonus",
+      "title": "Récompense journalière obtenue",
+      "userId": "u-1782136250876",
+      "message": "Félicitations ! Vous avez réclamé votre bonus quotidien de connexion gratuite de 50 XOF.",
+      "createdAt": "2026-06-25T09:10:13.756Z",
+      "lastModified": 1782378613760
+    },
+    {
+      "id": "not-wth-1782381895716",
+      "read": false,
+      "type": "withdraw",
+      "title": "Retrait en attente",
+      "userId": "u-1781900067016",
+      "message": "Votre demande de retrait de 3 000 XOF vers 0161655306 (MTN (BJ)) est en attente de traitement par la comptabilité.",
+      "createdAt": "2026-06-25T10:04:55.716Z",
+      "lastModified": 1782381895717
+    },
+    {
+      "id": "not-1782395659656",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur AgroProfit !",
+      "userId": "u-1782395659631",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-06-25T13:54:19.656Z",
+      "lastModified": 1782395659657
+    },
+    {
+      "id": "not-wth-app-1782484562102",
+      "userId": "u-1781864442965",
+      "title": "💸 Retrait envoyé !",
+      "message": "Félicitations, votre retrait de 2,000 XOF sur le numéro 0194047269 (Moov (BJ)) a été validé et expédié avec succès.",
+      "type": "withdraw",
+      "lastModified": 1782484562102,
+      "createdAt": "2026-06-26T14:36:02.102Z",
+      "read": false
+    },
+    {
+      "id": "not-wth-app-1782484561084",
+      "userId": "u-1781900067016",
+      "title": "💸 Retrait envoyé !",
+      "message": "Félicitations, votre retrait de 3,000 XOF sur le numéro 0161655306 (MTN (BJ)) a été validé et expédié avec succès.",
+      "type": "withdraw",
+      "lastModified": 1782484561212,
+      "createdAt": "2026-06-26T14:36:01.212Z",
+      "read": false
+    },
+    {
+      "id": "not-wth-app-1782484562802",
+      "userId": "u-1781939068204",
+      "title": "💸 Retrait envoyé !",
+      "message": "Félicitations, votre retrait de 1,000 XOF sur le numéro 99099065 (Moov (TG)) a été validé et expédié avec succès.",
+      "type": "withdraw",
+      "lastModified": 1782484562803,
+      "createdAt": "2026-06-26T14:36:02.803Z",
+      "read": false
+    },
+    {
+      "id": "not-wth-app-1782484563764",
+      "userId": "u-1781864442965",
+      "title": "💸 Retrait envoyé !",
+      "message": "Félicitations, votre retrait de 1,000 XOF sur le numéro +2290151046824 (MTN (BJ)) a été validé et expédié avec succès.",
+      "type": "withdraw",
+      "lastModified": 1782484563764,
+      "createdAt": "2026-06-26T14:36:03.764Z",
+      "read": false
     }
   ],
   "gi_bonus_codes": [
@@ -7678,11 +9082,11 @@
     {
       "id": "msg-1782058077120",
       "sender": "user",
-      "status": "read",
+      "status": "replied",
       "userId": "u-1781993072227",
       "message": "Ok ",
       "createdAt": "2026-06-21T16:07:57.120Z",
-      "lastModified": 1782061489116
+      "lastModified": 1782137707346
     },
     {
       "id": "msg-1782061528263",
@@ -7818,160 +9222,164 @@
       "message": "Les gens envoient seulement des choses inutiles raison pour laquelle nous avons l'enlever ",
       "createdAt": "2026-06-22T12:30:51.709Z",
       "lastModified": 1782131451709
+    },
+    {
+      "id": "msg-1782134908281",
+      "sender": "admin",
+      "status": "replied",
+      "userId": "u-1781959197097",
+      "message": "Déjà mettre en place ",
+      "createdAt": "2026-06-22T13:28:28.281Z",
+      "lastModified": 1782134908281
+    },
+    {
+      "id": "msg-1782137707345",
+      "sender": "admin",
+      "status": "replied",
+      "userId": "u-1781993072227",
+      "message": "Déjà disponible ",
+      "createdAt": "2026-06-22T14:15:07.345Z",
+      "lastModified": 1782137707346
+    },
+    {
+      "id": "msg-1782215059883",
+      "sender": "user",
+      "status": "replied",
+      "userId": "u-1782214547341",
+      "message": "Bonjour comment télécharger l aplication ?",
+      "createdAt": "2026-06-23T11:44:19.883Z",
+      "lastModified": 1782230727959
+    },
+    {
+      "id": "msg-1782230727959",
+      "sender": "admin",
+      "status": "replied",
+      "userId": "u-1782214547341",
+      "message": "L'application n'est pas disponible ",
+      "createdAt": "2026-06-23T16:05:27.959Z",
+      "lastModified": 1782230727959
     }
   ],
   "gi_products": [
     {
       "id": "vip-1",
-      "tag": "STATER",
-      "name": "STARTER",
-      "price": 2500,
+      "tag": "Aiprods 1",
+      "name": "Système Aiprods 1",
+      "price": 7000,
+      "category": "stability",
       "vipLevel": 1,
-      "isBlocked": false,
-      "dailyReturn": 180,
-      "totalReturn": 65700,
+      "dailyReturn": 300,
+      "totalReturn": 109500,
       "durationDays": 365,
-      "lastModified": 1781713661528
+      "lastModified": 1782457928621
     },
     {
       "id": "vip-2",
-      "tag": "STANDARD",
-      "name": "STANDARD",
-      "price": 6000,
+      "tag": "Aiprods 2",
+      "name": "Système Aiprods 2",
+      "price": 15000,
+      "category": "stability",
       "vipLevel": 2,
-      "isBlocked": false,
-      "dailyReturn": 360,
-      "totalReturn": 131400,
+      "dailyReturn": 700,
+      "totalReturn": 255500,
       "durationDays": 365,
-      "lastModified": 1781713739255
+      "lastModified": 1782457928621
     },
     {
       "id": "vip-3",
-      "tag": "PREMIUM",
-      "name": "PREMIUM",
-      "price": 15000,
+      "tag": "Aiprods 3",
+      "name": "Système Aiprods 3",
+      "price": 30000,
+      "category": "stability",
       "vipLevel": 3,
-      "dailyReturn": 744,
-      "totalReturn": 271560,
+      "dailyReturn": 1500,
+      "totalReturn": 547500,
       "durationDays": 365,
-      "lastModified": 1781713758042
+      "lastModified": 1782457928621
     },
     {
       "id": "vip-4",
-      "tag": "BUSINESS",
-      "name": "BUSINESS",
-      "price": 32000,
+      "tag": "Aiprods 4",
+      "name": "Système Aiprods 4",
+      "price": 60000,
+      "category": "stability",
       "vipLevel": 4,
-      "isBlocked": false,
-      "dailyReturn": 1544,
-      "totalReturn": 563560,
+      "dailyReturn": 3200,
+      "totalReturn": 1168000,
       "durationDays": 365,
-      "lastModified": 1781713775486
+      "lastModified": 1782457928621
     },
     {
       "id": "vip-5",
-      "tag": "AGOBUSI",
-      "name": "AGOBUSI ",
-      "price": 70000,
+      "tag": "Aiprods Pro",
+      "name": "Système Aiprods Pro",
+      "price": 120000,
+      "category": "stability",
       "vipLevel": 5,
-      "isBlocked": true,
-      "dailyReturn": 3000,
-      "totalReturn": 1095000,
+      "dailyReturn": 6800,
+      "totalReturn": 2482000,
       "durationDays": 365,
-      "lastModified": 1781713867259
+      "lastModified": 1782457928621
     },
     {
       "id": "vip-6",
-      "tag": "AGOBUSI1",
-      "name": "AGOBUSI1",
-      "price": 100000,
+      "tag": "Aiprods Pro 2",
+      "name": "Système Aiprods Pro 2",
+      "price": 250000,
+      "category": "stability",
       "vipLevel": 6,
-      "isBlocked": false,
-      "dailyReturn": 5000,
-      "totalReturn": 1825000,
-      "durationDays": 365,
-      "lastModified": 1781913600051
-    },
-    {
-      "id": "vip-1781528338036",
-      "tag": "Special Offer",
-      "name": "PREMIUM ",
-      "price": 120000,
-      "vipLevel": 7,
-      "isBlocked": true,
-      "dailyReturn": 8000,
-      "totalReturn": 2920000,
-      "durationDays": 365,
-      "lastModified": 1781713887839
-    },
-    {
-      "id": "vip-1781528385161",
-      "tag": "Special Offer",
-      "name": "PRO",
-      "price": 220000,
-      "vipLevel": 8,
-      "isBlocked": true,
       "dailyReturn": 15000,
       "totalReturn": 5475000,
       "durationDays": 365,
-      "lastModified": 1781713934898
+      "lastModified": 1782457928621
     },
     {
-      "id": "vip-1781528444528",
-      "tag": "Special Offer",
-      "name": "AGRENT",
+      "id": "vip-7",
+      "tag": "Aiprods Max",
+      "name": "Système Aiprods Max",
       "price": 500000,
-      "vipLevel": 9,
-      "isBlocked": true,
-      "dailyReturn": 50000,
-      "totalReturn": 18250000,
+      "category": "stability",
+      "vipLevel": 7,
+      "dailyReturn": 32000,
+      "totalReturn": 11680000,
       "durationDays": 365,
-      "lastModified": 1781713909533
+      "lastModified": 1782457928621
     },
     {
-      "id": "vip-1781528502913",
-      "tag": "Special Offer",
-      "name": "PRO MAX",
-      "price": 1000000,
-      "vipLevel": 10,
-      "isBlocked": true,
-      "dailyReturn": 100000,
-      "totalReturn": 36500000,
-      "durationDays": 365,
-      "lastModified": 1781713950760
-    },
-    {
-      "id": "act-1",
-      "tag": "Spécial 10 Jours",
-      "name": "ACT1",
-      "price": 10000,
+      "id": "activity-1",
+      "tag": "Activité 1",
+      "name": "Système Aiprods Activité 1",
+      "price": 5000,
       "category": "activity",
       "vipLevel": 1,
-      "dailyReturn": 2500,
-      "totalReturn": 25000,
-      "durationDays": 10
+      "dailyReturn": 1000,
+      "totalReturn": 7000,
+      "durationDays": 7,
+      "lastModified": 1782457928621
     },
     {
-      "id": "act-2",
-      "tag": "Fort Rendement",
-      "name": "ACT2",
-      "price": 30000,
+      "id": "activity-2",
+      "tag": "Activité 2",
+      "name": "Système Aiprods Activité 2",
+      "price": 12000,
       "category": "activity",
       "vipLevel": 2,
-      "dailyReturn": 8000,
-      "totalReturn": 80000,
-      "durationDays": 10
+      "dailyReturn": 3000,
+      "totalReturn": 15000,
+      "durationDays": 5,
+      "lastModified": 1782457928621
     },
     {
-      "id": "act-3",
-      "tag": "Meilleure Offre",
-      "name": "ACT3",
-      "price": 50000,
+      "id": "activity-3",
+      "tag": "Activité 3",
+      "name": "Système Aiprods Activité 3",
+      "price": 25000,
       "category": "activity",
       "vipLevel": 3,
-      "dailyReturn": 15000,
-      "totalReturn": 150000,
-      "durationDays": 10
+      "dailyReturn": 7500,
+      "totalReturn": 30000,
+      "durationDays": 4,
+      "lastModified": 1782457928621
     }
   ],
   "gi_mlm_level1_rate": 20,
