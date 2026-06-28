@@ -966,9 +966,9 @@ export class DataStore {
   }
 
   static getWhatsAppChannel(): string {
-    const val = getFromStore<string>('gi_whatsapp_channel', 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv').trim();
-    if (val === 'https://chat.whatsapp.com/JPSJXLJ2D1LGUztQDaSTyv' || val === 'https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k' || !val) {
-      return 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv';
+    const val = getFromStore<string>('gi_whatsapp_channel', 'https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k').trim();
+    if (val === 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv' || val === 'https://chat.whatsapp.com/JPSJXLJ2D1LGUztQDaSTyv' || !val) {
+      return 'https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k';
     }
     return val;
   }

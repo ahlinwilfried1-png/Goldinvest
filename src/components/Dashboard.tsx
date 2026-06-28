@@ -469,6 +469,7 @@ export default function Dashboard({
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
   const [deviceOS, setDeviceOS] = useState<'ios' | 'android' | 'other'>('other');
+  const [activeInstallTab, setActiveInstallTab] = useState<'android' | 'ios'>('android');
 
   useEffect(() => {
     // Detect standalone mode
@@ -479,8 +480,10 @@ export default function Dashboard({
     const ua = navigator.userAgent.toLowerCase();
     if (/iphone|ipad|ipod/.test(ua)) {
       setDeviceOS('ios');
+      setActiveInstallTab('ios');
     } else if (/android/.test(ua)) {
       setDeviceOS('android');
+      setActiveInstallTab('android');
     }
 
     // Intercept standard PWA prompt
@@ -3924,15 +3927,15 @@ export default function Dashboard({
                       <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Service client</span>
                     </button>
 
-                    {/* Télécharger */}
+                    {/* Installer l'App */}
                     <button 
-                      onClick={handleDownloadAndInstallApp}
+                      onClick={() => setIsInstallModalOpen(true)}
                       className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
                     >
                       <div className="w-11 h-11 bg-orange-50 text-orange-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-orange-100 transition-colors">
-                        <Download className="w-5 h-5 stroke-[2.5]" />
+                        <Smartphone className="w-5 h-5 stroke-[2.5]" />
                       </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Télécharger</span>
+                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Installer l'App</span>
                     </button>
 
                     {/* Canal */}
@@ -4503,8 +4506,270 @@ export default function Dashboard({
         )}
       </AnimatePresence>
 
+      {/* MODAL DE TÉLÉCHARGEMENT & D'ÉPINGLAGE À L'ÉCRAN D'ACCUEIL */}
+      <AnimatePresence>
+        {isInstallModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setIsInstallModalOpen(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-slate-900 border border-slate-800 rounded-[32px] w-full max-w-lg p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(234,88,12,0.15)] relative overflow-hidden flex flex-col max-h-[92vh]"
+              id="aiprods-pin-modal"
+            >
+              {/* Top Accent Gradient Bar */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500" />
+              
+              {/* Header */}
+              <div className="flex justify-between items-start mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20 shrink-0">
+                    <Smartphone className="w-5 h-5 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="font-sans font-black text-xs uppercase tracking-wider text-white" style={{ fontWeight: '900' }}>
+                      Épingler l'application
+                    </h3>
+                    <p className="text-[9px] text-orange-500 font-black uppercase tracking-wider font-mono">
+                      Raccourci Écran d'Accueil v2.6
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsInstallModalOpen(false)}
+                  className="p-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer border border-slate-700"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto pr-1 space-y-5 text-slate-300 text-left">
+                
+                {/* Alerte cruciale pour l'erreur de cookie de sécurité */}
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 space-y-2 text-amber-200">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">💡</span>
+                    <span className="text-[10.5px] font-black uppercase tracking-wider text-amber-400">
+                      RÉSOUT L'ERREUR "COOKIE DE SÉCURITÉ"
+                    </span>
+                  </div>
+                  <p className="text-[10px] leading-relaxed font-semibold">
+                    Si votre téléphone affiche l'erreur <span className="text-yellow-300 font-bold">"Action required to load your app"</span> ou bloque l'accès, c'est que la WebView de l'application de téléchargement est limitée.
+                  </p>
+                  <p className="text-[10px] leading-relaxed font-bold text-white bg-slate-950/40 p-2 rounded-xl border border-amber-500/20">
+                    🚀 <strong className="text-orange-400">La solution définitive :</strong> Épinglez l'application sur votre écran d'accueil en suivant le guide ci-dessous. Elle s'ouvrira directement dans votre navigateur officiel sans aucun blocage !
+                  </p>
+                </div>
 
+                {/* Tabs selection: Android vs iOS */}
+                <div className="grid grid-cols-2 gap-2 bg-slate-950/50 p-1.5 rounded-2xl border border-slate-850">
+                  <button
+                    onClick={() => setActiveInstallTab('android')}
+                    className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-0 ${
+                      activeInstallTab === 'android'
+                        ? 'bg-orange-600 text-white shadow-sm'
+                        : 'bg-transparent text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    🤖 Android (Chrome)
+                  </button>
+                  <button
+                    onClick={() => setActiveInstallTab('ios')}
+                    className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-0 ${
+                      activeInstallTab === 'ios'
+                        ? 'bg-orange-600 text-white shadow-sm'
+                        : 'bg-transparent text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    🍏 iPhone (Safari)
+                  </button>
+                </div>
+
+                {/* Tab Content: Android */}
+                {activeInstallTab === 'android' && (
+                  <div className="space-y-4">
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest">
+                          INSTALLATION DEPUIS GOOGLE CHROME
+                        </span>
+                      </div>
+                      
+                      {/* Interactive dynamic PWA installation if supported */}
+                      {isInstallable ? (
+                        <div className="space-y-2">
+                          <button 
+                            onClick={triggerPwaInstall}
+                            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-95 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 text-center cursor-pointer border-0"
+                            style={{ fontWeight: '900' }}
+                          >
+                            <Smartphone className="w-4 h-4 stroke-[3]" />
+                            Ajouter à l'Écran d'Accueil Maintenant
+                          </button>
+                          <p className="text-[9px] text-slate-400 text-center font-medium">
+                            En un clic, l'icône Aiprods sera ajoutée à votre écran.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                            <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                              1
+                            </div>
+                            <p className="text-[10.5px] font-medium leading-relaxed">
+                              Ouvrez l'application dans votre navigateur <strong className="text-orange-400">Google Chrome</strong> (ou tapez l'adresse dans Chrome).
+                            </p>
+                          </div>
+
+                          <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                            <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                              2
+                            </div>
+                            <p className="text-[10.5px] font-medium leading-relaxed">
+                              Appuyez sur le menu <strong className="text-white">Option ⋮ (les 3 points verticaux)</strong> en haut à droite de Chrome.
+                            </p>
+                          </div>
+
+                          <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                            <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                              3
+                            </div>
+                            <p className="text-[10.5px] font-medium leading-relaxed">
+                              Sélectionnez l'option <strong className="text-white font-bold">"Ajouter à l'écran d'accueil"</strong> ou <strong className="text-white font-bold">"Installer l'application"</strong>.
+                            </p>
+                          </div>
+
+                          <div className="flex gap-3 items-start bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
+                            <span className="text-sm">✨</span>
+                            <p className="text-[10.5px] font-bold text-emerald-300 leading-relaxed">
+                              Félicitations ! L'application s'installe en arrière-plan. Vous trouverez l'icône Aiprods sur votre écran d'accueil avec vos autres applications.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* APK Alternative Box */}
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9.5px] font-bold text-slate-500 uppercase tracking-widest">
+                          MÉTHODE PAR APK (ALTERNATIVE)
+                        </span>
+                      </div>
+                      
+                      <button 
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = '/Aiprods_v2.6.apk';
+                          link.download = 'Aiprods_v2.6.apk';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          openAlert(
+                            "Téléchargement APK !",
+                            "Le téléchargement de l'APK Aiprods a commencé. N'oubliez pas de désinstaller les anciennes versions de votre téléphone avant d'installer ce fichier !",
+                            "success"
+                          );
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all border border-slate-700 cursor-pointer shadow-xs"
+                      >
+                        <Download className="w-3.5 h-3.5 text-orange-500" />
+                        Télécharger le Fichier APK (Direct)
+                      </button>
+                      <p className="text-[9px] text-slate-500 leading-tight">
+                        ⚠️ <strong className="text-amber-400">Rappel :</strong> Pour éviter l'erreur de package ou l'échec de l'installation, supprimez l'ancienne application <strong className="text-yellow-400">"AgroProfit"</strong> ou <strong className="text-yellow-400">"Aiprods"</strong> de votre appareil au préalable.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab Content: iOS (Safari) */}
+                {activeInstallTab === 'ios' && (
+                  <div className="space-y-4">
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4 space-y-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                        <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest">
+                          INSTALLATION DEPUIS SAFARI (IPHONE / IPAD)
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                          <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                            1
+                          </div>
+                          <p className="text-[10.5px] font-medium leading-relaxed">
+                            Ouvrez obligatoirement l'application dans le navigateur officiel <strong className="text-orange-400">Safari</strong> de votre iPhone.
+                          </p>
+                        </div>
+
+                        <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                          <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                            2
+                          </div>
+                          <p className="text-[10.5px] font-medium leading-relaxed">
+                            Appuyez sur le bouton de <strong className="text-white">Partage 📤</strong> (l'icône de carré avec une flèche vers le haut, située au milieu en bas de votre écran Safari).
+                          </p>
+                        </div>
+
+                        <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                          <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                            3
+                          </div>
+                          <p className="text-[10.5px] font-medium leading-relaxed">
+                            Faites défiler le menu des options vers le bas et sélectionnez l'option <strong className="text-white font-bold">"Sur l'écran d'accueil"</strong> (ou "Ajouter sur l'écran d'accueil").
+                          </p>
+                        </div>
+
+                        <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                          <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                            4
+                          </div>
+                          <p className="text-[10.5px] font-medium leading-relaxed">
+                            Appuyez sur le bouton <strong className="text-orange-400 font-bold">"Ajouter"</strong> situé dans le coin supérieur droit.
+                          </p>
+                        </div>
+
+                        <div className="flex gap-3 items-start bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
+                          <span className="text-sm">✨</span>
+                          <p className="text-[10.5px] font-bold text-emerald-300 leading-relaxed">
+                            Terminé ! L'application Aiprods s'affiche sur l'écran d'accueil de votre iPhone. Ouvrez-la pour vous connecter normalement et en toute sécurité.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+              
+              {/* Footer */}
+              <div className="border-t border-slate-800 pt-4 mt-4 flex items-center justify-between">
+                <span className="text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">Aiprods © 2026</span>
+                <button 
+                  onClick={() => setIsInstallModalOpen(false)}
+                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer border border-slate-700"
+                  style={{ fontWeight: '900' }}
+                >
+                  Fermer
+                </button>
+              </div>
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       {/* FLOATING TOAST NOTIFICATIONS */}
