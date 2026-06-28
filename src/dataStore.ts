@@ -341,7 +341,11 @@ export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   // Try to use the standard backend first (getApiUrl)
   try {
-    const response = await fetch(url, init);
+    const fetchOptions: RequestInit = {
+      credentials: 'include',
+      ...init
+    };
+    const response = await fetch(url, fetchOptions);
     const contentType = response.headers.get('content-type') || "";
     
     // If the response is protected by google proxy or returned as text/html from unhandled errors,

@@ -516,6 +516,38 @@ export default function Dashboard({
     }
   };
 
+  const handleDownloadAndInstallApp = async () => {
+    // 1. Trigger the direct APK download programmatically
+    const link = document.createElement('a');
+    link.href = '/Aiprods_v2.6.apk';
+    link.download = 'Aiprods_v2.6.apk';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // 2. Trigger PWA installation if the browser supports it
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setIsStandalone(true);
+          setIsInstallable(false);
+          setDeferredPrompt(null);
+        }
+      } catch (err) {
+        console.error("PWA install error:", err);
+      }
+    }
+
+    // 3. Show a clear, precise alert instruction explaining what to do next & handling install errors
+    openAlert(
+      "Téléchargement Lancé ! 📲",
+      "Le téléchargement de l'application 'Aiprods_v2.6.apk' a commencé ! Ouvrez le fichier téléchargé pour l'installer.\n\n⚠️ IMPORTANT : Si l'installation refuse ou dit 'Application non installée', désinstallez d'abord TOUTE ancienne version (comme l'application AgroProfit ou une version précédente d'Aiprods) de votre téléphone, puis réessayez. Cela résout 100% des erreurs d'installation !",
+      "success"
+    );
+  };
+
   const [chatMessageInput, setChatMessageInput] = useState<string>('');
 
   // Clipboard copies
@@ -3453,15 +3485,27 @@ export default function Dashboard({
                         className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#FF0000] hover:bg-[#e60000] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border-0 cursor-pointer text-center"
                       >
                         <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
-                          <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.553a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11C4.482 20.5 12 20.5 12 20.5s7.518 0 9.388-.553a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                          <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.553a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11C4.482 20.5 12 20.5 12 20.5s7.518 0-9.388-.553a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                         </svg>
                         <span>YouTube</span>
                       </button>
+
+                      {/* Telegram */}
+                      <a 
+                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Aiprods et obtenez des rendements quotidiens exceptionnels sur vos équipements audio !`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#0088cc] hover:bg-[#0077b3] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm text-center"
+                      >
+                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
+                          <path d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.578.193l-8.534 7.701-.33 4.953c.485 0 .7-.223.972-.485l2.333-2.269 4.85 3.583c.893.492 1.535.239 1.758-.826l3.18-14.986c.325-1.3-.497-1.892-1.35-1.493z" />
+                        </svg>
+                        <span>Telegram</span>
+                      </a>
                     </div>
                   </div>
                 </div>
               </div>
- 
               {/* COMMISSIONS OVERVIEW CARDS */}
               <div className="grid grid-cols-2 gap-3 text-left">
                 <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
@@ -3882,7 +3926,7 @@ export default function Dashboard({
 
                     {/* Télécharger */}
                     <button 
-                      onClick={() => setIsInstallModalOpen(true)}
+                      onClick={handleDownloadAndInstallApp}
                       className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
                     >
                       <div className="w-11 h-11 bg-orange-50 text-orange-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-orange-100 transition-colors">
@@ -4458,6 +4502,8 @@ export default function Dashboard({
           </motion.div>
         )}
       </AnimatePresence>
+
+
 
 
 
