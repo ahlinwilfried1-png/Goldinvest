@@ -283,7 +283,7 @@ export default function AdminPanel({
   const [cleanupMessage, setCleanupMessage] = useState<string | null>(null);
 
   const handleForceCleanupUsers = async () => {
-    if (!window.confirm("🔴 ATTENTION CRITIQUE : Voulez-vous vraiment supprimer DÉFINITIVEMENT tous les comptes d'investisseurs (non-administrateurs) ? Cette action est irréversible et écrasera toutes les données correspondantes dans la base de données cloud (Supabase) et locale (db.json).")) {
+    if (!window.confirm("🔴 ATTENTION CRITIQUE : Voulez-vous vraiment supprimer DÉFINITIVEMENT tous les comptes d'investisseurs inscrits, ainsi que l'INTEGRALITÉ des dépôts et des retraits ? Cette action est irréversible et écrasera toutes les données correspondantes dans la base de données cloud (Supabase) et locale (db.json).")) {
       return;
     }
     
@@ -310,6 +310,60 @@ export default function AdminPanel({
       setCleanupMessage(`Exception : ${err.message || err}`);
     } finally {
       setIsCleaning(false);
+    }
+  };
+
+  const handleDeleteRefusedDeposits = async () => {
+    if (!window.confirm("🔴 Voulez-vous vraiment supprimer définitivement tous les dépôts refusés de la plateforme ? Cette action est irréversible.")) {
+      return;
+    }
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/delete-refused-deposits?t=' + Date.now()));
+      if (resp.ok) {
+        const data = await resp.json();
+        alert(data.message || "Dépôts refusés supprimés avec succès !");
+        executeDirectCentralSync();
+      } else {
+        alert("Erreur de communication avec le serveur.");
+      }
+    } catch (err: any) {
+      alert("Erreur : " + (err.message || err));
+    }
+  };
+
+  const handleDeletePendingDeposits = async () => {
+    if (!window.confirm("🔴 Voulez-vous vraiment supprimer définitivement tous les dépôts en attente de la plateforme ? Cette action est irréversible.")) {
+      return;
+    }
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/delete-pending-deposits?t=' + Date.now()));
+      if (resp.ok) {
+        const data = await resp.json();
+        alert(data.message || "Dépôts en attente supprimés avec succès !");
+        executeDirectCentralSync();
+      } else {
+        alert("Erreur de communication avec le serveur.");
+      }
+    } catch (err: any) {
+      alert("Erreur : " + (err.message || err));
+    }
+  };
+
+  const handleDeleteValidatedWithdrawals = async () => {
+    if (!window.confirm("🔴 Voulez-vous vraiment supprimer définitivement tous les retraits validés et expédiés de la plateforme ? Cette action est irréversible.")) {
+      return;
+    }
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/delete-validated-withdrawals?t=' + Date.now()));
+      if (resp.ok) {
+        const data = await resp.json();
+        alert(data.message || "Retraits validés supprimés avec succès !");
+        executeDirectCentralSync();
+      } else {
+        alert("Erreur de communication avec le serveur.");
+      }
+    } catch (err: any) {
+      alert("Erreur : " + (err.message || err));
     }
   };
 
@@ -1477,9 +1531,31 @@ export default function AdminPanel({
       {/* 1. DEPOSITS QUEUE */}
       {activeAdminTab === 'deposits' && (
         <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Demandes de Dépôts reçues</h3>
-            <span className="text-[11px] text-slate-400">Total : {deposits.length} entrées</span>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+            <div>
+              <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Demandes de Dépôts reçues</h3>
+              <span className="text-[11px] text-slate-400 block mt-0.5">Total : {deposits.length} entrées</span>
+            </div>
+            <div className="flex flex-wrap gap-2 w-full md:w-auto">
+              <button
+                id="btn-delete-refused-deposits"
+                type="button"
+                onClick={handleDeleteRefusedDeposits}
+                className="flex-1 md:flex-initial px-3 py-1.5 bg-red-650 hover:bg-red-600 hover:text-white text-red-100 border border-red-500/20 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Supprimer Refusés</span>
+              </button>
+              <button
+                id="btn-delete-pending-deposits"
+                type="button"
+                onClick={handleDeletePendingDeposits}
+                className="flex-1 md:flex-initial px-3 py-1.5 bg-amber-650/40 hover:bg-amber-600 hover:text-white text-amber-200 border border-amber-500/20 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Supprimer En Attente</span>
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -1619,14 +1695,25 @@ export default function AdminPanel({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
               <div>
                 <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider">Demandes de retraits passées</h3>
-                <span className="text-[11px] text-slate-400">Total : {withdrawals.length} demandes</span>
+                <span className="text-[11px] text-slate-400 block mt-0.5">Total : {withdrawals.length} demandes</span>
               </div>
-              <button
-                onClick={handleExportWithdrawalsToGoogle}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer active:scale-95"
-              >
-                <span>📊 Exporter Coordonnées Google Sheets</span>
-              </button>
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <button
+                  id="btn-delete-validated-withdrawals"
+                  type="button"
+                  onClick={handleDeleteValidatedWithdrawals}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-650 hover:bg-red-600 hover:text-white text-red-100 border border-red-500/20 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Supprimer Validés</span>
+                </button>
+                <button
+                  onClick={handleExportWithdrawalsToGoogle}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer active:scale-95"
+                >
+                  <span>📊 Exporter Coordonnées Google Sheets</span>
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">

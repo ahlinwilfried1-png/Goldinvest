@@ -674,7 +674,7 @@ async function startServer() {
   // API endpoints to synchronize state
   app.get("/api/admin/force-cleanup-non-admins", async (req, res) => {
     try {
-      console.log("[API CLEANUP] Wiping all non-administrative accounts from runtime memory...");
+      console.log("[API CLEANUP] Wiping all non-administrative accounts and ALL transactions/deposits/withdrawals...");
       const users = storeData["gi_users"] || [];
       const admins = users.filter((u: any) => u.role === "admin");
       
@@ -682,34 +682,32 @@ async function startServer() {
         admins.push({ id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' });
       }
 
-      const adminIds = new Set(admins.map((u: any) => u.id));
       const previousCount = users.length;
 
-      storeData["gi_users"] = admins;
+      // Keep only admins and reset their balances/earnings to 0 for a completely fresh start
+      const cleanedAdmins = admins.map((a: any) => ({
+        ...a,
+        balance: 0,
+        dailyEarnings: 0,
+        totalEarnings: 0,
+        bonus: 0
+      }));
 
-      // Filter other collections of items
-      const deposits = storeData["gi_deposits"] || [];
-      storeData["gi_deposits"] = deposits.filter((d: any) => adminIds.has(d.userId));
+      storeData["gi_users"] = cleanedAdmins;
 
-      const withdrawals = storeData["gi_withdrawals"] || [];
-      storeData["gi_withdrawals"] = withdrawals.filter((w: any) => adminIds.has(w.userId));
-
-      const investments = storeData["gi_investments"] || [];
-      storeData["gi_investments"] = investments.filter((i: any) => adminIds.has(i.userId));
-
-      const commissions = storeData["gi_commissions"] || [];
-      storeData["gi_commissions"] = commissions.filter((c: any) => adminIds.has(c.userId));
-
-      const notifications = storeData["gi_notifications"] || [];
-      storeData["gi_notifications"] = notifications.filter((n: any) => !n.userId || adminIds.has(n.userId));
-
-      const supportMessages = storeData["gi_support_messages"] || [];
-      storeData["gi_support_messages"] = supportMessages.filter((m: any) => adminIds.has(m.userId));
+      // COMPLETELY WIPE deposits, withdrawals, investments, commissions, notifications, support messages, and proofs as requested!
+      storeData["gi_deposits"] = [];
+      storeData["gi_withdrawals"] = [];
+      storeData["gi_investments"] = [];
+      storeData["gi_commissions"] = [];
+      storeData["gi_notifications"] = [];
+      storeData["gi_support_messages"] = [];
+      storeData["gi_withdrawal_proofs"] = [];
 
       saveStoreLocal();
 
       if (supabase) {
-        console.log("[API CLEANUP] Overwriting Supabase remote collections with clean records...");
+        console.log("[API CLEANUP] Overwriting Supabase remote collections with clean empty records...");
         const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages", "gi_withdrawal_proofs"];
         for (const tbl of tablesToOverwrite) {
           await supabase.from('store').upsert({
@@ -721,13 +719,104 @@ async function startServer() {
 
       res.json({
         success: true,
-        message: `Tous les comptes utilisateurs simples ont été supprimés avec succès ! Seuls les administrateurs ont été conservés de manière permanente dans la base locale et le cloud Supabase.`,
+        message: `Tous les comptes inscrits ont été supprimés avec succès (les comptes administrateurs ont été conservés). Tous les dépôts, retraits, investissements et historiques ont été définitivement effacés de la base de données.`,
         adminsKeptCount: admins.length,
         nonAdminsWipedCount: previousCount - admins.length,
         admins: admins.map((a: any) => ({ name: a.name, role: a.role, whatsapp: a.whatsapp, referralCode: a.referralCode }))
       });
     } catch (e: any) {
       console.error("[API CLEANUP] Error in cleanup request:", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  app.get("/api/admin/delete-refused-deposits", async (req, res) => {
+    try {
+      console.log("[API CLEANUP] Deleting all refused/failed/cancelled deposits...");
+      const deposits = storeData["gi_deposits"] || [];
+      const beforeCount = deposits.length;
+      
+      const filtered = deposits.filter((d: any) => 
+        d.status !== 'rejected' && d.status !== 'failed' && d.status !== 'cancelled'
+      );
+      
+      storeData["gi_deposits"] = filtered;
+      saveStoreLocal();
+
+      if (supabase) {
+        await supabase.from('store').upsert({
+          key: "gi_deposits",
+          value: filtered
+        });
+      }
+
+      res.json({
+        success: true,
+        message: `${beforeCount - filtered.length} dépôts refusés/échoués ont été définitivement supprimés.`,
+        deletedCount: beforeCount - filtered.length
+      });
+    } catch (e: any) {
+      console.error("[API CLEANUP] Error deleting refused deposits:", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  app.get("/api/admin/delete-pending-deposits", async (req, res) => {
+    try {
+      console.log("[API CLEANUP] Deleting all pending deposits...");
+      const deposits = storeData["gi_deposits"] || [];
+      const beforeCount = deposits.length;
+      
+      const filtered = deposits.filter((d: any) => d.status !== 'pending');
+      
+      storeData["gi_deposits"] = filtered;
+      saveStoreLocal();
+
+      if (supabase) {
+        await supabase.from('store').upsert({
+          key: "gi_deposits",
+          value: filtered
+        });
+      }
+
+      res.json({
+        success: true,
+        message: `${beforeCount - filtered.length} dépôts en attente ont été définitivement supprimés.`,
+        deletedCount: beforeCount - filtered.length
+      });
+    } catch (e: any) {
+      console.error("[API CLEANUP] Error deleting pending deposits:", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  app.get("/api/admin/delete-validated-withdrawals", async (req, res) => {
+    try {
+      console.log("[API CLEANUP] Deleting all approved/completed/successful withdrawals...");
+      const withdrawals = storeData["gi_withdrawals"] || [];
+      const beforeCount = withdrawals.length;
+      
+      const filtered = withdrawals.filter((w: any) => 
+        w.status !== 'approved' && w.status !== 'completed' && w.status !== 'success'
+      );
+      
+      storeData["gi_withdrawals"] = filtered;
+      saveStoreLocal();
+
+      if (supabase) {
+        await supabase.from('store').upsert({
+          key: "gi_withdrawals",
+          value: filtered
+        });
+      }
+
+      res.json({
+        success: true,
+        message: `${beforeCount - filtered.length} retraits validés/expédiés ont été définitivement supprimés.`,
+        deletedCount: beforeCount - filtered.length
+      });
+    } catch (e: any) {
+      console.error("[API CLEANUP] Error deleting validated withdrawals:", e);
       res.status(500).json({ success: false, error: e.message });
     }
   });
