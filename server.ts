@@ -181,6 +181,8 @@ async function startServer() {
       "gi_mlm_level3_rate": 1,
       "gi_withdrawals_blocked_global": false,
       "gi_referral_domain": "",
+      "gi_whatsapp_group": "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv",
+      "gi_whatsapp_channel": "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k",
       "gi_withdrawal_proofs": [
         {
           id: 'proof-1',
@@ -231,8 +233,21 @@ async function startServer() {
       storeData["gi_products"] = defaultData["gi_products"];
       modified = true;
     }
+    // Force correct WhatsApp links to prevent any resetting or loss of these connections
+    const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv";
+    const targetChannel = "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k";
 
+    if (storeData["gi_whatsapp_group"] !== targetGroup) {
+      console.log(`[STARTUP] Setting WhatsApp group link to: ${targetGroup}`);
+      storeData["gi_whatsapp_group"] = targetGroup;
+      modified = true;
+    }
 
+    if (storeData["gi_whatsapp_channel"] !== targetChannel) {
+      console.log(`[STARTUP] Setting WhatsApp channel link to: ${targetChannel}`);
+      storeData["gi_whatsapp_channel"] = targetChannel;
+      modified = true;
+    }
 
     if (modified) {
       saveStoreLocal();
@@ -1655,6 +1670,748 @@ async function startServer() {
 
     saveStore();
     res.json({ success: true, deposit: newDep, user: user || undefined });
+  });
+
+  // SendavaPay API Integration
+  function formatToE164(phone: string, country: string): string {
+    let digits = (phone || '').replace(/\D/g, '');
+    const prefixMap: Record<string, string> = {
+      'TG': '228', 'CI': '225', 'BJ': '229', 'SN': '221', 'ML': '223',
+      'BF': '226', 'CM': '237', 'GN': '224', 'COD': '243', 'COG': '242'
+    };
+    const prefix = prefixMap[country] || '225';
+    if (digits.startsWith(prefix)) {
+      return '+' + digits;
+    }
+    if (digits.startsWith('0') && digits.length > 3) {
+      digits = digits.substring(1);
+    }
+    return '+' + prefix + digits;
+  }
+
+  app.post("/api/sendavapay/create-charge", async (req, res) => {
+    try {
+      const { userId, amount, country, phone, operatorId } = req.body;
+      const amt = Number(amount);
+      if (!userId || isNaN(amt) || amt <= 0 || !country || !phone || !operatorId) {
+        return res.status(400).json({ success: false, error: "Paramètres manquants ou invalides pour SendavaPay." });
+      }
+
+      const users = storeData["gi_users"] || [];
+      const userIdx = users.findIndex((u: any) => u.id === userId);
+      const user = userIdx !== -1 ? users[userIdx] : null;
+      if (!user) {
+        return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
+      }
+
+      const currencyMap: Record<string, string> = {
+        'TG': 'XOF', 'CI': 'XOF', 'BJ': 'XOF', 'SN': 'XOF', 'ML': 'XOF',
+        'BF': 'XOF', 'CM': 'XAF', 'GN': 'GNF', 'COD': 'CDF', 'COG': 'XAF'
+      };
+      const currency = currencyMap[country] || 'XOF';
+      const formattedPhone = formatToE164(phone, country);
+
+      console.log(`[SENDAVAPAY] Creating transaction. User: ${user.name}, Phone: ${formattedPhone}, Amount: ${amt} ${currency}...`);
+
+      const createRes = await fetch("https://sendavapay.com/api/sdk/v1/create-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+        },
+        body: JSON.stringify({
+          amount: amt,
+          currency,
+          description: `Recharge de compte AgroProfit - Utilisateur: ${user.name}`,
+          customerName: user.name,
+          customerEmail: `${user.id}@agroprofit.online`,
+          customerPhone: formattedPhone,
+          payerCountry: country,
+          webhookUrl: `https://${req.get('host')}/api/sendavapay/webhook`,
+          externalReference: `dep-${Date.now()}`
+        })
+      });
+
+      if (!createRes.ok) {
+        const errText = await createRes.text();
+        console.error("[SENDAVAPAY] Create-payment failed:", createRes.status, errText);
+        return res.status(500).json({ success: false, error: "La création de la transaction SendavaPay a échoué." });
+      }
+
+      const createData = await createRes.json();
+      if (!createData || !createData.success) {
+        return res.status(400).json({ success: false, error: createData.error || "La création de la transaction SendavaPay a échoué." });
+      }
+
+      const { reference, paymentToken } = createData.data;
+      
+      const operatorMap: Record<string, { operator: string; slug: string }> = {
+        '29': { operator: 'Orange', slug: 'orange-money-ci' },
+        '30': { operator: 'MTN', slug: 'mtn-ci' },
+        '31': { operator: 'Moov', slug: 'moov-ci' },
+        '32': { operator: 'Wave', slug: 'wave-ci' },
+        '33': { operator: 'Moov', slug: 'moov-burkina-faso' },
+        '34': { operator: 'Orange', slug: 'orange-money-burkina' },
+        '35': { operator: 'MTN', slug: 'mtn-benin' },
+        '36': { operator: 'Moov', slug: 'moov-benin' },
+        '37': { operator: 'TMoney', slug: 't-money-togo' },
+        '38': { operator: 'Moov', slug: 'moov-togo' },
+        '52': { operator: 'Vodacom', slug: 'vodacom-cod' },
+        '53': { operator: 'Airtel', slug: 'airtel-cod' },
+        '54': { operator: 'Orange', slug: 'orange-cod' },
+        '55': { operator: 'Airtel', slug: 'airtel-cog' },
+        '56': { operator: 'MTN', slug: 'mtn-cog' },
+        '57': { operator: 'Orange', slug: 'new-orange-money-senegal' },
+        '58': { operator: 'Wave', slug: 'wave-senegal' },
+        '59': { operator: 'Mixx', slug: 'mixx-sn' },
+        '60': { operator: 'Orange', slug: 'orange-money-mali' }
+      };
+      const opInfo = operatorMap[String(operatorId)] || { operator: 'Orange', slug: 'orange-money-ci' };
+      const operatorSlug = opInfo.slug;
+      const operatorName = opInfo.operator;
+
+      console.log(`[SENDAVAPAY] Transaction created. Reference: ${reference}. Initiating Mobile Money Push for Operator ID: ${operatorId} (${operatorName} - ${operatorSlug})...`);
+
+      const initRes = await fetch("https://sendavapay.com/api/sdk/v1/initiate-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+        },
+        body: JSON.stringify({
+          paymentToken,
+          payerName: user.name,
+          payerPhone: formattedPhone,
+          payerCountry: country,
+          operatorId: isNaN(Number(operatorId)) ? operatorId : Number(operatorId),
+          operator: operatorName,
+          operatorSlug: operatorSlug
+        })
+      });
+
+      if (!initRes.ok) {
+        const errText = await initRes.text();
+        console.error("[SENDAVAPAY] Initiate-payment failed:", initRes.status, errText);
+        try {
+          fs.writeFileSync("./sendavapay_debug.json", JSON.stringify({
+            timestamp: new Date().toISOString(),
+            status: initRes.status,
+            body: errText,
+            sentPayload: {
+              paymentToken,
+              payerName: user.name,
+              payerPhone: formattedPhone,
+              payerCountry: country,
+              operatorId,
+              operatorSlug
+            }
+          }, null, 2));
+        } catch (e) {
+          console.error("Failed to write sendavapay_debug.json", e);
+        }
+        let parsedErr = "L'initialisation de la transaction SendavaPay a échoué.";
+        try {
+          const errObj = JSON.parse(errText);
+          if (errObj && errObj.error) parsedErr = errObj.error;
+          else if (errObj && errObj.message) parsedErr = errObj.message;
+        } catch (e) {}
+        return res.status(500).json({ success: false, error: parsedErr });
+      }
+
+      const initData = await initRes.json();
+      try {
+        fs.writeFileSync("./sendavapay_debug.json", JSON.stringify({
+          timestamp: new Date().toISOString(),
+          status: 200,
+          body: initData,
+          sentPayload: {
+            paymentToken,
+            payerName: user.name,
+            payerPhone: formattedPhone,
+            payerCountry: country,
+            operatorId,
+            operatorSlug
+          }
+        }, null, 2));
+      } catch (e) {
+        console.error("Failed to write sendavapay_debug.json", e);
+      }
+      console.log("[SENDAVAPAY] Initiate response:", initData);
+
+      // Register the pending deposit in the system
+      let deposits = storeData["gi_deposits"] || [];
+      const newDep = {
+        id: `dep-${Date.now()}`,
+        userId: user.id,
+        userName: user.name,
+        amount: amt,
+        operator: `SendavaPay (${country} - ${formattedPhone})`,
+        reference: reference,
+        receiptImage: "automated_sendavapay",
+        status: "pending",
+        lastModified: Date.now(),
+        createdAt: new Date().toISOString()
+      };
+
+      deposits.unshift(newDep);
+      storeData["gi_deposits"] = deposits;
+      saveStoreLocal();
+
+      if (supabase) {
+        try {
+          const { error: upsertErr } = await supabase.from('store').upsert({
+            key: "gi_deposits",
+            value: deposits
+          });
+          if (upsertErr) console.error("[SENDAVAPAY] Supabase backup error:", upsertErr.message);
+        } catch (err: any) {
+          console.error("[SENDAVAPAY] Supabase backup error (exception):", err.message);
+        }
+      }
+
+      res.json({
+        success: true,
+        requiresOtp: initData.requiresOtp || false,
+        otpToken: initData.otpToken || null,
+        reference: reference,
+        message: initData.message || "Demande de paiement envoyée sur votre téléphone.",
+        requiresRedirect: initData.requiresRedirect || false,
+        redirectUrl: initData.redirectUrl || null,
+        deposit: newDep
+      });
+
+    } catch (e: any) {
+      console.error("[SENDAVAPAY CREATE CHARGE EXCEPTION]", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  app.post("/api/sendavapay/submit-otp", async (req, res) => {
+    try {
+      const { otpToken, otp } = req.body;
+      if (!otpToken || !otp) {
+        return res.status(400).json({ success: false, error: "Le jeton OTP et le code OTP sont requis." });
+      }
+
+      console.log(`[SENDAVAPAY] Submitting OTP for token: ${otpToken}`);
+      const response = await fetch("https://sendavapay.com/api/sdk/v1/submit-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+        },
+        body: JSON.stringify({ otpToken, otp })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("[SENDAVAPAY] Submit OTP failed:", response.status, errText);
+        let parsedErr = "Erreur lors de la validation du code OTP.";
+        try {
+          const errObj = JSON.parse(errText);
+          if (errObj && errObj.error) parsedErr = errObj.error;
+          else if (errObj && errObj.message) parsedErr = errObj.message;
+        } catch (e) {}
+        return res.status(500).json({ success: false, error: parsedErr });
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (err: any) {
+      console.error("[SENDAVAPAY SUBMIT OTP EXCEPTION]", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post("/api/sendavapay/verify-deposit", async (req, res) => {
+    try {
+      const { reference } = req.body;
+      if (!reference) {
+        return res.status(400).json({ success: false, error: "Missing reference" });
+      }
+
+      console.log(`[SENDAVAPAY MANUAL VERIFY] Verifying reference: ${reference}...`);
+      const verifyRes = await fetch("https://sendavapay.com/api/sdk/v1/verify-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+        },
+        body: JSON.stringify({ reference })
+      });
+
+      if (!verifyRes.ok) {
+        return res.status(400).json({ success: false, error: "SendavaPay API error" });
+      }
+
+      const verifyData = await verifyRes.json();
+      console.log("[SENDAVAPAY MANUAL VERIFY] Response:", verifyData);
+
+      const isCompleted = verifyData?.success && verifyData.data?.status === 'completed';
+
+      if (isCompleted) {
+        if (supabase) {
+          try {
+            const { data, error } = await supabase.from('store').select('*');
+            if (!error && data && Array.isArray(data)) {
+              const kvData: Record<string, any> = {};
+              for (const item of data) {
+                kvData[item.key] = item.value;
+              }
+              mergeData(kvData);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        let deposits = storeData["gi_deposits"] || [];
+        let users = storeData["gi_users"] || [];
+        let notifications = storeData["gi_notifications"] || [];
+
+        const depIdx = deposits.findIndex((d: any) => 
+          String(d.reference) === String(reference) || 
+          String(d.id) === String(reference)
+        );
+        if (depIdx !== -1) {
+          const dep = deposits[depIdx];
+          if (dep.status === 'pending') {
+            dep.status = 'approved';
+            dep.lastModified = Date.now();
+
+            const userIdx = users.findIndex((u: any) => u.id === dep.userId);
+            if (userIdx !== -1) {
+              const user = users[userIdx];
+              user.balance += Number(dep.amount);
+              user.lastModified = Date.now();
+
+              notifications.unshift({
+                id: `not-dep-sp-${Date.now()}`,
+                userId: user.id,
+                title: '⚡ Dépôt Automatique SendavaPay',
+                message: `Votre versement de ${Number(dep.amount).toLocaleString()} XOF via SendavaPay a été crédité instantanément et automatiquement à 100%.`,
+                type: 'deposit',
+                lastModified: Date.now(),
+                createdAt: new Date().toISOString(),
+                read: false
+              });
+            }
+
+            storeData["gi_deposits"] = deposits;
+            storeData["gi_users"] = users;
+            storeData["gi_notifications"] = notifications;
+            saveStoreLocal();
+
+            if (supabase) {
+              try {
+                await supabase.from('store').upsert([
+                  { key: "gi_deposits", value: deposits },
+                  { key: "gi_users", value: users },
+                  { key: "gi_notifications", value: notifications }
+                ]);
+              } catch (e) {
+                console.error(e);
+              }
+            }
+
+            return res.json({ success: true, status: 'approved', message: "Paiement complété ! Votre compte a été crédité." });
+          } else {
+            return res.json({ success: true, status: dep.status, message: "La transaction a déjà été traitée." });
+          }
+        }
+      }
+
+      return res.json({ success: true, status: verifyData.data?.status || 'pending', message: "Le paiement est toujours en attente." });
+    } catch (e: any) {
+      console.error("[SENDAVAPAY MANUAL VERIFY EXCEPTION]", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // SendavaPay Webhook
+  app.all("/api/sendavapay/webhook", async (req, res) => {
+    try {
+      console.log("[SENDAVAPAY WEBHOOK] Request received.");
+      console.log("[SENDAVAPAY WEBHOOK] Headers:", req.headers);
+      console.log("[SENDAVAPAY WEBHOOK] Body:", req.body);
+
+      const payload = req.body || {};
+
+      // Pull latest state from Supabase to prevent race conditions
+      if (supabase) {
+        try {
+          const { data, error } = await supabase.from('store').select('*');
+          if (!error && data && Array.isArray(data)) {
+            const kvData: Record<string, any> = {};
+            for (const item of data) {
+              kvData[item.key] = item.value;
+            }
+            if (Object.keys(kvData).length > 0) {
+              mergeData(kvData);
+              saveStoreLocal();
+              console.log("[SENDAVAPAY WEBHOOK] Sync success with cloud state.");
+            }
+          }
+        } catch (e) {
+          console.error("[SENDAVAPAY WEBHOOK] Supabase pull error:", e);
+        }
+      }
+
+      const reference = payload.reference || payload.externalReference || payload.data?.reference || payload.data?.externalReference;
+      if (!reference) {
+        console.warn("[SENDAVAPAY WEBHOOK] Missing reference in payload.");
+        return res.status(400).json({ success: false, error: "Missing reference" });
+      }
+
+      // Verify transaction status securely via SendavaPay API
+      console.log(`[SENDAVAPAY WEBHOOK] Verifying reference "${reference}" via API...`);
+      const verifyRes = await fetch("https://sendavapay.com/api/sdk/v1/verify-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+        },
+        body: JSON.stringify({ reference })
+      });
+
+      let verifyData = null;
+      if (verifyRes.ok) {
+        verifyData = await verifyRes.json();
+      } else {
+        console.warn(`[SENDAVAPAY WEBHOOK] Verify payment failed on API: ${verifyRes.status}`);
+      }
+
+      console.log("[SENDAVAPAY WEBHOOK] Verification response:", verifyData);
+
+      const isCompleted = verifyData?.success && verifyData.data?.status === 'completed';
+
+      // 1. Process as Deposit
+      if (isCompleted) {
+        let deposits = storeData["gi_deposits"] || [];
+        let users = storeData["gi_users"] || [];
+        let notifications = storeData["gi_notifications"] || [];
+
+        const depIdx = deposits.findIndex((d: any) => 
+          String(d.reference) === String(reference) || 
+          String(d.id) === String(payload.externalReference) ||
+          String(d.id) === String(payload.data?.externalReference) ||
+          String(d.id) === String(reference)
+        );
+        if (depIdx !== -1) {
+          const dep = deposits[depIdx];
+          if (dep.status === 'pending') {
+            dep.status = 'approved';
+            dep.lastModified = Date.now();
+
+            const userIdx = users.findIndex((u: any) => u.id === dep.userId);
+            if (userIdx !== -1) {
+              const user = users[userIdx];
+              user.balance += Number(dep.amount);
+              user.lastModified = Date.now();
+
+              notifications.unshift({
+                id: `not-dep-sp-${Date.now()}`,
+                userId: user.id,
+                title: '⚡ Dépôt Automatique SendavaPay',
+                message: `Votre versement de ${Number(dep.amount).toLocaleString()} XOF via SendavaPay a été crédité instantanément et automatiquement à 100%.`,
+                type: 'deposit',
+                lastModified: Date.now(),
+                createdAt: new Date().toISOString(),
+                read: false
+              });
+
+              console.log(`[SENDAVAPAY WEBHOOK] Successfully credited ${dep.amount} XOF to user ${user.name}`);
+            }
+
+            storeData["gi_deposits"] = deposits;
+            storeData["gi_users"] = users;
+            storeData["gi_notifications"] = notifications;
+            saveStoreLocal();
+
+            if (supabase) {
+              try {
+                const { error: upsertErr } = await supabase.from('store').upsert([
+                  { key: "gi_deposits", value: deposits },
+                  { key: "gi_users", value: users },
+                  { key: "gi_notifications", value: notifications }
+                ]);
+                if (upsertErr) console.error("Supabase upsert failed:", upsertErr.message);
+              } catch (err: any) {
+                console.error("Supabase upsert failed (exception):", err.message);
+              }
+            }
+          } else {
+            console.log(`[SENDAVAPAY WEBHOOK] Deposit for reference "${reference}" already processed with status: ${dep.status}`);
+          }
+        }
+      }
+
+      // 2. Process as Payout (Withdrawal)
+      const isWithdrawalEvent = payload.event === 'withdrawal.completed' || payload.event === 'withdrawal.failed';
+      if (isWithdrawalEvent || (verifyData?.success && verifyData.data?.type === 'withdrawal')) {
+        let withdrawals = storeData["gi_withdrawals"] || [];
+        let users = storeData["gi_users"] || [];
+        let notifications = storeData["gi_notifications"] || [];
+
+        // Match by reference or externalReference (which maps to withdrawalId)
+        const extRef = payload.externalReference || payload.reference;
+        const wIdx = withdrawals.findIndex((w: any) => w.id === extRef || w.reference === reference);
+
+        if (wIdx !== -1) {
+          const withdrawal = withdrawals[wIdx];
+          const isSuccess = payload.event === 'withdrawal.completed' || (verifyData?.success && verifyData.data?.status === 'completed');
+          const isFailure = payload.event === 'withdrawal.failed' || (verifyData?.success && verifyData.data?.status === 'failed');
+
+          if (withdrawal.status === 'pending') {
+            if (isSuccess) {
+              withdrawal.status = 'approved';
+              withdrawal.lastModified = Date.now();
+
+              notifications.unshift({
+                id: `not-wth-sp-succ-${Date.now()}`,
+                userId: withdrawal.userId,
+                title: '💸 Retrait Automatique Réussi !',
+                message: `Votre demande de retrait de ${withdrawal.amount.toLocaleString()} XOF via SendavaPay a été traitée avec succès. Les fonds ont été déposés sur votre compte Mobile Money.`,
+                type: 'withdraw',
+                lastModified: Date.now(),
+                createdAt: new Date().toISOString(),
+                read: false
+              });
+
+              console.log(`[SENDAVAPAY WEBHOOK] Withdrawal approved for ID ${withdrawal.id}`);
+            } else if (isFailure) {
+              withdrawal.status = 'rejected';
+              withdrawal.lastModified = Date.now();
+
+              const uIdx = users.findIndex((u: any) => u.id === withdrawal.userId);
+              if (uIdx !== -1) {
+                users[uIdx].balance += Number(withdrawal.amount);
+                users[uIdx].lastModified = Date.now();
+              }
+
+              notifications.unshift({
+                id: `not-wth-sp-fail-${Date.now()}`,
+                userId: withdrawal.userId,
+                title: '❌ Retrait SendavaPay Échoué',
+                message: `Le transfert automatique de votre retrait de ${withdrawal.amount.toLocaleString()} XOF a échoué. Les fonds ont été retournés à votre solde principal.`,
+                type: 'withdraw',
+                lastModified: Date.now(),
+                createdAt: new Date().toISOString(),
+                read: false
+              });
+
+              console.log(`[SENDAVAPAY WEBHOOK] Withdrawal failed/rejected for ID ${withdrawal.id}`);
+            }
+
+            storeData["gi_withdrawals"] = withdrawals;
+            storeData["gi_users"] = users;
+            storeData["gi_notifications"] = notifications;
+            saveStoreLocal();
+
+            if (supabase) {
+              try {
+                const { error: upsertErr } = await supabase.from('store').upsert([
+                  { key: "gi_withdrawals", value: withdrawals },
+                  { key: "gi_users", value: users },
+                  { key: "gi_notifications", value: notifications }
+                ]);
+                if (upsertErr) console.error("Supabase upsert failed:", upsertErr.message);
+              } catch (err: any) {
+                console.error("Supabase upsert failed (exception):", err.message);
+              }
+            }
+          }
+        }
+      }
+
+      res.json({ success: true, received: true });
+    } catch (e: any) {
+      console.error("[SENDAVAPAY WEBHOOK EXCEPTION]", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // Admin Payout endpoint
+  app.post("/api/admin/sendavapay/payout", async (req, res) => {
+    try {
+      const { withdrawalId } = req.body;
+      if (!withdrawalId) {
+        return res.status(400).json({ success: false, error: "Identifiant de retrait requis." });
+      }
+
+      // Sync with Supabase first to get latest withdrawals list
+      if (supabase) {
+        try {
+          const { data, error } = await supabase.from('store').select('*');
+          if (!error && data && Array.isArray(data)) {
+            const kvData: Record<string, any> = {};
+            for (const item of data) {
+              kvData[item.key] = item.value;
+            }
+            if (Object.keys(kvData).length > 0) {
+              mergeData(kvData);
+              saveStoreLocal();
+            }
+          }
+        } catch (err) {}
+      }
+
+      let withdrawals = storeData["gi_withdrawals"] || [];
+      const idx = withdrawals.findIndex((w: any) => w.id === withdrawalId);
+      if (idx === -1) {
+        return res.status(404).json({ success: false, error: "Retrait introuvable." });
+      }
+
+      const withdrawal = withdrawals[idx];
+      if (withdrawal.status !== 'pending') {
+        return res.status(400).json({ success: false, error: "Ce retrait est déjà traité ou n'est plus en attente." });
+      }
+
+      let countryIso = "TG";
+      let operatorSlug = "tmoney";
+      let currency = "XOF";
+
+      const operatorLower = String(withdrawal.operator).toLowerCase();
+      
+      // Smart country matching
+      if (operatorLower.includes('ci') || operatorLower.includes("côte d'ivoire") || operatorLower.includes("cote d'ivoire")) {
+        countryIso = 'CI';
+        currency = 'XOF';
+      } else if (operatorLower.includes('tg') || operatorLower.includes('togo')) {
+        countryIso = 'TG';
+        currency = 'XOF';
+      } else if (operatorLower.includes('bj') || operatorLower.includes('bénin') || operatorLower.includes('benin')) {
+        countryIso = 'BJ';
+        currency = 'XOF';
+      } else if (operatorLower.includes('sn') || operatorLower.includes('sénégal') || operatorLower.includes('senegal')) {
+        countryIso = 'SN';
+        currency = 'XOF';
+      } else if (operatorLower.includes('ml') || operatorLower.includes('mali')) {
+        countryIso = 'ML';
+        currency = 'XOF';
+      } else if (operatorLower.includes('bf') || operatorLower.includes('burkina')) {
+        countryIso = 'BF';
+        currency = 'XOF';
+      } else if (operatorLower.includes('cm') || operatorLower.includes('cameroun')) {
+        countryIso = 'CM';
+        currency = 'XAF';
+      } else if (operatorLower.includes('gn') || operatorLower.includes('guinée') || operatorLower.includes('guinee')) {
+        countryIso = 'GN';
+        currency = 'GNF';
+      } else if (operatorLower.includes('cod') || operatorLower.includes('congo d')) {
+        countryIso = 'COD';
+        currency = 'CDF';
+      } else if (operatorLower.includes('cog') || operatorLower.includes('congo b')) {
+        countryIso = 'COG';
+        currency = 'XAF';
+      }
+
+      // Smart operator slug matching with live SendavaPay operators
+      const payoutSlugMap: Record<string, Record<string, string>> = {
+        TG: { tmoney: 't-money-togo', moov: 'moov-togo' },
+        CI: { orange: 'orange-money-ci', mtn: 'mtn-ci', moov: 'moov-ci', wave: 'wave-ci' },
+        BJ: { mtn: 'mtn-benin', moov: 'moov-benin' },
+        SN: { orange: 'new-orange-money-senegal', wave: 'wave-senegal', mixx: 'mixx-sn' },
+        ML: { orange: 'orange-money-mali' },
+        BF: { orange: 'orange-money-burkina', moov: 'moov-burkina-faso' },
+        COD: { vodacom: 'vodacom-cod', airtel: 'airtel-cod', orange: 'orange-cod' },
+        COG: { airtel: 'airtel-cog', mtn: 'mtn-cog' }
+      };
+
+      let genericKey = 'orange';
+      if (operatorLower.includes('tmoney') || operatorLower.includes('t-money')) {
+        genericKey = 'tmoney';
+      } else if (operatorLower.includes('flooz') || operatorLower.includes('moov')) {
+        genericKey = 'moov';
+      } else if (operatorLower.includes('mtn') || operatorLower.includes('momo')) {
+        genericKey = 'mtn';
+      } else if (operatorLower.includes('orange') || operatorLower.includes('om')) {
+        genericKey = 'orange';
+      } else if (operatorLower.includes('wave')) {
+        genericKey = 'wave';
+      } else if (operatorLower.includes('vodacom') || operatorLower.includes('mpesa')) {
+        genericKey = 'vodacom';
+      } else if (operatorLower.includes('airtel')) {
+        genericKey = 'airtel';
+      } else if (operatorLower.includes('mixx')) {
+        genericKey = 'mixx';
+      }
+
+      const matchedSlugs = payoutSlugMap[countryIso] || {};
+      operatorSlug = matchedSlugs[genericKey] || genericKey;
+
+      const formattedPhone = formatToE164(withdrawal.number, countryIso);
+      console.log(`[ADMIN SENDAVAPAY PAYOUT] Executing automatic withdraw. ID: ${withdrawalId}, Amount: ${withdrawal.amount} ${currency}, Country: ${countryIso}, Operator: ${operatorSlug}, Target: ${formattedPhone}`);
+
+      const payoutRes = await fetch("https://sendavapay.com/api/sdk/v1/withdraw", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+        },
+        body: JSON.stringify({
+          amount: Number(withdrawal.amount),
+          phoneNumber: formattedPhone,
+          operator: operatorSlug,
+          country: countryIso,
+          currency,
+          description: `Retrait AgroProfit automatique`,
+          externalReference: withdrawal.id
+        })
+      });
+
+      if (!payoutRes.ok) {
+        const errText = await payoutRes.text();
+        console.error("[ADMIN SENDAVAPAY PAYOUT] API error:", payoutRes.status, errText);
+        return res.status(500).json({ success: false, error: `L'API de payout SendavaPay a renvoyé une erreur : ${errText}` });
+      }
+
+      const payoutData = await payoutRes.json();
+      console.log("[ADMIN SENDAVAPAY PAYOUT] API response:", payoutData);
+
+      if (payoutData && payoutData.success) {
+        withdrawal.status = 'approved';
+        withdrawal.reference = payoutData.data?.reference || `sp-${Date.now()}`;
+        withdrawal.lastModified = Date.now();
+
+        // Send confirmation notification
+        let notifications = storeData["gi_notifications"] || [];
+        notifications.unshift({
+          id: `not-wth-sp-payout-${Date.now()}`,
+          userId: withdrawal.userId,
+          title: '💸 Retrait SendavaPay Initié',
+          message: `Votre demande de retrait de ${withdrawal.amount.toLocaleString()} XOF a été transmise automatiquement au réseau SendavaPay pour versement direct sur votre mobile money (${withdrawal.operator}).`,
+          type: 'withdraw',
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString(),
+          read: false
+        });
+
+        storeData["gi_withdrawals"] = withdrawals;
+        storeData["gi_notifications"] = notifications;
+        saveStoreLocal();
+
+        if (supabase) {
+          try {
+            const { error: upsertErr } = await supabase.from('store').upsert([
+              { key: "gi_withdrawals", value: withdrawals },
+              { key: "gi_notifications", value: notifications }
+            ]);
+            if (upsertErr) console.error("Supabase admin payout save failed:", upsertErr.message);
+          } catch (err: any) {
+            console.error("Supabase admin payout save failed (exception):", err.message);
+          }
+        }
+
+        return res.json({ success: true, message: `Payout SendavaPay initié avec succès ! Statut : ${payoutData.data?.status || 'queued'}` });
+      } else {
+        return res.status(400).json({ success: false, error: payoutData?.error || "La transaction de payout automatique a échoué." });
+      }
+
+    } catch (e: any) {
+      console.error("[ADMIN SENDAVAPAY PAYOUT EXCEPTION]", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
   });
 
   // PayDunya Create Charge API
