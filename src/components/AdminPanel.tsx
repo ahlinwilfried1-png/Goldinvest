@@ -71,7 +71,7 @@ export default function AdminPanel({
   } | null>(null);
 
   // Navigation tab
-  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions' | 'support' | 'proofs' | 'investments'>('deposits');
+  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions' | 'support' | 'proofs' | 'investments' | 'canals'>('deposits');
   const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
 
   const handleDeleteInvestment = (investmentId: string) => {
@@ -417,6 +417,7 @@ export default function AdminPanel({
   const [whatsappGroup, setWhatsappGroup] = useState<string>(() => DataStore.getWhatsAppGroup());
   const [whatsappChannel, setWhatsappChannel] = useState<string>(() => DataStore.getWhatsAppChannel());
   const [whatsappSupportNumber, setWhatsappSupportNumber] = useState<string>(() => DataStore.getWhatsAppSupportNumber());
+  const [manualDepositNumbers, setManualDepositNumbers] = useState<Record<string, string>>(() => DataStore.getManualDepositNumbers());
 
   const handleSaveMlmRates = (e: React.FormEvent) => {
     e.preventDefault();
@@ -429,7 +430,14 @@ export default function AdminPanel({
     DataStore.saveWhatsAppGroup(whatsappGroup);
     DataStore.saveWhatsAppChannel(whatsappChannel);
     DataStore.saveWhatsAppSupportNumber(whatsappSupportNumber);
-    alert('Réglages système (MLM, domaine, WhatsApp, Support) enregistrés avec succès !');
+    DataStore.saveManualDepositNumbers(manualDepositNumbers);
+    alert('Réglages système (MLM, domaine, WhatsApp, Support, Numéros Dépôt Manuel) enregistrés avec succès !');
+  };
+
+  const handleSaveManualDepositNumbers = (e: React.FormEvent) => {
+    e.preventDefault();
+    DataStore.saveManualDepositNumbers(manualDepositNumbers);
+    alert('✅ Numéros de réception des dépôts enregistrés avec succès !');
   };
 
   // Picture receipt lightbox state
@@ -1368,6 +1376,13 @@ export default function AdminPanel({
           {pendingDepositsCount > 0 && (
             <span className="bg-red-500 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-full animate-pulse">{pendingDepositsCount}</span>
           )}
+        </button>
+        <button
+          onClick={() => setActiveAdminTab('canals')}
+          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors flex items-center space-x-2 ${activeAdminTab === 'canals' ? 'border-yellow-500 text-yellow-400 bg-slate-900/40 rounded-t-lg' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <span className="text-sm">🔌</span>
+          <span>Canaux de Dépôt</span>
         </button>
         <button
           onClick={() => setActiveAdminTab('withdrawals')}
@@ -2824,6 +2839,68 @@ export default function AdminPanel({
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* CANAUX DE DÉPÔT CONFIGURATION TAB */}
+      {activeAdminTab === 'canals' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="border-b border-slate-800 pb-4 mb-6">
+              <h2 className="text-lg font-display font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <span>🔌</span>
+                <span>Canaux de Dépôt & Numéros de Réception</span>
+              </h2>
+              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                Configurez ici les numéros de téléphone et noms de comptes Mobile Money associés à chaque pays et chaque opérateur.
+                Ces numéros s'afficheront directement aux membres sur l'interface de dépôt lorsqu'ils initieront un transfert manuel.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveManualDepositNumbers} className="space-y-6">
+              <div className="space-y-6">
+                {(Object.entries({
+                  'TG': { name: 'Togo 🇹🇬', ops: [{ id: '37', name: 'TMoney' }, { id: '38', name: 'Moov Money' }] }
+                }) as [string, { name: string, ops: { id: string, name: string }[] }][]).map(([countryCode, countryInfo]) => (
+                  <div key={countryCode} className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-5">
+                    <span className="text-xs font-black text-yellow-500 block mb-4 uppercase tracking-wider font-sans border-b border-slate-800 pb-2">{countryInfo.name}</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {countryInfo.ops.map((op) => {
+                        const key = `${countryCode}_${op.id}`;
+                        return (
+                          <div key={op.id} className="space-y-2">
+                            <span className="text-[11px] text-slate-300 font-bold font-mono">{op.name}</span>
+                            <input
+                              type="text"
+                              placeholder="Ex: TTMoney - 90 90 33 19 (Nom de Titulaire)"
+                              value={manualDepositNumbers[key] || ''}
+                              onChange={(e) => {
+                                setManualDepositNumbers({
+                                  ...manualDepositNumbers,
+                                  [key]: e.target.value
+                                });
+                              }}
+                              className="w-full bg-slate-900 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-xs text-white font-mono focus:outline-none placeholder-slate-700"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
+                >
+                  <span>💾</span>
+                  <span>Enregistrer tous les Canaux de Dépôt</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

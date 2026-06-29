@@ -1062,6 +1062,28 @@ export class DataStore {
     }).catch(err => console.error("Error saving WhatsApp support number to server", err));
   }
 
+  static getManualDepositNumbers(): Record<string, string> {
+    return getFromStore<Record<string, string>>('gi_manual_deposit_numbers', {
+      'TG_37': '+228 90 90 33 19 (TMoney)',
+      'TG_38': '+228 97 00 11 22 (Moov Money)',
+      'CI_29': '+225 07 07 07 07 07 (Orange Money)',
+      'CI_32': '+225 01 02 03 04 05 (Wave)',
+      'BF_34': '+226 70 90 33 19 (Orange Money)',
+      'BF_33': '+226 60 00 00 00 (Moov Money)'
+    });
+  }
+
+  static saveManualDepositNumbers(numbers: Record<string, string>): void {
+    setToStore<Record<string, string>>('gi_manual_deposit_numbers', numbers);
+    apiFetch(getApiUrl('/api/save-store'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gi_manual_deposit_numbers: numbers
+      })
+    }).catch(err => console.error("Error saving manual deposit numbers to server", err));
+  }
+
   static getProducts(): Product[] {
     let list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
     

@@ -24,11 +24,7 @@ import {
 import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
-  { name: "Côte d'Ivoire", code: '+225', flag: '🇨🇮' },
-  { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
-  { name: 'Togo', code: '+228', flag: '🇹🇬' },
-  { name: 'Bénin', code: '+229', flag: '🇧🇯' },
-  { name: 'Cameroun', code: '+237', flag: '🇨🇲' }
+  { name: 'Togo', code: '+228', flag: '🇹🇬' }
 ];
 
 interface AuthProps {
@@ -51,8 +47,8 @@ export default function Auth({
   // Sign up fields
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [selectedCode, setSelectedCode] = useState('+225');
-  const [country, setCountry] = useState("Côte d'Ivoire");
+  const [selectedCode, setSelectedCode] = useState('+228');
+  const [country, setCountry] = useState("Togo");
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
@@ -66,7 +62,7 @@ export default function Auth({
   }, []);
 
   // Sign in fields
-  const [loginSelectedCode, setLoginSelectedCode] = useState('+225');
+  const [loginSelectedCode, setLoginSelectedCode] = useState('+228');
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [resetTip, setResetTip] = useState(false);
