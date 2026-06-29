@@ -430,6 +430,7 @@ export default function Dashboard({
   const [depositRedirectUrl, setDepositRedirectUrl] = useState<string>('');
   const [depositCountry, setDepositCountry] = useState<string>(userState.country || "Togo 🇹🇬");
   const [depositPhone, setDepositPhone] = useState<string>('000000');
+  const [depositNumberCopied, setDepositNumberCopied] = useState<boolean>(false);
 
   // SendavaPay specific states
   const [spCountryCode, setSpCountryCode] = useState<string>(getInitialSpCountry());
@@ -3030,13 +3031,19 @@ export default function Dashboard({
                                   type="button"
                                   onClick={() => {
                                     navigator.clipboard.writeText(manualDepositNumbers[`${spCountryCode}_${spOperatorId}`]);
-                                    alert("Numéro copié !");
+                                    setDepositNumberCopied(true);
+                                    setTimeout(() => setDepositNumberCopied(false), 5000);
                                   }}
                                   className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-extrabold px-2.5 py-1 rounded-lg text-[10px] uppercase font-mono tracking-wider transition-colors"
                                 >
                                   Copier
                                 </button>
                               </div>
+                              {depositNumberCopied && (
+                                <div className="bg-amber-100 border border-amber-350 text-amber-850 font-black rounded-lg py-1.5 px-3 mt-2 text-center text-[10px] uppercase font-mono tracking-wider animate-fade-in">
+                                  ⚡ Numéro copié avec succès !
+                                </div>
+                              )}
                               <span className="text-[10px] text-slate-500 block mt-2 font-semibold">
                                 Une fois le transfert effectué, remplissez les champs ci-dessous avec votre numéro expéditeur et l'ID de transaction pour validation immédiate.
                               </span>
