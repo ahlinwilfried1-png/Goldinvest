@@ -45,7 +45,6 @@ export default function Auth({
   const [successMessage, setSuccessMessage] = useState('');
 
   // Sign up fields
-  const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [selectedCode, setSelectedCode] = useState('+228');
   const [country, setCountry] = useState("Togo");
@@ -55,11 +54,53 @@ export default function Auth({
 
   // Pre-fill sponsor referral code if captured from a direct web link
   React.useEffect(() => {
-    const captured = safeLocalStorage.getItem('gi_captured_ref');
-    if (captured) {
-      setReferralCode(captured);
-    }
-  }, []);
+    const parseUrlAndSync = () => {
+      // 1. Parse current URL params
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '');
+      
+      const getParamInsensitive = (key: string) => {
+        const lowerKey = key.toLowerCase();
+        for (const [k, v] of searchParams.entries()) {
+          if (k.toLowerCase() === lowerKey) return v;
+        }
+        for (const [k, v] of hashParams.entries()) {
+          if (k.toLowerCase() === lowerKey) return v;
+        }
+        return null;
+      };
+
+      const refCode = getParamInsensitive('ref') || 
+                      getParamInsensitive('code') || 
+                      getParamInsensitive('r') || 
+                      getParamInsensitive('parrain') || 
+                      getParamInsensitive('sponsor');
+      if (refCode) {
+        safeLocalStorage.setItem('gi_captured_ref', refCode.toUpperCase());
+      }
+
+      // 2. Synchronize with state
+      const captured = safeLocalStorage.getItem('gi_captured_ref') || 'AGR72';
+      if (captured !== referralCode) {
+        setReferralCode(captured);
+      }
+    };
+
+    parseUrlAndSync();
+    
+    // Listen to all link clicks and storage checks
+    window.addEventListener('click', parseUrlAndSync);
+    window.addEventListener('popstate', parseUrlAndSync);
+    window.addEventListener('hashchange', parseUrlAndSync);
+    const interval = setInterval(parseUrlAndSync, 500);
+
+    return () => {
+      window.removeEventListener('click', parseUrlAndSync);
+      window.removeEventListener('popstate', parseUrlAndSync);
+      window.removeEventListener('hashchange', parseUrlAndSync);
+      clearInterval(interval);
+    };
+  }, [referralCode]);
 
   // Sign in fields
   const [loginSelectedCode, setLoginSelectedCode] = useState('+228');
@@ -99,11 +140,6 @@ export default function Auth({
 
     if (isRegister) {
       // Registration validations
-      if (name.trim().length < 3) {
-        setErrorMessage("Veuillez entrer un nom d'utilisateur valide (au moins 3 caractères).");
-        setLoading(false);
-        return;
-      }
       if (!whatsapp.trim()) {
         setErrorMessage('Le numéro de téléphone est requis.');
         setLoading(false);
@@ -121,6 +157,7 @@ export default function Auth({
       }
 
       const fullWhatsapp = getCleanWhatsappNumber(whatsapp, selectedCode);
+      const autoName = "Membre " + whatsapp.trim();
 
       // Detect current device type
       const ua = navigator.userAgent;
@@ -132,7 +169,7 @@ export default function Auth({
 
       // Call database
       const result = await DataStore.register({
-        name: name.trim(),
+        name: autoName,
         whatsapp: fullWhatsapp,
         country,
         password,
@@ -300,28 +337,6 @@ export default function Auth({
           {isRegister ? (
             /* REGISTRATION FIELDS */
             <>
-              {/* Full name input */}
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-700 tracking-wide pl-1">
-                  Nom complet d’utilisateur
-                </label>
-                <div className="bg-white border border-slate-200 rounded-2xl p-1 px-3 flex items-center justify-between gap-2 focus-within:border-[#ff7c00] focus-within:ring-1 focus-within:ring-[#ff7c00]/20 transition-all shadow-xs">
-                  <div className="flex items-center gap-1.5 shrink-0 text-slate-400 pl-1">
-                    <UserIcon className="w-4 h-4 text-[#ff7c00]" />
-                    <div className="h-5 w-[1px] bg-slate-200 ml-1.5" />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    maxLength={20}
-                    placeholder="Entrez votre nom complet d'utilisateur"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="flex-1 bg-transparent text-slate-900 text-sm font-semibold px-2 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
-                  />
-                </div>
-              </div>
-
               {/* Country-coded phone input */}
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-700 tracking-wide pl-1">
