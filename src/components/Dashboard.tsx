@@ -1421,13 +1421,18 @@ export default function Dashboard({
           setDepositError(res.error || "L'initialisation du paiement a échoué.");
         }
       } else {
-        const errObj = await response.json().catch(() => null);
-        const errText = errObj?.error || await response.text();
-        setDepositError(`Erreur API : ${errText}`);
+        const errText = await response.text().catch(() => "Erreur de lecture du serveur");
+        let parsedMessage = errText;
+        try {
+          const errObj = JSON.parse(errText);
+          if (errObj && errObj.error) parsedMessage = errObj.error;
+          else if (errObj && errObj.message) parsedMessage = errObj.message;
+        } catch (e) {}
+        setDepositError(`Erreur API : ${parsedMessage}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Deposit submission error:", error);
-      setDepositError("Erreur de connexion. Veuillez réessayer.");
+      setDepositError(`Erreur de connexion : ${error?.message || error || "Veuillez réessayer."}`);
     } finally {
       setIsSubmittingDeposit(false);
     }

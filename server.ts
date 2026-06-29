@@ -686,6 +686,187 @@ async function startServer() {
     return clean;
   }
 
+  function distributeMlmCommissions(userId: string, amount: number, type: 'recharge' | 'investment', originName: string) {
+    let users = storeData["gi_users"] || [];
+    let commissions = storeData["gi_commissions"] || [];
+    let notifications = storeData["gi_notifications"] || [];
+
+    const user = users.find((u: any) => String(u.id) === String(userId));
+    if (!user) {
+      console.warn(`[MLM COMMISSION] User ${userId} not found for commission distribution.`);
+      return;
+    }
+
+    // Fetch live MLM Rates
+    const mlmRates = {
+      level1: Number(storeData["gi_mlm_level1_rate"] || 20),
+      level2: Number(storeData["gi_mlm_level2_rate"] || 3),
+      level3: Number(storeData["gi_mlm_level3_rate"] || 1),
+    };
+
+    console.log(`[MLM COMMISSION] Distributing ${type} commission for ${user.name} on ${amount} XOF. Rates:`, mlmRates);
+
+    // Level 1 MLM
+    if (user.referredBy) {
+      const cleanInput = user.referredBy.trim();
+      const refClean = cleanInput.toUpperCase();
+      const digitsOnlyInput = cleanInput.replace(/\D/g, '');
+
+      const parentUser = users.find((u: any) => {
+        if (String(u.id).toUpperCase() === refClean) return true;
+        if (u.referralCode && u.referralCode.toUpperCase() === refClean) return true;
+        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
+          const uDigits = u.whatsapp.replace(/\D/g, '');
+          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
+        }
+        return false;
+      });
+
+      if (parentUser) {
+        const commAmtLvl1 = Math.round(amount * (mlmRates.level1 / 100));
+        parentUser.balance += commAmtLvl1;
+        parentUser.bonus += commAmtLvl1;
+        parentUser.totalEarnings = (parentUser.totalEarnings || 0) + commAmtLvl1;
+        parentUser.lastModified = Date.now();
+
+        commissions.unshift({
+          id: `com-${Date.now()}-1`,
+          userId: parentUser.id,
+          fromUserName: user.name,
+          level: 1,
+          amount: commAmtLvl1,
+          type: type, // 'recharge' or 'investment'
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString()
+        });
+
+        const title = type === 'recharge' ? 'Commission de dépôt reçue !' : 'Commission d\'investissement reçue !';
+        const message = type === 'recharge'
+          ? `Félicitations, vous avez perçu ${commAmtLvl1} XOF (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a effectué un dépôt de ${amount} XOF.`
+          : `Félicitations, vous avez perçu ${commAmtLvl1} XOF (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi de l'argent dans le plan ${originName}.`;
+
+        notifications.unshift({
+          id: `not-com1-${Date.now()}`,
+          userId: parentUser.id,
+          title: title,
+          message: message,
+          type: 'bonus',
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString(),
+          read: false
+        });
+
+        // Level 2 MLM
+        if (parentUser.referredBy) {
+          const cleanInput2 = parentUser.referredBy.trim();
+          const refClean2 = cleanInput2.toUpperCase();
+          const digitsOnlyInput2 = cleanInput2.replace(/\D/g, '');
+
+          const grandParentUser = users.find((u: any) => {
+            if (String(u.id).toUpperCase() === refClean2) return true;
+            if (u.referralCode && u.referralCode.toUpperCase() === refClean2) return true;
+            if (digitsOnlyInput2.length >= 6 && u.whatsapp) {
+              const uDigits = u.whatsapp.replace(/\D/g, '');
+              if (uDigits.endsWith(digitsOnlyInput2) || digitsOnlyInput2.endsWith(uDigits)) return true;
+            }
+            return false;
+          });
+
+          if (grandParentUser) {
+            const commAmtLvl2 = Math.round(amount * (mlmRates.level2 / 100));
+            grandParentUser.balance += commAmtLvl2;
+            grandParentUser.bonus += commAmtLvl2;
+            grandParentUser.totalEarnings = (grandParentUser.totalEarnings || 0) + commAmtLvl2;
+            grandParentUser.lastModified = Date.now();
+
+            commissions.unshift({
+              id: `com-${Date.now()}-2`,
+              userId: grandParentUser.id,
+              fromUserName: user.name,
+              level: 2,
+              amount: commAmtLvl2,
+              type: type,
+              lastModified: Date.now(),
+              createdAt: new Date().toISOString()
+            });
+
+            const title2 = type === 'recharge' ? 'Commission de dépôt Niveau 2 !' : 'Commission d\'investissement Niveau 2 !';
+            const message2 = type === 'recharge'
+              ? `Vous avez perçu ${commAmtLvl2} XOF (Niveau 2 : ${mlmRates.level2}%) suite au dépôt de ${user.name} (parrainé par ${parentUser.name}).`
+              : `Vous avez perçu ${commAmtLvl2} XOF (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`;
+
+            notifications.unshift({
+              id: `not-com2-${Date.now()}`,
+              userId: grandParentUser.id,
+              title: title2,
+              message: message2,
+              type: 'bonus',
+              lastModified: Date.now(),
+              createdAt: new Date().toISOString(),
+              read: false
+            });
+
+            // Level 3 MLM
+            if (grandParentUser.referredBy) {
+              const cleanInput3 = grandParentUser.referredBy.trim();
+              const refClean3 = cleanInput3.toUpperCase();
+              const digitsOnlyInput3 = cleanInput3.replace(/\D/g, '');
+
+              const greatGrandParentUser = users.find((u: any) => {
+                if (String(u.id).toUpperCase() === refClean3) return true;
+                if (u.referralCode && u.referralCode.toUpperCase() === refClean3) return true;
+                if (digitsOnlyInput3.length >= 6 && u.whatsapp) {
+                  const uDigits = u.whatsapp.replace(/\D/g, '');
+                  if (uDigits.endsWith(digitsOnlyInput3) || digitsOnlyInput3.endsWith(uDigits)) return true;
+                }
+                return false;
+              });
+
+              if (greatGrandParentUser) {
+                const commAmtLvl3 = Math.round(amount * (mlmRates.level3 / 100));
+                greatGrandParentUser.balance += commAmtLvl3;
+                greatGrandParentUser.bonus += commAmtLvl3;
+                greatGrandParentUser.totalEarnings = (greatGrandParentUser.totalEarnings || 0) + commAmtLvl3;
+                greatGrandParentUser.lastModified = Date.now();
+
+                commissions.unshift({
+                  id: `com-${Date.now()}-3`,
+                  userId: greatGrandParentUser.id,
+                  fromUserName: user.name,
+                  level: 3,
+                  amount: commAmtLvl3,
+                  type: type,
+                  lastModified: Date.now(),
+                  createdAt: new Date().toISOString()
+                });
+
+                const title3 = type === 'recharge' ? 'Commission de dépôt Niveau 3 !' : 'Commission d\'investissement Niveau 3 !';
+                const message3 = type === 'recharge'
+                  ? `Vous avez perçu ${commAmtLvl3} XOF (Niveau 3 : ${mlmRates.level3}%) suite au dépôt de ${user.name} (parrainé de façon indirecte par un membre de votre réseau).`
+                  : `Vous avez perçu ${commAmtLvl3} XOF (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name} (parrainé de façon indirecte par un membre de votre réseau).`;
+
+                notifications.unshift({
+                  id: `not-com3-${Date.now()}`,
+                  userId: greatGrandParentUser.id,
+                  title: title3,
+                  message: message3,
+                  type: 'bonus',
+                  lastModified: Date.now(),
+                  createdAt: new Date().toISOString(),
+                  read: false
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    storeData["gi_users"] = users;
+    storeData["gi_commissions"] = commissions;
+    storeData["gi_notifications"] = notifications;
+  }
+
   // API endpoints to synchronize state
   app.get("/api/admin/force-cleanup-non-admins", async (req, res) => {
     try {
@@ -1305,149 +1486,12 @@ async function startServer() {
     };
     investments.unshift(newInvestment);
 
-    // Fetch live MLM Rates
-    const mlmRates = {
-      level1: Number(storeData["gi_mlm_level1_rate"] || 20),
-      level2: Number(storeData["gi_mlm_level2_rate"] || 3),
-      level3: Number(storeData["gi_mlm_level3_rate"] || 1),
-    };
+    distributeMlmCommissions(userId, targetProduct.price, 'investment', targetProduct.name);
 
-    if (user.referredBy) {
-      const cleanInput = user.referredBy.trim();
-      const refClean = cleanInput.toUpperCase();
-      const digitsOnlyInput = cleanInput.replace(/\D/g, '');
-
-      const parentUser = users.find((u: any) => {
-        if (u.id.toUpperCase() === refClean) return true;
-        if (u.referralCode && u.referralCode.toUpperCase() === refClean) return true;
-        if (digitsOnlyInput.length >= 6 && u.whatsapp) {
-          const uDigits = u.whatsapp.replace(/\D/g, '');
-          if (uDigits.endsWith(digitsOnlyInput) || digitsOnlyInput.endsWith(uDigits)) return true;
-        }
-        return false;
-      });
-
-      if (parentUser) {
-        const commAmtLvl1 = Math.round(targetProduct.price * (mlmRates.level1 / 100));
-        parentUser.balance += commAmtLvl1;
-        parentUser.bonus += commAmtLvl1;
-        parentUser.totalEarnings = (parentUser.totalEarnings || 0) + commAmtLvl1;
-        parentUser.lastModified = Date.now();
-
-        commissions.unshift({
-          id: `com-${Date.now()}-1`,
-          userId: parentUser.id,
-          fromUserName: user.name,
-          level: 1,
-          amount: commAmtLvl1,
-          lastModified: Date.now(),
-          createdAt: new Date().toISOString()
-        });
-
-        notifications.unshift({
-          id: `not-com1-${Date.now()}`,
-          userId: parentUser.id,
-          title: 'Commission MLM reçue !',
-          message: `Félicitations, vous avez perçu ${commAmtLvl1} XOF (Niveau 1 : ${mlmRates.level1}%) car votre affilié ${user.name} a investi de l'argent dans le plan ${targetProduct.name}.`,
-          type: 'bonus',
-          lastModified: Date.now(),
-          createdAt: new Date().toISOString(),
-          read: false
-        });
-
-        // Level 2 MLM
-        if (parentUser.referredBy) {
-          const cleanInput2 = parentUser.referredBy.trim();
-          const refClean2 = cleanInput2.toUpperCase();
-          const digitsOnlyInput2 = cleanInput2.replace(/\D/g, '');
-
-          const grandParentUser = users.find((u: any) => {
-            if (u.id.toUpperCase() === refClean2) return true;
-            if (u.referralCode && u.referralCode.toUpperCase() === refClean2) return true;
-            if (digitsOnlyInput2.length >= 6 && u.whatsapp) {
-              const uDigits = u.whatsapp.replace(/\D/g, '');
-              if (uDigits.endsWith(digitsOnlyInput2) || digitsOnlyInput2.endsWith(uDigits)) return true;
-            }
-            return false;
-          });
-
-          if (grandParentUser) {
-            const commAmtLvl2 = Math.round(targetProduct.price * (mlmRates.level2 / 100));
-            grandParentUser.balance += commAmtLvl2;
-            grandParentUser.bonus += commAmtLvl2;
-            grandParentUser.totalEarnings = (grandParentUser.totalEarnings || 0) + commAmtLvl2;
-            grandParentUser.lastModified = Date.now();
-
-            commissions.unshift({
-              id: `com-${Date.now()}-2`,
-              userId: grandParentUser.id,
-              fromUserName: user.name,
-              level: 2,
-              amount: commAmtLvl2,
-              lastModified: Date.now(),
-              createdAt: new Date().toISOString()
-            });
-
-            notifications.unshift({
-              id: `not-com2-${Date.now()}`,
-              userId: grandParentUser.id,
-              title: 'Commission MLM Niveau 2 !',
-              message: `Vous avez perçu ${commAmtLvl2} XOF (Niveau 2 : ${mlmRates.level2}%) suite à l'investissement de ${user.name} (parrainé par ${parentUser.name}).`,
-              type: 'bonus',
-              lastModified: Date.now(),
-              createdAt: new Date().toISOString(),
-              read: false
-            });
-
-            // Level 3 MLM
-            if (grandParentUser.referredBy) {
-              const cleanInput3 = grandParentUser.referredBy.trim();
-              const refClean3 = cleanInput3.toUpperCase();
-              const digitsOnlyInput3 = cleanInput3.replace(/\D/g, '');
-
-              const greatGrandParentUser = users.find((u: any) => {
-                if (u.id.toUpperCase() === refClean3) return true;
-                if (u.referralCode && u.referralCode.toUpperCase() === refClean3) return true;
-                if (digitsOnlyInput3.length >= 6 && u.whatsapp) {
-                  const uDigits = u.whatsapp.replace(/\D/g, '');
-                  if (uDigits.endsWith(digitsOnlyInput3) || digitsOnlyInput3.endsWith(uDigits)) return true;
-                }
-                return false;
-              });
-
-              if (greatGrandParentUser) {
-                const commAmtLvl3 = Math.round(targetProduct.price * (mlmRates.level3 / 100));
-                greatGrandParentUser.balance += commAmtLvl3;
-                greatGrandParentUser.bonus += commAmtLvl3;
-                greatGrandParentUser.totalEarnings = (greatGrandParentUser.totalEarnings || 0) + commAmtLvl3;
-                greatGrandParentUser.lastModified = Date.now();
-
-                commissions.unshift({
-                  id: `com-${Date.now()}-3`,
-                  userId: greatGrandParentUser.id,
-                  fromUserName: user.name,
-                  level: 3,
-                  amount: commAmtLvl3,
-                  lastModified: Date.now(),
-                  createdAt: new Date().toISOString()
-                });
-
-                notifications.unshift({
-                  id: `not-com3-${Date.now()}`,
-                  userId: greatGrandParentUser.id,
-                  title: 'Commission MLM Niveau 3 !',
-                  message: `Vous avez perçu ${commAmtLvl3} XOF (Niveau 3 : ${mlmRates.level3}%) suite à l'investissement de ${user.name} (parrainé de façon indirecte par un membre de votre réseau).`,
-                  type: 'bonus',
-                  lastModified: Date.now(),
-                  createdAt: new Date().toISOString(),
-                  read: false
-                });
-              }
-            }
-          }
-        }
-      }
-    }
+    // Refresh local lists from mutated storeData
+    users = storeData["gi_users"] || [];
+    commissions = storeData["gi_commissions"] || [];
+    notifications = storeData["gi_notifications"] || [];
 
     notifications.unshift({
       id: `not-plan-${Date.now()}`,
@@ -1698,7 +1742,7 @@ async function startServer() {
       }
 
       const users = storeData["gi_users"] || [];
-      const userIdx = users.findIndex((u: any) => u.id === userId);
+      const userIdx = users.findIndex((u: any) => String(u.id) === String(userId));
       const user = userIdx !== -1 ? users[userIdx] : null;
       if (!user) {
         return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
@@ -1735,7 +1779,13 @@ async function startServer() {
       if (!createRes.ok) {
         const errText = await createRes.text();
         console.error("[SENDAVAPAY] Create-payment failed:", createRes.status, errText);
-        return res.status(500).json({ success: false, error: "La création de la transaction SendavaPay a échoué." });
+        let errorMsg = "La création de la transaction SendavaPay a échoué.";
+        try {
+          const parsed = JSON.parse(errText);
+          if (parsed && parsed.error) errorMsg = parsed.error;
+          else if (parsed && parsed.message) errorMsg = parsed.message;
+        } catch (e) {}
+        return res.status(500).json({ success: false, error: `${errorMsg} (Code: ${createRes.status})` });
       }
 
       const createData = await createRes.json();
@@ -1995,6 +2045,11 @@ async function startServer() {
                 createdAt: new Date().toISOString(),
                 read: false
               });
+
+              // Distribute MLM commissions
+              distributeMlmCommissions(dep.userId, Number(dep.amount), 'recharge', 'SendavaPay');
+              users = storeData["gi_users"] || users;
+              notifications = storeData["gi_notifications"] || notifications;
             }
 
             storeData["gi_deposits"] = deposits;
@@ -2007,7 +2062,8 @@ async function startServer() {
                 await supabase.from('store').upsert([
                   { key: "gi_deposits", value: deposits },
                   { key: "gi_users", value: users },
-                  { key: "gi_notifications", value: notifications }
+                  { key: "gi_notifications", value: notifications },
+                  { key: "gi_commissions", value: storeData["gi_commissions"] || [] }
                 ]);
               } catch (e) {
                 console.error(e);
@@ -2120,6 +2176,11 @@ async function startServer() {
                 read: false
               });
 
+              // Distribute MLM commissions
+              distributeMlmCommissions(dep.userId, Number(dep.amount), 'recharge', 'SendavaPay');
+              users = storeData["gi_users"] || users;
+              notifications = storeData["gi_notifications"] || notifications;
+
               console.log(`[SENDAVAPAY WEBHOOK] Successfully credited ${dep.amount} XOF to user ${user.name}`);
             }
 
@@ -2133,7 +2194,8 @@ async function startServer() {
                 const { error: upsertErr } = await supabase.from('store').upsert([
                   { key: "gi_deposits", value: deposits },
                   { key: "gi_users", value: users },
-                  { key: "gi_notifications", value: notifications }
+                  { key: "gi_notifications", value: notifications },
+                  { key: "gi_commissions", value: storeData["gi_commissions"] || [] }
                 ]);
                 if (upsertErr) console.error("Supabase upsert failed:", upsertErr.message);
               } catch (err: any) {
@@ -3139,6 +3201,11 @@ async function startServer() {
         createdAt: new Date().toISOString(),
         read: false
       });
+
+      // Distribute MLM commissions automatically upon manual approval
+      distributeMlmCommissions(deposits[idx].userId, deposits[idx].amount, 'recharge', deposits[idx].operator || 'Manuel');
+      users = storeData["gi_users"] || users;
+      notifications = storeData["gi_notifications"] || notifications;
     } else {
       deposits[idx].status = 'rejected';
       notifications.unshift({
