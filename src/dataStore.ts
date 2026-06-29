@@ -348,7 +348,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
   // Try to use the standard backend first (getApiUrl)
   try {
     const fetchOptions: RequestInit = {
-      credentials: 'include',
+      credentials: 'same-origin',
       ...init
     };
     let response = await fetch(activeUrl, fetchOptions);
@@ -408,7 +408,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
         console.log(`[apiFetch Network Failover] Retrying on network error with: ${fallbackUrl}`);
         
         const fetchOptions: RequestInit = {
-          credentials: 'include',
+          credentials: 'same-origin',
           ...init
         };
         const response = await fetch(fallbackUrl, fetchOptions);
@@ -1452,7 +1452,7 @@ export class DataStore {
 
     // Send silently in the background if possible
     try {
-      fetch(getApiUrl('/api/save-store'), {
+      apiFetch(getApiUrl('/api/save-store'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
