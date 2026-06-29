@@ -1718,7 +1718,14 @@ async function startServer() {
 
   // SendavaPay API Integration
   function formatToE164(phone: string, country: string): string {
-    let digits = (phone || '').replace(/\D/g, '');
+    let clean = (phone || '').trim();
+    if (clean.startsWith('+')) {
+      clean = clean.substring(1);
+    }
+    let digits = clean.replace(/\D/g, '');
+    if (digits.startsWith('00')) {
+      digits = digits.substring(2);
+    }
     const prefixMap: Record<string, string> = {
       'TG': '228', 'CI': '225', 'BJ': '229', 'SN': '221', 'ML': '223',
       'BF': '226', 'CM': '237', 'GN': '224', 'COD': '243', 'COG': '242'

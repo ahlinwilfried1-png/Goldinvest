@@ -451,6 +451,7 @@ export default function Dashboard({
   // SendavaPay specific states
   const [spCountryCode, setSpCountryCode] = useState<string>(getInitialSpCountry());
   const [spOperatorId, setSpOperatorId] = useState<string>('');
+  const [hasManuallySelectedOperator, setHasManuallySelectedOperator] = useState<boolean>(false);
   const [spOtpToken, setSpOtpToken] = useState<string | null>(null);
   const [spOtpCode, setSpOtpCode] = useState<string>('');
   const [spOtpModalOpen, setSpOtpModalOpen] = useState<boolean>(false);
@@ -491,14 +492,74 @@ export default function Dashboard({
 
   const [dynamicLiveTransactions, setDynamicLiveTransactions] = useState(liveTransactions);
 
+  const detectSpOperator = (phone: string, country: string): string => {
+    let clean = (phone || '').replace(/\D/g, '');
+    const prefixes: Record<string, string> = {
+      'TG': '228', 'CI': '225', 'BJ': '229', 'SN': '221', 'ML': '223',
+      'BF': '226', 'CM': '237', 'GN': '224', 'COD': '243', 'COG': '242'
+    };
+    const prefix = prefixes[country];
+    if (prefix && clean.startsWith(prefix)) {
+      clean = clean.substring(prefix.length);
+    }
+    if (clean.startsWith('0')) {
+      clean = clean.substring(1);
+    }
+
+    if (!clean) return '';
+
+    if (country === 'TG') {
+      // TG: 37 (TMoney), 38 (Moov)
+      // TMoney starts with 90, 91, 92, 93, 96, 79
+      // Moov starts with 97, 98, 99, 70
+      if (/^(90|91|92|93|96|79)/.test(clean)) return '37';
+      if (/^(97|98|99|70)/.test(clean)) return '38';
+    } else if (country === 'CI') {
+      // CI: 29 (Orange), 30 (MTN), 31 (Moov), 32 (Wave)
+      // Orange: 07, 47, 57, 77, 87, 97
+      // MTN: 05, 45, 55, 75, 85, 95
+      // Moov: 01, 41, 51, 71, 81, 91
+      if (/^(07|47|57|77|87|97)/.test(clean)) return '29';
+      if (/^(05|45|55|75|85|95)/.test(clean)) return '30';
+      if (/^(01|41|51|71|81|91)/.test(clean)) return '31';
+    } else if (country === 'BJ') {
+      // BJ: 35 (MTN), 36 (Moov)
+      if (/^(51|52|53|54|61|62|66|67|69|90|91|96|97)/.test(clean)) return '35';
+      if (/^(50|55|58|60|63|64|65|68|94|95|98|99)/.test(clean)) return '36';
+    } else if (country === 'BF') {
+      // BF: 34 (Orange), 33 (Moov)
+      if (/^(07|57|67|77)/.test(clean)) return '34';
+      if (/^(06|56|66|76)/.test(clean)) return '33';
+    } else if (country === 'SN') {
+      // SN: 57 (Orange), 58 (Wave), 59 (Mixx)
+      if (/^(77|78)/.test(clean)) return '57';
+    }
+    return '';
+  };
+
+  useEffect(() => {
+    setHasManuallySelectedOperator(false);
+  }, [spCountryCode]);
+
   useEffect(() => {
     if (depositMethod === 'sendavapay' && spCountryCode) {
-      const operators = SENDAVAPAY_OPERATORS[spCountryCode] || [];
-      if (operators.length > 0) {
-        setSpOperatorId(operators[0].id);
+      if (!hasManuallySelectedOperator && depositPhone) {
+        const detected = detectSpOperator(depositPhone, spCountryCode);
+        if (detected) {
+          setSpOperatorId(detected);
+          return;
+        }
+      }
+      
+      // Fallback: default to the first operator of the country
+      if (!spOperatorId) {
+        const operators = SENDAVAPAY_OPERATORS[spCountryCode] || [];
+        if (operators.length > 0) {
+          setSpOperatorId(operators[0].id);
+        }
       }
     }
-  }, [spCountryCode, depositMethod]);
+  }, [spCountryCode, depositMethod, depositPhone, hasManuallySelectedOperator]);
 
   useEffect(() => {
     const poolFirstNames = [
@@ -2958,7 +3019,10 @@ export default function Dashboard({
                       </label>
                       <select
                         value={spOperatorId}
-                        onChange={(e) => setSpOperatorId(e.target.value)}
+                        onChange={(e) => {
+                          setSpOperatorId(e.target.value);
+                          setHasManuallySelectedOperator(true);
+                        }}
                         className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
                       >
                         <option value="">-- Sélectionner l'opérateur --</option>
@@ -2968,6 +3032,11 @@ export default function Dashboard({
                           </option>
                         ))}
                       </select>
+                      {depositPhone && detectSpOperator(depositPhone, spCountryCode) && (
+                        <span className="text-[10px] text-[#1b64d9] font-black block mt-1 font-mono">
+                          ⚡ Opérateur détecté automatiquement selon votre numéro.
+                        </span>
+                      )}
                     </div>
 
                     {/* PHONE NUMBER FIELD */}
