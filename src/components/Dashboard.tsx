@@ -48,7 +48,7 @@ import {
   Music
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage, WithdrawalProof } from '../types';
-import { DataStore, syncWithBackend, getApiUrl } from '../dataStore';
+import { DataStore, syncWithBackend, getApiUrl, apiFetch } from '../dataStore';
 import AdminPanel from './AdminPanel';
 import CountdownTimer from './CountdownTimer';
 import { InvestmentItem } from './InvestmentItem';
@@ -1323,7 +1323,7 @@ export default function Dashboard({
       }
 
       try {
-        const response = await fetch(getApiUrl('/api/sendavapay/verify-deposit'), {
+        const response = await apiFetch(getApiUrl('/api/sendavapay/verify-deposit'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -1382,7 +1382,7 @@ export default function Dashboard({
         return;
       }
 
-      const response = await fetch(getApiUrl('/api/sendavapay/create-charge'), {
+      const response = await apiFetch(getApiUrl('/api/sendavapay/create-charge'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1444,7 +1444,7 @@ export default function Dashboard({
     setIsSubmittingDeposit(true);
     setDepositError('');
     try {
-      const response = await fetch(getApiUrl('/api/sendavapay/submit-otp'), {
+      const response = await apiFetch(getApiUrl('/api/sendavapay/submit-otp'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

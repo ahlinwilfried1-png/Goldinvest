@@ -339,15 +339,48 @@ export const SUPABASE_URL = "https://gepdalprxhdjiuxwxidv.supabase.co";
 export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTk2MDIxMSwiZXhwIjoyMDk1NTM2MjExfQ.9_yn5Vn_bi45VGDFFQOU3RZTD3NsIUz_IvDDkQFYjCM";
 
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  let activeUrl = url;
+  let isRetried = false;
+
+  const hasPre = url.includes('-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
+  const hasDev = url.includes('-dev-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
+
   // Try to use the standard backend first (getApiUrl)
   try {
     const fetchOptions: RequestInit = {
       credentials: 'include',
       ...init
     };
-    const response = await fetch(url, fetchOptions);
-    const contentType = response.headers.get('content-type') || "";
+    let response = await fetch(activeUrl, fetchOptions);
+    let contentType = response.headers.get('content-type') || "";
     
+    // If we get an error response or a HTML page (like Google's proxy/Cloud Run sleeping/error page),
+    // and we have an alternate Cloud Run URL, let's try the other one.
+    if ((!response.ok || contentType.includes('text/html')) && (hasPre || hasDev) && !isRetried) {
+      isRetried = true;
+      const fallbackHost = hasPre 
+        ? 'https://ais-dev-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app'
+        : 'https://ais-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app';
+      
+      try {
+        const parsedUrl = new URL(activeUrl);
+        const fallbackUrl = `${fallbackHost}${parsedUrl.pathname}${parsedUrl.search}`;
+        console.log(`[apiFetch Failover] Primary backend non-responsive. Retrying with alternate backend: ${fallbackUrl}`);
+        
+        const fallbackResp = await fetch(fallbackUrl, fetchOptions);
+        const fallbackContentType = fallbackResp.headers.get('content-type') || "";
+        
+        if (fallbackResp.ok && !fallbackContentType.includes('text/html')) {
+          try {
+            localStorage.setItem('gi_custom_backend_url', fallbackHost);
+          } catch (e) {}
+          return fallbackResp;
+        }
+      } catch (retryErr) {
+        console.error(`[apiFetch Failover] Alternate backend failed too:`, retryErr);
+      }
+    }
+
     // If the response is protected by google proxy or returned as text/html from unhandled errors,
     // protect the caller from trying to parse HTML as JSON.
     if (response.ok && !response.redirected && !contentType.includes('text/html')) {
@@ -360,7 +393,37 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
       }
     }
   } catch (error) {
-    console.warn(`[apiFetch] API fetch threw error: ${error instanceof Error ? error.message : String(error)} for URL: ${url}. Triggering fallback.`);
+    console.warn(`[apiFetch] API fetch threw error: ${error instanceof Error ? error.message : String(error)} for URL: ${url}. Triggering failover check.`);
+    
+    // If it threw a network error (like Failed to fetch), try the alternate backend!
+    if ((hasPre || hasDev) && !isRetried) {
+      isRetried = true;
+      const fallbackHost = hasPre 
+        ? 'https://ais-dev-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app'
+        : 'https://ais-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app';
+      
+      try {
+        const parsedUrl = new URL(activeUrl);
+        const fallbackUrl = `${fallbackHost}${parsedUrl.pathname}${parsedUrl.search}`;
+        console.log(`[apiFetch Network Failover] Retrying on network error with: ${fallbackUrl}`);
+        
+        const fetchOptions: RequestInit = {
+          credentials: 'include',
+          ...init
+        };
+        const response = await fetch(fallbackUrl, fetchOptions);
+        const contentType = response.headers.get('content-type') || "";
+        
+        if (response.ok && !contentType.includes('text/html')) {
+          try {
+            localStorage.setItem('gi_custom_backend_url', fallbackHost);
+          } catch (e) {}
+          return response;
+        }
+      } catch (retryErr) {
+        console.error(`[apiFetch Network Failover] Retry failed too:`, retryErr);
+      }
+    }
   }
 
   // --- DIRECT SUPABASE Sync FALLBACK ---
