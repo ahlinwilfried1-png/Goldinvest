@@ -44,241 +44,28 @@ const INITIAL_USERS: User[] = [
     role: 'admin',
     isBlocked: false,
     createdAt: '2026-05-10T10:00:00Z'
-  },
-  {
-    id: 'u-1',
-    name: 'Aline Ouédraogo',
-    whatsapp: '+22670717273',
-    password: 'user123',
-    country: 'Burkina Faso',
-    balance: 14200,
-    dailyEarnings: 600,
-    totalEarnings: 4200,
-    bonus: 500,
-    referralCode: 'ALINE226',
-    referredBy: 'u-admin',
-    role: 'user',
-    isBlocked: false,
-    createdAt: '2026-05-18T14:30:00Z'
-  },
-  {
-    id: 'u-2',
-    name: 'Koffi Kouamé',
-    whatsapp: '+2250708091011',
-    password: 'user123',
-    country: 'Côte d’Ivoire',
-    balance: 38000,
-    dailyEarnings: 2500,
-    totalEarnings: 15000,
-    bonus: 1000,
-    referralCode: 'KOFFI225',
-    referredBy: 'u-1',
-    role: 'user',
-    isBlocked: false,
-    createdAt: '2026-05-20T09:15:00Z'
-  },
-  {
-    id: 'u-3',
-    name: 'Moussa Diarra',
-    whatsapp: '+22360616263',
-    password: 'user123',
-    country: 'Mali',
-    balance: 2400,
-    dailyEarnings: 0,
-    totalEarnings: 0,
-    bonus: 500,
-    referralCode: 'MOUSSA223',
-    referredBy: 'u-2',
-    role: 'user',
-    isBlocked: false,
-    createdAt: '2026-05-22T16:45:00Z'
   }
 ];
 
-const INITIAL_DEPOSITS: Deposit[] = [
-  {
-    id: 'dep-101',
-    userId: 'u-2',
-    userName: 'Koffi Kouamé',
-    amount: 10000,
-    operator: 'Orange Money (Ivory Coast)',
-    reference: 'TXN-OM-293847293',
-    receiptImage: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop',
-    status: 'approved',
-    createdAt: '2026-05-20T09:30:00Z'
-  },
-  {
-    id: 'dep-102',
-    userId: 'u-1',
-    userName: 'Aline Ouédraogo',
-    amount: 3000,
-    operator: 'Moov Money (Burkina)',
-    reference: 'REF-MV-1029382',
-    receiptImage: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop',
-    status: 'approved',
-    createdAt: '2026-05-18T14:45:00Z'
-  },
-  {
-    id: 'dep-103',
-    userId: 'u-3',
-    userName: 'Moussa Diarra',
-    amount: 3000,
-    operator: 'Orange Money (Mali)',
-    reference: 'OM-TX-2236162',
-    receiptImage: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=400&auto=format&fit=crop',
-    status: 'pending',
-    createdAt: '2026-05-28T05:22:00Z'
-  }
-];
+const INITIAL_DEPOSITS: Deposit[] = [];
 
-const INITIAL_WITHDRAWALS: Withdrawal[] = [
-  {
-    id: 'wth-201',
-    userId: 'u-2',
-    userName: 'Koffi Kouamé',
-    amount: 5000,
-    operator: 'Wave (Ivory Coast)',
-    number: '+2250708091011',
-    status: 'approved',
-    createdAt: '2026-05-24T18:00:00Z'
-  },
-  {
-    id: 'wth-202',
-    userId: 'u-1',
-    userName: 'Aline Ouédraogo',
-    amount: 2000,
-    operator: 'Orange Money (Burkina)',
-    number: '+22670717273',
-    status: 'pending',
-    createdAt: '2026-05-28T06:10:00Z'
-  }
-];
+const INITIAL_WITHDRAWALS: Withdrawal[] = [];
 
-const INITIAL_INVESTMENTS: Investment[] = [
-  {
-    id: 'inv-301',
-    userId: 'u-2',
-    productId: 'vip-2',
-    productName: 'VIP Emeraude 2',
-    price: 10000,
-    dailyReturn: 2500,
-    daysPassed: 6,
-    durationDays: 10,
-    totalReturnClaimed: 15000,
-    lastClaimDate: '2026-05-27T08:00:00Z',
-    status: 'active',
-    createdAt: '2026-05-21T08:00:00Z'
-  },
-  {
-    id: 'inv-302',
-    userId: 'u-1',
-    productId: 'vip-1',
-    productName: 'VIP Élixir 1',
-    price: 3000,
-    dailyReturn: 600,
-    daysPassed: 7,
-    durationDays: 10,
-    totalReturnClaimed: 4200,
-    lastClaimDate: '2026-05-27T10:30:00Z',
-    status: 'active',
-    createdAt: '2026-05-20T10:30:00Z'
-  }
-];
+const INITIAL_INVESTMENTS: Investment[] = [];
 
-const INITIAL_COMMISSIONS: Commission[] = [
-  {
-    id: 'com-401',
-    userId: 'u-1', // Aline gets commission from Koffi (Koffi is Lvl 1 of Aline)
-    fromUserName: 'Koffi Kouamé',
-    level: 1,
-    amount: 1000, // 10% of 10000
-    createdAt: '2026-05-20T09:30:00Z'
-  },
-  {
-    id: 'com-402',
-    userId: 'u-admin', // Admin gets commission from Koffi (Koffi are Lvl 2 of Admin via Aline)
-    fromUserName: 'Koffi Kouamé',
-    level: 2,
-    amount: 500, // 5% of 10000
-    createdAt: '2026-0s-20T09:30:00Z'
-  }
-];
+const INITIAL_COMMISSIONS: Commission[] = [];
 
-const INITIAL_NOTIFICATIONS: SystemNotification[] = [
-  {
-    id: 'not-1',
-    userId: 'u-2',
-    title: 'Dépôt approuvé',
-    message: 'Votre dépôt de 10 000 XOF a été validé par l\'administrateur. Votre solde a été mis à jour.',
-    type: 'deposit',
-    createdAt: '2026-05-20T09:30:00Z',
-    read: false
-  },
-  {
-    id: 'not-2',
-    userId: 'u-2',
-    title: 'Achat de plan',
-    message: 'Félicitations ! Vous avez acquis le plan VIP Emeraude 2 pour 10 000 XOF.',
-    type: 'plan',
-    createdAt: '2026-05-21T08:00:00Z',
-    read: true
-  },
-  {
-    id: 'not-3',
-    userId: 'u-1',
-    title: 'Bonus de parrainage',
-    message: 'Vous avez reçu un bonus de parrainage de Niveau 1 d\'une valeur de 1 000 XOF suite à l\'investissement de Koffi Kouamé.',
-    type: 'bonus',
-    createdAt: '2026-05-20T09:30:00Z',
-    read: false
-  }
-];
+const INITIAL_NOTIFICATIONS: SystemNotification[] = [];
 
 const INITIAL_BONUS_CODES: BonusCode[] = [
-  { code: 'AGR72', amount: 1000, maxUses: 100, usedCount: 3, usedByUsers: ['u-1', 'u-2', 'u-3'] },
+  { code: 'AGR72', amount: 1000, maxUses: 100, usedCount: 0, usedByUsers: [] },
   { code: 'WELCOME500', amount: 500, maxUses: 500, usedCount: 0, usedByUsers: [] },
   { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
 ];
 
-const INITIAL_CHATS: SupportMessage[] = [
-  { id: 'm-1', userId: 'u-2', sender: 'user', message: 'Bonjour, j\'aimerais savoir comment effectuer un retrait ?', createdAt: '2026-05-24T10:00:00Z' },
-  { id: 'm-2', userId: 'u-2', sender: 'admin', message: 'Bonjour ! Allez simplement dans l\'onglet "Retrait" de votre tableau de bord, entrez votre numéro de Mobile Money, sélectionnez votre opérateur et soumettez la demande. C\'est rapide et traité sous 2 heures !', createdAt: '2026-05-24T10:05:00Z' }
-];
+const INITIAL_CHATS: SupportMessage[] = [];
 
-const INITIAL_PROOFS: WithdrawalProof[] = [
-  {
-    id: 'proof-1',
-    userId: 'u-1',
-    userName: 'Koffi Kouamé',
-    userCountry: 'Côte d’Ivoire',
-    amount: 25000,
-    message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci Aiprods ! 🌾✨',
-    image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
-    likes: ['u-2', 'u-3'],
-    createdAt: '2026-06-15T10:12:00Z'
-  },
-  {
-    id: 'proof-2',
-    userId: 'u-2',
-    userName: 'Aïcha Diallo',
-    userCountry: 'Sénégal',
-    amount: 15400,
-    message: 'Franchement c’est le meilleur service de l’année. Mes retours journaliers accumulés et retirés via Wave sans aucun problème. 😎💪',
-    image: 'https://images.unsplash.com/photo-1563013544-824ae1d704d3?q=80&w=600&auto=format&fit=crop',
-    likes: ['u-1'],
-    createdAt: '2026-06-15T14:30:00Z'
-  },
-  {
-    id: 'proof-3',
-    userId: 'u-3',
-    userName: 'Yao Mensah',
-    userCountry: 'Togo',
-    amount: 8500,
-    message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement Aiprods à tout mon entourage.',
-    likes: ['u-1', 'u-2', 'u-admin'],
-    createdAt: '2026-06-16T02:05:00Z'
-  }
-];
+const INITIAL_PROOFS: WithdrawalProof[] = [];
 
 // Robust, frame-safe in-memory cache to guarantee full compatibility when running inside sandboxed environments
 // (like an iframe on iOS, Safari, or tablets) where localStorage or sessionStorage access is strictly restricted or blocked.

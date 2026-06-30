@@ -183,40 +183,7 @@ async function startServer() {
       "gi_referral_domain": "",
       "gi_whatsapp_group": "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv",
       "gi_whatsapp_channel": "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k",
-      "gi_withdrawal_proofs": [
-        {
-          id: 'proof-1',
-          userId: 'u-1',
-          userName: 'Koffi Kouamé',
-          userCountry: 'Côte d’Ivoire',
-          amount: 25000,
-          message: 'Retrait de 25 000 XOF bien reçu sur mon compte Orange Money ! Très rapide et efficace. Merci AgroProfit ! 🌾✨',
-          image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=600&auto=format&fit=crop',
-          likes: ['u-2', 'u-3'],
-          createdAt: '2026-06-15T10:12:00Z'
-        },
-        {
-          id: 'proof-2',
-          userId: 'u-2',
-          userName: 'Aïcha Diallo',
-          userCountry: 'Sénégal',
-          amount: 15400,
-          message: 'Franchement c’est le meilleur service de l’année. Mes retours journaliers accumulés et retirés via Wave sans aucun problème. 😎💪',
-          image: 'https://images.unsplash.com/photo-1563013544-824ae1d704d3?q=80&w=600&auto=format&fit=crop',
-          likes: ['u-1'],
-          createdAt: '2026-06-15T14:30:00Z'
-        },
-        {
-          id: 'proof-3',
-          userId: 'u-3',
-          userName: 'Yao Mensah',
-          userCountry: 'Togo',
-          amount: 8500,
-          message: 'T-Money au top ! Reçu mes fonds en moins de 15 minutes. Je recommande vivement AgroProfit à tout mon entourage.',
-          likes: ['u-1', 'u-2', 'u-admin'],
-          createdAt: '2026-06-16T02:05:00Z'
-        }
-      ],
+      "gi_withdrawal_proofs": [],
       "gi_manual_deposit_numbers": {
         "TG_37": "*145*1*montant*70903319*code#",
         "TG_38": "*155*1*1*78829438*78829438*montant*code#",
@@ -266,36 +233,45 @@ async function startServer() {
     async function cleanupNonAdminAccounts() {
       console.log("[CLEANUP] Starting deletion of all non-admin accounts...");
       const users = storeData["gi_users"] || [];
-      const admins = users.filter((u: any) => u.role === "admin");
+      const admins = users.filter((u: any) => u.id === "u-admin");
       
-      // Ensure we always keep u-admin even if someone edited it
+      // Ensure we always keep u-admin with its exact standard structure
       if (admins.length === 0) {
-        admins.push({ id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' });
+        admins.push({
+          id: 'u-admin',
+          name: 'Administrateur Principal',
+          whatsapp: '+237600000000',
+          password: 'agro777',
+          country: 'Cameroun',
+          balance: 1250000,
+          dailyEarnings: 0,
+          totalEarnings: 0,
+          bonus: 5000,
+          referralCode: 'AGR72',
+          role: 'admin',
+          isBlocked: false,
+          createdAt: '2026-05-10T10:00:00Z'
+        });
+      } else {
+        // Reset admin earnings and referrals for a complete fresh start if needed, or keep balance
+        admins[0].dailyEarnings = 0;
+        admins[0].totalEarnings = 0;
       }
 
-      const adminIds = new Set(admins.map((u: any) => u.id));
-      console.log(`[CLEANUP] Found ${admins.length} administrator account(s): ${Array.from(adminIds).join(", ")}. Deleting other accounts...`);
+      console.log(`[CLEANUP] Keeping only core master administrator: u-admin. Wiping all other registered accounts, deposits, and withdrawals...`);
 
       storeData["gi_users"] = admins;
 
-      // Filter linked database collections to retain only admin items
-      const deposits = storeData["gi_deposits"] || [];
-      storeData["gi_deposits"] = deposits.filter((d: any) => adminIds.has(d.userId));
-
-      const withdrawals = storeData["gi_withdrawals"] || [];
-      storeData["gi_withdrawals"] = withdrawals.filter((w: any) => adminIds.has(w.userId));
-
-      const investments = storeData["gi_investments"] || [];
-      storeData["gi_investments"] = investments.filter((i: any) => adminIds.has(i.userId));
-
-      const commissions = storeData["gi_commissions"] || [];
-      storeData["gi_commissions"] = commissions.filter((c: any) => adminIds.has(c.userId));
-
-      const notifications = storeData["gi_notifications"] || [];
-      storeData["gi_notifications"] = notifications.filter((n: any) => !n.userId || adminIds.has(n.userId));
-
-      const supportMessages = storeData["gi_support_messages"] || [];
-      storeData["gi_support_messages"] = supportMessages.filter((m: any) => adminIds.has(m.userId));
+      // Reset all user-submitted transactions and dynamic records to complete fresh start
+      storeData["gi_deposits"] = [];
+      storeData["gi_withdrawals"] = [];
+      storeData["gi_investments"] = [];
+      storeData["gi_commissions"] = [];
+      storeData["gi_notifications"] = [];
+      storeData["gi_support_messages"] = [];
+      storeData["gi_withdrawal_proofs"] = [];
+      storeData["gi_deleted_investments"] = [];
+      storeData["gi_deleted_users"] = [];
 
       // Persist clean copy locally to db.json
       saveStoreLocal();
