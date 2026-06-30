@@ -369,7 +369,8 @@ export default function Dashboard({
 
   // Form states
   const SENDAVAPAY_COUNTRIES = [
-    { code: 'TG', name: 'Togo 🇹🇬', currency: 'XOF' }
+    { code: 'TG', name: 'Togo 🇹🇬', currency: 'XOF' },
+    { code: 'CM', name: 'Cameroun 🇨🇲', currency: 'XAF' }
   ];
 
   const SENDAVAPAY_OPERATORS: Record<string, { id: string; name: string; slug: string; requiresOtp?: boolean }[]> = {
@@ -377,43 +378,31 @@ export default function Dashboard({
       { id: '37', name: 'TMoney', slug: 't-money-togo' },
       { id: '38', name: 'Moov Money', slug: 'moov-togo' }
     ],
-    CI: [
-      { id: '29', name: 'Orange Money', slug: 'orange-money-ci', requiresOtp: true },
-      { id: '30', name: 'MTN Money', slug: 'mtn-ci' },
-      { id: '31', name: 'Moov Money', slug: 'moov-ci' },
-      { id: '32', name: 'Wave', slug: 'wave-ci' }
-    ],
-    BJ: [
-      { id: '35', name: 'MTN Money', slug: 'mtn-benin' },
-      { id: '36', name: 'Moov Money', slug: 'moov-benin' }
-    ],
-    SN: [
-      { id: '57', name: 'Orange Money', slug: 'new-orange-money-senegal' },
-      { id: '58', name: 'Wave', slug: 'wave-senegal' },
-      { id: '59', name: 'Mixx', slug: 'mixx-sn' }
-    ],
-    ML: [
-      { id: '60', name: 'Orange Money', slug: 'orange-money-mali' }
-    ],
-    BF: [
-      { id: '34', name: 'Orange Money', slug: 'orange-money-burkina', requiresOtp: true },
-      { id: '33', name: 'Moov Money', slug: 'moov-burkina-faso' }
-    ],
-    CM: [],
-    GN: [],
-    COD: [
-      { id: '52', name: 'Vodacom M-Pesa', slug: 'vodacom-cod' },
-      { id: '53', name: 'Airtel Money', slug: 'airtel-cod' },
-      { id: '54', name: 'Orange Money', slug: 'orange-cod' }
-    ],
-    COG: [
-      { id: '55', name: 'Airtel Money', slug: 'airtel-cog' },
-      { id: '56', name: 'MTN Money', slug: 'mtn-cog' }
+    CM: [
+      { id: '41', name: 'MTN Mobile Money', slug: 'mtn-cameroun' },
+      { id: '42', name: 'Orange Money', slug: 'orange-money-cameroun' }
     ]
   };
 
   const getInitialSpCountry = () => {
+    if (userState.country) {
+      const c = userState.country.toLowerCase();
+      if (c.includes('cameroun')) return 'CM';
+    }
     return 'TG';
+  };
+
+  const formatDepositCode = (numStr: string) => {
+    if (!numStr) return "";
+    if (numStr.toLowerCase().includes("montant")) {
+      const amt = depositAmount && parseInt(depositAmount, 10) > 0 ? depositAmount : "montant";
+      return numStr.replace(/montant/gi, amt);
+    }
+    return numStr;
+  };
+
+  const isUssdCode = (str: string) => {
+    return str && (str.includes('*') || str.includes('#'));
   };
 
   const [depositAmount, setDepositAmount] = useState<string>('5000');
@@ -860,6 +849,9 @@ export default function Dashboard({
 
   const productsRef = useRef(products);
   productsRef.current = products;
+
+  const manualDepositNumbersRef = useRef(manualDepositNumbers);
+  manualDepositNumbersRef.current = manualDepositNumbers;
   
   const myIdUpper = userState.id.toUpperCase();
   const myCodeUpper = userState.referralCode ? userState.referralCode.trim().toUpperCase() : '';
@@ -1117,6 +1109,9 @@ export default function Dashboard({
     const pfs = DataStore.getWithdrawalProofs().filter(p => !p.status || p.status === 'approved');
     setWithdrawalProofs(pfs);
 
+    // Sync configured deposit numbers from administrator so they update automatically without page refresh
+    setManualDepositNumbers(DataStore.getManualDepositNumbers());
+
     try {
       const checkKey = `gi_last_daily_${currentUser.id}`;
       setHasCheckedInToday(localStorage.getItem(checkKey) === new Date().toDateString());
@@ -1170,12 +1165,15 @@ export default function Dashboard({
       const oldBal = userStateRef.current.balance;
       const oldUsersLen = allUsersRef.current.length;
       const oldProductsStr = JSON.stringify(productsRef.current);
+      const oldManualNumsStr = JSON.stringify(manualDepositNumbersRef.current);
       DataStore.processAutomaticDailyInstallments();
       
       const fresh = DataStore.getCurrentUser();
       const freshUsers = DataStore.getUsers();
       const freshProducts = DataStore.getProducts();
       const freshProductsStr = JSON.stringify(freshProducts);
+      const freshManualNums = DataStore.getManualDepositNumbers();
+      const freshManualNumsStr = JSON.stringify(freshManualNums);
       
       // Pull real-time notifications
       const freshNotifs = DataStore.getNotifications().filter(n => n.userId === undefined || n.userId === currentUser.id);
@@ -1190,7 +1188,8 @@ export default function Dashboard({
       } else if (
         (fresh && fresh.balance !== oldBal) || 
         freshUsers.length !== oldUsersLen ||
-        freshProductsStr !== oldProductsStr
+        freshProductsStr !== oldProductsStr ||
+        freshManualNumsStr !== oldManualNumsStr
       ) {
         syncDashboardData();
       }
@@ -2931,10 +2930,32 @@ export default function Dashboard({
                   <form onSubmit={submitDeposit} className="space-y-5 text-left animate-fade-in font-sans">
                     {depositStep === 1 ? (
                       <div className="space-y-5 animate-fade-in">
+                        {/* COUNTRY SELECT */}
+                        <div>
+                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                            Étape 1 : Choisissez votre pays d'origine 🌍
+                          </label>
+                          <select
+                            value={spCountryCode}
+                            onChange={(e) => {
+                              setSpCountryCode(e.target.value);
+                              setSpOperatorId(''); // Clear selected operator when country changes
+                              setHasManuallySelectedOperator(false);
+                            }}
+                            className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
+                          >
+                            {SENDAVAPAY_COUNTRIES.map((cnt) => (
+                              <option key={cnt.code} value={cnt.code}>
+                                {cnt.name} ({cnt.currency})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
                         {/* AMOUNT PRESETS */}
                         <div>
                           <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 1 : Choisissez ou cliquez un montant rapide 💵
+                            Étape 2 : Choisissez ou cliquez un montant rapide 💵
                           </label>
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                             {[3000, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
@@ -2960,23 +2981,23 @@ export default function Dashboard({
                         {/* AMOUNT FIELD */}
                         <div>
                           <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Ou saisissez votre propre montant ({getCurrency()})
+                            Ou saisissez votre propre montant ({SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'})
                           </label>
                           <input
                             type="number"
                             required
-                            placeholder={`Minimum 3 000 ${getCurrency()}`}
+                            placeholder={`Minimum 3 000 ${SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}`}
                             value={depositAmount}
                             onChange={(e) => setDepositAmount(e.target.value)}
                             className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
                           />
-                          <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 3 000 XOF.</span>
+                          <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 3 000 {SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}.</span>
                         </div>
 
                         {/* SENDAVAPAY OPERATOR SELECT */}
                         <div>
                           <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 2 : Choisissez votre opérateur Mobile Money 📲
+                            Étape 3 : Choisissez votre opérateur Mobile Money 📲
                           </label>
                           <select
                             value={spOperatorId}
@@ -3022,26 +3043,34 @@ export default function Dashboard({
                               <span className="font-black text-yellow-800 uppercase text-[10px] tracking-wider block mb-1">
                                 👉 INSTRUCTIONS DE RECHARGE MANUELLE :
                               </span>
-                              Veuillez transférer exactement <strong className="text-[#1b64d9] font-black text-sm font-mono">{(parseInt(depositAmount) || 0).toLocaleString()} F</strong> sur le compte suivant :
+                              {isUssdCode(manualDepositNumbers[`${spCountryCode}_${spOperatorId}`]) ? (
+                                <span>
+                                  Veuillez composer <strong>directement</strong> le code de transfert USSD ci-dessous sur le clavier de votre téléphone pour payer <strong className="text-[#1b64d9] font-black text-sm font-mono">{(parseInt(depositAmount) || 0).toLocaleString()} F</strong> :
+                                </span>
+                              ) : (
+                                <span>
+                                  Veuillez transférer exactement <strong className="text-[#1b64d9] font-black text-sm font-mono">{(parseInt(depositAmount) || 0).toLocaleString()} F</strong> sur le compte suivant :
+                                </span>
+                              )}
                               <div className="bg-white px-3 py-2 rounded-xl border border-yellow-350 mt-2 flex items-center justify-between shadow-sm">
                                 <span className="font-mono font-extrabold text-sm text-yellow-950 select-all">
-                                  {manualDepositNumbers[`${spCountryCode}_${spOperatorId}`]}
+                                  {formatDepositCode(manualDepositNumbers[`${spCountryCode}_${spOperatorId}`])}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    navigator.clipboard.writeText(manualDepositNumbers[`${spCountryCode}_${spOperatorId}`]);
+                                    navigator.clipboard.writeText(formatDepositCode(manualDepositNumbers[`${spCountryCode}_${spOperatorId}`]));
                                     setDepositNumberCopied(true);
                                     setTimeout(() => setDepositNumberCopied(false), 5000);
                                   }}
-                                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-extrabold px-2.5 py-1 rounded-lg text-[10px] uppercase font-mono tracking-wider transition-colors"
+                                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-extrabold px-2.5 py-1 rounded-lg text-[10px] uppercase font-mono tracking-wider transition-colors cursor-pointer"
                                 >
                                   Copier
                                 </button>
                               </div>
                               {depositNumberCopied && (
                                 <div className="bg-amber-100 border border-amber-350 text-amber-850 font-black rounded-lg py-1.5 px-3 mt-2 text-center text-[10px] uppercase font-mono tracking-wider animate-fade-in">
-                                  ⚡ Numéro copié avec succès !
+                                  ⚡ Copié avec succès !
                                 </div>
                               )}
                               <span className="text-[10px] text-slate-500 block mt-2 font-semibold">
@@ -3049,9 +3078,9 @@ export default function Dashboard({
                               </span>
                             </div>
                           ) : (
-                            <div className="bg-blue-50 border border-blue-250 p-4 rounded-2xl text-xs text-slate-800 leading-relaxed font-sans">
-                              <span className="font-extrabold text-blue-800 uppercase text-[10px] tracking-wider block mb-0.5">ℹ️ CANAL EN ATTENTE DE CONFIGURATION</span>
-                              Veuillez contacter notre support WhatsApp direct au <strong className="text-blue-900 font-black">{DataStore.getWhatsAppSupportNumber()}</strong> pour obtenir le numéro de réception de paiement pour cet opérateur.
+                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-xs text-slate-800 leading-relaxed font-sans">
+                              <span className="font-extrabold text-amber-800 uppercase text-[10px] tracking-wider block mb-1">ℹ️ CANAL EN ATTENTE DE CONFIGURATION</span>
+                              Aucun numéro de réception n'est configuré pour cet opérateur. Veuillez revenir à l'étape précédente et choisir un autre opérateur actif.
                             </div>
                           )}
                         </div>
@@ -3226,6 +3255,8 @@ export default function Dashboard({
                   >
                     <option value="T-Money (TG)">T-Money (TG)</option>
                     <option value="Moov (TG)">Moov (TG)</option>
+                    <option value="MTN (CM)">MTN (CM)</option>
+                    <option value="Orange (CM)">Orange (CM)</option>
                   </select>
                 </div>
 

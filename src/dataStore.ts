@@ -726,7 +726,8 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_referral_domain',
           'gi_withdrawal_proofs',
           'gi_deleted_investments',
-          'gi_deleted_users'
+          'gi_deleted_users',
+          'gi_manual_deposit_numbers'
         ];
         
         // Ensure standard keys are read with their default fallback if they are not in local storage yet
@@ -743,6 +744,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
         DataStore.areWithdrawalsBlocked();
         DataStore.getReferralDomain();
         DataStore.getWithdrawalProofs();
+        DataStore.getManualDepositNumbers();
  
         for (const key of keysToSync) {
           try {
@@ -1063,25 +1065,40 @@ export class DataStore {
   }
 
   static getManualDepositNumbers(): Record<string, string> {
-    return getFromStore<Record<string, string>>('gi_manual_deposit_numbers', {
-      'TG_37': '+228 90 90 33 19 (TMoney)',
-      'TG_38': '+228 97 00 11 22 (Moov Money)',
+    const defaults: Record<string, string> = {
+      'TG_37': '*145*1*montant*70903319*code#',
+      'TG_38': '*155*1*1*78829438*78829438*montant*code#',
+      'CM_41': '*126*9*677451289*montant #',
+      'CM_42': '#150*688969868*montant#',
       'CI_29': '+225 07 07 07 07 07 (Orange Money)',
       'CI_32': '+225 01 02 03 04 05 (Wave)',
       'BF_34': '+226 70 90 33 19 (Orange Money)',
       'BF_33': '+226 60 00 00 00 (Moov Money)'
-    });
+    };
+    const stored = getFromStore<Record<string, string>>('gi_manual_deposit_numbers', defaults);
+    const cleaned = { ...stored };
+    if (cleaned['TG_37'] && !cleaned['TG_37'].includes('*')) {
+      cleaned['TG_37'] = defaults['TG_37'];
+    }
+    if (cleaned['TG_38'] && !cleaned['TG_38'].includes('*')) {
+      cleaned['TG_38'] = defaults['TG_38'];
+    }
+    // Merge defaults so any newly added default configuration keys exist even if localStorage is stale
+    return { ...defaults, ...cleaned };
   }
 
-  static saveManualDepositNumbers(numbers: Record<string, string>): void {
+  static async saveManualDepositNumbers(numbers: Record<string, string>): Promise<any> {
     setToStore<Record<string, string>>('gi_manual_deposit_numbers', numbers);
-    apiFetch(getApiUrl('/api/save-store'), {
+    return apiFetch(getApiUrl('/api/save-store'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         gi_manual_deposit_numbers: numbers
       })
-    }).catch(err => console.error("Error saving manual deposit numbers to server", err));
+    }).catch(err => {
+      console.error("Error saving manual deposit numbers to server", err);
+      throw err;
+    });
   }
 
   static getProducts(): Product[] {

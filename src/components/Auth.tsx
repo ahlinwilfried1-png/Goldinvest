@@ -24,7 +24,8 @@ import {
 import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
-  { name: 'Togo', code: '+228', flag: '🇹🇬' }
+  { name: 'Togo', code: '+228', flag: '🇹🇬' },
+  { name: 'Cameroun', code: '+237', flag: '🇨🇲' }
 ];
 
 interface AuthProps {

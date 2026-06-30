@@ -72,6 +72,10 @@ export default function AdminPanel({
 
   // Navigation tab
   const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'deposits' | 'withdrawals' | 'products' | 'platform' | 'transactions' | 'support' | 'proofs' | 'investments' | 'canals'>('deposits');
+  const activeAdminTabRef = React.useRef(activeAdminTab);
+  React.useEffect(() => {
+    activeAdminTabRef.current = activeAdminTab;
+  }, [activeAdminTab]);
   const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
 
   const handleDeleteInvestment = (investmentId: string) => {
@@ -211,6 +215,11 @@ export default function AdminPanel({
           if (Array.isArray(data['gi_investments'])) setInvestments(data['gi_investments']);
           if (Array.isArray(data['gi_support_messages'])) setSupportMessages(data['gi_support_messages']);
           if (Array.isArray(data['gi_withdrawal_proofs'])) setWithdrawalProofs(data['gi_withdrawal_proofs']);
+          if (data['gi_manual_deposit_numbers'] && typeof data['gi_manual_deposit_numbers'] === 'object') {
+            if (activeAdminTabRef.current !== 'canals') {
+              setManualDepositNumbers(data['gi_manual_deposit_numbers']);
+            }
+          }
           
           // 2. Keep local storage safe inside a try-catch to prevent iframe/sandboxed crashes
           try {
@@ -418,6 +427,7 @@ export default function AdminPanel({
   const [whatsappChannel, setWhatsappChannel] = useState<string>(() => DataStore.getWhatsAppChannel());
   const [whatsappSupportNumber, setWhatsappSupportNumber] = useState<string>(() => DataStore.getWhatsAppSupportNumber());
   const [manualDepositNumbers, setManualDepositNumbers] = useState<Record<string, string>>(() => DataStore.getManualDepositNumbers());
+  const [canalsSuccess, setCanalsSuccess] = useState<string | null>(null);
 
   const handleSaveMlmRates = (e: React.FormEvent) => {
     e.preventDefault();
@@ -434,10 +444,21 @@ export default function AdminPanel({
     alert('Réglages système (MLM, domaine, WhatsApp, Support, Numéros Dépôt Manuel) enregistrés avec succès !');
   };
 
-  const handleSaveManualDepositNumbers = (e: React.FormEvent) => {
+  const handleSaveManualDepositNumbers = async (e: React.FormEvent) => {
     e.preventDefault();
-    DataStore.saveManualDepositNumbers(manualDepositNumbers);
-    alert('✅ Numéros de réception des dépôts enregistrés avec succès !');
+    try {
+      await DataStore.saveManualDepositNumbers(manualDepositNumbers);
+      setCanalsSuccess('✅ Tous les canaux de dépôt (Cameroun, Togo, etc.) ont été enregistrés et synchronisés avec succès !');
+      setTimeout(() => setCanalsSuccess(null), 6000);
+      
+      // Force direct synchronization with central Express server
+      if (typeof executeDirectCentralSync === 'function') {
+        await executeDirectCentralSync();
+      }
+    } catch (err: any) {
+      console.error("Error saving manual deposit numbers:", err);
+      setCanalsSuccess(`❌ Erreur lors de l'enregistrement : ${err.message || err}`);
+    }
   };
 
   // Picture receipt lightbox state
@@ -2859,9 +2880,20 @@ export default function AdminPanel({
             </div>
 
             <form onSubmit={handleSaveManualDepositNumbers} className="space-y-6">
+              {canalsSuccess && (
+                <div className={`p-4 rounded-xl text-xs font-bold border transition-all animate-fade-in ${
+                  canalsSuccess.startsWith('❌') 
+                    ? "bg-red-500/10 border-red-500/20 text-red-400" 
+                    : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                }`}>
+                  {canalsSuccess}
+                </div>
+              )}
+
               <div className="space-y-6">
                 {(Object.entries({
-                  'TG': { name: 'Togo 🇹🇬', ops: [{ id: '37', name: 'TMoney' }, { id: '38', name: 'Moov Money' }] }
+                  'TG': { name: 'Togo 🇹🇬', ops: [{ id: '37', name: 'TMoney' }, { id: '38', name: 'Moov Money' }] },
+                  'CM': { name: 'Cameroun 🇨🇲', ops: [{ id: '41', name: 'MTN Mobile Money' }, { id: '42', name: 'Orange Money' }] }
                 }) as [string, { name: string, ops: { id: string, name: string }[] }][]).map(([countryCode, countryInfo]) => (
                   <div key={countryCode} className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-5">
                     <span className="text-xs font-black text-yellow-500 block mb-4 uppercase tracking-wider font-sans border-b border-slate-800 pb-2">{countryInfo.name}</span>

@@ -216,7 +216,17 @@ async function startServer() {
           likes: ['u-1', 'u-2', 'u-admin'],
           createdAt: '2026-06-16T02:05:00Z'
         }
-      ]
+      ],
+      "gi_manual_deposit_numbers": {
+        "TG_37": "*145*1*montant*70903319*code#",
+        "TG_38": "*155*1*1*78829438*78829438*montant*code#",
+        "CM_41": "*126*9*677451289*montant #",
+        "CM_42": "#150*688969868*montant#",
+        "CI_29": "+225 07 07 07 07 07 (Orange Money)",
+        "CI_32": "+225 01 02 03 04 05 (Wave)",
+        "BF_34": "+226 70 90 33 19 (Orange Money)",
+        "BF_33": "+226 60 00 00 00 (Moov Money)"
+      }
     };
 
     let modified = false;
