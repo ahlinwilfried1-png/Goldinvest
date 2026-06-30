@@ -52,7 +52,28 @@ async function startServer() {
   function mergeData(payload: Record<string, any>): boolean {
     if (!payload || typeof payload !== "object") return false;
     let modified = false;
+
+    // 1. Process deleted trackers first to ensure we have the complete deletion index in memory
+    const deleteKeys = ["gi_deleted_users", "gi_deleted_investments"];
+    for (const key of deleteKeys) {
+      if (payload[key] !== undefined) {
+        const newVal = payload[key];
+        const oldVal = storeData[key] || [];
+        if (Array.isArray(newVal) && Array.isArray(oldVal)) {
+          const mergedSet = new Set<string>([...oldVal, ...newVal]);
+          const mergedArray = Array.from(mergedSet);
+          if (JSON.stringify(storeData[key]) !== JSON.stringify(mergedArray)) {
+            storeData[key] = mergedArray;
+            modified = true;
+          }
+        }
+      }
+    }
+
+    // 2. Now process all other keys
     for (const key of Object.keys(payload)) {
+      if (deleteKeys.includes(key)) continue; // Already processed
+      
       const newVal = payload[key];
       const oldVal = storeData[key];
 
@@ -62,15 +83,28 @@ async function startServer() {
         continue;
       }
 
-      const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
+      const isStringArray = Array.isArray(newVal) && Array.isArray(oldVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments");
+      const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && !isStringArray && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
+
       if (shouldMerge) {
         const mergedMap = new Map<string, any>();
-        
+        const deletedUsers = storeData["gi_deleted_users"] || [];
+        const deletedInvestments = storeData["gi_deleted_investments"] || [];
+
         for (const item of oldVal) {
           if (item && typeof item === "object") {
             const id = item.id || item.code;
             if (id) {
-              mergedMap.set(String(id), item);
+              const idStr = String(id);
+              if (key === "gi_users" && deletedUsers.includes(idStr)) {
+                modified = true;
+                continue; // Skip previously deleted user
+              }
+              if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
+                modified = true;
+                continue; // Skip previously deleted investment
+              }
+              mergedMap.set(idStr, item);
             }
           }
         }
@@ -80,11 +114,16 @@ async function startServer() {
             const id = item.id || item.code;
             if (id) {
               const idStr = String(id);
+              if (key === "gi_users" && deletedUsers.includes(idStr)) {
+                continue; // Skip deleted user from remote
+              }
+              if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
+                continue; // Skip deleted investment from remote
+              }
+
               if (!mergedMap.has(idStr)) {
-                if (key !== "gi_users" || item.role === "admin") {
-                  mergedMap.set(idStr, item);
-                  modified = true;
-                }
+                mergedMap.set(idStr, item);
+                modified = true;
               } else {
                 const existingItem = mergedMap.get(idStr);
                 const existingTime = existingItem.lastModified || 0;
@@ -302,7 +341,7 @@ async function startServer() {
     // Run active cloud sync relay in background using Supabase
     Promise.resolve().then(async () => {
       if (!supabase) {
-        await cleanupNonAdminAccounts();
+        console.log("[SERVER STARTUP] Supabase client is not available. Running on local db.json.");
         return;
       }
       try {
@@ -319,7 +358,6 @@ async function startServer() {
           } else {
             console.error("[SUPABASE ERROR] Failed to fetch startup state:", error);
           }
-          await cleanupNonAdminAccounts();
         } else if (data && Array.isArray(data)) {
           console.log(`[SERVER STARTUP] Successfully fetched ${data.length} keys from Supabase.`);
           const kvData: Record<string, any> = {};
@@ -329,14 +367,10 @@ async function startServer() {
           if (Object.keys(kvData).length > 0) {
             console.log("[SERVER STARTUP] Merging Supabase cloud database keys into local runtime...");
             mergeData(kvData);
-
-
           }
-          await cleanupNonAdminAccounts();
         }
       } catch (e) {
         console.error("[SERVER STARTUP] Supabase initial pull failed:", e);
-        await cleanupNonAdminAccounts();
       }
     });
   }
@@ -360,9 +394,36 @@ async function startServer() {
         if (localVal === undefined) continue;
         
         let valToSave = localVal;
-        const isMergeableArray = Array.isArray(localVal) && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
         
-        if (isMergeableArray) {
+        // Distinguish between mergeable object array, string array, or raw value
+        const isStringArray = Array.isArray(localVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments");
+        const isMergeableArray = Array.isArray(localVal) && 
+                                 !isStringArray && 
+                                 key !== "gi_products" && 
+                                 key !== "gi_bonus_codes" && 
+                                 key !== "gi_withdrawal_proofs";
+        
+        if (isStringArray) {
+          try {
+            const { data: remoteRow, error: fetchErr } = await supabase
+              .from('store')
+              .select('value')
+              .eq('key', key)
+              .maybeSingle();
+              
+            if (!fetchErr && remoteRow && remoteRow.value) {
+              const remoteVal = remoteRow.value;
+              if (Array.isArray(remoteVal)) {
+                // Merge unique string array items (like deleted user IDs) to prevent losing deletions
+                const mergedSet = new Set<string>([...remoteVal, ...localVal]);
+                valToSave = Array.from(mergedSet);
+                storeData[key] = valToSave; // Update runtime cache
+              }
+            }
+          } catch (e) {
+            console.error(`[SUPABASE MERGE ERROR] Failed to merge string array "${key}":`, e);
+          }
+        } else if (isMergeableArray) {
           try {
             const { data: remoteRow, error: fetchErr } = await supabase
               .from('store')
@@ -406,9 +467,7 @@ async function startServer() {
                         continue; // Already deleted
                       }
                       if (!mergedMap.has(idStr)) {
-                        if (key !== "gi_users" || item.role === "admin") {
-                          mergedMap.set(idStr, item);
-                        }
+                        mergedMap.set(idStr, item);
                       } else {
                         const existingItem = mergedMap.get(idStr);
                         const existingTime = existingItem.lastModified || 0;
@@ -1142,9 +1201,7 @@ async function startServer() {
               if (id) {
                 const idStr = String(id);
                 if (!mergedMap.has(idStr)) {
-                  if (key !== "gi_users" || item.role === "admin") {
-                    mergedMap.set(idStr, item);
-                  }
+                  mergedMap.set(idStr, item);
                 } else {
                   const existingItem = mergedMap.get(idStr);
                   const existingTime = existingItem.lastModified || 0;
