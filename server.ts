@@ -370,6 +370,28 @@ async function startServer() {
             mergeData(kvData);
           }
         }
+
+        // Force correct WhatsApp links even after merging Supabase keys
+        const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv";
+        const targetChannel = "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k";
+        let linksModified = false;
+
+        if (storeData["gi_whatsapp_group"] !== targetGroup) {
+          console.log(`[STARTUP MERGE] Forcing correct WhatsApp group link: ${targetGroup}`);
+          storeData["gi_whatsapp_group"] = targetGroup;
+          linksModified = true;
+        }
+
+        if (storeData["gi_whatsapp_channel"] !== targetChannel) {
+          console.log(`[STARTUP MERGE] Forcing correct WhatsApp channel link: ${targetChannel}`);
+          storeData["gi_whatsapp_channel"] = targetChannel;
+          linksModified = true;
+        }
+
+        if (linksModified) {
+          await saveStore(["gi_whatsapp_group", "gi_whatsapp_channel"]);
+        }
+
         await cleanupNonAdminAccounts();
       } catch (e) {
         console.error("[SERVER STARTUP] Supabase initial pull failed:", e);
