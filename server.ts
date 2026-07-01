@@ -342,6 +342,7 @@ async function startServer() {
     Promise.resolve().then(async () => {
       if (!supabase) {
         console.log("[SERVER STARTUP] Supabase client is not available. Running on local db.json.");
+        await cleanupNonAdminAccounts();
         return;
       }
       try {
@@ -369,8 +370,10 @@ async function startServer() {
             mergeData(kvData);
           }
         }
+        await cleanupNonAdminAccounts();
       } catch (e) {
         console.error("[SERVER STARTUP] Supabase initial pull failed:", e);
+        await cleanupNonAdminAccounts();
       }
     });
   }

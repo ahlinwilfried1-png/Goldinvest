@@ -1406,8 +1406,8 @@ export default function Dashboard({
     setDepositError('');
     setDepositSuccess('');
     const amt = parseInt(depositAmount);
-    if (isNaN(amt) || amt < 3000) {
-      setDepositError(`Le montant minimum pour un versement est de 3 000 ${getCurrency()}.`);
+    if (isNaN(amt) || amt < 2500) {
+      setDepositError(`Le montant minimum pour un versement est de 2 500 ${getCurrency()}.`);
       return;
     }
     if (!spOperatorId) {
@@ -1423,8 +1423,8 @@ export default function Dashboard({
     setDepositSuccess('');
 
     const amt = parseInt(depositAmount);
-    if (isNaN(amt) || amt < 3000) {
-      setDepositError(`Le montant minimum pour un versement est de 3 000 ${getCurrency()}.`);
+    if (isNaN(amt) || amt < 2500) {
+      setDepositError(`Le montant minimum pour un versement est de 2 500 ${getCurrency()}.`);
       return;
     }
 
@@ -1845,6 +1845,9 @@ export default function Dashboard({
                     <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
                       Togo 🇹🇬
                     </span>
+                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
+                      Cameroun 🇨🇲
+                    </span>
                   </div>
                 </div>
 
@@ -1860,7 +1863,7 @@ export default function Dashboard({
                   <span className="text-xs select-none">📥</span>
                   <div>
                     <span className="font-bold text-white/95">Recharge minimale :</span>{' '}
-                    <span className="text-white font-mono font-black text-xs ml-0.5">3 000 {getCurrency()}</span>
+                    <span className="text-white font-mono font-black text-xs ml-0.5">2 500 {getCurrency()}</span>
                   </div>
                 </div>
 
@@ -2958,7 +2961,7 @@ export default function Dashboard({
                             Étape 2 : Choisissez ou cliquez un montant rapide 💵
                           </label>
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
-                            {[3000, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
+                            {[2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
                               const isSelected = parseInt(depositAmount) === amt;
                               return (
                                 <button
@@ -2986,12 +2989,12 @@ export default function Dashboard({
                           <input
                             type="number"
                             required
-                            placeholder={`Minimum 3 000 ${SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}`}
+                            placeholder={`Minimum 2 500 ${SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}`}
                             value={depositAmount}
                             onChange={(e) => setDepositAmount(e.target.value)}
                             className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
                           />
-                          <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 3 000 {SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}.</span>
+                          <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}.</span>
                         </div>
 
                         {/* SENDAVAPAY OPERATOR SELECT */}
