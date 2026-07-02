@@ -112,21 +112,13 @@ export const SUPABASE_URL = "https://gepdalprxhdjiuxwxidv.supabase.co";
 export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTk2MDIxMSwiZXhwIjoyMDk1NTM2MjExfQ.9_yn5Vn_bi45VGDFFQOU3RZTD3NsIUz_IvDDkQFYjCM";
 
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
-  // Completely bypass interceptor/fallback logic for SendavaPay endpoints
-  if (url.includes('/sendavapay')) {
-    const fetchOptions: RequestInit = {
-      credentials: 'same-origin',
-      ...init
-    };
-    return fetch(url, fetchOptions);
-  }
-
   let activeUrl = url;
   let isRetried = false;
 
   const hasPre = url.includes('-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
   const hasDev = url.includes('-dev-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
   const isSyncEndpoint = url.includes('/api/get-store') || url.includes('/api/save-store');
+  const isSendavaPay = url.includes('/sendavapay');
 
   // Try to use the standard backend first (getApiUrl)
   try {
@@ -146,14 +138,19 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
         : 'https://ais-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app';
       
       try {
-        const parsedUrl = new URL(activeUrl);
+        let parsedUrl: URL;
+        try {
+          parsedUrl = new URL(activeUrl);
+        } catch (e) {
+          parsedUrl = new URL(activeUrl, typeof window !== 'undefined' ? window.location.origin : undefined);
+        }
         const fallbackUrl = `${fallbackHost}${parsedUrl.pathname}${parsedUrl.search}`;
         console.log(`[apiFetch Failover] Primary backend non-responsive. Retrying with alternate backend: ${fallbackUrl}`);
         
         const fallbackResp = await fetch(fallbackUrl, fetchOptions);
         const fallbackContentType = fallbackResp.headers.get('content-type') || "";
         
-        if ((fallbackResp.ok || !isSyncEndpoint) && !fallbackContentType.includes('text/html')) {
+        if ((fallbackResp.ok || !isSyncEndpoint || isSendavaPay) && !fallbackContentType.includes('text/html')) {
           try {
             localStorage.setItem('gi_custom_backend_url', fallbackHost);
           } catch (e) {}
@@ -162,6 +159,11 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
       } catch (retryErr) {
         console.error(`[apiFetch Failover] Alternate backend failed too:`, retryErr);
       }
+    }
+
+    // For SendavaPay, return the response directly as long as it is not a Google proxy HTML page
+    if (isSendavaPay && !contentType.includes('text/html')) {
+      return response;
     }
 
     // If the response is protected by google proxy or returned as text/html from unhandled errors,
@@ -186,7 +188,12 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
         : 'https://ais-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app';
       
       try {
-        const parsedUrl = new URL(activeUrl);
+        let parsedUrl: URL;
+        try {
+          parsedUrl = new URL(activeUrl);
+        } catch (e) {
+          parsedUrl = new URL(activeUrl, typeof window !== 'undefined' ? window.location.origin : undefined);
+        }
         const fallbackUrl = `${fallbackHost}${parsedUrl.pathname}${parsedUrl.search}`;
         console.log(`[apiFetch Network Failover] Retrying on network error with: ${fallbackUrl}`);
         
@@ -197,7 +204,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
         const response = await fetch(fallbackUrl, fetchOptions);
         const contentType = response.headers.get('content-type') || "";
         
-        if ((response.ok || !isSyncEndpoint) && !contentType.includes('text/html')) {
+        if ((response.ok || !isSyncEndpoint || isSendavaPay) && !contentType.includes('text/html')) {
           try {
             localStorage.setItem('gi_custom_backend_url', fallbackHost);
           } catch (e) {}
@@ -207,6 +214,20 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
         console.error(`[apiFetch Network Failover] Retry failed too:`, retryErr);
       }
     }
+
+    if (isSendavaPay) {
+      return new Response(JSON.stringify({ success: false, error: "Erreur de connexion. Le serveur de paiement est temporairement indisponible." }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  }
+
+  if (isSendavaPay) {
+    return new Response(JSON.stringify({ success: false, error: "Le serveur de paiement n'a pas répondu." }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   // --- DIRECT SUPABASE Sync FALLBACK ---
