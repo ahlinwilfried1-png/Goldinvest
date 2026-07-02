@@ -404,8 +404,8 @@ export default function Dashboard({
       { id: '60', name: 'Orange Money', slug: 'orange-money-mali' }
     ],
     CM: [
-      { id: '41', name: 'MTN Mobile Money', slug: 'mtn-cameroun' },
-      { id: '42', name: 'Orange Money', slug: 'orange-money-cameroun' }
+      { id: '1', name: 'MTN Mobile Money', slug: 'mtn-cameroun' },
+      { id: '2', name: 'Orange Money', slug: 'orange-cm' }
     ]
   };
 
@@ -536,6 +536,10 @@ export default function Dashboard({
     } else if (country === 'SN') {
       // SN: 57 (Orange), 58 (Wave), 59 (Mixx)
       if (/^(77|78)/.test(clean)) return '57';
+    } else if (country === 'CM') {
+      // CM: 1 (MTN), 2 (Orange)
+      if (/^(650|651|652|653|654|67|68)/.test(clean)) return '1';
+      if (/^(655|656|657|658|659|69)/.test(clean)) return '2';
     }
     return '';
   };

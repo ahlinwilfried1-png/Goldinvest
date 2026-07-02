@@ -1965,6 +1965,8 @@ async function startServer() {
       const { reference, paymentToken } = createData.data;
       
       const operatorMap: Record<string, { operator: string; slug: string }> = {
+        '1': { operator: 'MTN', slug: 'mtn-cameroun' },
+        '2': { operator: 'Orange', slug: 'orange-cm' },
         '29': { operator: 'Orange', slug: 'orange-money-ci' },
         '30': { operator: 'MTN', slug: 'mtn-ci' },
         '31': { operator: 'Moov', slug: 'moov-ci' },
@@ -1976,7 +1978,7 @@ async function startServer() {
         '37': { operator: 'TMoney', slug: 't-money-togo' },
         '38': { operator: 'Moov', slug: 'moov-togo' },
         '41': { operator: 'MTN', slug: 'mtn-cameroun' },
-        '42': { operator: 'Orange', slug: 'orange-money-cameroun' },
+        '42': { operator: 'Orange', slug: 'orange-cm' },
         '52': { operator: 'Vodacom', slug: 'vodacom-cod' },
         '53': { operator: 'Airtel', slug: 'airtel-cod' },
         '54': { operator: 'Orange', slug: 'orange-cod' },

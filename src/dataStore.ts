@@ -112,6 +112,15 @@ export const SUPABASE_URL = "https://gepdalprxhdjiuxwxidv.supabase.co";
 export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTk2MDIxMSwiZXhwIjoyMDk1NTM2MjExfQ.9_yn5Vn_bi45VGDFFQOU3RZTD3NsIUz_IvDDkQFYjCM";
 
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  // Completely bypass interceptor/fallback logic for SendavaPay endpoints
+  if (url.includes('/sendavapay')) {
+    const fetchOptions: RequestInit = {
+      credentials: 'same-origin',
+      ...init
+    };
+    return fetch(url, fetchOptions);
+  }
+
   let activeUrl = url;
   let isRetried = false;
 
