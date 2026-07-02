@@ -17,25 +17,7 @@
       "totalEarnings": 0
     },
     {
-      "id": "u-1782990007907",
-      "name": "Membre 70903319",
-      "role": "user",
-      "bonus": 200,
-      "device": "Android",
-      "balance": 200,
-      "country": "Togo",
-      "password": "123456",
-      "whatsapp": "+22870903319",
-      "createdAt": "2026-07-02T11:00:07.907Z",
-      "isBlocked": false,
-      "referredBy": "u-admin",
-      "lastModified": 1782990046122,
-      "referralCode": "1HGO3",
-      "dailyEarnings": 0,
-      "totalEarnings": 0
-    },
-    {
-      "id": "u-1782990046121",
+      "id": "u-1782992018935",
       "name": "Membre 97783065",
       "role": "user",
       "bonus": 200,
@@ -44,72 +26,39 @@
       "country": "Togo",
       "password": "123456",
       "whatsapp": "+22897783065",
-      "createdAt": "2026-07-02T11:00:46.121Z",
+      "createdAt": "2026-07-02T11:33:38.936Z",
       "isBlocked": false,
       "referredBy": "u-admin",
-      "lastModified": 1782990046122,
-      "referralCode": "OZ0Y1",
+      "lastModified": 0,
+      "referralCode": "7D0SX",
       "dailyEarnings": 0,
       "totalEarnings": 0
     }
   ],
-  "gi_deposits": [
-    {
-      "id": "dep-1782990130013",
-      "userId": "u-admin",
-      "userName": "Administrateur Principal",
-      "amount": 5000,
-      "operator": "SendavaPay (TG - +22897783065)",
-      "reference": "sdk_mr3eac6v_bd0c5d3cfc09a5a9",
-      "receiptImage": "automated_sendavapay",
-      "status": "pending",
-      "lastModified": 1782990130013,
-      "createdAt": "2026-07-02T11:02:10.013Z"
-    }
-  ],
+  "gi_deposits": [],
   "gi_withdrawals": [],
   "gi_investments": [],
   "gi_commissions": [],
   "gi_notifications": [
     {
-      "id": "not-ref-1782990007923",
-      "read": false,
-      "type": "info",
-      "title": "Nouveau parrainage",
-      "userId": "u-admin",
-      "message": "Membre 70903319 s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
-      "createdAt": "2026-07-02T11:00:07.923Z",
-      "lastModified": 1782990007923
-    },
-    {
-      "id": "not-1782990007923",
-      "read": false,
-      "type": "bonus",
-      "title": "Bienvenue sur Aiprods !",
-      "userId": "u-1782990007907",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
-      "createdAt": "2026-07-02T11:00:07.923Z",
-      "lastModified": 1782990007923
-    },
-    {
-      "id": "not-ref-1782990046126",
+      "id": "not-ref-1782992018952",
       "read": false,
       "type": "info",
       "title": "Nouveau parrainage",
       "userId": "u-admin",
       "message": "Membre 97783065 s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
-      "createdAt": "2026-07-02T11:00:46.126Z",
-      "lastModified": 1782990046126
+      "createdAt": "2026-07-02T11:33:38.952Z",
+      "lastModified": 1782992018952
     },
     {
-      "id": "not-1782990046126",
+      "id": "not-1782992018952",
       "read": false,
       "type": "bonus",
       "title": "Bienvenue sur Aiprods !",
-      "userId": "u-1782990046121",
+      "userId": "u-1782992018935",
       "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
-      "createdAt": "2026-07-02T11:00:46.126Z",
-      "lastModified": 1782990046126
+      "createdAt": "2026-07-02T11:33:38.952Z",
+      "lastModified": 1782992018952
     }
   ],
   "gi_support_messages": [],
@@ -324,7 +273,7 @@
     "TG_37": "70903319",
     "TG_38": "78829438"
   },
-  "gi_cleanup_timestamp": 1782989746674,
+  "gi_cleanup_timestamp": 1782990676970,
   "userId": "",
   "role": "user"
 }

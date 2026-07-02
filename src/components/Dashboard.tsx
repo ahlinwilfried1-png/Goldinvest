@@ -442,6 +442,13 @@ export default function Dashboard({
   const [receiptBase64, setReceiptBase64] = useState<string>('');
   const [depositError, setDepositError] = useState<string>('');
   const [depositSuccess, setDepositSuccess] = useState<string>('');
+  const [depositMode, setDepositMode] = useState<'automatic' | 'manual_cm'>('automatic');
+  const [manualOperator, setManualOperator] = useState<string>('MTN Mobile Money (Cameroun 🇨🇲)');
+  const [manualReference, setManualReference] = useState<string>('');
+  const [manualReceiptBase64, setManualReceiptBase64] = useState<string>('');
+  const [manualReceiptFileName, setManualReceiptFileName] = useState<string>('');
+  const [isDraggingManualReceipt, setIsDraggingManualReceipt] = useState<boolean>(false);
+  const [manualCopied, setManualCopied] = useState<boolean>(false);
   const [manualDepositNumbers, setManualDepositNumbers] = useState<Record<string, string>>(() => DataStore.getManualDepositNumbers());
   const [isSubmittingDeposit, setIsSubmittingDeposit] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -1463,19 +1470,9 @@ export default function Dashboard({
       return;
     }
 
-    if (!depositPhone || depositPhone.trim() === '') {
-      setDepositError("Veuillez saisir votre numéro Mobile Money.");
-      return;
-    }
-
-    if (!spOperatorId) {
-      setDepositError("Veuillez sélectionner un opérateur Mobile Money.");
-      return;
-    }
-
     setIsSubmittingDeposit(true);
     try {
-      const response = await apiFetch(getApiUrl('/api/sendavapay/create-charge'), {
+      const response = await apiFetch(getApiUrl('/api/paydunya/create-charge'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1483,33 +1480,23 @@ export default function Dashboard({
         body: JSON.stringify({
           userId: userState.id,
           amount: amt,
-          country: spCountryCode,
-          phone: depositPhone,
-          operatorId: spOperatorId
+          method: 'westpay',
+          gateway: 'westpay',
+          operator: 'WestPay'
         })
       });
 
       const data = await response.json();
-      if (data.success) {
-        if (data.requiresOtp) {
-          setSpOtpToken(data.otpToken);
-          setSpReference(data.reference);
-          setSpStatusMessage(data.message);
-          setSpOtpModalOpen(true);
-        } else if (data.requiresRedirect && data.redirectUrl) {
-          window.open(data.redirectUrl, '_blank');
-          setDepositSuccess("Veuillez finaliser le paiement sur la page de paiement sécurisée de l'opérateur. Votre solde sera crédité automatiquement.");
-          if (data.reference) {
-            pollSendavaPayStatus(data.reference);
-          }
-        } else {
-          setDepositSuccess("Demande de paiement envoyée sur votre téléphone. Veuillez confirmer sur votre mobile en composant votre code secret.");
-          if (data.reference) {
-            pollSendavaPayStatus(data.reference);
-          }
+      if (data.success && data.url) {
+        setDepositRedirectUrl(data.url);
+        setDepositSuccess("Votre facture de paiement WestPay a été créée avec succès ! Cliquez sur le bouton ci-dessous pour effectuer votre recharge en toute sécurité.");
+        try {
+          window.open(data.url, '_blank');
+        } catch (popupErr) {
+          console.warn("Popup blocked, user needs to click button manually.", popupErr);
         }
       } else {
-        setDepositError(data.error || "L'initialisation de la transaction a échoué. Veuillez vérifier les informations saisies.");
+        setDepositError(data.error || "L'initialisation de la transaction WestPay a échoué. Veuillez réessayer.");
       }
     } catch (error: any) {
       console.error("Deposit submission error:", error);
@@ -1519,39 +1506,77 @@ export default function Dashboard({
     }
   };
 
-  const submitSpOtp = async (e: React.FormEvent) => {
+  const handleManualReceiptDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    if (!spOtpToken || !spOtpCode.trim()) return;
-    setIsSubmittingDeposit(true);
+    setIsDraggingManualReceipt(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      setManualReceiptFileName(file.name);
+      const b64 = await compressImage(file);
+      setManualReceiptBase64(b64);
+    }
+  };
+
+  const handleManualReceiptSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setManualReceiptFileName(file.name);
+      const b64 = await compressImage(file);
+      setManualReceiptBase64(b64);
+    }
+  };
+
+  const handleCopyManualUssd = (text: string) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+      setManualCopied(true);
+      setTimeout(() => setManualCopied(false), 2000);
+    }
+  };
+
+  const submitManualDeposit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setDepositError('');
+    setDepositSuccess('');
+
+    const amt = parseInt(depositAmount);
+    if (isNaN(amt) || amt < 2500) {
+      setDepositError("Le montant minimum pour un versement est de 2 500 F.");
+      return;
+    }
+
+    if (!manualReference.trim()) {
+      setDepositError("Veuillez saisir l'ID de transaction ou la référence du paiement SMS.");
+      return;
+    }
+
+    if (!manualReceiptBase64) {
+      setDepositError("Veuillez joindre la capture d'écran de votre reçu de paiement.");
+      return;
+    }
+
+    setIsSubmittingDeposit(true);
     try {
-      const response = await apiFetch(getApiUrl('/api/sendavapay/submit-otp'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          otpToken: spOtpToken,
-          otp: spOtpCode
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
-        setDepositSuccess("Code OTP validé avec succès ! Votre transaction est en cours de traitement. Votre solde sera crédité automatiquement dès confirmation.");
-        setSpOtpModalOpen(false);
-        setSpOtpToken(null);
-        setSpOtpCode('');
-        setDepositAmount('5000');
+      const dep = await DataStore.createDeposit(
+        userState.id,
+        amt,
+        manualOperator,
+        manualReference.trim(),
+        manualReceiptBase64
+      );
+
+      if (dep) {
+        setDepositSuccess(`Votre demande de recharge manuelle de ${amt.toLocaleString()} F CFA via ${manualOperator} (Réf: ${manualReference}) a été enregistrée avec succès ! Notre équipe créditera votre solde dès vérification.`);
+        setManualReference('');
+        setManualReceiptBase64('');
+        setManualReceiptFileName('');
         syncDashboardData();
-        if (spReference) {
-          pollSendavaPayStatus(spReference);
-        }
       } else {
-        setDepositError(data.error || "La validation du code OTP a échoué. Veuillez vérifier le code saisi.");
+        setDepositError("Une erreur est survenue lors de l'enregistrement de votre demande. Veuillez réessayer.");
       }
     } catch (err: any) {
-      console.error("OTP validation error:", err);
-      setDepositError("Une erreur est survenue lors de la validation de l'OTP.");
+      console.error("Manual deposit submission error:", err);
+      setDepositError(`Erreur lors de la soumission : ${err?.message || err || "Veuillez réessayer."}`);
     } finally {
       setIsSubmittingDeposit(false);
     }
@@ -2894,128 +2919,268 @@ export default function Dashboard({
           {/* DEPOSIT FORM TAB */}
           {activeTab === 'deposit' && (() => {
             return (
-              <div className="max-w-xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800 animate-fade-in animate-duration-300">
+              <div className="max-w-xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800 animate-fade-in animate-duration-300 font-sans">
+                {/* MODE CHANGER TAB */}
+                <div className="flex bg-slate-200/50 p-1 rounded-2xl mb-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDepositMode('automatic');
+                      setDepositError('');
+                      setDepositSuccess('');
+                    }}
+                    className={`flex-1 py-2.5 text-center rounded-xl text-xs font-black uppercase transition-all duration-300 cursor-pointer ${
+                      depositMode === 'automatic'
+                        ? 'bg-white text-[#1b64d9] shadow'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    🚀 Recharge Automatique
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDepositMode('manual_cm');
+                      setDepositError('');
+                      setDepositSuccess('');
+                    }}
+                    className={`flex-1 py-2.5 text-center rounded-xl text-xs font-black uppercase transition-all duration-300 cursor-pointer ${
+                      depositMode === 'manual_cm'
+                        ? 'bg-white text-emerald-600 shadow border-b-2 border-emerald-500'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    🇨🇲 Manuel Cameroun
+                  </button>
+                </div>
+
                 <div className="text-center mb-6">
-                  <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">
-                    Recharge Sécurisée Directe
-                  </span>
-                  <h3 className="text-xl font-display font-black text-slate-800 uppercase tracking-tight">Recharger mon compte</h3>
-                  <p className="text-xs text-slate-500 font-bold mt-1">
-                    Choisissez votre méthode préférée et recharger instantanément et automatiquement votre solde de compte.
-                  </p>
+                  {depositMode === 'automatic' ? (
+                    <>
+                      <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">
+                        ⚡ RECHARGE AUTOMATIQUE SÉCURISÉE
+                      </span>
+                      <p className="text-xs text-slate-500 font-bold mt-1">
+                        Choisissez votre montant et rechargez instantanément et automatiquement votre solde par Mobile Money.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs font-black text-emerald-600 tracking-widest uppercase block mb-1">
+                        📲 DEPOSIT MANUEL VALIDÉ PAR REÇU
+                      </span>
+                      <p className="text-xs text-slate-500 font-bold mt-1">
+                        Effectuez le paiement Orange ou MTN Money, renseignez l'identifiant et joignez la preuve de transfert.
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {depositError && (
                   <div className="mb-4 p-3 rounded-xl bg-red-100 border border-red-200 text-xs text-red-700 font-bold">{depositError}</div>
                 )}
                 {depositSuccess && (
-                  <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold leading-normal space-y-2">
+                  <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold leading-normal space-y-2 animate-fade-in">
                     <div>{depositSuccess}</div>
-                    {depositRedirectUrl && (
+                    {depositMode === 'automatic' && depositRedirectUrl && (
                       <a
                         href={depositRedirectUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block py-2.5 px-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-black uppercase text-[10px] mt-1 text-center shadow"
+                        className="inline-block py-2.5 px-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-black uppercase text-[10px] mt-1 text-center shadow animate-bounce"
                       >
-                        👉 Cliquer ici pour ouvrir le paiement sécurisé
+                        👉 Cliquer ici pour ouvrir la page de paiement sécurisée
                       </a>
-                    )}
-                    {isPollingSp && (
-                      <div className="flex items-center justify-center space-x-2 p-3 bg-white/60 rounded-xl border border-green-300 text-[11px] text-emerald-800 font-bold mt-2 shadow-sm">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-600 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
-                        </span>
-                        <span>Vérification automatique de votre paiement en cours...</span>
-                      </div>
                     )}
                   </div>
                 )}
 
-                {/* OTP Validation Form (Inline) */}
-                {spOtpModalOpen ? (
-                  <form onSubmit={submitSpOtp} className="space-y-4 font-sans animate-fade-in">
-                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl text-center">
-                      <span className="text-xl">💬</span>
-                      <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight mt-1">Validation OTP Obligatoire</h4>
-                      <p className="text-[11px] text-slate-500 font-semibold mt-1">
-                        {spStatusMessage || "Veuillez entrer le code secret de validation temporaire envoyé par SMS pour valider votre recharge Mobile Money."}
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                        Code secret temporaire SMS 🔑
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Ex: 123456"
-                        value={spOtpCode}
-                        onChange={(e) => setSpOtpCode(e.target.value)}
-                        className="w-full bg-white border-2 border-slate-200 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-center text-lg font-black tracking-widest text-slate-850 focus:outline-none shadow-sm"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmittingDeposit}
-                      className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-[#1b64d9] hover:bg-blue-700 rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmittingDeposit ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Vérification du code...</span>
+                {depositMode === 'manual_cm' ? (
+                  <form onSubmit={submitManualDeposit} className="space-y-5 text-left animate-fade-in font-sans">
+                    <div className="space-y-5">
+                      {/* AMOUNT PRESETS */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 1 : Choisissez un montant rapide 💵
+                        </label>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                          {[2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
+                            const isSelected = parseInt(depositAmount) === amt;
+                            return (
+                              <button
+                                type="button"
+                                key={amt}
+                                onClick={() => setDepositAmount(amt.toString())}
+                                className={`py-2 px-1 text-center rounded-xl border text-[11px] font-black font-mono transition-all duration-200 cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/10'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                                }`}
+                              >
+                                {amt.toLocaleString()} F
+                              </button>
+                            );
+                          })}
                         </div>
-                      ) : (
-                        <span>✓ Valider et Créditer mon compte</span>
-                      )}
-                    </button>
+                      </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSpOtpModalOpen(false);
-                        setSpOtpToken(null);
-                        setSpOtpCode('');
-                        setDepositSuccess('');
-                        setDepositError('');
-                      }}
-                      className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-700 uppercase tracking-wider underline cursor-pointer"
-                    >
-                      Annuler et modifier les informations
-                    </button>
+                      {/* AMOUNT INPUT */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Ou saisissez votre propre montant (F CFA)
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          placeholder={`Minimum 2 500 ${getCurrency()}`}
+                          value={depositAmount}
+                          onChange={(e) => setDepositAmount(e.target.value)}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-emerald-500 rounded-2xl py-3.5 px-4 text-sm text-emerald-600 font-black focus:outline-none shadow-sm placeholder:text-slate-400"
+                        />
+                      </div>
+
+                      {/* OPERATOR CHOOSE */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 2 : Sélectionnez votre opérateur Mobile Money 📲
+                        </label>
+                        <select
+                          value={manualOperator}
+                          onChange={(e) => setManualOperator(e.target.value)}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-emerald-500 rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
+                        >
+                          <option value="MTN Mobile Money (Cameroun 🇨🇲)">MTN Mobile Money (Cameroun 🇨🇲)</option>
+                          <option value="Orange Money (Cameroun 🇨🇲)">Orange Money (Cameroun 🇨🇲)</option>
+                        </select>
+                      </div>
+
+                      {/* INSTRUCTIONS & USSD BOX */}
+                      <div className="bg-[#eefcf4] border border-emerald-200 p-4 rounded-2xl shadow-sm">
+                        <span className="font-extrabold text-emerald-700 uppercase text-[10px] tracking-wider block mb-1">📋 Étape 3 : Effectuez le paiement</span>
+                        <p className="text-xs text-slate-650 leading-relaxed font-semibold mb-3">
+                          Composez précisément le code USSD interactif ci-dessous sur votre téléphone pour lancer le transfert Mobile Money :
+                        </p>
+
+                        {/* CODE BOX */}
+                        {(() => {
+                          const ussdKey = manualOperator.includes('MTN') ? 'CM_41' : 'CM_42';
+                          const rawUssd = manualDepositNumbers[ussdKey] || (ussdKey === 'CM_41' ? '*126*9*677451289*montant #' : '#150*688969868*montant#');
+                          const ussdWithAmount = rawUssd.replace('montant', depositAmount);
+
+                          return (
+                            <div className="flex items-center justify-between bg-slate-900 text-emerald-400 font-mono text-sm font-bold p-3.5 rounded-xl border border-slate-800 shadow-inner">
+                              <span className="truncate pr-2">{ussdWithAmount}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyManualUssd(ussdWithAmount)}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-sans text-[10px] font-black uppercase rounded-lg shadow transition-colors cursor-pointer shrink-0"
+                              >
+                                {manualCopied ? '✓ Copié !' : '📋 Copier'}
+                              </button>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* TRANSACTION REFERENCE FIELD */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 4 : Référence SMS / ID de transaction 🔑
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ex: MP210903.1120.C3321 ou Réf ID"
+                          value={manualReference}
+                          onChange={(e) => setManualReference(e.target.value)}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-emerald-500 rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
+                        />
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">
+                          Inscrivez l'identifiant exact de la transaction reçu par SMS pour valider votre demande.
+                        </span>
+                      </div>
+
+                      {/* RECEIPT DRAG & DROP FILE UPLOAD */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 5 : Capture d'écran du reçu (Preuve de paiement) 📸
+                        </label>
+                        
+                        <div
+                          onDragOver={(e) => { e.preventDefault(); setIsDraggingManualReceipt(true); }}
+                          onDragLeave={() => setIsDraggingManualReceipt(false)}
+                          onDrop={handleManualReceiptDrop}
+                          className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 ${
+                            isDraggingManualReceipt
+                              ? 'border-emerald-500 bg-emerald-50'
+                              : manualReceiptBase64
+                              ? 'border-green-300 bg-green-50/50'
+                              : 'border-slate-300 hover:border-emerald-400 bg-white'
+                          }`}
+                        >
+                          {manualReceiptBase64 ? (
+                            <div className="space-y-2 animate-fade-in">
+                              <div className="mx-auto w-24 h-24 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex items-center justify-center p-1">
+                                <img src={manualReceiptBase64} alt="Reçu" className="max-w-full max-h-full object-contain rounded" />
+                              </div>
+                              <div className="text-xs text-slate-650 font-bold max-w-xs mx-auto truncate">
+                                📎 {manualReceiptFileName || "Image reçue"}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setManualReceiptBase64('');
+                                  setManualReceiptFileName('');
+                                }}
+                                className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-black uppercase rounded-lg transition-colors cursor-pointer"
+                              >
+                                Supprimer et remplacer
+                              </button>
+                            </div>
+                          ) : (
+                            <label className="cursor-pointer block space-y-2">
+                              <span className="text-3xl block">📤</span>
+                              <span className="text-xs font-bold text-slate-600 block">
+                                Glissez-déposez la capture d'écran ici, ou <span className="text-emerald-600 underline">parcourez vos fichiers</span>
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-semibold block">Format d'image JPEG, PNG accepté</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleManualReceiptSelect}
+                                className="hidden"
+                              />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* SUBMIT BUTTON */}
+                      <div className="space-y-3 pt-2">
+                        <button
+                          type="submit"
+                          disabled={isSubmittingDeposit}
+                          className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-emerald-600 to-emerald-700 hover:opacity-95 rounded-2xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmittingDeposit ? (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              <span>Envoi de la demande...</span>
+                            </div>
+                          ) : (
+                            <span>⚡ Soumettre ma preuve de dépôt</span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </form>
                 ) : (
                   <form onSubmit={submitDeposit} className="space-y-5 text-left animate-fade-in font-sans">
                     <div className="space-y-5">
-                      {/* COUNTRY SELECT */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Étape 1 : Choisissez votre pays d'origine 🌍
-                        </label>
-                        <select
-                          value={spCountryCode}
-                          onChange={(e) => {
-                            setSpCountryCode(e.target.value);
-                            setSpOperatorId(''); // Clear selected operator when country changes
-                            setHasManuallySelectedOperator(false);
-                          }}
-                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
-                        >
-                          {SENDAVAPAY_COUNTRIES.map((cnt) => (
-                            <option key={cnt.code} value={cnt.code}>
-                              {cnt.name} ({cnt.currency})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
                       {/* AMOUNT PRESETS */}
                       <div>
                         <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Étape 2 : Choisissez ou cliquez un montant rapide 💵
+                          Cliquez sur un montant rapide 💵
                         </label>
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                           {[2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
@@ -3041,62 +3206,32 @@ export default function Dashboard({
                       {/* AMOUNT FIELD */}
                       <div>
                         <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Ou saisissez votre propre montant ({SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'})
+                          Ou saisissez votre propre montant ({getCurrency()})
                         </label>
                         <input
                           type="number"
                           required
-                          placeholder={`Minimum 2 500 ${SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}`}
+                          placeholder={`Minimum 2 500 ${getCurrency()}`}
                           value={depositAmount}
                           onChange={(e) => setDepositAmount(e.target.value)}
                           className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
                         />
-                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}.</span>
-                      </div>
-
-                      {/* SENDAVAPAY OPERATOR SELECT */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Étape 3 : Choisissez votre opérateur Mobile Money 📲
-                        </label>
-                        <select
-                          value={spOperatorId}
-                          onChange={(e) => {
-                            setSpOperatorId(e.target.value);
-                            setHasManuallySelectedOperator(true);
-                          }}
-                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
-                        >
-                          <option value="">-- Sélectionner l'opérateur --</option>
-                          {(SENDAVAPAY_OPERATORS[spCountryCode] || []).map((op) => (
-                            <option key={op.id} value={op.id}>
-                              {op.name} {op.requiresOtp ? "(Demande OTP SMS)" : ""}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* PHONE NUMBER FIELD */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Étape 4 : Saisissez votre numéro de téléphone Mobile Money 📱
-                        </label>
-                        <input
-                          type="tel"
-                          required
-                          placeholder="Ex: 90000000"
-                          value={depositPhone}
-                          onChange={(e) => setDepositPhone(e.target.value)}
-                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
-                        />
-                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">
-                          Saisissez le numéro de téléphone pour le débit Mobile Money.
-                        </span>
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {getCurrency()}.</span>
                       </div>
 
                       <div className="bg-[#e2ebf9]/80 p-4 rounded-xl border border-slate-200/50 text-xs text-slate-650 leading-relaxed font-semibold">
-                        <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block mb-0.5">🔒 Paiement Sécurisé SendavaPay :</span>
-                        Dès validation, une demande de débit sera envoyée directement sur votre téléphone pour finaliser instantanément la recharge de votre portefeuille.
+                        <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block mb-1">🔒 Passerelle de Paiement Intégrée WestPay :</span>
+                        <p className="mb-2">
+                          WestPay prend en charge tous vos moyens de paiement locaux dans les pays suivants :
+                        </p>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {['Togo 🇹🇬', 'Côte d\'Ivoire 🇨🇮', 'Bénin 🇧🇯', 'Sénégal 🇸🇳', 'Mali 🇲🇱', 'Burkina Faso 🇧🇫', 'Cameroun 🇨🇲', 'Congo 🇨🇬'].map(c => (
+                            <span key={c} className="bg-white/60 px-2 py-0.5 rounded text-[10px] font-bold text-slate-700">{c}</span>
+                          ))}
+                        </div>
+                        <p>
+                          Opérateurs compatibles : <strong className="text-slate-800 font-black">TMoney, Moov Money, MTN, Orange Money, Wave</strong>, cartes bancaires et plus.
+                        </p>
                       </div>
 
                       {/* Submitting button */}
@@ -3109,10 +3244,10 @@ export default function Dashboard({
                           {isSubmittingDeposit ? (
                             <div className="flex items-center space-x-2">
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              <span>Initialisation du paiement...</span>
+                              <span>Création de la facture de paiement...</span>
                             </div>
                           ) : (
-                            <span>⚡ Recharger mon compte</span>
+                            <span>⚡ Continuer vers WestPay</span>
                           )}
                         </button>
                       </div>
