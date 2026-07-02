@@ -1113,14 +1113,38 @@ export default function AdminPanel({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Rôle du Compte</label>
-                <select
-                  value={editRole}
-                  onChange={(e) => setEditRole(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none"
-                >
-                  <option value="user">Utilisateur Client</option>
-                  <option value="admin">Administrateur Système</option>
-                </select>
+                {(() => {
+                  const isPrincipalAdmin = currentUser.id === 'u-admin' || 
+                    currentUser.whatsapp === '+237600000000' || 
+                    currentUser.whatsapp?.replace(/\D/g, '') === '237600000000';
+                  
+                  if (isPrincipalAdmin) {
+                    return (
+                      <select
+                        value={editRole}
+                        onChange={(e) => setEditRole(e.target.value as any)}
+                        className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500"
+                      >
+                        <option value="user">Utilisateur Client</option>
+                        <option value="admin">Administrateur Système</option>
+                      </select>
+                    );
+                  } else {
+                    return (
+                      <div className="space-y-1.5">
+                        <select
+                          disabled
+                          value={editRole}
+                          className="w-full bg-slate-950/70 border border-slate-800 rounded-xl py-3 px-4 text-sm text-slate-500 cursor-not-allowed focus:outline-none"
+                        >
+                          <option value="user">Utilisateur Client</option>
+                          <option value="admin">Administrateur Système</option>
+                        </select>
+                        <p className="text-[10px] text-red-400/80">⚠️ Seul l'administrateur principal (+237600000000) a le droit de nommer ou révoquer des administrateurs.</p>
+                      </div>
+                    );
+                  }
+                })()}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Parrain / Sponsor Direct</label>

@@ -1192,11 +1192,16 @@ async function startServer() {
 
       const clientUserId = body.userId || '';
       let isGenuineAdmin = false;
+      let isPrincipalAdmin = false;
       if (clientUserId) {
         const userList = storeData["gi_users"] || [];
         const dbUser = userList.find((u: any) => u.id === clientUserId);
         if (dbUser && dbUser.role === 'admin') {
           isGenuineAdmin = true;
+          const uDigits = dbUser.whatsapp ? dbUser.whatsapp.replace(/\D/g, '') : '';
+          if (dbUser.id === 'u-admin' || uDigits === '237600000000' || dbUser.whatsapp === '+237600000000') {
+            isPrincipalAdmin = true;
+          }
         }
       }
 
@@ -1290,7 +1295,11 @@ async function startServer() {
               if (id) {
                 const idStr = String(id);
                 if (!mergedMap.has(idStr)) {
-                  mergedMap.set(idStr, item);
+                  let newUser = item;
+                  if (newUser && newUser.role === 'admin' && !isPrincipalAdmin) {
+                    newUser = { ...newUser, role: 'user' };
+                  }
+                  mergedMap.set(idStr, newUser);
                 } else {
                   const existingItem = mergedMap.get(idStr);
                   const existingTime = existingItem.lastModified || 0;
@@ -1298,9 +1307,13 @@ async function startServer() {
                   
                   if (key === "gi_users") {
                     const useIncoming = incomingTime > existingTime;
+                    let finalRole = existingItem.role || 'user';
+                    if (isPrincipalAdmin) {
+                      finalRole = useIncoming ? (item.role || 'user') : (existingItem.role || 'user');
+                    }
                     const mergedUser = {
                       ...(useIncoming ? item : existingItem),
-                      role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
+                      role: finalRole,
                       isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
                       lastModified: Math.max(existingTime, incomingTime)
                     };
@@ -1878,6 +1891,23 @@ async function startServer() {
       const amt = Number(amount);
       if (!userId || isNaN(amt) || amt <= 0 || !country || !phone || !operatorId) {
         return res.status(400).json({ success: false, error: "Paramètres manquants ou invalides pour SendavaPay." });
+      }
+
+      // Synchronize with direct Cloud database to get the latest user registers and avoid state issues
+      if (supabase) {
+        try {
+          console.log("[SENDAVAPAY CREATE CHARGE] Pulling latest state from Supabase...");
+          const { data, error } = await supabase.from('store').select('*');
+          if (!error && data && Array.isArray(data)) {
+            const kvData: Record<string, any> = {};
+            for (const item of data) {
+              kvData[item.key] = item.value;
+            }
+            storeData = { ...storeData, ...kvData };
+          }
+        } catch (err: any) {
+          console.error("[SENDAVAPAY CREATE CHARGE] Failed to pull from Supabase:", err);
+        }
       }
 
       const users = storeData["gi_users"] || [];

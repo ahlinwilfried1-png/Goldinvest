@@ -117,6 +117,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
 
   const hasPre = url.includes('-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
   const hasDev = url.includes('-dev-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
+  const isSyncEndpoint = url.includes('/api/get-store') || url.includes('/api/save-store');
 
   // Try to use the standard backend first (getApiUrl)
   try {
@@ -143,7 +144,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
         const fallbackResp = await fetch(fallbackUrl, fetchOptions);
         const fallbackContentType = fallbackResp.headers.get('content-type') || "";
         
-        if (fallbackResp.ok && !fallbackContentType.includes('text/html')) {
+        if ((fallbackResp.ok || !isSyncEndpoint) && !fallbackContentType.includes('text/html')) {
           try {
             localStorage.setItem('gi_custom_backend_url', fallbackHost);
           } catch (e) {}
@@ -156,7 +157,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
 
     // If the response is protected by google proxy or returned as text/html from unhandled errors,
     // protect the caller from trying to parse HTML as JSON.
-    if (response.ok && !response.redirected && !contentType.includes('text/html')) {
+    if ((response.ok || !isSyncEndpoint) && !response.redirected && !contentType.includes('text/html')) {
       return response;
     } else {
       if (contentType.includes('text/html')) {
@@ -187,7 +188,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
         const response = await fetch(fallbackUrl, fetchOptions);
         const contentType = response.headers.get('content-type') || "";
         
-        if (response.ok && !contentType.includes('text/html')) {
+        if ((response.ok || !isSyncEndpoint) && !contentType.includes('text/html')) {
           try {
             localStorage.setItem('gi_custom_backend_url', fallbackHost);
           } catch (e) {}
