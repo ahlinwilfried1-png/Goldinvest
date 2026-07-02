@@ -1975,6 +1975,8 @@ async function startServer() {
         '36': { operator: 'Moov', slug: 'moov-benin' },
         '37': { operator: 'TMoney', slug: 't-money-togo' },
         '38': { operator: 'Moov', slug: 'moov-togo' },
+        '41': { operator: 'MTN', slug: 'mtn-cameroun' },
+        '42': { operator: 'Orange', slug: 'orange-money-cameroun' },
         '52': { operator: 'Vodacom', slug: 'vodacom-cod' },
         '53': { operator: 'Airtel', slug: 'airtel-cod' },
         '54': { operator: 'Orange', slug: 'orange-cod' },

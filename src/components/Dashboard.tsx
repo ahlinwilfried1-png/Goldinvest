@@ -542,6 +542,7 @@ export default function Dashboard({
 
   useEffect(() => {
     setHasManuallySelectedOperator(false);
+    setSpOperatorId('');
   }, [spCountryCode]);
 
   useEffect(() => {

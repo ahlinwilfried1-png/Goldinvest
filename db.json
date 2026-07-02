@@ -15,53 +15,26 @@
       "referralCode": "AGR72",
       "dailyEarnings": 0,
       "totalEarnings": 0
-    },
-    {
-      "id": "u-1782988280388",
-      "name": "Membre 70903319",
-      "role": "admin",
-      "bonus": 200,
-      "device": "Android",
-      "balance": 200,
-      "country": "Togo",
-      "password": "123456",
-      "whatsapp": "+22870903319",
-      "createdAt": "2026-07-02T10:31:20.388Z",
-      "isBlocked": false,
-      "referredBy": "u-admin",
-      "lastModified": 1782988498112,
-      "referralCode": "K00OZ",
-      "dailyEarnings": 0,
-      "totalEarnings": 0,
-      "withdrawBlocked": false
     }
   ],
-  "gi_deposits": [],
+  "gi_deposits": [
+    {
+      "id": "dep-1782989620666",
+      "userId": "u-admin",
+      "userName": "Administrateur Principal",
+      "amount": 2500,
+      "operator": "SendavaPay (TG - +22890123456)",
+      "reference": "sdk_mr3dzf1b_dfea8241f5fec2f3",
+      "receiptImage": "automated_sendavapay",
+      "status": "pending",
+      "lastModified": 1782989620666,
+      "createdAt": "2026-07-02T10:53:40.666Z"
+    }
+  ],
   "gi_withdrawals": [],
   "gi_investments": [],
   "gi_commissions": [],
-  "gi_notifications": [
-    {
-      "id": "not-ref-1782988280388",
-      "userId": "u-admin",
-      "title": "Nouveau parrainage",
-      "message": "Membre 70903319 s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
-      "type": "info",
-      "createdAt": "2026-07-02T10:31:20.388Z",
-      "lastModified": 1782988280388,
-      "read": false
-    },
-    {
-      "id": "not-1782988280388",
-      "userId": "u-1782988280388",
-      "title": "Bienvenue sur Aiprods !",
-      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
-      "type": "bonus",
-      "createdAt": "2026-07-02T10:31:20.388Z",
-      "lastModified": 1782988280388,
-      "read": false
-    }
-  ],
+  "gi_notifications": [],
   "gi_support_messages": [],
   "gi_withdrawal_proofs": [],
   "gi_deleted_investments": [],
@@ -274,7 +247,7 @@
     "TG_37": "70903319",
     "TG_38": "78829438"
   },
-  "gi_cleanup_timestamp": 1782988172763,
+  "gi_cleanup_timestamp": 1782989004481,
   "userId": "",
   "role": "user"
 }
