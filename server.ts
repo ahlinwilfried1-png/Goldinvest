@@ -53,6 +53,26 @@ async function startServer() {
     if (!payload || typeof payload !== "object") return false;
     let modified = false;
 
+    // Check if the incoming payload has a higher cleanup timestamp than our current database.
+    // If so, we must perform a complete wipe of the transactional and user tables to match the purge!
+    const incomingCleanup = Number(payload["gi_cleanup_timestamp"] || 0);
+    const localCleanup = Number(storeData["gi_cleanup_timestamp"] || 0);
+    if (incomingCleanup > localCleanup) {
+      console.log(`[MERGE CLEANUP] Remote has a newer cleanup timestamp (${incomingCleanup} > ${localCleanup}). Purging local cache tables...`);
+      storeData["gi_users"] = (payload["gi_users"] || []).filter((u: any) => u.id === "u-admin" || u.role === "admin");
+      storeData["gi_deposits"] = [];
+      storeData["gi_withdrawals"] = [];
+      storeData["gi_investments"] = [];
+      storeData["gi_commissions"] = [];
+      storeData["gi_notifications"] = [];
+      storeData["gi_support_messages"] = [];
+      storeData["gi_withdrawal_proofs"] = [];
+      storeData["gi_deleted_investments"] = [];
+      storeData["gi_deleted_users"] = [];
+      storeData["gi_cleanup_timestamp"] = incomingCleanup;
+      modified = true;
+    }
+
     // 1. Process deleted trackers first to ensure we have the complete deletion index in memory
     const deleteKeys = ["gi_deleted_users", "gi_deleted_investments"];
     for (const key of deleteKeys) {
@@ -200,21 +220,7 @@ async function startServer() {
         { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
       ],
       "gi_support_messages": [],
-      "gi_products": [
-        { id: 'vip-1', vipLevel: 1, name: 'Système Aiprods 1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'Aiprods 1', category: 'stability' },
-        { id: 'vip-2', vipLevel: 2, name: 'Système Aiprods 2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'Aiprods 2', category: 'stability' },
-        { id: 'vip-3', vipLevel: 3, name: 'Système Aiprods 3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'Aiprods 3', category: 'stability' },
-        { id: 'vip-4', vipLevel: 4, name: 'Système Aiprods 4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'Aiprods 4', category: 'stability' },
-        { id: 'vip-5', vipLevel: 5, name: 'Système Aiprods Pro', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'Aiprods Pro', category: 'stability' },
-        { id: 'vip-6', vipLevel: 6, name: 'Système Aiprods Pro 2', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'Aiprods Pro 2', category: 'stability' },
-        { id: 'vip-7', vipLevel: 7, name: 'Système Aiprods Max', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'Aiprods Max', category: 'stability' },
-        { id: 'vip-8', vipLevel: 8, name: 'Système Aiprods Ultra', price: 1000000, dailyReturn: 70000, durationDays: 365, totalReturn: 25550000, tag: 'Aiprods Ultra', category: 'stability' },
-        { id: 'vip-9', vipLevel: 9, name: 'Système Aiprods Élite', price: 2000000, dailyReturn: 150000, durationDays: 365, totalReturn: 54750000, tag: 'Aiprods Élite', category: 'stability' },
-        // Activités (Short-cycle products)
-        { id: 'activity-1', vipLevel: 1, name: 'Airprods Activité 1', price: 5000, dailyReturn: 1000, durationDays: 7, totalReturn: 7000, tag: 'Activité 1', category: 'activity' },
-        { id: 'activity-2', vipLevel: 2, name: 'Airprods Activité 2', price: 12000, dailyReturn: 3000, durationDays: 5, totalReturn: 15000, tag: 'Activité 2', category: 'activity' },
-        { id: 'activity-3', vipLevel: 3, name: 'Airprods Activité 3', price: 25000, dailyReturn: 7500, durationDays: 4, totalReturn: 30000, tag: 'Activité 3', category: 'activity' }
-      ],
+      "gi_products": [],
       "gi_mlm_level1_rate": 20,
       "gi_mlm_level2_rate": 3,
       "gi_mlm_level3_rate": 1,
@@ -243,12 +249,8 @@ async function startServer() {
       }
     }
 
-    // Auto-migrate server-side products if they are outdated (less than 12 products in database)
-    if (storeData["gi_products"] && Array.isArray(storeData["gi_products"]) && storeData["gi_products"].length < 12) {
-      console.log(`[MIGRATION] Outdated products list found (${storeData["gi_products"].length} items). Resetting to 12 products.`);
-      storeData["gi_products"] = defaultData["gi_products"];
-      modified = true;
-    }
+
+
     // Force correct WhatsApp links to prevent any resetting or loss of these connections
     const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv";
     const targetChannel = "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k";
@@ -264,6 +266,9 @@ async function startServer() {
       storeData["gi_whatsapp_channel"] = targetChannel;
       modified = true;
     }
+
+    // Default VIP/Airprods products should persist and not be cleared on server startup.
+    // The user can configure, edit, or delete them directly via the administrator panel.
 
     if (modified) {
       saveStoreLocal();
@@ -301,7 +306,7 @@ async function startServer() {
 
       storeData["gi_users"] = admins;
 
-      // Reset all user-submitted transactions and dynamic records to complete fresh start
+      // COMPLETELY WIPE deposits, withdrawals, investments, commissions, notifications, support messages, and proofs as requested!
       storeData["gi_deposits"] = [];
       storeData["gi_withdrawals"] = [];
       storeData["gi_investments"] = [];
@@ -311,6 +316,9 @@ async function startServer() {
       storeData["gi_withdrawal_proofs"] = [];
       storeData["gi_deleted_investments"] = [];
       storeData["gi_deleted_users"] = [];
+      
+      // Update the cleanup timestamp to current epoch to notify all browser clients to flush their local caches
+      storeData["gi_cleanup_timestamp"] = Date.now();
 
       // Persist clean copy locally to db.json
       saveStoreLocal();
@@ -319,7 +327,7 @@ async function startServer() {
       if (supabase) {
         try {
           console.log("[CLEANUP] Overwriting remote tables in Supabase with clean admin-only set...");
-          const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages", "gi_withdrawal_proofs"];
+          const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages", "gi_withdrawal_proofs", "gi_cleanup_timestamp"];
           for (const tbl of tablesToOverwrite) {
             const { error: upsertErr } = await supabase.from('store').upsert({
               key: tbl,
@@ -596,7 +604,7 @@ async function startServer() {
     }
   }
 
-  function processAutomaticDailyInstallmentsServer(): void {
+  async function processAutomaticDailyInstallmentsServer(): Promise<void> {
     const now = Date.now();
     let users = storeData["gi_users"] || [];
     let investments = storeData["gi_investments"] || [];
@@ -711,7 +719,7 @@ async function startServer() {
       storeData["gi_users"] = users;
       storeData["gi_investments"] = investments;
       storeData["gi_notifications"] = notifications;
-      saveStore();
+      await saveStore();
     }
   }
 
@@ -969,12 +977,15 @@ async function startServer() {
       storeData["gi_notifications"] = [];
       storeData["gi_support_messages"] = [];
       storeData["gi_withdrawal_proofs"] = [];
+      
+      // Update the cleanup timestamp to notify clients
+      storeData["gi_cleanup_timestamp"] = Date.now();
 
       saveStoreLocal();
 
       if (supabase) {
         console.log("[API CLEANUP] Overwriting Supabase remote collections with clean empty records...");
-        const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages", "gi_withdrawal_proofs"];
+        const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages", "gi_withdrawal_proofs", "gi_cleanup_timestamp"];
         for (const tbl of tablesToOverwrite) {
           await supabase.from('store').upsert({
             key: tbl,
@@ -1113,7 +1124,7 @@ async function startServer() {
   app.get("/api/get-store", async (req, res) => {
     // Process automatic daily earnings on the server to stay fully up-to-date
     try {
-      processAutomaticDailyInstallmentsServer();
+      await processAutomaticDailyInstallmentsServer();
     } catch (e) {
       console.error("[SERVER GET-STORE] Error processing automatic payouts:", e);
     }
@@ -1165,9 +1176,62 @@ async function startServer() {
     const body = req.body;
     if (body && typeof body === "object") {
       let modified = false;
+      
+      const serverCleanup = Number(storeData["gi_cleanup_timestamp"] || 0);
+      const incomingCleanup = Number(body["gi_cleanup_timestamp"] || 0);
+      const tablesToGuard = [
+        "gi_users",
+        "gi_deposits",
+        "gi_withdrawals",
+        "gi_investments",
+        "gi_commissions",
+        "gi_notifications",
+        "gi_support_messages",
+        "gi_withdrawal_proofs"
+      ];
+
+      const clientUserId = body.userId || '';
+      let isGenuineAdmin = false;
+      if (clientUserId) {
+        const userList = storeData["gi_users"] || [];
+        const dbUser = userList.find((u: any) => u.id === clientUserId);
+        if (dbUser && dbUser.role === 'admin') {
+          isGenuineAdmin = true;
+        }
+      }
+
+      const adminOnlyKeys = [
+        "gi_products",
+        "gi_bonus_codes",
+        "gi_mlm_level1_rate",
+        "gi_mlm_level2_rate",
+        "gi_mlm_level3_rate",
+        "gi_withdrawals_blocked_global",
+        "gi_referral_domain",
+        "gi_whatsapp_group",
+        "gi_whatsapp_channel",
+        "gi_whatsapp_support_number",
+        "gi_manual_deposit_numbers"
+      ];
+
       for (const key of Object.keys(body)) {
+        if (key === "userId" || key === "role") continue;
+
+        if (adminOnlyKeys.includes(key)) {
+          if (!isGenuineAdmin) {
+            console.log(`[API SAVE-STORE Warning] Rejected attempt to update administrative key "${key}" from non-admin user "${clientUserId}"`);
+            continue;
+          }
+        }
+
         let newVal = body[key];
         let oldVal = storeData[key];
+
+        // Guard against outdated clients uploading resurrected users/history caches
+        if (serverCleanup > incomingCleanup && tablesToGuard.includes(key)) {
+          console.log(`[API SAVE-STORE] Outdated client cache uploaded for key "${key}" (${incomingCleanup} < ${serverCleanup}). Skipping update to prevent resurrection.`);
+          continue;
+        }
 
         // Filter and scrub deleted investments or users from incoming payload
         if (key === "gi_investments" && Array.isArray(newVal)) {
@@ -1282,7 +1346,7 @@ async function startServer() {
   });
 
   // Centralized Registration API
-  app.post("/api/register", (req, res) => {
+  app.post("/api/register", async (req, res) => {
     try {
       const data = req.body;
       if (!data || !data.name || !data.whatsapp) {
@@ -1456,7 +1520,7 @@ async function startServer() {
       }
       storeData["gi_notifications"] = notifications;
 
-      saveStore();
+      await saveStore();
       res.json({ success: true, user: newUser, message: 'Inscription réussie.' });
     } catch (error: any) {
       console.error('Registration server error:', error);
@@ -1500,7 +1564,7 @@ async function startServer() {
   });
 
   // Centralized Product Purchase and MLM 3 levels split API
-  app.post("/api/buy-product", (req, res) => {
+  app.post("/api/buy-product", async (req, res) => {
     const { userId, productId } = req.body;
     let users = storeData["gi_users"] || [];
     let products = storeData["gi_products"] || [];
@@ -1577,12 +1641,12 @@ async function startServer() {
     storeData["gi_commissions"] = commissions;
     storeData["gi_notifications"] = notifications;
 
-    saveStore();
+    await saveStore();
     res.json({ success: true, message: `Vous avez investi avec succès dans le plan ${targetProduct.name} !`, user });
   });
 
   // Centralized Daily Loyalty Reward claim API
-  app.post("/api/claim-daily", (req, res) => {
+  app.post("/api/claim-daily", async (req, res) => {
     const { userId } = req.body;
     let users = storeData["gi_users"] || [];
     let notifications = storeData["gi_notifications"] || [];
@@ -1613,12 +1677,12 @@ async function startServer() {
     storeData["gi_users"] = users;
     storeData["gi_notifications"] = notifications;
 
-    saveStore();
+    await saveStore();
     res.json({ success: true, message: `Félicitations ! Vous avez reçu un bonus journalier de ${rewardAmt} XOF !`, amount: rewardAmt, user });
   });
 
   // Centralized Harvest Dailydividends claim API
-  app.post("/api/claim-investment", (req, res) => {
+  app.post("/api/claim-investment", async (req, res) => {
     const { userId, investmentId } = req.body;
     let users = storeData["gi_users"] || [];
     let investments = storeData["gi_investments"] || [];
@@ -1672,7 +1736,7 @@ async function startServer() {
       inv.status = 'completed';
       inv.lastModified = Date.now();
       handleCyclicCompletion(inv, users, products, investments, notifications);
-      saveStore();
+      await saveStore();
       return res.json({ success: false, message: 'Ce plan est complété ! Tous les revenus ont été distribués.', amount: 0 });
     }
 
@@ -1708,12 +1772,12 @@ async function startServer() {
     storeData["gi_investments"] = investments;
     storeData["gi_notifications"] = notifications;
 
-    saveStore();
+    await saveStore();
     res.json({ success: true, message: `Revenu journalier de +${inv.dailyReturn} XOF encaissé avec succès !`, amount: inv.dailyReturn, user: users[uIdx] });
   });
 
   // Centralized Create Deposit API
-  app.post("/api/create-deposit", (req, res) => {
+  app.post("/api/create-deposit", async (req, res) => {
     const { userId, amount, operator, reference, receiptImage } = req.body;
     let users = storeData["gi_users"] || [];
     let deposits = storeData["gi_deposits"] || [];
@@ -1780,7 +1844,7 @@ async function startServer() {
     storeData["gi_notifications"] = notifications;
     storeData["gi_users"] = users;
 
-    saveStore();
+    await saveStore();
     res.json({ success: true, deposit: newDep, user: user || undefined });
   });
 
@@ -1836,7 +1900,7 @@ async function startServer() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+          "Authorization": "Bearer " + (process.env.SENDAVAPAY_TOKEN || "sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt")
         },
         body: JSON.stringify({
           amount: amt,
@@ -1901,7 +1965,7 @@ async function startServer() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+          "Authorization": "Bearer " + (process.env.SENDAVAPAY_TOKEN || "sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt")
         },
         body: JSON.stringify({
           paymentToken,
@@ -2023,7 +2087,7 @@ async function startServer() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+          "Authorization": "Bearer " + (process.env.SENDAVAPAY_TOKEN || "sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt")
         },
         body: JSON.stringify({ otpToken, otp })
       });
@@ -2060,7 +2124,7 @@ async function startServer() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+          "Authorization": "Bearer " + (process.env.SENDAVAPAY_TOKEN || "sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt")
         },
         body: JSON.stringify({ reference })
       });
@@ -2200,7 +2264,7 @@ async function startServer() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+          "Authorization": "Bearer " + (process.env.SENDAVAPAY_TOKEN || "sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt")
         },
         body: JSON.stringify({ reference })
       });
@@ -2222,12 +2286,40 @@ async function startServer() {
         let users = storeData["gi_users"] || [];
         let notifications = storeData["gi_notifications"] || [];
 
-        const depIdx = deposits.findIndex((d: any) => 
+        let depIdx = deposits.findIndex((d: any) => 
           String(d.reference) === String(reference) || 
           String(d.id) === String(payload.externalReference) ||
           String(d.id) === String(payload.data?.externalReference) ||
           String(d.id) === String(reference)
         );
+
+        if (depIdx === -1 && verifyData?.data?.customerEmail) {
+          const email = verifyData.data.customerEmail;
+          if (email.endsWith("@agroprofit.online")) {
+            const userId = email.split("@")[0];
+            const users = storeData["gi_users"] || [];
+            const user = users.find((u: any) => u.id === userId);
+            if (user) {
+              console.log(`[SENDAVAPAY WEBHOOK] Deposit record not found. Dynamically creating approved deposit for user ${user.name} (${userId})`);
+              const newDep = {
+                id: `dep-${Date.now()}`,
+                userId: user.id,
+                userName: user.name,
+                amount: Number(verifyData.data.amount),
+                operator: `SendavaPay (${verifyData.data.paymentMethod || "Mobile Money"})`,
+                reference: reference,
+                receiptImage: "automated_sendavapay",
+                status: "pending", // set to pending first so it is processed cleanly below
+                lastModified: Date.now(),
+                createdAt: new Date().toISOString()
+              };
+              deposits.unshift(newDep);
+              storeData["gi_deposits"] = deposits;
+              depIdx = 0; // The index of our new deposit
+            }
+          }
+        }
+
         if (depIdx !== -1) {
           const dep = deposits[depIdx];
           if (dep.status === 'pending') {
@@ -2484,7 +2576,7 @@ async function startServer() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt"
+          "Authorization": "Bearer " + (process.env.SENDAVAPAY_TOKEN || "sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt")
         },
         body: JSON.stringify({
           amount: Number(withdrawal.amount),
@@ -2683,7 +2775,7 @@ async function startServer() {
           };
           deposits.unshift(newDep);
           storeData["gi_deposits"] = deposits;
-          saveStore(["gi_deposits"]);
+          await saveStore(["gi_deposits"]);
         }
 
         res.json({
@@ -2712,7 +2804,7 @@ async function startServer() {
           };
           deposits.unshift(newDep);
           storeData["gi_deposits"] = deposits;
-          saveStore(["gi_deposits"]);
+          await saveStore(["gi_deposits"]);
 
           console.log("[WESTPAY FALLBACK] Gracefully forwarding to direct payment link");
           return res.json({
@@ -3064,14 +3156,14 @@ async function startServer() {
     storeData["gi_deposits"] = deposits;
     storeData["gi_notifications"] = notifications;
 
-    saveStore(["gi_users", "gi_deposits", "gi_notifications"]);
+    await saveStore(["gi_users", "gi_deposits", "gi_notifications"]);
 
     console.log(`[WEBHOOK ${sourceName.toUpperCase()}] Successfully processed deposit of ${amount} XOF for user ${user.name} (${user.id}).`);
     return res.json({ success: true, message: "Webhook processed successfully" });
   }
 
   // Centralized Create Withdrawal API
-  app.post("/api/create-withdrawal", (req, res) => {
+  app.post("/api/create-withdrawal", async (req, res) => {
     const { userId, amount, operator, number, proof_file_url } = req.body;
     let users = storeData["gi_users"] || [];
     let withdrawals = storeData["gi_withdrawals"] || [];
@@ -3142,12 +3234,12 @@ async function startServer() {
     storeData["gi_withdrawals"] = withdrawals;
     storeData["gi_notifications"] = notifications;
 
-    saveStore();
+    await saveStore();
     res.json({ success: true, withdrawal: newWth, user });
   });
 
   // Centralized Apply Promo Bonus Code API
-  app.post("/api/apply-bonus", (req, res) => {
+  app.post("/api/apply-bonus", async (req, res) => {
     const { userId, codeString } = req.body;
     const cleanCode = codeString.toUpperCase().trim();
     let users = storeData["gi_users"] || [];
@@ -3194,12 +3286,12 @@ async function startServer() {
     storeData["gi_bonus_codes"] = bonusCodes;
     storeData["gi_notifications"] = notifications;
 
-    saveStore();
+    await saveStore();
     res.json({ success: true, message: `Succès ! Le code bonus a été appliqué avec succès. +${target.amount.toLocaleString()} XOF !`, user });
   });
 
   // Support Msg API
-  app.post("/api/send-message", (req, res) => {
+  app.post("/api/send-message", async (req, res) => {
     const { userId, message, sender } = req.body;
     let msgs = storeData["gi_support_messages"] || [];
     
@@ -3225,11 +3317,11 @@ async function startServer() {
     };
     updatedMsgs.push(newMsg);
     storeData["gi_support_messages"] = updatedMsgs;
-    saveStore();
+    await saveStore();
     res.json({ success: true, message: newMsg });
   });
 
-  app.post("/api/mark-messages-read", (req, res) => {
+  app.post("/api/mark-messages-read", async (req, res) => {
     const { userId } = req.body;
     let msgs = storeData["gi_support_messages"] || [];
     let changed = false;
@@ -3242,13 +3334,13 @@ async function startServer() {
     });
     if (changed) {
       storeData["gi_support_messages"] = updatedMsgs;
-      saveStore();
+      await saveStore();
     }
     res.json({ success: true, changed });
   });
 
   // Admin Account controls
-  app.post("/api/admin/deposit-action", (req, res) => {
+  app.post("/api/admin/deposit-action", async (req, res) => {
     const { depositId, action } = req.body; // 'approve' or 'reject'
     let deposits = storeData["gi_deposits"] || [];
     let users = storeData["gi_users"] || [];
@@ -3300,11 +3392,11 @@ async function startServer() {
     storeData["gi_users"] = users;
     storeData["gi_notifications"] = notifications;
 
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/withdrawal-action", (req, res) => {
+  app.post("/api/admin/withdrawal-action", async (req, res) => {
     const { withdrawalId, action } = req.body; // 'approve' or 'reject'
     let withdrawals = storeData["gi_withdrawals"] || [];
     let users = storeData["gi_users"] || [];
@@ -3351,11 +3443,11 @@ async function startServer() {
     storeData["gi_users"] = users;
     storeData["gi_notifications"] = notifications;
 
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/update-user", (req, res) => {
+  app.post("/api/admin/update-user", async (req, res) => {
     const { userId, balance, bonus, role, password, referredBy, withdrawBlocked } = req.body;
     let users = storeData["gi_users"] || [];
     const idx = users.findIndex((u: any) => u.id === userId);
@@ -3390,28 +3482,28 @@ async function startServer() {
         }
       }
       users[idx].lastModified = Date.now();
-      saveStore();
+      await saveStore();
       res.json({ success: true, user: users[idx] });
     } else {
       res.status(404).json({ error: 'Utilisateur introuvable' });
     }
   });
 
-  app.post("/api/admin/block-user", (req, res) => {
+  app.post("/api/admin/block-user", async (req, res) => {
     const { userId, isBlocked } = req.body;
     let users = storeData["gi_users"] || [];
     const idx = users.findIndex((u: any) => u.id === userId);
     if (idx !== -1) {
       users[idx].isBlocked = isBlocked;
       users[idx].lastModified = Date.now();
-      saveStore();
+      await saveStore();
       res.json({ success: true });
     } else {
       res.status(404).json({ error: 'Utilisateur introuvable' });
     }
   });
 
-  app.post("/api/admin/delete-user", (req, res) => {
+  app.post("/api/admin/delete-user", async (req, res) => {
     const { userId } = req.body;
     
     // Track deleted user id
@@ -3453,11 +3545,11 @@ async function startServer() {
       storeData["gi_withdrawal_proofs"] = storeData["gi_withdrawal_proofs"].filter((p: any) => p.userId !== userId);
     }
 
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/delete-investment", (req, res) => {
+  app.post("/api/admin/delete-investment", async (req, res) => {
     const { investmentId } = req.body;
     let investments = storeData["gi_investments"] || [];
     let users = storeData["gi_users"] || [];
@@ -3487,27 +3579,27 @@ async function startServer() {
       storeData["gi_users"] = users;
     }
 
-    saveStore();
+    await saveStore();
     res.json({ success: true, investments, users });
   });
 
-  app.post("/api/admin/update-mlm", (req, res) => {
+  app.post("/api/admin/update-mlm", async (req, res) => {
     const { level1, level2, level3 } = req.body;
     storeData["gi_mlm_level1_rate"] = level1;
     storeData["gi_mlm_level2_rate"] = level2;
     storeData["gi_mlm_level3_rate"] = level3;
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/update-withdraw-block", (req, res) => {
+  app.post("/api/admin/update-withdraw-block", async (req, res) => {
     const { blocked } = req.body;
     storeData["gi_withdrawals_blocked_global"] = blocked;
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/create-bonus", (req, res) => {
+  app.post("/api/admin/create-bonus", async (req, res) => {
     const { code, amount, maxUses } = req.body;
     let list = storeData["gi_bonus_codes"] || [];
     list.unshift({
@@ -3519,11 +3611,11 @@ async function startServer() {
       lastModified: Date.now()
     });
     storeData["gi_bonus_codes"] = list;
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/global-notification", (req, res) => {
+  app.post("/api/admin/global-notification", async (req, res) => {
     const { title, message } = req.body;
     let notifications = storeData["gi_notifications"] || [];
     notifications.unshift({
@@ -3536,63 +3628,76 @@ async function startServer() {
       read: false
     });
     storeData["gi_notifications"] = notifications;
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/product/create", (req, res) => {
+  app.post("/api/admin/product/create", async (req, res) => {
     const p = req.body;
     let list = storeData["gi_products"] || [];
     const id = `vip-${Date.now()}`;
+    const price = p.price || 5000;
+    const dailyReturn = p.dailyReturn || 1000;
+    const durationDays = p.durationDays || 10;
+    const totalReturn = p.totalReturn !== undefined ? p.totalReturn : (dailyReturn * durationDays);
+
     list.push({
       id,
       vipLevel: p.vipLevel || list.length + 1,
       name: p.name || 'Nouveau Produit VIP',
-      price: p.price || 5000,
-      dailyReturn: p.dailyReturn || 1000,
-      durationDays: p.durationDays || 10,
-      totalReturn: (p.dailyReturn || 1000) * (p.durationDays || 10),
+      price,
+      dailyReturn,
+      durationDays,
+      totalReturn,
       tag: p.tag || 'Special Offer',
       isCyclic: p.isCyclic || false,
       generatedProductIds: p.generatedProductIds || [],
-      category: p.category || 'stability',
+      category: 'stability',
       lastModified: Date.now()
     });
     storeData["gi_products"] = list;
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/product/delete", (req, res) => {
+  app.post("/api/admin/product/delete", async (req, res) => {
     const { productId } = req.body;
     let list = storeData["gi_products"] || [];
     storeData["gi_products"] = list.filter((p: any) => p.id !== productId);
-    saveStore();
+    await saveStore();
     res.json({ success: true });
   });
 
-  app.post("/api/admin/product/update", (req, res) => {
+  app.post("/api/admin/product/delete-all", async (req, res) => {
+    storeData["gi_products"] = [];
+    await saveStore();
+    res.json({ success: true });
+  });
+
+  app.post("/api/admin/product/update", async (req, res) => {
     const { productId, updatedP } = req.body;
     let list = storeData["gi_products"] || [];
     const idx = list.findIndex((p: any) => p.id === productId);
     if (idx !== -1) {
-      const current = list[idx];
-      const daily = updatedP.dailyReturn !== undefined ? updatedP.dailyReturn : current.dailyReturn;
-      const days = updatedP.durationDays !== undefined ? updatedP.durationDays : current.durationDays;
-      list[idx] = {
-        ...current,
-        ...updatedP,
-        totalReturn: daily * days,
-        lastModified: Date.now()
-      };
-      saveStore();
-      res.json({ success: true });
+       const current = list[idx];
+       const daily = updatedP.dailyReturn !== undefined ? updatedP.dailyReturn : current.dailyReturn;
+       const days = updatedP.durationDays !== undefined ? updatedP.durationDays : current.durationDays;
+       const fallbackTotal = daily * days;
+       list[idx] = {
+         ...current,
+         ...updatedP,
+         totalReturn: updatedP.totalReturn !== undefined ? updatedP.totalReturn : fallbackTotal,
+         category: 'stability',
+         lastModified: Date.now()
+       };
+       await saveStore();
+       res.json({ success: true });
     } else {
-      res.status(404).json({ error: 'Produit introuvable' });
+       res.status(404).json({ error: 'Produit introuvable' });
     }
   });
 
-  app.post("/api/admin/product/toggle-block", (req, res) => {
+  app.post("/api/admin/product/toggle-block", async (req, res) => {
     const { productId, isBlocked, reopenDateTime } = req.body;
     let list = storeData["gi_products"] || [];
     const idx = list.findIndex((p: any) => p.id === productId);
@@ -3600,7 +3705,7 @@ async function startServer() {
       list[idx].isBlocked = isBlocked;
       list[idx].reopenDateTime = isBlocked ? (reopenDateTime || undefined) : undefined;
       list[idx].lastModified = Date.now();
-      saveStore();
+      await saveStore();
       res.json({ success: true });
     } else {
       res.status(404).json({ error: 'Produit introuvable' });

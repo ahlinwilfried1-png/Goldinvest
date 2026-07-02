@@ -339,7 +339,6 @@ export default function Dashboard({
   // Navigation tabs: 'dashboard', 'products', 'team', 'profile', 'deposit', 'withdraw'
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'team' | 'profile' | 'deposit' | 'withdraw'>('dashboard');
   const [referralListTab, setReferralListTab] = useState<'level1' | 'level2' | 'level3'>('level1');
-  const [productSubTab, setProductSubTab] = useState<'stability' | 'activity'>('stability');
 
   // Local lists
   const [userState, setUserState] = useState<User>(currentUser);
@@ -370,6 +369,11 @@ export default function Dashboard({
   // Form states
   const SENDAVAPAY_COUNTRIES = [
     { code: 'TG', name: 'Togo 🇹🇬', currency: 'XOF' },
+    { code: 'CI', name: 'Côte d’Ivoire 🇨🇮', currency: 'XOF' },
+    { code: 'BJ', name: 'Bénin 🇧🇯', currency: 'XOF' },
+    { code: 'BF', name: 'Burkina Faso 🇧🇫', currency: 'XOF' },
+    { code: 'SN', name: 'Sénégal 🇸🇳', currency: 'XOF' },
+    { code: 'ML', name: 'Mali 🇲🇱', currency: 'XOF' },
     { code: 'CM', name: 'Cameroun 🇨🇲', currency: 'XAF' }
   ];
 
@@ -377,6 +381,27 @@ export default function Dashboard({
     TG: [
       { id: '37', name: 'TMoney', slug: 't-money-togo' },
       { id: '38', name: 'Moov Money', slug: 'moov-togo' }
+    ],
+    CI: [
+      { id: '29', name: 'Orange Money', slug: 'orange-money-ci' },
+      { id: '30', name: 'MTN Mobile Money', slug: 'mtn-ci', requiresOtp: true },
+      { id: '31', name: 'Moov Money', slug: 'moov-ci' },
+      { id: '32', name: 'Wave', slug: 'wave-ci' }
+    ],
+    BJ: [
+      { id: '35', name: 'MTN Mobile Money', slug: 'mtn-benin', requiresOtp: true },
+      { id: '36', name: 'Moov Money', slug: 'moov-benin' }
+    ],
+    BF: [
+      { id: '33', name: 'Moov Money', slug: 'moov-burkina-faso' },
+      { id: '34', name: 'Orange Money', slug: 'orange-money-burkina' }
+    ],
+    SN: [
+      { id: '57', name: 'Orange Money', slug: 'new-orange-money-senegal' },
+      { id: '58', name: 'Wave', slug: 'wave-senegal' }
+    ],
+    ML: [
+      { id: '60', name: 'Orange Money', slug: 'orange-money-mali' }
     ],
     CM: [
       { id: '41', name: 'MTN Mobile Money', slug: 'mtn-cameroun' },
@@ -388,6 +413,11 @@ export default function Dashboard({
     if (userState.country) {
       const c = userState.country.toLowerCase();
       if (c.includes('cameroun')) return 'CM';
+      if (c.includes('ivoire') || c.includes('ivory')) return 'CI';
+      if (c.includes('benin') || c.includes('bénin')) return 'BJ';
+      if (c.includes('burkina')) return 'BF';
+      if (c.includes('senegal') || c.includes('sénégal')) return 'SN';
+      if (c.includes('mali')) return 'ML';
     }
     return 'TG';
   };
@@ -418,7 +448,7 @@ export default function Dashboard({
   const [depositStep, setDepositStep] = useState<1 | 2>(1);
   const [depositRedirectUrl, setDepositRedirectUrl] = useState<string>('');
   const [depositCountry, setDepositCountry] = useState<string>(userState.country || "Togo 🇹🇬");
-  const [depositPhone, setDepositPhone] = useState<string>('000000');
+  const [depositPhone, setDepositPhone] = useState<string>(userState.whatsapp || '');
   const [depositNumberCopied, setDepositNumberCopied] = useState<boolean>(false);
 
   // SendavaPay specific states
@@ -1424,12 +1454,12 @@ export default function Dashboard({
 
     const amt = parseInt(depositAmount);
     if (isNaN(amt) || amt < 2500) {
-      setDepositError(`Le montant minimum pour un versement est de 2 500 ${getCurrency()}.`);
+      setDepositError(`Le montant minimum pour un versement est de 2 500 F.`);
       return;
     }
 
     if (!depositPhone || depositPhone.trim() === '') {
-      setDepositError("Veuillez saisir votre numéro Mobile Money (expéditeur) pour effectuer le dépôt.");
+      setDepositError("Veuillez saisir votre numéro Mobile Money.");
       return;
     }
 
@@ -1438,35 +1468,43 @@ export default function Dashboard({
       return;
     }
 
-    if (!depositRef || depositRef.trim() === '') {
-      setDepositError("Veuillez saisir l'ID ou la référence de la transaction reçu par SMS ou sur votre reçu.");
-      return;
-    }
-
     setIsSubmittingDeposit(true);
     try {
-      const opsList = SENDAVAPAY_OPERATORS[spCountryCode] || [];
-      const selectedOp = opsList.find(op => op.id === spOperatorId);
-      const operatorName = selectedOp ? selectedOp.name : "Mobile Money";
-      const operatorText = `${operatorName} Dépôt Manuel (${spCountryCode} / Exp: ${depositPhone})`;
+      const response = await apiFetch(getApiUrl('/api/sendavapay/create-charge'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userState.id,
+          amount: amt,
+          country: spCountryCode,
+          phone: depositPhone,
+          operatorId: spOperatorId
+        })
+      });
 
-      const result = await DataStore.createDeposit(
-        userState.id,
-        amt,
-        operatorText,
-        depositRef,
-        receiptBase64 || ""
-      );
-
-      if (result && result.id) {
-        setDepositAmount('5000');
-        setDepositRef('');
-        setReceiptBase64('');
-        setDepositStep(1);
-        setDepositSuccess("Votre demande de dépôt manuel de " + amt.toLocaleString() + " F a été enregistrée avec succès. Elle est en cours de vérification par l'administrateur.");
-        syncDashboardData();
+      const data = await response.json();
+      if (data.success) {
+        if (data.requiresOtp) {
+          setSpOtpToken(data.otpToken);
+          setSpReference(data.reference);
+          setSpStatusMessage(data.message);
+          setSpOtpModalOpen(true);
+        } else if (data.requiresRedirect && data.redirectUrl) {
+          window.open(data.redirectUrl, '_blank');
+          setDepositSuccess("Veuillez finaliser le paiement sur la page de paiement sécurisée de l'opérateur. Votre solde sera crédité automatiquement.");
+          if (data.reference) {
+            pollSendavaPayStatus(data.reference);
+          }
+        } else {
+          setDepositSuccess("Demande de paiement envoyée sur votre téléphone. Veuillez confirmer sur votre mobile en composant votre code secret.");
+          if (data.reference) {
+            pollSendavaPayStatus(data.reference);
+          }
+        }
       } else {
-        setDepositError("Une erreur est survenue lors de l'enregistrement de votre dépôt.");
+        setDepositError(data.error || "L'initialisation de la transaction a échoué. Veuillez vérifier les informations saisies.");
       }
     } catch (error: any) {
       console.error("Deposit submission error:", error);
@@ -1844,6 +1882,21 @@ export default function Dashboard({
                     <span className="font-bold text-white/95">Pays :</span>
                     <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
                       Togo 🇹🇬
+                    </span>
+                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
+                      Bénin 🇧🇯
+                    </span>
+                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
+                      Côte d’Ivoire 🇨🇮
+                    </span>
+                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
+                      Burkina Faso 🇧🇫
+                    </span>
+                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
+                      Sénégal 🇸🇳
+                    </span>
+                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
+                      Mali 🇲🇱
                     </span>
                     <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
                       Cameroun 🇨🇲
@@ -2576,11 +2629,9 @@ export default function Dashboard({
               </div>
 
               {/* DYNAMIC PRODUCTS CONTAINER LIST */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto pt-4">
                 {products
                   .filter((p) => {
-                    const isCyclic = p.isCyclic === true;
-                    if (isCyclic) return false; // Supprimer complètement les produits de bien-être (cycliques)
                     return p.category !== 'activity';
                   })
                   .map((p, index) => {
@@ -2591,6 +2642,10 @@ export default function Dashboard({
 
                     // Custom displayName formatting based on type
                     const getVipDisplayName = (prod: Product, defaultVipLevel: number) => {
+                      if (prod.name) {
+                        return prod.name;
+                      }
+
                       if (prod.isCyclic) {
                         return `SYSTÈME AIPRODS BIEN-ÊTRE 🌸`;
                       }
@@ -2817,15 +2872,13 @@ export default function Dashboard({
                   })}
 
                 {products.filter((p) => {
-                  const isCyclic = p.isCyclic === true;
-                  if (isCyclic) return false;
                   return p.category !== 'activity';
                 }).length === 0 && (
                   <div className="col-span-1 md:col-span-2 lg:col-span-3 py-16 px-4 text-center rounded-3xl bg-slate-50 border border-dashed border-slate-200/60 max-w-sm mx-auto">
                     <span className="text-3xl">📭</span>
                     <h5 className="font-sans font-black text-slate-700 uppercase tracking-wider text-xs mt-3">Aucun produit disponible</h5>
                     <p className="text-[10px] text-slate-400 font-bold mt-1">
-                      Aucun plan d'investissement n'est actif dans cette catégorie pour le moment.
+                      Aucun plan d'investissement n'est actif pour le moment.
                     </p>
                   </div>
                 )}
@@ -2931,281 +2984,134 @@ export default function Dashboard({
                   </form>
                 ) : (
                   <form onSubmit={submitDeposit} className="space-y-5 text-left animate-fade-in font-sans">
-                    {depositStep === 1 ? (
-                      <div className="space-y-5 animate-fade-in">
-                        {/* COUNTRY SELECT */}
-                        <div>
-                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 1 : Choisissez votre pays d'origine 🌍
-                          </label>
-                          <select
-                            value={spCountryCode}
-                            onChange={(e) => {
-                              setSpCountryCode(e.target.value);
-                              setSpOperatorId(''); // Clear selected operator when country changes
-                              setHasManuallySelectedOperator(false);
-                            }}
-                            className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
-                          >
-                            {SENDAVAPAY_COUNTRIES.map((cnt) => (
-                              <option key={cnt.code} value={cnt.code}>
-                                {cnt.name} ({cnt.currency})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* AMOUNT PRESETS */}
-                        <div>
-                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 2 : Choisissez ou cliquez un montant rapide 💵
-                          </label>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
-                            {[2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
-                              const isSelected = parseInt(depositAmount) === amt;
-                              return (
-                                <button
-                                  type="button"
-                                  key={amt}
-                                  onClick={() => setDepositAmount(amt.toString())}
-                                  className={`py-2 px-1 text-center rounded-xl border text-[11px] font-black font-mono transition-all duration-200 cursor-pointer ${
-                                    isSelected
-                                      ? 'bg-[#1b64d9] text-white border-[#1b64d9] shadow-md shadow-blue-500/10'
-                                      : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                                  }`}
-                                >
-                                  {amt.toLocaleString()} F
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* AMOUNT FIELD */}
-                        <div>
-                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Ou saisissez votre propre montant ({SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'})
-                          </label>
-                          <input
-                            type="number"
-                            required
-                            placeholder={`Minimum 2 500 ${SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}`}
-                            value={depositAmount}
-                            onChange={(e) => setDepositAmount(e.target.value)}
-                            className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
-                          />
-                          <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}.</span>
-                        </div>
-
-                        {/* SENDAVAPAY OPERATOR SELECT */}
-                        <div>
-                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 3 : Choisissez votre opérateur Mobile Money 📲
-                          </label>
-                          <select
-                            value={spOperatorId}
-                            onChange={(e) => {
-                              setSpOperatorId(e.target.value);
-                              setHasManuallySelectedOperator(true);
-                            }}
-                            className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
-                          >
-                            <option value="">-- Sélectionner l'opérateur --</option>
-                            {(SENDAVAPAY_OPERATORS[spCountryCode] || []).map((op) => (
-                              <option key={op.id} value={op.id}>
-                                {op.name} {op.requiresOtp ? "(Demande OTP SMS)" : ""}
-                              </option>
-                            ))}
-                          </select>
-                          {depositPhone && detectSpOperator(depositPhone, spCountryCode) && (
-                            <span className="text-[10px] text-[#1b64d9] font-black block mt-1 font-mono">
-                              ⚡ Opérateur détecté automatiquement selon votre numéro.
-                            </span>
-                          )}
-                        </div>
-
-                        {/* CONTINUE BUTTON */}
-                        <button
-                          type="button"
-                          onClick={handleGoToStep2}
-                          className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#1b64d9] to-[#3b82f6] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2"
+                    <div className="space-y-5">
+                      {/* COUNTRY SELECT */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 1 : Choisissez votre pays d'origine 🌍
+                        </label>
+                        <select
+                          value={spCountryCode}
+                          onChange={(e) => {
+                            setSpCountryCode(e.target.value);
+                            setSpOperatorId(''); // Clear selected operator when country changes
+                            setHasManuallySelectedOperator(false);
+                          }}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
                         >
-                          <span>Continuer ➡️</span>
-                        </button>
+                          {SENDAVAPAY_COUNTRIES.map((cnt) => (
+                            <option key={cnt.code} value={cnt.code}>
+                              {cnt.name} ({cnt.currency})
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    ) : (
-                      <div className="space-y-5 animate-fade-in">
-                        {/* MANUAL DEPOSIT NUMBER & INSTRUCTIONS */}
-                        <div>
-                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 3 : Transférez le montant sur le numéro de réception 📲
-                          </label>
-                          
-                          {spOperatorId && manualDepositNumbers[`${spCountryCode}_${spOperatorId}`] ? (
-                            <div className="bg-yellow-50 border-2 border-yellow-200 p-4 rounded-2xl text-xs text-slate-800 leading-relaxed font-sans shadow-inner">
-                              <span className="font-black text-yellow-800 uppercase text-[10px] tracking-wider block mb-1">
-                                👉 INSTRUCTIONS DE RECHARGE MANUELLE :
-                              </span>
-                              {isUssdCode(manualDepositNumbers[`${spCountryCode}_${spOperatorId}`]) ? (
-                                <span>
-                                  Veuillez composer <strong>directement</strong> le code de transfert USSD ci-dessous sur le clavier de votre téléphone pour payer <strong className="text-[#1b64d9] font-black text-sm font-mono">{(parseInt(depositAmount) || 0).toLocaleString()} F</strong> :
-                                </span>
-                              ) : (
-                                <span>
-                                  Veuillez transférer exactement <strong className="text-[#1b64d9] font-black text-sm font-mono">{(parseInt(depositAmount) || 0).toLocaleString()} F</strong> sur le compte suivant :
-                                </span>
-                              )}
-                              <div className="bg-white px-3 py-2 rounded-xl border border-yellow-350 mt-2 flex items-center justify-between shadow-sm">
-                                <span className="font-mono font-extrabold text-sm text-yellow-950 select-all">
-                                  {formatDepositCode(manualDepositNumbers[`${spCountryCode}_${spOperatorId}`])}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(formatDepositCode(manualDepositNumbers[`${spCountryCode}_${spOperatorId}`]));
-                                    setDepositNumberCopied(true);
-                                    setTimeout(() => setDepositNumberCopied(false), 5000);
-                                  }}
-                                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-extrabold px-2.5 py-1 rounded-lg text-[10px] uppercase font-mono tracking-wider transition-colors cursor-pointer"
-                                >
-                                  Copier
-                                </button>
-                              </div>
-                              {depositNumberCopied && (
-                                <div className="bg-amber-100 border border-amber-350 text-amber-850 font-black rounded-lg py-1.5 px-3 mt-2 text-center text-[10px] uppercase font-mono tracking-wider animate-fade-in">
-                                  ⚡ Copié avec succès !
-                                </div>
-                              )}
-                              <span className="text-[10px] text-slate-500 block mt-2 font-semibold">
-                                Une fois le transfert effectué, remplissez les champs ci-dessous avec votre numéro expéditeur et l'ID de transaction pour validation immédiate.
-                              </span>
+
+                      {/* AMOUNT PRESETS */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 2 : Choisissez ou cliquez un montant rapide 💵
+                        </label>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                          {[2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
+                            const isSelected = parseInt(depositAmount) === amt;
+                            return (
+                              <button
+                                type="button"
+                                key={amt}
+                                onClick={() => setDepositAmount(amt.toString())}
+                                className={`py-2 px-1 text-center rounded-xl border text-[11px] font-black font-mono transition-all duration-200 cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-[#1b64d9] text-white border-[#1b64d9] shadow-md shadow-blue-500/10'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                                }`}
+                              >
+                                {amt.toLocaleString()} F
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* AMOUNT FIELD */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Ou saisissez votre propre montant ({SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'})
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          placeholder={`Minimum 2 500 ${SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}`}
+                          value={depositAmount}
+                          onChange={(e) => setDepositAmount(e.target.value)}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
+                        />
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {SENDAVAPAY_COUNTRIES.find(c => c.code === spCountryCode)?.currency || 'F'}.</span>
+                      </div>
+
+                      {/* SENDAVAPAY OPERATOR SELECT */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 3 : Choisissez votre opérateur Mobile Money 📲
+                        </label>
+                        <select
+                          value={spOperatorId}
+                          onChange={(e) => {
+                            setSpOperatorId(e.target.value);
+                            setHasManuallySelectedOperator(true);
+                          }}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm cursor-pointer"
+                        >
+                          <option value="">-- Sélectionner l'opérateur --</option>
+                          {(SENDAVAPAY_OPERATORS[spCountryCode] || []).map((op) => (
+                            <option key={op.id} value={op.id}>
+                              {op.name} {op.requiresOtp ? "(Demande OTP SMS)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* PHONE NUMBER FIELD */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 4 : Saisissez votre numéro de téléphone Mobile Money 📱
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="Ex: 90000000"
+                          value={depositPhone}
+                          onChange={(e) => setDepositPhone(e.target.value)}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
+                        />
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">
+                          Saisissez le numéro de téléphone pour le débit Mobile Money.
+                        </span>
+                      </div>
+
+                      <div className="bg-[#e2ebf9]/80 p-4 rounded-xl border border-slate-200/50 text-xs text-slate-650 leading-relaxed font-semibold">
+                        <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block mb-0.5">🔒 Paiement Sécurisé SendavaPay :</span>
+                        Dès validation, une demande de débit sera envoyée directement sur votre téléphone pour finaliser instantanément la recharge de votre portefeuille.
+                      </div>
+
+                      {/* Submitting button */}
+                      <div className="space-y-3">
+                        <button
+                          type="submit"
+                          disabled={isSubmittingDeposit}
+                          className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#1b64d9] to-[#3b82f6] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmittingDeposit ? (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              <span>Initialisation du paiement...</span>
                             </div>
                           ) : (
-                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-xs text-slate-800 leading-relaxed font-sans">
-                              <span className="font-extrabold text-amber-800 uppercase text-[10px] tracking-wider block mb-1">ℹ️ CANAL EN ATTENTE DE CONFIGURATION</span>
-                              Aucun numéro de réception n'est configuré pour cet opérateur. Veuillez revenir à l'étape précédente et choisir un autre opérateur actif.
-                            </div>
+                            <span>⚡ Recharger mon compte</span>
                           )}
-                        </div>
-
-                        {/* PHONE NUMBER FIELD */}
-                        <div>
-                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 4 : Saisissez votre numéro expéditeur Mobile Money 📱
-                          </label>
-                          <input
-                            type="tel"
-                            required={depositStep === 2}
-                            placeholder="Ex: 000000"
-                            value={depositPhone}
-                            onChange={(e) => setDepositPhone(e.target.value)}
-                            className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
-                          />
-                          <span className="text-[10px] text-slate-400 font-semibold block mt-1">
-                            Saisissez le numéro depuis lequel vous avez fait le transfert.
-                          </span>
-                        </div>
-
-                        {/* TRANSACTION REFERENCE / ID FIELD */}
-                        <div>
-                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 5 : Référence / ID de transaction 🔑
-                          </label>
-                          <input
-                            type="text"
-                            required={depositStep === 2}
-                            placeholder="Ex: Réf de transaction, ID, etc."
-                            value={depositRef}
-                            onChange={(e) => setDepositRef(e.target.value)}
-                            className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
-                          />
-                          <span className="text-[10px] text-slate-400 font-semibold block mt-1">
-                            Saisissez l'ID de transaction reçu dans le SMS de confirmation du transfert.
-                          </span>
-                        </div>
-
-                        {/* RECEIPT CAPTURE IMAGE SCREENSHOT */}
-                        <div>
-                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                            Étape 6 : Capture d'écran du reçu (Optionnel) 📸
-                          </label>
-                          <div className="flex items-center justify-center w-full">
-                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer bg-white hover:bg-slate-50 transition-colors">
-                              <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                                {receiptBase64 ? (
-                                  <div className="space-y-1">
-                                    <span className="text-xs text-emerald-600 font-black">✔️ Capture d'écran chargée avec succès !</span>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setReceiptBase64('');
-                                      }}
-                                      className="text-[10px] text-red-500 hover:underline font-bold block mx-auto mt-1 cursor-pointer"
-                                    >
-                                      Supprimer l'image
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <span className="text-slate-400 text-sm">📸</span>
-                                    <p className="mb-1 text-xs text-slate-550 font-bold mt-1">Cliquez pour importer la capture d'écran du transfert</p>
-                                    <p className="text-[10px] text-slate-400 font-semibold">Format JPG, PNG (Max. 5Mo)</p>
-                                  </>
-                                )}
-                              </div>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      setReceiptBase64(reader.result as string);
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                }}
-                              />
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="bg-[#e2ebf9]/80 p-4 rounded-xl border border-slate-200/50 text-xs text-slate-650 leading-relaxed font-semibold">
-                          <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block mb-0.5">🔒 Protection Sécurisée :</span>
-                          Votre demande est enregistrée de manière sécurisée. L'administrateur créditera votre compte dès validation du transfert.
-                        </div>
-
-                        {/* Submitting button */}
-                        <div className="space-y-3">
-                          <button
-                            type="submit"
-                            disabled={isSubmittingDeposit}
-                            className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#0284c7] to-[#0ea5e9] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isSubmittingDeposit ? (
-                              <div className="flex items-center space-x-2">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                <span>Traitement en cours...</span>
-                              </div>
-                            ) : (
-                              <span>⚡ Confirmer mon dépôt</span>
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setDepositStep(1)}
-                            className="w-full py-3.5 text-slate-500 border-2 border-slate-250 hover:bg-slate-50 font-sans font-extrabold text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer flex items-center justify-center space-x-2"
-                          >
-                            <span>⬅️ Modifier le montant ou l'opérateur</span>
-                          </button>
-                        </div>
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </form>
                 )}
               </div>

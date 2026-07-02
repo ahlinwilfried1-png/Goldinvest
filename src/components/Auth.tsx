@@ -25,6 +25,11 @@ import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
   { name: 'Togo', code: '+228', flag: '🇹🇬' },
+  { name: 'Bénin', code: '+229', flag: '🇧🇯' },
+  { name: 'Côte d’Ivoire', code: '+225', flag: '🇨🇮' },
+  { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
+  { name: 'Sénégal', code: '+221', flag: '🇸🇳' },
+  { name: 'Mali', code: '+223', flag: '🇲🇱' },
   { name: 'Cameroun', code: '+237', flag: '🇨🇲' }
 ];
 

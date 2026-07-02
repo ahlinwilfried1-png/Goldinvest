@@ -19,10 +19,11 @@ import {
   ArrowRight,
   ChevronRight,
   Search,
-  RefreshCw
+  RefreshCw,
+  Zap
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment, SupportMessage, WithdrawalProof } from '../types';
-import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl, apiFetch } from '../dataStore';
+import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl, apiFetch, safeLocalStorage } from '../dataStore';
 
 interface AdminPanelProps {
   currentUser: User;
@@ -225,7 +226,7 @@ export default function AdminPanel({
           try {
             for (const key of Object.keys(data)) {
               if (data[key] !== undefined && data[key] !== null) {
-                localStorage.setItem(key, JSON.stringify(data[key]));
+                safeLocalStorage.setItem(key, JSON.stringify(data[key]));
               }
             }
           } catch (storageErr) {
@@ -304,11 +305,31 @@ export default function AdminPanel({
       if (resp.ok) {
         const data = await resp.json();
         if (data.success) {
+          // Instantly immunize the current admin tab from resurrecting old local data
+          try {
+            safeLocalStorage.setItem('gi_cleanup_timestamp', String(Date.now()));
+            const keysToClear = [
+              'gi_users',
+              'gi_deposits',
+              'gi_withdrawals',
+              'gi_investments',
+              'gi_commissions',
+              'gi_notifications',
+              'gi_support_messages',
+              'gi_withdrawal_proofs',
+              'gi_deleted_investments',
+              'gi_deleted_users'
+            ];
+            for (const k of keysToClear) {
+              safeLocalStorage.removeItem(k);
+            }
+          } catch (e) {}
+
           setCleanupMessage(data.message);
           // Wait a short delay and refresh data
           setTimeout(() => {
-            executeDirectCentralSync();
-          }, 1000);
+            window.location.reload();
+          }, 1500);
         } else {
           setCleanupMessage(`Erreur : ${data.error || 'Impossible de faire le nettoyage'}`);
         }
@@ -388,6 +409,7 @@ export default function AdminPanel({
 
   // Edit product modal state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [editProductVipLevel, setEditProductVipLevel] = useState<number>(1);
   const [editProductName, setEditProductName] = useState<string>('');
   const [editProductPrice, setEditProductPrice] = useState<number>(5000);
@@ -691,12 +713,34 @@ export default function AdminPanel({
     }
   };
 
+  const handleSendavaPayPayout = async (id: string) => {
+    if (!window.confirm("Voulez-vous vraiment lancer le paiement automatique par SendavaPay Payout pour cette demande de retrait ? Le compte de l'utilisateur sera crédité directement.")) {
+      return;
+    }
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/sendavapay/payout'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ withdrawalId: id })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        alert("Succès : " + data.message);
+        await executeDirectCentralSync();
+      } else {
+        alert("Erreur : " + (data.error || "La transaction a échoué. Veuillez vérifier la configuration de votre jeton SendavaPay."));
+      }
+    } catch (e: any) {
+      console.error("Payout failed:", e);
+      alert("Erreur de connexion : " + (e.message || e));
+    }
+  };
+
   // Product actions
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVipName) return;
 
-    const isActivity = newVipCategory === 'activity';
     const payload = {
       vipLevel: newVipLevel,
       name: newVipName,
@@ -704,10 +748,10 @@ export default function AdminPanel({
       dailyReturn: newVipDaily,
       durationDays: newVipDuration,
       tag: newVipTag || undefined,
-      isCyclic: isActivity ? true : newVipIsCyclic,
+      isCyclic: newVipIsCyclic,
       generatedProductIds: newVipGeneratedProductIds,
-      category: newVipCategory,
-      totalReturn: isActivity ? (newVipPrice + newVipDaily) : (newVipDaily * newVipDuration)
+      category: 'stability' as const,
+      totalReturn: newVipDaily * newVipDuration
     };
 
     try {
@@ -736,22 +780,41 @@ export default function AdminPanel({
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (confirm('Voulez-vous vraiment supprimer définitivement ce package d\'investissement VIP ?')) {
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/product/delete'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: id })
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      } else {
+        DataStore.deleteProduct(id);
+        syncLocalStates();
+      }
+    } catch (e) {
+      console.error("Failed server product deletion, fallback local:", e);
+      DataStore.deleteProduct(id);
+      syncLocalStates();
+    }
+  };
+
+  const handleDeleteAllProducts = async () => {
+    if (confirm('⚠️ Voulez-vous vraiment supprimer définitivement TOUS les produits d\'investissement (Stabilité et Activité) ? Cette action est irréversible.')) {
       try {
-        const resp = await apiFetch(getApiUrl('/api/admin/product/delete'), {
+        const resp = await apiFetch(getApiUrl('/api/admin/product/delete-all'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: id })
+          headers: { 'Content-Type': 'application/json' }
         });
         if (resp.ok) {
           await executeDirectCentralSync();
         } else {
-          DataStore.deleteProduct(id);
+          DataStore.saveProducts([]);
           syncLocalStates();
         }
       } catch (e) {
-        console.error("Failed server product deletion, fallback local:", e);
-        DataStore.deleteProduct(id);
+        console.error("Failed server products clear:", e);
+        DataStore.saveProducts([]);
         syncLocalStates();
       }
     }
@@ -772,7 +835,6 @@ export default function AdminPanel({
 
   const handleSaveProduct = async () => {
     if (editingProduct) {
-      const isActivity = editVipCategory === 'activity';
       const payload = {
         vipLevel: editProductVipLevel,
         name: editProductName,
@@ -780,10 +842,10 @@ export default function AdminPanel({
         dailyReturn: editProductDailyReturn,
         durationDays: editProductDuration,
         tag: editProductTag || undefined,
-        isCyclic: isActivity ? true : editVipIsCyclic,
+        isCyclic: editVipIsCyclic,
         generatedProductIds: editVipGeneratedProductIds,
-        category: editVipCategory,
-        totalReturn: isActivity ? (editProductPrice + editProductDailyReturn) : (editProductDailyReturn * editProductDuration)
+        category: 'stability' as const,
+        totalReturn: editProductDailyReturn * editProductDuration
       };
 
       try {
@@ -1157,6 +1219,48 @@ export default function AdminPanel({
         </div>
       )}
 
+      {/* Custom Delete product confirmation modal */}
+      {productToDelete && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-slate-900 border border-red-500/30 rounded-3xl p-6 md:p-8 relative flex flex-col shadow-2xl animate-fade-in">
+            <button 
+              onClick={() => setProductToDelete(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4 text-red-500">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="font-display font-bold text-lg text-white mb-2">Supprimer le Produit</h3>
+              <p className="text-slate-350 text-sm mb-6">
+                Voulez-vous vraiment supprimer définitivement le package d'investissement <span className="font-bold text-red-400">{productToDelete.name}</span> ? Cette action est irréversible.
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setProductToDelete(null)}
+                className="flex-1 py-3 text-xs font-bold border border-slate-800 rounded-xl text-slate-400 hover:bg-slate-800"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  const id = productToDelete.id;
+                  setProductToDelete(null);
+                  await handleDeleteProduct(id);
+                }}
+                className="flex-1 py-3 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-500/10"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Editing product modal overlay */}
       {editingProduct && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[99] flex items-center justify-center p-4">
@@ -1171,21 +1275,6 @@ export default function AdminPanel({
             
             <div className="flex-1 overflow-y-auto pr-1 space-y-4 my-2 scrollbar-thin scrollbar-thumb-slate-800">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Catégorie de Plan d'investissement</label>
-                <select
-                  value={editVipCategory}
-                  onChange={(e) => {
-                    const value = e.target.value as 'stability' | 'activity';
-                    setEditVipCategory(value);
-                  }}
-                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
-                >
-                  <option value="stability">Stabilité (VIP - Dividendes quotidiens)</option>
-                  <option value="activity">Activités (Cycle Court - Gain et capital à expiration)</option>
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau VIP (Indice)</label>
                 <input
                   type="number"
@@ -1194,6 +1283,8 @@ export default function AdminPanel({
                   className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:border-yellow-500/40"
                 />
               </div>
+
+
 
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Nom du Plan d'investissement</label>
@@ -1218,7 +1309,7 @@ export default function AdminPanel({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                  {editVipCategory === 'activity' ? "Bénéfice Net Total (XOF)" : "Rendement Journalier (XOF)"}
+                  Rendement Journalier (XOF)
                 </label>
                 <input
                   type="number"
@@ -1230,7 +1321,7 @@ export default function AdminPanel({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                  {editVipCategory === 'activity' ? "Durée du cycle (Jours)" : "Durée de l'effet (Jours)"}
+                  Durée de l'effet (Jours)
                 </label>
                 <input
                   type="number"
@@ -1535,9 +1626,9 @@ export default function AdminPanel({
                 try {
                   const cleaned = customBackendInput.trim();
                   if (cleaned) {
-                    localStorage.setItem('gi_custom_backend_url', cleaned);
+                    safeLocalStorage.setItem('gi_custom_backend_url', cleaned);
                   } else {
-                    localStorage.removeItem('gi_custom_backend_url');
+                    safeLocalStorage.removeItem('gi_custom_backend_url');
                   }
                   executeDirectCentralSync();
                   alert('Configuration du serveur central sauvegardée avec succès ! Les données vont se synchroniser.');
@@ -1826,9 +1917,16 @@ export default function AdminPanel({
                             {wth.status === 'pending' ? (
                               <div className="flex items-center justify-center gap-1.5">
                                 <button
+                                  onClick={() => handleSendavaPayPayout(wth.id)}
+                                  className="w-7 h-7 bg-blue-600 text-white flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
+                                  title="Payer automatiquement via SendavaPay Payout (Mobile Money)"
+                                >
+                                  <Zap className="w-3.5 h-3.5 stroke-[3] fill-white" />
+                                </button>
+                                <button
                                   onClick={() => handleApproveWithdrawal(wth.id)}
                                   className="w-7 h-7 bg-green-500 text-slate-950 flex items-center justify-center rounded-lg hover:scale-115 transition-transform"
-                                  title="Valider le retrait"
+                                  title="Valider manuellement"
                                 >
                                   <Check className="w-4 h-4 text-slate-950 stroke-[3]" />
                                 </button>
@@ -2182,27 +2280,22 @@ export default function AdminPanel({
         <div className="space-y-6">
           {/* New VIP creator Form */}
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
-            <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider mb-4 flex items-center space-x-2">
-              <Plus className="w-4 h-4 text-yellow-500" />
-              <span>Créer une nouvelle Offre VIP</span>
-            </h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+              <h3 className="font-display font-bold text-sm text-white uppercase tracking-wider flex items-center space-x-2">
+                <Plus className="w-4 h-4 text-yellow-500" />
+                <span>Créer une nouvelle Offre VIP</span>
+              </h3>
+              <button
+                type="button"
+                onClick={handleDeleteAllProducts}
+                className="px-3.5 py-1.5 bg-red-600/10 hover:bg-red-650 border border-red-500/20 hover:border-red-600 text-red-400 hover:text-white rounded-xl text-xs font-bold uppercase tracking-wider duration-150 flex items-center gap-1.5 cursor-pointer shadow-sm shadow-red-950/20"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Supprimer tous les produits d'un coup</span>
+              </button>
+            </div>
 
             <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Catégorie de Plan d'investissement</label>
-                <select
-                  value={newVipCategory}
-                  onChange={(e) => {
-                    const value = e.target.value as 'stability' | 'activity';
-                    setNewVipCategory(value);
-                  }}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
-                >
-                  <option value="stability">Stabilité (VIP - Dividendes quotidiens)</option>
-                  <option value="activity">Activités (Cycle Court - Gain et capital à expiration)</option>
-                </select>
-              </div>
-
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Niveau VIP (Indice)</label>
                 <input
@@ -2239,7 +2332,7 @@ export default function AdminPanel({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                  {newVipCategory === 'activity' ? "Bénéfice Net Total (XOF)" : "Rendement Journalier (XOF)"}
+                  Rendement Journalier (XOF)
                 </label>
                 <input
                   type="number"
@@ -2252,7 +2345,7 @@ export default function AdminPanel({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                  {newVipCategory === 'activity' ? "Durée du cycle (Jours)" : "Durée de l'effet (Jours)"}
+                  Durée de l'effet (Jours)
                 </label>
                 <input
                   type="number"
@@ -2273,6 +2366,8 @@ export default function AdminPanel({
                   className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none"
                 />
               </div>
+
+
 
               <div className="md:col-span-3 pt-3">
                 <button
@@ -2320,7 +2415,7 @@ export default function AdminPanel({
                               <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => handleDeleteProduct(p.id)}
+                              onClick={() => setProductToDelete(p)}
                               className="text-red-400 hover:text-red-500 p-1.5 bg-red-500/10 rounded duration-150"
                               title="Supprimer"
                             >
@@ -2422,141 +2517,8 @@ export default function AdminPanel({
               </div>
             </div>
 
-            {/* 2. Plans d'Activités de Cycle Court */}
-            <div>
-              <h4 className="text-sm font-display font-bold text-green-400 uppercase tracking-widest mb-4">
-                ⚡ Activités (Cycle Court - Gain + Capital à expiration)
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {products.filter(p => p.category === 'activity').map((p) => {
-                  const isCurrentlyBlocked = p.isBlocked === true;
-                  const formattedReopenTime = p.reopenDateTime 
-                    ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
-                    : null;
-                  const netProfit = p.dailyReturn; // Le profit net est stocké dans dailyReturn pour l'activité
-                  const totalRelease = p.totalReturn || (p.price + netProfit);
 
-                  return (
-                    <div key={p.id} className={`p-5 rounded-xl border flex flex-col justify-between ${isCurrentlyBlocked ? 'bg-red-950/20 border-red-900/40' : 'bg-slate-950 border-slate-800'}`}>
-                      <div>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-[10px] text-green-400 font-mono uppercase font-bold">Activité VIP {p.vipLevel}</span>
-                              <span className={`w-1.5 h-1.5 rounded-full ${isCurrentlyBlocked ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></span>
-                            </div>
-                            <h4 className="font-display font-medium text-white text-sm block mt-0.5">{p.name}</h4>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => openEditProductModal(p)}
-                              className="text-slate-350 hover:text-yellow-400 p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded duration-150"
-                              title="Modifier"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProduct(p.id)}
-                              className="text-red-400 hover:text-red-500 p-1.5 bg-red-500/10 rounded duration-150"
-                              title="Supprimer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
 
-                        <div className="space-y-1 mt-4 text-xs font-mono">
-                          <div className="flex justify-between text-slate-400">
-                            <span>Prix :</span>
-                            <span className="text-white font-bold">{p.price.toLocaleString()} XOF</span>
-                          </div>
-                          <div className="flex justify-between text-slate-400">
-                            <span>Bénéfice Net :</span>
-                            <span className="text-green-400 font-bold font-mono">+{netProfit.toLocaleString()} XOF</span>
-                          </div>
-                          <div className="flex justify-between text-slate-400">
-                            <span>Cycle :</span>
-                            <span className="text-yellow-400">{p.durationDays} Jours</span>
-                          </div>
-                          <div className="flex justify-between text-slate-400 font-bold border-t border-slate-900 pt-1.5 mt-1.5 font-mono">
-                            <span>Retour total de fin :</span>
-                            <span className="text-white">{totalRelease.toLocaleString()} XOF</span>
-                          </div>
-
-                          {isCurrentlyBlocked && (
-                            <div className="bg-red-950/35 border border-red-900/30 rounded-lg p-2.5 mt-3 font-sans">
-                              <p className="text-[10px] text-red-400 font-bold flex items-center gap-1.5">
-                                <Lock className="w-3 h-3" />
-                                <span>ACTIVITÉ SUSPENDUE</span>
-                              </p>
-                              {formattedReopenTime && (
-                                <p className="text-[9px] text-slate-300 mt-0.5 font-mono">
-                                  Réouverture le : {formattedReopenTime}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="mt-5 pt-3 border-t border-slate-900">
-                        {schedulingBlockProductId === p.id ? (
-                          <div className="space-y-3 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">HEURE DE RÉOUVERTURE (OPTIONNELLE)</label>
-                              <input
-                                type="datetime-local"
-                                value={blockReopenTime}
-                                onChange={(e) => setBlockReopenTime(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-800 text-xs text-yellow-400 p-1.5 rounded focus:outline-none focus:border-yellow-500/40"
-                              />
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleConfirmProductBlock(p.id, false)}
-                                className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold uppercase transition-all"
-                              >
-                                Suspendre à vie
-                              </button>
-                              <button
-                                onClick={() => handleConfirmProductBlock(p.id, true)}
-                                className="flex-1 py-1.5 gold-bg-gradient text-slate-950 rounded text-[10px] font-bold uppercase transition-all"
-                                disabled={!blockReopenTime}
-                              >
-                                Planifier Heure
-                              </button>
-                            </div>
-                            <button
-                              onClick={() => setSchedulingBlockProductId(null)}
-                              className="w-full py-1 text-slate-500 hover:text-slate-400 text-[10px] uppercase font-bold text-center"
-                            >
-                              Annuler
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => handleToggleBlockProduct(p.id, isCurrentlyBlocked)}
-                            className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${isCurrentlyBlocked ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'}`}
-                          >
-                            {isCurrentlyBlocked ? (
-                              <>
-                                <Unlock className="w-3.5 h-3.5" />
-                                <span>Activer immédiatement</span>
-                              </>
-                            ) : (
-                              <>
-                                <Lock className="w-3.5 h-3.5" />
-                                <span>Suspendre / Planifier</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -2893,6 +2855,11 @@ export default function AdminPanel({
               <div className="space-y-6">
                 {(Object.entries({
                   'TG': { name: 'Togo 🇹🇬', ops: [{ id: '37', name: 'TMoney' }, { id: '38', name: 'Moov Money' }] },
+                  'CI': { name: 'Côte d’Ivoire 🇨🇮', ops: [{ id: '29', name: 'Orange Money' }, { id: '30', name: 'MTN Mobile Money' }, { id: '31', name: 'Moov Money' }, { id: '32', name: 'Wave' }] },
+                  'BJ': { name: 'Bénin 🇧🇯', ops: [{ id: '35', name: 'MTN Mobile Money' }, { id: '36', name: 'Moov Money' }] },
+                  'BF': { name: 'Burkina Faso 🇧🇫', ops: [{ id: '33', name: 'Moov Money' }, { id: '34', name: 'Orange Money' }] },
+                  'SN': { name: 'Sénégal 🇸🇳', ops: [{ id: '57', name: 'Orange Money' }, { id: '58', name: 'Wave' }] },
+                  'ML': { name: 'Mali 🇲🇱', ops: [{ id: '60', name: 'Orange Money' }] },
                   'CM': { name: 'Cameroun 🇨🇲', ops: [{ id: '41', name: 'MTN Mobile Money' }, { id: '42', name: 'Orange Money' }] }
                 }) as [string, { name: string, ops: { id: string, name: string }[] }][]).map(([countryCode, countryInfo]) => (
                   <div key={countryCode} className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-5">

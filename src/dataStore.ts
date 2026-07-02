@@ -13,21 +13,7 @@ import {
 } from './types';
 
 // Default mock configuration values
-export const DEFAULT_PRODUCTS: Product[] = [
-  { id: 'vip-1', vipLevel: 1, name: 'Airprods 1', price: 7000, dailyReturn: 300, durationDays: 365, totalReturn: 109500, tag: 'Airprods 1', category: 'stability' },
-  { id: 'vip-2', vipLevel: 2, name: 'Airprods 2', price: 15000, dailyReturn: 700, durationDays: 365, totalReturn: 255500, tag: 'Airprods 2', category: 'stability' },
-  { id: 'vip-3', vipLevel: 3, name: 'Airprods 3', price: 30000, dailyReturn: 1500, durationDays: 365, totalReturn: 547500, tag: 'Airprods 3', category: 'stability' },
-  { id: 'vip-4', vipLevel: 4, name: 'Airprods 4', price: 60000, dailyReturn: 3200, durationDays: 365, totalReturn: 1168000, tag: 'Airprods 4', category: 'stability' },
-  { id: 'vip-5', vipLevel: 5, name: 'Airprods Pro', price: 120000, dailyReturn: 6800, durationDays: 365, totalReturn: 2482000, tag: 'Airprods Pro', category: 'stability' },
-  { id: 'vip-6', vipLevel: 6, name: 'Airprods Pro 2', price: 250000, dailyReturn: 15000, durationDays: 365, totalReturn: 5475000, tag: 'Airprods Pro 2', category: 'stability' },
-  { id: 'vip-7', vipLevel: 7, name: 'Airprods Max', price: 500000, dailyReturn: 32000, durationDays: 365, totalReturn: 11680000, tag: 'Airprods Max', category: 'stability' },
-  { id: 'vip-8', vipLevel: 8, name: 'Airprods Ultra', price: 1000000, dailyReturn: 70000, durationDays: 365, totalReturn: 25550000, tag: 'Airprods Ultra', category: 'stability' },
-  { id: 'vip-9', vipLevel: 9, name: 'Airprods Élite', price: 2000000, dailyReturn: 150000, durationDays: 365, totalReturn: 54750000, tag: 'Airprods Élite', category: 'stability' },
-  // Activités (Short-cycle products)
-  { id: 'activity-1', vipLevel: 1, name: 'Airprods Activité 1', price: 5000, dailyReturn: 1000, durationDays: 7, totalReturn: 7000, tag: 'Activité 1', category: 'activity' },
-  { id: 'activity-2', vipLevel: 2, name: 'Airprods Activité 2', price: 12000, dailyReturn: 3000, durationDays: 5, totalReturn: 15000, tag: 'Activité 2', category: 'activity' },
-  { id: 'activity-3', vipLevel: 3, name: 'Airprods Activité 3', price: 25000, dailyReturn: 7500, durationDays: 4, totalReturn: 30000, tag: 'Activité 3', category: 'activity' }
-];
+export const DEFAULT_PRODUCTS: Product[] = [];
 
 const INITIAL_USERS: User[] = [
   {
@@ -438,10 +424,21 @@ export const setToStore = <T>(key: string, value: T): void => {
     } catch (e) {}
 
     // Asynchronously send update to central Express database or KVdb
+    let userId = '';
+    let userRole = 'user';
+    try {
+      const activeUserStr = localStorage.getItem('gi_current_user') || inMemoryStore['gi_current_user'];
+      if (activeUserStr) {
+        const u = JSON.parse(activeUserStr);
+        if (u && u.id) userId = u.id;
+        if (u && u.role) userRole = u.role;
+      }
+    } catch (e) {}
+
     apiFetch(getApiUrl('/api/save-store'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [key]: newValue })
+      body: JSON.stringify({ [key]: newValue, userId, role: userRole })
     }).catch(err => console.error('Failed to sync to central DB server:', err));
   } catch (error) {
     console.error(`Error writing to fallback store for key "${key}":`, error);
@@ -492,6 +489,42 @@ export const syncWithBackend = async (): Promise<boolean> => {
     if (!resp.ok) return false;
     const data = await resp.json();
     if (data && typeof data === 'object') {
+      // Check for remote database purge/cleanup command
+      const serverCleanupTime = Number(data['gi_cleanup_timestamp'] || 0);
+      let localCleanupTime = 0;
+      try {
+        localCleanupTime = Number(localStorage.getItem('gi_cleanup_timestamp') || '0');
+      } catch (e) {}
+
+      if (serverCleanupTime > localCleanupTime) {
+        console.log(`[CLEANUP] Server requested a database reset. Clearing local user and history caches...`);
+        const keysToClear = [
+          'gi_users',
+          'gi_deposits',
+          'gi_withdrawals',
+          'gi_investments',
+          'gi_commissions',
+          'gi_notifications',
+          'gi_support_messages',
+          'gi_withdrawal_proofs',
+          'gi_deleted_investments',
+          'gi_deleted_users'
+        ];
+        for (const k of keysToClear) {
+          try {
+            localStorage.removeItem(k);
+            delete inMemoryStore[k];
+          } catch (e) {}
+        }
+        try {
+          localStorage.setItem('gi_cleanup_timestamp', String(serverCleanupTime));
+        } catch (e) {}
+        
+        // Force fully fresh reload of the application to apply the reset
+        window.location.reload();
+        return true;
+      }
+
       const serverKeys = Object.keys(data);
       if (serverKeys.length === 0) {
         // Server database is empty! Upload our local storage data to initialize it
@@ -890,14 +923,6 @@ export class DataStore {
 
   static getProducts(): Product[] {
     let list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
-    
-    // Auto-update to P1-P9 (365 days duration) if old database exists in visitor localstorage
-    const needsReset = list.length < 12 || list.some(p => p.name.includes('VIP Élixir') || p.name.includes('VIP Élixir 1') || p.name === 'P1' || p.name === 'A1' || p.name.startsWith('P'));
-    const hasActivity = list.some(p => p.category === 'activity');
-    if (needsReset || !hasActivity) {
-      list = DEFAULT_PRODUCTS;
-      this.saveProducts(list);
-    }
 
     let changed = false;
     const now = new Date();
@@ -2813,6 +2838,10 @@ export class DataStore {
       const generatedProductIds = updatedP.generatedProductIds !== undefined ? updatedP.generatedProductIds : current.generatedProductIds;
       const category = updatedP.category !== undefined ? updatedP.category : current.category;
 
+      const totalReturn = updatedP.totalReturn !== undefined 
+        ? updatedP.totalReturn 
+        : (dailyReturn * durationDays);
+
       list[idx] = {
         id: productId,
         vipLevel,
@@ -2820,7 +2849,7 @@ export class DataStore {
         price,
         dailyReturn,
         durationDays,
-        totalReturn: dailyReturn * durationDays,
+        totalReturn,
         tag,
         isBlocked,
         reopenDateTime,
