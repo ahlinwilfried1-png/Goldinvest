@@ -15,13 +15,67 @@
       "referralCode": "AGR72",
       "dailyEarnings": 0,
       "totalEarnings": 0
+    },
+    {
+      "id": "u-1783067097338",
+      "name": "Membre 70903319",
+      "role": "user",
+      "bonus": 200,
+      "device": "Android",
+      "balance": 200,
+      "country": "Togo",
+      "password": "123456",
+      "whatsapp": "+22870903319",
+      "createdAt": "2026-07-03T08:24:57.338Z",
+      "isBlocked": false,
+      "referredBy": "u-admin",
+      "lastModified": 1783067097359,
+      "referralCode": "68CCZ",
+      "dailyEarnings": 0,
+      "totalEarnings": 0
     }
   ],
-  "gi_deposits": [],
+  "gi_deposits": [
+    {
+      "id": "dep-1783067407482",
+      "userId": "u-admin",
+      "userName": "Administrateur Principal",
+      "amount": 5000,
+      "operator": "Westpay (Auto)",
+      "reference": "WP-FB-1783067407482",
+      "receiptImage": "automated",
+      "status": "pending",
+      "country": "Togo",
+      "phoneNumber": "90000000",
+      "lastModified": 1783067407482,
+      "createdAt": "2026-07-03T08:30:07.482Z"
+    }
+  ],
   "gi_withdrawals": [],
   "gi_investments": [],
   "gi_commissions": [],
-  "gi_notifications": [],
+  "gi_notifications": [
+    {
+      "id": "not-ref-1783067097362",
+      "read": false,
+      "type": "info",
+      "title": "Nouveau parrainage",
+      "userId": "u-admin",
+      "message": "Membre 70903319 s'est inscrit en utilisant votre lien. Vous recevrez 20% de commission sur ses investissements !",
+      "createdAt": "2026-07-03T08:24:57.362Z",
+      "lastModified": 1783067097362
+    },
+    {
+      "id": "not-1783067097362",
+      "read": false,
+      "type": "bonus",
+      "title": "Bienvenue sur Aiprods !",
+      "userId": "u-1783067097338",
+      "message": "Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.",
+      "createdAt": "2026-07-03T08:24:57.362Z",
+      "lastModified": 1783067097362
+    }
+  ],
   "gi_support_messages": [],
   "gi_withdrawal_proofs": [],
   "gi_deleted_investments": [],
@@ -31,7 +85,7 @@
   "gi_mlm_level3_rate": 1,
   "gi_withdrawals_blocked_global": false,
   "gi_referral_domain": "",
-  "gi_whatsapp_group": "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv",
+  "gi_whatsapp_group": "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t",
   "gi_whatsapp_channel": "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k",
   "gi_bonus_codes": [
     {
@@ -234,7 +288,7 @@
     "TG_37": "70903319",
     "TG_38": "78829438"
   },
-  "gi_cleanup_timestamp": 1783063592325,
+  "gi_cleanup_timestamp": 1783066645658,
   "userId": "",
   "role": "user"
 }
