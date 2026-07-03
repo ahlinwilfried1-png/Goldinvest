@@ -863,9 +863,9 @@ export class DataStore {
   }
 
   static getWhatsAppGroup(): string {
-    const val = getFromStore<string>('gi_whatsapp_group', 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv').trim();
+    const val = getFromStore<string>('gi_whatsapp_group', 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t').trim();
     if (!val) {
-      return 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv';
+      return 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t';
     }
     return val;
   }
@@ -1474,6 +1474,31 @@ export class DataStore {
     return newDep;
   }
 
+  static async createSoinaPayDeposit(userId: string, amount: number, reference: string, operator: string = 'SoinaPay'): Promise<Deposit | null> {
+    try {
+      const response = await apiFetch(getApiUrl('/api/create-deposit'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount, operator, reference, receiptImage: 'automated' })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success && res.deposit) {
+          if (res.user) {
+            this.saveCurrentUser(res.user);
+          }
+          await syncWithBackend();
+          return res.deposit;
+        } else {
+          return null;
+        }
+      }
+    } catch (error) {
+      console.error('Create SoinaPay deposit API error:', error);
+    }
+    return null;
+  }
+
   static async createWestPayDeposit(userId: string, amount: number, reference: string, operator: string = 'WestPay Direct'): Promise<Deposit | null> {
     try {
       const response = await apiFetch(getApiUrl('/api/create-deposit'), {
@@ -1537,8 +1562,8 @@ export class DataStore {
     notifications.unshift({
       id: `not-dep-wp-${Date.now()}`,
       userId,
-      title: 'Dépôt Automatique WestPay',
-      message: `Votre versement de ${amount.toLocaleString()} XOF via WestPay (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
+      title: 'Dépôt Automatique',
+      message: `Votre versement de ${amount.toLocaleString()} XOF (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
       type: 'deposit',
       createdAt: new Date().toISOString(),
       read: false

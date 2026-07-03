@@ -436,13 +436,14 @@ export default function Dashboard({
   };
 
   const [depositAmount, setDepositAmount] = useState<string>('5000');
+  const [depositPhoneNumber, setDepositPhoneNumber] = useState<string>('');
   const [depositOperator, setDepositOperator] = useState<string>('TMoney');
   const [depositMethod, setDepositMethod] = useState<'sendavapay'>('sendavapay');
   const [depositRef, setDepositRef] = useState<string>('');
   const [receiptBase64, setReceiptBase64] = useState<string>('');
   const [depositError, setDepositError] = useState<string>('');
   const [depositSuccess, setDepositSuccess] = useState<string>('');
-  const [depositMode, setDepositMode] = useState<'automatic' | 'manual_cm'>('automatic');
+  const [depositMode, setDepositMode] = useState<'automatic' | 'manual_cm'>('manual_cm');
   const [manualOperator, setManualOperator] = useState<string>('MTN Mobile Money (Cameroun 🇨🇲)');
   const [manualReference, setManualReference] = useState<string>('');
   const [manualReceiptBase64, setManualReceiptBase64] = useState<string>('');
@@ -1179,7 +1180,7 @@ export default function Dashboard({
           setTimeout(() => {
             openPurchaseSuccessAlert(
               'Recharge Reçue ! 💳💰',
-              "Félicitations !\nVotre compte a été crédité automatiquement et instantanément de " + data.amount.toLocaleString() + " " + getCurrency() + " suite à votre paiement réussi sur WestPay.\n\nRéférence du paiement: " + data.ref
+              "Félicitations !\nVotre compte a été crédité automatiquement et instantanément de " + data.amount.toLocaleString() + " " + getCurrency() + " suite à votre paiement réussi.\n\nRéférence du paiement: " + data.ref
             );
           }, 800);
         }
@@ -1470,6 +1471,11 @@ export default function Dashboard({
       return;
     }
 
+    if (!depositPhoneNumber || depositPhoneNumber.trim() === '') {
+      setDepositError("Veuillez saisir votre numéro de téléphone pour le paiement.");
+      return;
+    }
+
     setIsSubmittingDeposit(true);
     try {
       const response = await apiFetch(getApiUrl('/api/paydunya/create-charge'), {
@@ -1482,21 +1488,23 @@ export default function Dashboard({
           amount: amt,
           method: 'westpay',
           gateway: 'westpay',
-          operator: 'WestPay'
+          operator: 'WestPay',
+          country: depositCountry,
+          phoneNumber: depositPhoneNumber
         })
       });
 
       const data = await response.json();
       if (data.success && data.url) {
         setDepositRedirectUrl(data.url);
-        setDepositSuccess("Votre facture de paiement WestPay a été créée avec succès ! Cliquez sur le bouton ci-dessous pour effectuer votre recharge en toute sécurité.");
+        setDepositSuccess("Votre facture de paiement a été créée avec succès ! Cliquez sur le bouton ci-dessous pour effectuer votre recharge en toute sécurité.");
         try {
           window.open(data.url, '_blank');
         } catch (popupErr) {
           console.warn("Popup blocked, user needs to click button manually.", popupErr);
         }
       } else {
-        setDepositError(data.error || "L'initialisation de la transaction WestPay a échoué. Veuillez réessayer.");
+        setDepositError(data.error || "L'initialisation de la transaction a échoué. Veuillez réessayer.");
       }
     } catch (error: any) {
       console.error("Deposit submission error:", error);
@@ -1850,10 +1858,25 @@ export default function Dashboard({
     }
   };
 
-  const handleFastForwardTime = () => {
+  const handleFastForwardTime = async () => {
+    // 1. First trigger client-side update
     DataStore.advanceAllActiveInvestmentsBy24Hours(userState.id);
+
+    // 2. Also trigger server-side time advancement so they remain perfectly in sync
+    try {
+      await apiFetch(getApiUrl('/api/test/advance-time'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userState.id })
+      });
+      // Perform background sync to pull the newly advanced state from the server
+      await syncWithBackend();
+    } catch (e) {
+      console.error('Server fast forward failed:', e);
+    }
+
     syncDashboardData();
-    setSimulationStatus("⏱️ Succès : Le temps a avancé de 24 Heures ! Vos revenus quotidiens ont été automatiquement crédités.");
+    setSimulationStatus("⏱️ Succès : Le temps a avancé de 24 Heures sur le serveur et le client ! Vos revenus quotidiens ont été automatiquement crédités.");
     setTimeout(() => {
       setSimulationStatus('');
     }, 6000);
@@ -2920,22 +2943,33 @@ export default function Dashboard({
           {activeTab === 'deposit' && (() => {
             return (
               <div className="max-w-xl mx-auto bg-[#eef3fc] border-2 border-slate-200/40 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800 animate-fade-in animate-duration-300 font-sans">
-                {/* MODE CHANGER TAB */}
-                <div className="flex bg-slate-200/50 p-1 rounded-2xl mb-6">
+                {/* DEPOSIT HEADER */}
+                <div className="text-center mb-6">
+                  <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">
+                    💸 CRÉDITER MON COMPTE
+                  </span>
+                  <p className="text-xs text-slate-500 font-bold mt-1">
+                    Choisissez votre méthode d'approvisionnement préférée.
+                  </p>
+                </div>
+
+                {/* MODE CHOOSE TABS */}
+                <div className="grid grid-cols-2 gap-3 mb-6 bg-slate-200/50 p-1.5 rounded-2xl">
                   <button
                     type="button"
                     onClick={() => {
                       setDepositMode('automatic');
                       setDepositError('');
                       setDepositSuccess('');
+                      setDepositRedirectUrl('');
                     }}
-                    className={`flex-1 py-2.5 text-center rounded-xl text-xs font-black uppercase transition-all duration-300 cursor-pointer ${
+                    className={`py-3 px-2 rounded-xl text-center text-xs font-black uppercase transition-all duration-300 cursor-pointer ${
                       depositMode === 'automatic'
-                        ? 'bg-white text-[#1b64d9] shadow'
-                        : 'text-slate-500 hover:text-slate-800'
+                        ? 'bg-[#1b64d9] text-white shadow-md'
+                        : 'text-slate-600 hover:bg-slate-300/40'
                     }`}
                   >
-                    🚀 Recharge Automatique
+                    ⚡ Automatique
                   </button>
                   <button
                     type="button"
@@ -2943,37 +2977,16 @@ export default function Dashboard({
                       setDepositMode('manual_cm');
                       setDepositError('');
                       setDepositSuccess('');
+                      setDepositRedirectUrl('');
                     }}
-                    className={`flex-1 py-2.5 text-center rounded-xl text-xs font-black uppercase transition-all duration-300 cursor-pointer ${
+                    className={`py-3 px-2 rounded-xl text-center text-xs font-black uppercase transition-all duration-300 cursor-pointer ${
                       depositMode === 'manual_cm'
-                        ? 'bg-white text-emerald-600 shadow border-b-2 border-emerald-500'
-                        : 'text-slate-500 hover:text-slate-800'
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'text-slate-600 hover:bg-slate-300/40'
                     }`}
                   >
-                    🇨🇲 Manuel Cameroun
+                    🇨🇲 Manuel (Cameroun)
                   </button>
-                </div>
-
-                <div className="text-center mb-6">
-                  {depositMode === 'automatic' ? (
-                    <>
-                      <span className="text-xs font-black text-[#1b64d9] tracking-widest uppercase block mb-1">
-                        ⚡ RECHARGE AUTOMATIQUE SÉCURISÉE
-                      </span>
-                      <p className="text-xs text-slate-500 font-bold mt-1">
-                        Choisissez votre montant et rechargez instantanément et automatiquement votre solde par Mobile Money.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-xs font-black text-emerald-600 tracking-widest uppercase block mb-1">
-                        📲 DEPOSIT MANUEL VALIDÉ PAR REÇU
-                      </span>
-                      <p className="text-xs text-slate-500 font-bold mt-1">
-                        Effectuez le paiement Orange ou MTN Money, renseignez l'identifiant et joignez la preuve de transfert.
-                      </p>
-                    </>
-                  )}
                 </div>
 
                 {depositError && (
@@ -2987,15 +3000,111 @@ export default function Dashboard({
                         href={depositRedirectUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block py-2.5 px-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-black uppercase text-[10px] mt-1 text-center shadow animate-bounce"
+                        className="mt-3 w-full py-3 bg-[#1b64d9] hover:bg-blue-700 text-white font-sans text-xs font-black uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-center block"
                       >
-                        👉 Cliquer ici pour ouvrir la page de paiement sécurisée
+                        🔗 Ouvrir le lien du paiement
                       </a>
                     )}
                   </div>
                 )}
 
-                {depositMode === 'manual_cm' ? (
+                {depositMode === 'automatic' ? (
+                  <form onSubmit={submitDeposit} className="space-y-5 text-left animate-fade-in font-sans">
+                    <div className="space-y-5">
+                      {/* AMOUNT PRESETS */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 1 : Choisissez un montant rapide 💵
+                        </label>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                          {[2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
+                            const isSelected = parseInt(depositAmount) === amt;
+                            return (
+                              <button
+                                type="button"
+                                key={amt}
+                                onClick={() => setDepositAmount(amt.toString())}
+                                className={`py-2 px-1 text-center rounded-xl border text-[11px] font-black font-mono transition-all duration-200 cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-[#1b64d9] text-white border-[#1b64d9] shadow-md shadow-blue-500/10'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                                }`}
+                              >
+                                {amt.toLocaleString()} F
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* AMOUNT INPUT */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Ou saisissez votre propre montant ({getCurrency()})
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          placeholder={`Minimum 2 500 ${getCurrency()}`}
+                          value={depositAmount}
+                          onChange={(e) => setDepositAmount(e.target.value)}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
+                        />
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {getCurrency()}.</span>
+                      </div>
+
+                      {/* COUNTRY SELECTION */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 2 : Choisissez votre pays 🌍
+                        </label>
+                        <select
+                          value={depositCountry}
+                          onChange={(e) => setDepositCountry(e.target.value)}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-700 font-bold focus:outline-none shadow-sm cursor-pointer"
+                        >
+                          {['Togo 🇹🇬', 'Côte d\'Ivoire 🇨🇮', 'Bénin 🇧🇯', 'Sénégal 🇸🇳', 'Mali 🇲🇱', 'Burkina Faso 🇧🇫', 'Cameroun 🇨🇲', 'Congo 🇨🇬'].map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* PHONE NUMBER INPUT */}
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
+                          Étape 3 : Saisissez votre numéro de téléphone Mobile Money 📞
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="Ex: 0707070707"
+                          value={depositPhoneNumber}
+                          onChange={(e) => setDepositPhoneNumber(e.target.value)}
+                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-700 font-bold focus:outline-none shadow-sm placeholder:text-slate-400"
+                        />
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Saisissez le numéro avec lequel vous allez effectuer le paiement.</span>
+                      </div>
+
+                      {/* SUBMIT BUTTON */}
+                      <div className="space-y-3 pt-2">
+                        <button
+                          type="submit"
+                          disabled={isSubmittingDeposit}
+                          className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#1b64d9] to-[#3b82f6] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmittingDeposit ? (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              <span>Création de la facture de paiement...</span>
+                            </div>
+                          ) : (
+                            <span>⚡ Continuer vers le paiement</span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                ) : (
                   <form onSubmit={submitManualDeposit} className="space-y-5 text-left animate-fade-in font-sans">
                     <div className="space-y-5">
                       {/* AMOUNT PRESETS */}
@@ -3027,7 +3136,7 @@ export default function Dashboard({
                       {/* AMOUNT INPUT */}
                       <div>
                         <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Ou saisissez votre propre montant (F CFA)
+                          Ou saisissez votre propre montant ({getCurrency()})
                         </label>
                         <input
                           type="number"
@@ -3037,6 +3146,7 @@ export default function Dashboard({
                           onChange={(e) => setDepositAmount(e.target.value)}
                           className="w-full bg-white border-2 border-slate-200/45 focus:border-emerald-500 rounded-2xl py-3.5 px-4 text-sm text-emerald-600 font-black focus:outline-none shadow-sm placeholder:text-slate-400"
                         />
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {getCurrency()}.</span>
                       </div>
 
                       {/* OPERATOR CHOOSE */}
@@ -3055,7 +3165,7 @@ export default function Dashboard({
                       </div>
 
                       {/* INSTRUCTIONS & USSD BOX */}
-                      <div className="bg-[#eefcf4] border border-emerald-200 p-4 rounded-2xl shadow-sm">
+                      <div className="bg-[#eefcf4] border border-emerald-200 p-4 rounded-2xl shadow-sm text-slate-850">
                         <span className="font-extrabold text-emerald-700 uppercase text-[10px] tracking-wider block mb-1">📋 Étape 3 : Effectuez le paiement</span>
                         <p className="text-xs text-slate-650 leading-relaxed font-semibold mb-3">
                           Composez précisément le code USSD interactif ci-dessous sur votre téléphone pour lancer le transfert Mobile Money :
@@ -3065,7 +3175,7 @@ export default function Dashboard({
                         {(() => {
                           const ussdKey = manualOperator.includes('MTN') ? 'CM_41' : 'CM_42';
                           const rawUssd = manualDepositNumbers[ussdKey] || (ussdKey === 'CM_41' ? '*126*9*677451289*montant #' : '#150*688969868*montant#');
-                          const ussdWithAmount = rawUssd.replace('montant', depositAmount);
+                          const ussdWithAmount = rawUssd.replace('montant', depositAmount || '0');
 
                           return (
                             <div className="flex items-center justify-between bg-slate-900 text-emerald-400 font-mono text-sm font-bold p-3.5 rounded-xl border border-slate-800 shadow-inner">
@@ -3121,7 +3231,7 @@ export default function Dashboard({
                           {manualReceiptBase64 ? (
                             <div className="space-y-2 animate-fade-in">
                               <div className="mx-auto w-24 h-24 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex items-center justify-center p-1">
-                                <img src={manualReceiptBase64} alt="Reçu" className="max-w-full max-h-full object-contain rounded" />
+                                <img src={manualReceiptBase64} alt="Reçu" className="max-w-full max-h-full object-contain rounded animate-fade-in" />
                               </div>
                               <div className="text-xs text-slate-650 font-bold max-w-xs mx-auto truncate">
                                 📎 {manualReceiptFileName || "Image reçue"}
@@ -3169,85 +3279,6 @@ export default function Dashboard({
                             </div>
                           ) : (
                             <span>⚡ Soumettre ma preuve de dépôt</span>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                ) : (
-                  <form onSubmit={submitDeposit} className="space-y-5 text-left animate-fade-in font-sans">
-                    <div className="space-y-5">
-                      {/* AMOUNT PRESETS */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Cliquez sur un montant rapide 💵
-                        </label>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
-                          {[2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map((amt) => {
-                            const isSelected = parseInt(depositAmount) === amt;
-                            return (
-                              <button
-                                type="button"
-                                key={amt}
-                                onClick={() => setDepositAmount(amt.toString())}
-                                className={`py-2 px-1 text-center rounded-xl border text-[11px] font-black font-mono transition-all duration-200 cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-[#1b64d9] text-white border-[#1b64d9] shadow-md shadow-blue-500/10'
-                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                                }`}
-                              >
-                                {amt.toLocaleString()} F
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* AMOUNT FIELD */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Ou saisissez votre propre montant ({getCurrency()})
-                        </label>
-                        <input
-                          type="number"
-                          required
-                          placeholder={`Minimum 2 500 ${getCurrency()}`}
-                          value={depositAmount}
-                          onChange={(e) => setDepositAmount(e.target.value)}
-                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
-                        />
-                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {getCurrency()}.</span>
-                      </div>
-
-                      <div className="bg-[#e2ebf9]/80 p-4 rounded-xl border border-slate-200/50 text-xs text-slate-650 leading-relaxed font-semibold">
-                        <span className="font-extrabold text-[#1b64d9] uppercase text-[10px] tracking-wider block mb-1">🔒 Passerelle de Paiement Intégrée WestPay :</span>
-                        <p className="mb-2">
-                          WestPay prend en charge tous vos moyens de paiement locaux dans les pays suivants :
-                        </p>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {['Togo 🇹🇬', 'Côte d\'Ivoire 🇨🇮', 'Bénin 🇧🇯', 'Sénégal 🇸🇳', 'Mali 🇲🇱', 'Burkina Faso 🇧🇫', 'Cameroun 🇨🇲', 'Congo 🇨🇬'].map(c => (
-                            <span key={c} className="bg-white/60 px-2 py-0.5 rounded text-[10px] font-bold text-slate-700">{c}</span>
-                          ))}
-                        </div>
-                        <p>
-                          Opérateurs compatibles : <strong className="text-slate-800 font-black">TMoney, Moov Money, MTN, Orange Money, Wave</strong>, cartes bancaires et plus.
-                        </p>
-                      </div>
-
-                      {/* Submitting button */}
-                      <div className="space-y-3">
-                        <button
-                          type="submit"
-                          disabled={isSubmittingDeposit}
-                          className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#1b64d9] to-[#3b82f6] rounded-2xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSubmittingDeposit ? (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              <span>Création de la facture de paiement...</span>
-                            </div>
-                          ) : (
-                            <span>⚡ Continuer vers WestPay</span>
                           )}
                         </button>
                       </div>

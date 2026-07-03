@@ -1,7 +1,7 @@
-// Service Worker de l'application AgroProfit v2.5
+// Service Worker de l'application Aiprods v2.6
 // Version ultra-légère et rapide pour une fluidité native complète
 
-const CACHE_NAME = 'agroprofit-cache-v2.5';
+const CACHE_NAME = 'aiprods-cache-v2.6';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

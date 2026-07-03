@@ -226,7 +226,7 @@ async function startServer() {
       "gi_mlm_level3_rate": 1,
       "gi_withdrawals_blocked_global": false,
       "gi_referral_domain": "",
-      "gi_whatsapp_group": "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv",
+      "gi_whatsapp_group": "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t",
       "gi_whatsapp_channel": "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k",
       "gi_withdrawal_proofs": [],
       "gi_manual_deposit_numbers": {
@@ -252,7 +252,7 @@ async function startServer() {
 
 
     // Force correct WhatsApp links to prevent any resetting or loss of these connections
-    const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv";
+    const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t";
     const targetChannel = "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k";
 
     if (storeData["gi_whatsapp_group"] !== targetGroup) {
@@ -380,7 +380,7 @@ async function startServer() {
         }
 
         // Force correct WhatsApp links even after merging Supabase keys
-        const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv";
+        const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t";
         const targetChannel = "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k";
         let linksModified = false;
 
@@ -1789,6 +1789,47 @@ async function startServer() {
     res.json({ success: true, message: `Revenu journalier de +${inv.dailyReturn} XOF encaissé avec succès !`, amount: inv.dailyReturn, user: users[uIdx] });
   });
 
+  // Centralized Simulation Fast-Forward Time API (Persists 24h shift on server)
+  app.post("/api/test/advance-time", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      if (!userId) {
+        return res.status(400).json({ success: false, message: 'ID utilisateur requis.' });
+      }
+
+      let investments = storeData["gi_investments"] || [];
+      let changed = false;
+
+      investments = investments.map((inv: any) => {
+        if (inv.userId === userId && inv.status === 'active') {
+          const currentDate = new Date(inv.createdAt);
+          currentDate.setHours(currentDate.getHours() - 24);
+          inv.createdAt = currentDate.toISOString();
+          changed = true;
+        }
+        return inv;
+      });
+
+      if (changed) {
+        storeData["gi_investments"] = investments;
+        try {
+          await processAutomaticDailyInstallmentsServer();
+        } catch (e) {
+          console.error("[ADVANCE TIME API] Error running automatic daily installments server:", e);
+        }
+        await saveStore();
+      }
+
+      const users = storeData["gi_users"] || [];
+      const freshUser = users.find((u: any) => u.id === userId);
+
+      res.json({ success: true, message: 'Le temps de vos plans actifs a avancé de 24h sur le serveur ! Vos revenus ont été crédités.', user: freshUser });
+    } catch (err: any) {
+      console.error("[ADVANCE TIME API] Failed:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Centralized Create Deposit API
   app.post("/api/create-deposit", async (req, res) => {
     const { userId, amount, operator, reference, receiptImage } = req.body;
@@ -1827,14 +1868,19 @@ async function startServer() {
     if (isAutomated && user) {
       user.balance += Number(amount);
       user.lastModified = Date.now();
+      try {
+        distributeMlmCommissions(userId, Number(amount), 'recharge', operator || 'SoinaPay');
+      } catch (mlmErr) {
+        console.error("[DEPOSIT API MLM ERROR]", mlmErr);
+      }
     }
 
     if (isAutomated) {
       notifications.unshift({
         id: `not-dep-wp-${Date.now()}`,
         userId,
-        title: 'Dépôt Automatique WestPay',
-        message: `Votre versement de ${Number(amount).toLocaleString()} XOF via ${operator || 'WestPay'} (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
+        title: 'Dépôt Automatique Crédité',
+        message: `Votre versement de ${Number(amount).toLocaleString()} XOF via ${operator || 'SoinaPay'} (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
         type: 'deposit',
         lastModified: Date.now(),
         createdAt: new Date().toISOString(),
@@ -1947,7 +1993,8 @@ async function startServer() {
 
       if (!createRes.ok) {
         const errText = await createRes.text();
-        console.error("[SENDAVAPAY] Create-payment failed:", createRes.status, errText);
+        const cleanErr = (errText.includes("<") || errText.includes("html") || errText.includes("<!DOCTYPE")) ? "HTML Error Page Received" : errText.slice(0, 200);
+        console.error("[SENDAVAPAY] Create-payment failed:", createRes.status, cleanErr);
         let errorMsg = "La création de la transaction SendavaPay a échoué.";
         try {
           const parsed = JSON.parse(errText);
@@ -2014,7 +2061,8 @@ async function startServer() {
 
       if (!initRes.ok) {
         const errText = await initRes.text();
-        console.error("[SENDAVAPAY] Initiate-payment failed:", initRes.status, errText);
+        const cleanErr = (errText.includes("<") || errText.includes("html") || errText.includes("<!DOCTYPE")) ? "HTML Error Page Received" : errText.slice(0, 200);
+        console.error("[SENDAVAPAY] Initiate-payment failed:", initRes.status, cleanErr);
         try {
           fs.writeFileSync("./sendavapay_debug.json", JSON.stringify({
             timestamp: new Date().toISOString(),
@@ -2128,7 +2176,8 @@ async function startServer() {
 
       if (!response.ok) {
         const errText = await response.text();
-        console.error("[SENDAVAPAY] Submit OTP failed:", response.status, errText);
+        const cleanErr = (errText.includes("<") || errText.includes("html") || errText.includes("<!DOCTYPE")) ? "HTML Error Page Received" : errText.slice(0, 200);
+        console.error("[SENDAVAPAY] Submit OTP failed:", response.status, cleanErr);
         let parsedErr = "Erreur lors de la validation du code OTP.";
         try {
           const errObj = JSON.parse(errText);
@@ -2625,8 +2674,9 @@ async function startServer() {
 
       if (!payoutRes.ok) {
         const errText = await payoutRes.text();
-        console.error("[ADMIN SENDAVAPAY PAYOUT] API error:", payoutRes.status, errText);
-        return res.status(500).json({ success: false, error: `L'API de payout SendavaPay a renvoyé une erreur : ${errText}` });
+        const cleanErr = (errText.includes("<") || errText.includes("html") || errText.includes("<!DOCTYPE")) ? "HTML Error Page Received" : errText.slice(0, 200);
+        console.error("[ADMIN SENDAVAPAY PAYOUT] API error:", payoutRes.status, cleanErr);
+        return res.status(500).json({ success: false, error: `L'API de payout SendavaPay a renvoyé une erreur : ${cleanErr}` });
       }
 
       const payoutData = await payoutRes.json();
@@ -2680,7 +2730,7 @@ async function startServer() {
   // PayDunya Create Charge API
   app.post("/api/paydunya/create-charge", async (req, res) => {
     try {
-      const { userId, amount, method, gateway } = req.body;
+      const { userId, amount, method, gateway, country, phoneNumber } = req.body;
       const amt = Number(amount);
       if (!userId || isNaN(amt) || amt <= 0) {
         return res.status(400).json({ success: false, error: "Identifiant utilisateur ou montant invalide." });
@@ -2707,13 +2757,13 @@ async function startServer() {
       const returnUrl = `${baseUrl}/?ref=AGRO777`;
       const callbackUrl = `${baseUrl}/webhook`;
 
-      console.log(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Creating invoice for user ${user.name} (Amount: ${amt} XOF) on ${apiDomain}...`);
+      console.log(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Creating invoice for user ${user.name} (Amount: ${amt} XOF, Country: ${country}, Phone: ${phoneNumber}) on ${apiDomain}...`);
       console.log(`[PAYMENT] Calculated dynamic routing: ReturnURL: ${returnUrl}, CallbackURL: ${callbackUrl}`);
 
       const payload = {
         invoice: {
           total_amount: amt,
-          description: `Recharge de compte Aiprods - Utilisateur: ${user.name}`
+          description: `Recharge de compte Aiprods - Utilisateur: ${user.name} (${country || ''} - ${phoneNumber || ''})`
         },
         store: {
           name: "Aiprods",
@@ -2725,7 +2775,9 @@ async function startServer() {
           return_url: returnUrl
         },
         custom_data: {
-          userId: user.id
+          userId: user.id,
+          country: country || "",
+          phoneNumber: phoneNumber || ""
         }
       };
 
@@ -2750,7 +2802,9 @@ async function startServer() {
         if (liveRes.ok) {
           data = await liveRes.json();
         } else {
-          console.warn(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Live API returned non-200: ${liveRes.status}`);
+          const errText = await liveRes.text();
+          const cleanErr = (errText.includes("<") || errText.includes("html") || errText.includes("<!DOCTYPE")) ? "HTML Error Page Received" : errText.slice(0, 200);
+          console.warn(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Live API returned non-200: ${liveRes.status}. Output: ${cleanErr}`);
         }
       } catch (err: any) {
         console.warn(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'} LIVE TRY FAILED]`, err.message);
@@ -2776,7 +2830,8 @@ async function startServer() {
             usedSandbox = true;
           } else {
             const errText = await sandboxRes.text();
-            console.error(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Sandbox API returned non-200: ${sandboxRes.status}. Output: ${errText}`);
+            const cleanErr = (errText.includes("<") || errText.includes("html") || errText.includes("<!DOCTYPE")) ? "HTML Error Page Received" : errText.slice(0, 200);
+            console.error(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'}] Sandbox API returned non-200: ${sandboxRes.status}. Output: ${cleanErr}`);
           }
         } catch (err: any) {
           console.error(`[${isWestpay ? 'WESTPAY' : 'PAYDUNYA'} SANDBOX TRY FAILED]`, err.message);
@@ -2804,6 +2859,8 @@ async function startServer() {
             reference: reference,
             receiptImage: "automated",
             status: "pending",
+            country: country || "",
+            phoneNumber: phoneNumber || "",
             lastModified: Date.now(),
             createdAt: new Date().toISOString()
           };
@@ -2833,6 +2890,8 @@ async function startServer() {
             reference: fallbackToken,
             receiptImage: "automated",
             status: "pending",
+            country: country || "",
+            phoneNumber: phoneNumber || "",
             lastModified: Date.now(),
             createdAt: new Date().toISOString()
           };
