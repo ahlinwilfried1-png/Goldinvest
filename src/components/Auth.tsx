@@ -573,44 +573,6 @@ export default function Auth({
           </p>
         </div>
 
-        {/* PWA / APK installation panel so users can download, install and log in */}
-        <div className="mt-6 bg-white/80 backdrop-blur-md border border-slate-200 rounded-3xl p-4 text-left shadow-md">
-          <div className="flex items-center gap-2 mb-2">
-            <Smartphone className="w-5 h-5 text-[#ff7c00]" />
-            <h3 className="font-sans font-black text-xs uppercase tracking-wider text-slate-800">
-              Télécharger l'Application Officielle
-            </h3>
-          </div>
-          <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
-            Pour une fluidité optimale et un accès direct sur votre écran d'accueil, téléchargez l'application mobile Aiprods ou installez-la directement depuis votre navigateur.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <a
-              href="/Aiprods_v2.6.apk"
-              download="Aiprods_v2.6.apk"
-              className="flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-sans font-bold text-[11px] py-2.5 px-3 rounded-full transition-all active:scale-95 text-center shadow-xs cursor-pointer"
-            >
-              📥 Télécharger l'APK (Android)
-            </a>
-            <button
-              type="button"
-              onClick={() => {
-                setErrorMessage('');
-                setSuccessMessage("💡 ASTUCE D'INSTALLATION : Si vous êtes sur Safari (iPhone) ou Chrome (Android), cliquez sur 'Partager' (ou l'icône de menu) puis sur 'Ajouter à l'écran d'accueil' pour installer l'application instantanément !");
-              }}
-              className="flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-sans font-bold text-[11px] py-2.5 px-3 rounded-full transition-all active:scale-95 text-center border border-slate-200 cursor-pointer"
-            >
-              PWA 📲 Installation Directe
-            </button>
-          </div>
-          <div className="mt-2.5 pt-2 border-t border-slate-150 text-[9.5px] text-slate-500 leading-tight flex items-start gap-1">
-            <Info className="w-3.5 h-3.5 text-[#ff7c00] shrink-0 mt-0.5" />
-            <span>
-              <strong>Note :</strong> En cas d'erreur lors de l'installation de l'APK, désinstallez d'abord toute ancienne version d'Aiprods ou AgroProfit de votre téléphone.
-            </span>
-          </div>
-        </div>
-
       </div>
 
       {/* Footer Branding label */}
