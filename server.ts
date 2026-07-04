@@ -2879,14 +2879,14 @@ async function startServer() {
         // Since user wanted Westpay, if the dynamic checkout api fails because of sandbox/token configs,
         // fallback gracefully to generating a pending deposit and forwarding the user to their official Westpay payment link!
         if (isWestpay) {
-          const fallbackToken = `WP-FB-${Date.now()}`;
+          const fallbackToken = `ASH-FB-${Date.now()}`;
           let deposits = storeData["gi_deposits"] || [];
           const newDep = {
             id: `dep-${Date.now()}`,
             userId: user.id,
             userName: user.name,
             amount: amt,
-            operator: "Westpay (Auto)",
+            operator: "AshtechPay (Auto)",
             reference: fallbackToken,
             receiptImage: "automated",
             status: "pending",
@@ -2899,10 +2899,10 @@ async function startServer() {
           storeData["gi_deposits"] = deposits;
           await saveStore(["gi_deposits"]);
 
-          console.log("[WESTPAY FALLBACK] Gracefully forwarding to direct payment link");
+          console.log("[ASHTECHPAY FALLBACK] Gracefully forwarding to direct payment link");
           return res.json({
             success: true,
-            url: "https://westpay.cfd/link/c25ukanomq2agyq6",
+            url: "https://ashtechpay.top/pay/https://airprods.space/pay/",
             token: fallbackToken,
             deposit: newDep
           });
@@ -3500,18 +3500,135 @@ async function startServer() {
       return res.json({ success: false, message: 'Retrait introuvable ou déjà traité.' });
     }
 
+    const withdrawal = withdrawals[idx];
+
     if (action === 'approve') {
-      withdrawals[idx].status = 'approved';
-      notifications.unshift({
-        id: `not-wth-app-${Date.now()}`,
-        userId: withdrawals[idx].userId,
-        title: '💸 Retrait envoyé !',
-        message: `Félicitations, votre retrait de ${withdrawals[idx].amount.toLocaleString()} XOF sur le numéro ${withdrawals[idx].number} (${withdrawals[idx].operator}) a été validé et expédié avec succès.`,
-        type: 'withdraw',
-        lastModified: Date.now(),
-        createdAt: new Date().toISOString(),
-        read: false
-      });
+      let countryIso = "TG";
+      let operatorSlug = "tmoney";
+      let currency = "XOF";
+
+      const operatorLower = String(withdrawal.operator).toLowerCase();
+      
+      // Smart country matching
+      if (operatorLower.includes('ci') || operatorLower.includes("côte d'ivoire") || operatorLower.includes("cote d'ivoire")) {
+        countryIso = 'CI';
+        currency = 'XOF';
+      } else if (operatorLower.includes('tg') || operatorLower.includes('togo')) {
+        countryIso = 'TG';
+        currency = 'XOF';
+      } else if (operatorLower.includes('bj') || operatorLower.includes('bénin') || operatorLower.includes('benin')) {
+        countryIso = 'BJ';
+        currency = 'XOF';
+      } else if (operatorLower.includes('sn') || operatorLower.includes('sénégal') || operatorLower.includes('senegal')) {
+        countryIso = 'SN';
+        currency = 'XOF';
+      } else if (operatorLower.includes('ml') || operatorLower.includes('mali')) {
+        countryIso = 'ML';
+        currency = 'XOF';
+      } else if (operatorLower.includes('bf') || operatorLower.includes('burkina')) {
+        countryIso = 'BF';
+        currency = 'XOF';
+      } else if (operatorLower.includes('cm') || operatorLower.includes('cameroun')) {
+        countryIso = 'CM';
+        currency = 'XAF';
+      } else if (operatorLower.includes('gn') || operatorLower.includes('guinée') || operatorLower.includes('guinee')) {
+        countryIso = 'GN';
+        currency = 'GNF';
+      } else if (operatorLower.includes('cod') || operatorLower.includes('congo d')) {
+        countryIso = 'COD';
+        currency = 'CDF';
+      } else if (operatorLower.includes('cog') || operatorLower.includes('congo b')) {
+        countryIso = 'COG';
+        currency = 'XAF';
+      }
+
+      // Smart operator slug matching with live SendavaPay operators
+      const payoutSlugMap: Record<string, Record<string, string>> = {
+        TG: { tmoney: 't-money-togo', moov: 'moov-togo' },
+        CI: { orange: 'orange-money-ci', mtn: 'mtn-ci', moov: 'moov-ci', wave: 'wave-ci' },
+        BJ: { mtn: 'mtn-benin', moov: 'moov-benin' },
+        SN: { orange: 'new-orange-money-senegal', wave: 'wave-senegal', mixx: 'mixx-sn' },
+        ML: { orange: 'orange-money-mali' },
+        BF: { orange: 'orange-money-burkina', moov: 'moov-burkina-faso' },
+        COD: { vodacom: 'vodacom-cod', airtel: 'airtel-cod', orange: 'orange-cod' },
+        COG: { airtel: 'airtel-cog', mtn: 'mtn-cog' }
+      };
+
+      let genericKey = 'orange';
+      if (operatorLower.includes('tmoney') || operatorLower.includes('t-money')) {
+        genericKey = 'tmoney';
+      } else if (operatorLower.includes('flooz') || operatorLower.includes('moov')) {
+        genericKey = 'moov';
+      } else if (operatorLower.includes('mtn') || operatorLower.includes('momo')) {
+        genericKey = 'mtn';
+      } else if (operatorLower.includes('orange') || operatorLower.includes('om')) {
+        genericKey = 'orange';
+      } else if (operatorLower.includes('wave')) {
+        genericKey = 'wave';
+      } else if (operatorLower.includes('vodacom') || operatorLower.includes('mpesa')) {
+        genericKey = 'vodacom';
+      } else if (operatorLower.includes('airtel')) {
+        genericKey = 'airtel';
+      } else if (operatorLower.includes('mixx')) {
+        genericKey = 'mixx';
+      }
+
+      const matchedSlugs = payoutSlugMap[countryIso] || {};
+      operatorSlug = matchedSlugs[genericKey] || genericKey;
+
+      const formattedPhone = formatToE164(withdrawal.number, countryIso);
+      console.log(`[ADMIN WITHDRAWAL APPROVAL PAYOUT] Executing automatic SendavaPay withdraw payout. ID: ${withdrawalId}, Amount: ${withdrawal.amount} ${currency}, Country: ${countryIso}, Operator: ${operatorSlug}, Target: ${formattedPhone}`);
+
+      try {
+        const payoutRes = await fetch("https://sendavapay.com/api/sdk/v1/withdraw", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + (process.env.SENDAVAPAY_TOKEN || "sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt")
+          },
+          body: JSON.stringify({
+            amount: Number(withdrawal.amount),
+            phoneNumber: formattedPhone,
+            operator: operatorSlug,
+            country: countryIso,
+            currency,
+            description: `Retrait AgroProfit automatique`,
+            externalReference: withdrawal.id
+          })
+        });
+
+        if (!payoutRes.ok) {
+          const errText = await payoutRes.text();
+          const cleanErr = (errText.includes("<") || errText.includes("html") || errText.includes("<!DOCTYPE")) ? "HTML Error Page Received" : errText.slice(0, 200);
+          console.error("[ADMIN WITHDRAWAL APPROVAL PAYOUT] API error:", payoutRes.status, cleanErr);
+          return res.json({ success: false, message: `L'API de payout SendavaPay a renvoyé une erreur : ${cleanErr}` });
+        }
+
+        const payoutData = await payoutRes.json();
+        console.log("[ADMIN WITHDRAWAL APPROVAL PAYOUT] API response:", payoutData);
+
+        if (payoutData && payoutData.success) {
+          withdrawals[idx].status = 'approved';
+          withdrawals[idx].reference = payoutData.data?.reference || `sp-${Date.now()}`;
+          withdrawals[idx].lastModified = Date.now();
+
+          notifications.unshift({
+            id: `not-wth-sp-payout-${Date.now()}`,
+            userId: withdrawal.userId,
+            title: '💸 Retrait SendavaPay Initié',
+            message: `Votre demande de retrait de ${withdrawal.amount.toLocaleString()} XOF a été transmise automatiquement au réseau SendavaPay pour versement direct sur votre mobile money (${withdrawal.operator}).`,
+            type: 'withdraw',
+            lastModified: Date.now(),
+            createdAt: new Date().toISOString(),
+            read: false
+          });
+        } else {
+          return res.json({ success: false, message: payoutData?.error || "La transaction de payout automatique a échoué via SendavaPay." });
+        }
+      } catch (payoutErr: any) {
+        console.error("[ADMIN WITHDRAWAL APPROVAL PAYOUT] Exception calling SendavaPay:", payoutErr);
+        return res.json({ success: false, message: `Exception lors du payout SendavaPay : ${payoutErr.message}` });
+      }
     } else {
       withdrawals[idx].status = 'rejected';
       const uIdx = users.findIndex((u: any) => u.id === withdrawals[idx].userId);
