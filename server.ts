@@ -1832,79 +1832,84 @@ async function startServer() {
 
   // Centralized Create Deposit API
   app.post("/api/create-deposit", async (req, res) => {
-    const { userId, amount, operator, reference, receiptImage } = req.body;
-    let users = storeData["gi_users"] || [];
-    let deposits = storeData["gi_deposits"] || [];
-    let notifications = storeData["gi_notifications"] || [];
+    try {
+      const { userId, amount, operator, reference, receiptImage } = req.body;
+      let users = storeData["gi_users"] || [];
+      let deposits = storeData["gi_deposits"] || [];
+      let notifications = storeData["gi_notifications"] || [];
 
-    const uIdx = users.findIndex((u: any) => u.id === userId);
-    const user = uIdx !== -1 ? users[uIdx] : null;
+      const uIdx = users.findIndex((u: any) => u.id === userId);
+      const user = uIdx !== -1 ? users[uIdx] : null;
 
-    // Prevent duplicate processing of the same transaction reference!
-    if (reference) {
-      const existing = deposits.find((d: any) => d.reference === reference);
-      if (existing) {
-        console.log(`[DEPOSIT API] Reference "${reference}" already processed for deposit ${existing.id}. Skipping to avoid duplicates.`);
-        return res.json({ success: true, deposit: existing, user: user || undefined });
+      // Prevent duplicate processing of the same transaction reference!
+      if (reference) {
+        const existing = deposits.find((d: any) => d.reference === reference);
+        if (existing) {
+          console.log(`[DEPOSIT API] Reference "${reference}" already processed for deposit ${existing.id}. Skipping to avoid duplicates.`);
+          return res.json({ success: true, deposit: existing, user: user || undefined });
+        }
       }
-    }
 
-    const isAutomated = receiptImage === 'automated_westpay' || receiptImage === 'automated';
+      const isAutomated = receiptImage === 'automated_westpay' || receiptImage === 'automated';
 
-    const newDep = {
-      id: `dep-${Date.now()}`,
-      userId,
-      userName: user ? user.name : 'Utilisateur',
-      amount: Number(amount),
-      operator: operator || 'WestPay Direct',
-      reference,
-      receiptImage,
-      status: isAutomated ? 'approved' : 'pending',
-      lastModified: Date.now(),
-      createdAt: new Date().toISOString()
-    };
-    deposits.unshift(newDep);
+      const newDep = {
+        id: `dep-${Date.now()}`,
+        userId,
+        userName: user ? user.name : 'Utilisateur',
+        amount: Number(amount),
+        operator: operator || 'WestPay Direct',
+        reference,
+        receiptImage,
+        status: isAutomated ? 'approved' : 'pending',
+        lastModified: Date.now(),
+        createdAt: new Date().toISOString()
+      };
+      deposits.unshift(newDep);
 
-    if (isAutomated && user) {
-      user.balance += Number(amount);
-      user.lastModified = Date.now();
-      try {
-        distributeMlmCommissions(userId, Number(amount), 'recharge', operator || 'SoinaPay');
-      } catch (mlmErr) {
-        console.error("[DEPOSIT API MLM ERROR]", mlmErr);
+      if (isAutomated && user) {
+        user.balance += Number(amount);
+        user.lastModified = Date.now();
+        try {
+          distributeMlmCommissions(userId, Number(amount), 'recharge', operator || 'SoinaPay');
+        } catch (mlmErr) {
+          console.error("[DEPOSIT API MLM ERROR]", mlmErr);
+        }
       }
+
+      if (isAutomated) {
+        notifications.unshift({
+          id: `not-dep-wp-${Date.now()}`,
+          userId,
+          title: 'Dépôt Automatique Crédité',
+          message: `Votre versement de ${Number(amount).toLocaleString()} XOF via ${operator || 'SoinaPay'} (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
+          type: 'deposit',
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString(),
+          read: false
+        });
+      } else {
+        notifications.unshift({
+          id: `not-dep-${Date.now()}`,
+          userId,
+          title: 'Dépôt soumis',
+          message: `Votre demande de dépôt de ${Number(amount).toLocaleString()} XOF via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
+          type: 'deposit',
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString(),
+          read: false
+        });
+      }
+
+      storeData["gi_deposits"] = deposits;
+      storeData["gi_notifications"] = notifications;
+      storeData["gi_users"] = users;
+
+      await saveStore(["gi_users", "gi_deposits", "gi_notifications"]);
+      res.json({ success: true, deposit: newDep, user: user || undefined });
+    } catch (err: any) {
+      console.error("[DEPOSIT API ERROR]", err);
+      res.status(500).json({ success: false, error: err?.message || String(err) });
     }
-
-    if (isAutomated) {
-      notifications.unshift({
-        id: `not-dep-wp-${Date.now()}`,
-        userId,
-        title: 'Dépôt Automatique Crédité',
-        message: `Votre versement de ${Number(amount).toLocaleString()} XOF via ${operator || 'SoinaPay'} (Réf: ${reference}) a été crédité instantanément et automatiquement à 100%.`,
-        type: 'deposit',
-        lastModified: Date.now(),
-        createdAt: new Date().toISOString(),
-        read: false
-      });
-    } else {
-      notifications.unshift({
-        id: `not-dep-${Date.now()}`,
-        userId,
-        title: 'Dépôt soumis',
-        message: `Votre demande de dépôt de ${Number(amount).toLocaleString()} XOF via ${operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
-        type: 'deposit',
-        lastModified: Date.now(),
-        createdAt: new Date().toISOString(),
-        read: false
-      });
-    }
-
-    storeData["gi_deposits"] = deposits;
-    storeData["gi_notifications"] = notifications;
-    storeData["gi_users"] = users;
-
-    await saveStore();
-    res.json({ success: true, deposit: newDep, user: user || undefined });
   });
 
   // SendavaPay API Integration

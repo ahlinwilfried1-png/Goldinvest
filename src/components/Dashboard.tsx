@@ -1538,34 +1538,93 @@ export default function Dashboard({
         payload.operator = `SendavaPay [${depositPhoneNumber.trim()}]`;
       }
 
-      const response = await apiFetch(getApiUrl('/api/create-deposit'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      let succeeded = false;
+      let response;
+      try {
+        response = await apiFetch(getApiUrl('/api/create-deposit'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        if (response && response.ok) {
+          const data = await response.json();
+          if (data && data.success) {
+            succeeded = true;
+            if (data.user) {
+              DataStore.saveCurrentUser(data.user);
+            }
+          } else {
+            setDepositError(data?.error || "La création du dépôt a échoué. Veuillez réessayer.");
+            setIsSubmittingDeposit(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("[SendavaPay API failover] Server API failed, falling back to local/Supabase store:", err);
+      }
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.success) {
-          const redirectUrl = "https://sendavapay.com/pay/SPYURDC56TK";
-          setDepositRedirectUrl(redirectUrl);
-          setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} F via SendavaPay a été enregistrée avec succès ! Veuillez cliquer sur le bouton ci-dessous pour effectuer le paiement de manière sécurisée.`);
-          try {
-            window.open(redirectUrl, '_blank');
-          } catch (popupErr) {
-            console.warn("Popup blocked, user needs to click button manually.", popupErr);
-          }
-          syncDashboardData();
-          if (typeof syncWithBackend === 'function') {
-            syncWithBackend().catch(() => {});
-          }
-        } else {
-          setDepositError(data.error || "La création du dépôt a échoué. Veuillez réessayer.");
+      const redirectUrl = "https://sendavapay.com/pay/SPYURDC56TK";
+
+      if (succeeded) {
+        setDepositRedirectUrl(redirectUrl);
+        setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} F via SendavaPay a été enregistrée avec succès ! Veuillez cliquer sur le bouton ci-dessous pour effectuer le paiement de manière sécurisée.`);
+        try {
+          window.open(redirectUrl, '_blank');
+        } catch (popupErr) {
+          console.warn("Popup blocked, user needs to click button manually.", popupErr);
+        }
+        syncDashboardData();
+        if (typeof syncWithBackend === 'function') {
+          syncWithBackend().catch(() => {});
         }
       } else {
-        setDepositError("Erreur serveur lors de la création du dépôt. Veuillez réessayer.");
+        // --- CLIENT-SIDE FAILOVER STRATEGY ---
+        console.log("[SendavaPay Fallback] Executing robust direct-to-Supabase deposit register...");
+        
+        const deposits = DataStore.getDeposits();
+        const users = DataStore.getUsers();
+        const user = users.find(u => u.id === userState.id);
+
+        const newDep = {
+          id: `dep-${Date.now()}`,
+          userId: userState.id,
+          userName: user ? user.name : (userState.name || 'Utilisateur'),
+          amount: amt,
+          operator: payload.operator,
+          reference: reference,
+          receiptImage: 'sendavapay_link',
+          status: 'pending' as const,
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString()
+        };
+
+        deposits.unshift(newDep);
+        DataStore.saveDeposits(deposits);
+
+        const notifications = DataStore.getNotifications();
+        notifications.unshift({
+          id: `not-dep-${Date.now()}`,
+          userId: userState.id,
+          title: 'Dépôt soumis',
+          message: `Votre demande de dépôt de ${amt.toLocaleString()} F via ${payload.operator} (Réf: ${reference}) est en cours de vérification par l'administration.`,
+          type: 'deposit',
+          lastModified: Date.now(),
+          createdAt: new Date().toISOString(),
+          read: false
+        });
+        DataStore.saveNotifications(notifications);
+
+        // Notify client and allow them to click the payment link anyway
+        setDepositRedirectUrl(redirectUrl);
+        setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} F via SendavaPay a été enregistrée avec succès ! Veuillez cliquer sur le bouton ci-dessous pour effectuer le paiement de manière sécurisée.`);
+        try {
+          window.open(redirectUrl, '_blank');
+        } catch (popupErr) {
+          console.warn("Popup blocked, user needs to click button manually.", popupErr);
+        }
+        syncDashboardData();
       }
     } catch (error: any) {
       console.error("SendavaPay deposit error:", error);
