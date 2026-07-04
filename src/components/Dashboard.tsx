@@ -3429,10 +3429,45 @@ export default function Dashboard({
                     onChange={(e) => setWithdrawOperator(e.target.value)}
                     className="w-full bg-white border border-orange-100 rounded-xl py-2 px-3 text-xs text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm"
                   >
-                    <option value="T-Money (TG)">T-Money (TG)</option>
-                    <option value="Moov (TG)">Moov (TG)</option>
-                    <option value="MTN (CM)">MTN (CM)</option>
-                    <option value="Orange (CM)">Orange (CM)</option>
+                    <optgroup label="Togo 🇹🇬">
+                      <option value="T-Money (TG)">T-Money (TG)</option>
+                      <option value="Moov (TG)">Moov (TG)</option>
+                    </optgroup>
+                    <optgroup label="Cameroun 🇨🇲">
+                      <option value="MTN (CM)">MTN (CM)</option>
+                      <option value="Orange (CM)">Orange (CM)</option>
+                    </optgroup>
+                    <optgroup label="Côte d'Ivoire 🇨🇮">
+                      <option value="Wave (CI)">Wave (CI)</option>
+                      <option value="MTN (CI)">MTN (CI)</option>
+                      <option value="Orange (CI)">Orange (CI)</option>
+                      <option value="Moov (CI)">Moov (CI)</option>
+                    </optgroup>
+                    <optgroup label="Sénégal 🇸🇳">
+                      <option value="Wave (SN)">Wave (SN)</option>
+                      <option value="Orange (SN)">Orange (SN)</option>
+                      <option value="Free Money / Mixx (SN)">Free Money / Mixx (SN)</option>
+                    </optgroup>
+                    <optgroup label="Bénin 🇧🇯">
+                      <option value="MTN (BJ)">MTN (BJ)</option>
+                      <option value="Moov (BJ)">Moov (BJ)</option>
+                    </optgroup>
+                    <optgroup label="Burkina Faso 🇧🇫">
+                      <option value="Orange (BF)">Orange (BF)</option>
+                      <option value="Moov (BF)">Moov (BF)</option>
+                    </optgroup>
+                    <optgroup label="Mali 🇲🇱">
+                      <option value="Orange (ML)">Orange (ML)</option>
+                    </optgroup>
+                    <optgroup label="Congo RDC 🇨🇩">
+                      <option value="Vodacom (COD)">Vodacom (COD)</option>
+                      <option value="Airtel (COD)">Airtel (COD)</option>
+                      <option value="Orange (COD)">Orange (COD)</option>
+                    </optgroup>
+                    <optgroup label="Congo Brazzaville 🇨🇬">
+                      <option value="Airtel (COG)">Airtel (COG)</option>
+                      <option value="MTN (COG)">MTN (COG)</option>
+                    </optgroup>
                   </select>
                 </div>
 
