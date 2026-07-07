@@ -44,7 +44,7 @@ const INITIAL_COMMISSIONS: Commission[] = [];
 const INITIAL_NOTIFICATIONS: SystemNotification[] = [];
 
 const INITIAL_BONUS_CODES: BonusCode[] = [
-  { code: 'AGR72', amount: 1000, maxUses: 100, usedCount: 0, usedByUsers: [] },
+  { code: '72AGR', amount: 1000, maxUses: 100, usedCount: 0, usedByUsers: [] },
   { code: 'WELCOME500', amount: 500, maxUses: 500, usedCount: 0, usedByUsers: [] },
   { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
 ];
@@ -785,7 +785,7 @@ export class DataStore {
         dailyEarnings: 0,
         totalEarnings: 0,
         bonus: 5000,
-        referralCode: 'AGR72',
+        referralCode: '72AGR',
         role: 'admin',
         isBlocked: false,
         createdAt: '2026-05-10T10:00:00Z'
@@ -1203,26 +1203,17 @@ export class DataStore {
     const digitsPool = '0123456789';
 
     while (codeExists) {
-      let selectedLetters = '';
-      for (let i = 0; i < 3; i++) {
-        selectedLetters += lettersPool.charAt(Math.floor(Math.random() * lettersPool.length));
-      }
-      
       let selectedDigits = '';
       for (let i = 0; i < 2; i++) {
         selectedDigits += digitsPool.charAt(Math.floor(Math.random() * digitsPool.length));
       }
-      
-      // Shuffle them to mix letters and digits
-      const combinedArray = (selectedLetters + selectedDigits).split('');
-      for (let i = combinedArray.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = combinedArray[i];
-        combinedArray[i] = combinedArray[j];
-        combinedArray[j] = temp;
+
+      let selectedLetters = '';
+      for (let i = 0; i < 3; i++) {
+        selectedLetters += lettersPool.charAt(Math.floor(Math.random() * lettersPool.length));
       }
-      
-      const potentialCode = combinedArray.join('');
+
+      const potentialCode = selectedDigits + selectedLetters;
       const isDuplicate = users.some((u: any) => u.referralCode && u.referralCode.toUpperCase() === potentialCode);
       if (!isDuplicate) {
         referralCode = potentialCode;
@@ -1272,7 +1263,7 @@ export class DataStore {
           totalEarnings: 0,
           bonus: 200,
           referralCode: codeClean,
-          referredBy: 'AGR72',
+          referredBy: '72AGR',
           role: 'user',
           isBlocked: false,
           createdAt: new Date().toISOString()
@@ -1310,7 +1301,7 @@ export class DataStore {
     notifications.unshift({
       id: `not-${Date.now()}`,
       userId: newUser.id,
-      title: 'Bienvenue sur Aiprods !',
+      title: 'Bienvenue sur Dreampod !',
       message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
       type: 'bonus',
       createdAt: new Date().toISOString(),

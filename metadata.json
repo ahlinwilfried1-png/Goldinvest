@@ -1,5 +1,5 @@
 {
-  "name": "Aiprods",
+  "name": "Dreampod",
   "description": "Plateforme d'investissement technologique moderne, sécurisée et professionnelle avec tableau de bord premium, système de parrainage MLM et panneau d'administration pour écouteurs et produits audio connectés.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

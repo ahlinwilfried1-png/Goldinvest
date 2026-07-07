@@ -199,20 +199,20 @@ export default function App() {
   return (
     <div className="min-h-screen bg-transparent font-sans tracking-tight leading-normal overflow-x-hidden select-none relative text-slate-900">
       
-      {/* Immersive White AirPods background image for the entire site */}
+      {/* Immersive White Dreampod background image for the entire site */}
       <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden select-none" id="site-global-brand-background">
         <img 
-          src="https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&w=1600&q=85" 
-          alt="Site AirPods Background White" 
-          className="w-full h-full object-cover filter brightness-[1.04] contrast-[1.02]"
+          src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=85" 
+          alt="Site Dreampod Background White" 
+          className="w-full h-full object-cover filter brightness-[1.05] contrast-[1.01]"
           referrerPolicy="no-referrer"
         />
         {/* Soft elegant white overlays to blend it perfectly and guarantee high contrast */}
-        <div className="absolute inset-0 bg-white/25" />
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/45 via-white/10 to-white/50" />
+        <div className="absolute inset-0 bg-white/75" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/80 via-white/40 to-white/80" />
         
         {/* Ambient colored highlights */}
-        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-[#ff7c00]/5 blur-[140px]" />
+        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-purple-500/10 blur-[140px]" />
       </div>
 
       {/* 1. AUTHENTICATION & REGISTRATION SCREEN */}

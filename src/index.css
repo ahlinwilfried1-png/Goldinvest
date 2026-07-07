@@ -1,32 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 @import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700,800,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "PP Neue Montreal", "Neue Montreal", "General Sans", "Plus Jakarta Sans", "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "PP Neue Montreal", "Neue Montreal", "General Sans", "Plus Jakarta Sans", "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Roboto", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "General Sans", monospace;
   
-  --color-gold-luminous: #facc15;
-  --color-gold-dark: #b45309;
-  --color-night-blue: #7f1d1d;
-  --color-night-blue-light: #9f1239;
-  --color-dark-black: #000000;
+  --color-gold-luminous: #c084fc;
+  --color-gold-dark: #6d28d9;
+  --color-night-blue: #5b21b6;
+  --color-night-blue-light: #7c3aed;
+  --color-dark-black: #0f172a;
   --color-premium-white: #ffffff;
 }
 
-/* Force Montreal (General Sans / Plus Jakarta Sans) on everything to guarantee NO exception anywhere in the app */
+/* Force Roboto on everything to guarantee NO exception anywhere in the app */
 *, html, body, button, input, select, textarea, table, th, td, h1, h2, h3, h4, h5, h6, span, p, div, a, li, ul, ol, label, section, footer, header, main, nav, aside {
-  font-family: "PP Neue Montreal", "Neue Montreal", "General Sans", "Plus Jakarta Sans", "Montserrat", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: "Roboto", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
-/* Custom Gold and Deep Premium Styles */
+/* Custom Purple and Premium White Styles */
 :root {
-  --gold-primary: #facc15;
-  --gold-secondary: #eab308;
-  --dark-blue: #7f1d1d;
-  --dark-black: #000000;
+  --purple-primary: #7c3aed;
+  --purple-secondary: #6d28d9;
+  --dark-purple: #4c1d95;
+  --dark-black: #0f172a;
 }
 
 html, body, #root {
@@ -41,7 +42,7 @@ html, body, #root {
 
 /* Perfect compact base layout scaling with optimized typography visibility */
 html {
-  font-size: 13.5px !important; /* Elegant compact base that shrinks layout blocks naturally on mobile viewports */
+  font-size: 13.5px !important;
 }
 
 @media (min-width: 640px) {
@@ -52,57 +53,57 @@ html {
 
 @media (min-width: 768px) {
   html {
-    font-size: 15px !important; /* Standard pixel density for crisp high-end screens */
+    font-size: 15px !important;
   }
 }
 
 /* Perfect balanced text overrides with supreme clarity and zero disproportion */
 .text-\[8px\] {
-  font-size: 0.72rem !important; /* ~10px */
+  font-size: 0.72rem !important;
 }
 
 .text-\[9px\] {
-  font-size: 0.78rem !important; /* ~11px */
+  font-size: 0.78rem !important;
 }
 
 .text-\[10px\] {
-  font-size: 0.83rem !important; /* ~11px */
+  font-size: 0.83rem !important;
 }
 
 .text-\[11px\] {
-  font-size: 0.88rem !important;  /* ~12px */
+  font-size: 0.88rem !important;
 }
 
 .text-xs {
-  font-size: 0.94rem !important;  /* ~13px */
+  font-size: 0.94rem !important;
 }
 
 .text-sm {
-  font-size: 1.06rem !important;  /* ~14px */
+  font-size: 1.06rem !important;
 }
 
 .text-base {
-  font-size: 1.18rem !important;  /* ~16px */
+  font-size: 1.18rem !important;
 }
 
 .text-lg {
-  font-size: 1.34rem !important;  /* ~18px */
+  font-size: 1.34rem !important;
 }
 
 .text-xl {
-  font-size: 1.54rem !important;  /* ~21px */
+  font-size: 1.54rem !important;
 }
 
 .text-2xl {
-  font-size: 1.85rem !important;  /* ~25px */
+  font-size: 1.85rem !important;
 }
 
 .text-3xl {
-  font-size: 2.22rem !important;  /* ~30px */
+  font-size: 2.22rem !important;
 }
 
 .text-4xl {
-  font-size: 2.75rem !important;  /* ~37px */
+  font-size: 2.75rem !important;
 }
 
 .text-5xl {
@@ -115,13 +116,13 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #fcfcfd !important;
-  background-image: linear-gradient(180deg, #ffffff 0%, #fffbf2 100%) !important; /* Subtle elite warm golden track */
+  background-color: #fafafa !important;
+  background-image: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%) !important; /* Subtle elite warm violet/purple track */
   color: #1e293b !important;
   background-attachment: fixed !important;
 }
 
-/* Transform all dark/slate cards & panels to luxurious pure white cards with soft Red-Gold premium borders */
+/* Transform all dark/slate cards & panels to luxurious pure white cards with soft Purple premium borders */
 .bg-\[\#eef3fc\],
 .bg-slate-900\/60,
 .bg-slate-905\/40,
@@ -150,23 +151,23 @@ body {
   background: #ffffff !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(220, 38, 38, 0.15) !important; /* Elegant crimson border */
+  border: 1px solid rgba(124, 58, 237, 0.12) !important; /* Elegant violet border */
   color: #0f172a !important;
-  box-shadow: 0 12px 36px rgba(220, 38, 38, 0.03) !important;
+  box-shadow: 0 12px 36px rgba(124, 58, 237, 0.03) !important;
 }
 
 /* Force light background on all select/input fields inside these panels as well */
 input, select, textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  border: 1.5px solid rgba(220, 38, 38, 0.18) !important;
+  border: 1.5px solid rgba(124, 58, 237, 0.16) !important;
 }
 
 button {
-  border-color: rgba(220, 38, 38, 0.2) !important;
+  border-color: rgba(124, 58, 237, 0.18) !important;
 }
 
-/* Convert all dark modal/lightbox overlays to beautiful translucent cream-yellow instead of black */
+/* Convert all dark modal/lightbox overlays to beautiful translucent white-purple instead of black */
 .bg-black\/90,
 .bg-black\/80,
 .bg-black\/65,
@@ -207,11 +208,11 @@ button {
   color: #ffffff !important;
 }
 
-/* Override the bank card style to rich professional prestigious SKY BLUE depth */
+/* Override the bank card style to rich professional prestigious PURPLE/VIOLET depth */
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] {
-  background-image: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
-  border: 1.5px solid #38bdf8 !important; /* Sky blue border */
-  box-shadow: 0 20px 50px -15px rgba(14, 165, 233, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  background-image: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  border: 1.5px solid #c084fc !important; /* Light purple border */
+  box-shadow: 0 20px 50px -15px rgba(124, 58, 237, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
   color: #ffffff !important;
 }
 
@@ -222,36 +223,40 @@ button {
   color: #ffffff !important; /* Prestigious white contrast on the card */
 }
 
-/* Balance in prestigious bright sky blue */
+/* Balance in prestigious bright purple */
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] .solde-display-number,
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] [id="main-balance-text"] {
   color: #ffffff !important;
-  text-shadow: 0 1.5px 3px rgba(2, 132, 199, 0.35);
+  text-shadow: 0 1.5px 3px rgba(109, 40, 217, 0.35);
 }
 
 /* Ensure secondary buttons over the card stand out */
 .bg-gradient-to-br.from-\[\#1b64d9\].via-\[\#1059d1\].to-\[\#044ab0\] button {
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15) !important;
   background-color: #ffffff !important;
-  color: #0284c7 !important;
-  border: 1px solid #38bdf8 !important;
+  color: #7c3aed !important;
+  border: 1px solid #c084fc !important;
 }
 
-/* Action buttons & daily check-in gradients to supreme Sky Blue premium gradient */
+/* Action buttons & daily check-in gradients to supreme Purple/Violet premium gradient */
 .from-\[\#1b64d9\].to-\[\#046fff\],
 .from-\[\#00d2c3\].to-\[\#046fff\],
-.bg-gradient-to-r.from-\[\#1b64d9\] {
-  background-image: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
+.bg-gradient-to-r.from-\[\#1b64d9\],
+.bg-\[\#1b64d9\] {
+  background-image: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  background-color: #7c3aed !important;
   color: #ffffff !important;
   font-weight: 800 !important;
-  border: 1px solid #38bdf8 !important;
+  border: 1px solid #c084fc !important;
 }
 
-/* Accent texts like blue/cyan/emerald are re-mapped to professional sky blue */
+/* Accent texts like blue/cyan/emerald are re-mapped to professional purple/violet */
 .text-\[\#1b64d9\],
 .text-cyan-404,
-.text-\[\#38bdf8\] {
-  color: #0284c7 !important;
+.text-\[\#38bdf8\],
+.text-blue-600,
+.text-[#1b64d9] {
+  color: #7c3aed !important;
 }
 
 .border-\[\#1b64d9\],
@@ -272,58 +277,58 @@ button {
 .border-gray-305,
 .border-gray-300,
 .border-orange-100 {
-  border-color: rgba(14, 165, 233, 0.18) !important;
+  border-color: rgba(124, 58, 237, 0.15) !important;
 }
 
 .bg-\[\#1b64d9\]\/10 {
-  background-color: rgba(14, 165, 233, 0.08) !important;
+  background-color: rgba(124, 58, 237, 0.08) !important;
 }
 
-/* Glassmorphism utility using sky blue */
+/* Glassmorphism utility using purple */
 .glass-panel {
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.15);
 }
 
 .glass-panel-hover {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border-color: rgba(14, 165, 233, 0.35);
+  border-color: rgba(124, 58, 237, 0.35);
   background: #ffffff;
-  box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.08);
 }
 
 .gold-gradient-text {
-  background: linear-gradient(135deg, #facc15 0%, #eab308 50%, #ca8a04 100%);
+  background: linear-gradient(135deg, #c084fc 0%, #7c3aed 50%, #4c1d95 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gold-bg-gradient {
-  background: linear-gradient(135deg, #fffbeb 0%, #facc15 50%, #eab308 100%);
+  background: linear-gradient(135deg, #f5f3ff 0%, #d8b4fe 50%, #7c3aed 100%);
 }
 
 .gold-border {
-  border: 1.5px solid #facc15;
+  border: 1.5px solid #c084fc;
 }
 
-/* Custom scrollbar with red and yellow theme colors */
+/* Custom scrollbar with purple theme colors */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #fffdf5;
+  background: #f5f3ff;
 }
 ::-webkit-scrollbar-thumb {
-  background: #fef08a; /* Warm gold track */
+  background: #ddd6fe; /* Warm purple track */
   border-radius: 999px;
-  border: 1px solid #facc15;
+  border: 1px solid #c084fc;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #dc2626; /* Cherry red on scroll hover */
+  background: #7c3aed; /* Vibrant purple on scroll hover */
 }
 
 /* Shine effect */
@@ -342,7 +347,7 @@ button {
     to bottom right,
     rgba(255, 255, 255, 0) 0%,
     rgba(255, 255, 255, 0) 40%,
-    rgba(250, 204, 21, 0.35) 50%,
+    rgba(192, 132, 252, 0.35) 50%,
     rgba(255, 255, 255, 0) 60%,
     rgba(255, 255, 255, 0) 100%
   );
@@ -369,7 +374,7 @@ div.font-black {
   font-weight: 500 !important;
 }
 
-/* Keep only the account balance (solde) bold */
+/* Keep only the account balance bold */
 .solde-bold,
 .solde-bold *,
 [id="main-balance-text"],
@@ -379,17 +384,20 @@ div.font-black {
   font-weight: 900 !important;
 }
 
-/* --- GLOBAL WHITE, RED & YELLOW THEME TRANSLATIONS --- */
+/* --- GLOBAL WHITE & PURPLE THEME TRANSLATIONS --- */
 
-/* Text colors translated to rich amber yellow */
+/* Text colors translated to rich purple/violet */
 .text-yellow-500,
 .text-yellow-400,
 .text-yellow-300,
 .text-yellow-600,
 .text-amber-500,
 .text-orange-500,
-.text-orange-600 {
-  color: #d97706 !important;
+.text-orange-600,
+.text-emerald-500,
+.text-emerald-600,
+.text-emerald-700 {
+  color: #7c3aed !important;
 }
 
 .text-yellow-705,
@@ -397,24 +405,17 @@ div.font-black {
 .text-amber-700,
 .text-orange-700,
 .text-amber-800 {
-  color: #b45309 !important;
-}
-
-/* Red values translation to override previous green overrides */
-.text-emerald-500,
-.text-emerald-600,
-.text-emerald-700 {
-  color: #dc2626 !important;
+  color: #5b21b6 !important;
 }
 
 .bg-emerald-500,
 .bg-emerald-600,
 .bg-emerald-700 {
-  background-color: #dc2626 !important;
+  background-color: #7c3aed !important;
   color: #ffffff !important;
 }
 
-/* Red background opacities */
+/* Red background opacities replaced with soft purple */
 .bg-emerald-500\/10,
 .bg-emerald-500\/15,
 .bg-emerald-500\/20,
@@ -422,8 +423,8 @@ div.font-black {
 .bg-emerald-50,
 .bg-green-50,
 .bg-green-100 {
-  background-color: rgba(220, 38, 38, 0.08) !important;
-  color: #9f1239 !important;
+  background-color: rgba(124, 58, 237, 0.08) !important;
+  color: #6d28d9 !important;
 }
 
 /* Yellow background values */
@@ -433,8 +434,8 @@ div.font-black {
 .bg-amber-500,
 .bg-orange-500,
 .bg-orange-600 {
-  background-color: #facc15 !important;
-  color: #1e293b !important;
+  background-color: #c084fc !important;
+  color: #ffffff !important;
 }
 
 /* Yellow background opacities */
@@ -445,8 +446,8 @@ div.font-black {
 .bg-amber-500\/10,
 .bg-orange-500\/10,
 .bg-orange-500\/20 {
-  background-color: rgba(250, 204, 21, 0.12) !important;
-  color: #b45309 !important;
+  background-color: rgba(124, 58, 237, 0.08) !important;
+  color: #6d28d9 !important;
 }
 
 /* Borders */
@@ -464,29 +465,29 @@ div.font-black {
 .border-emerald-500\/20,
 .focus\:border-yellow-500\/40:focus,
 .focus\:border-yellow-500:focus {
-  border-color: rgba(250, 204, 21, 0.3) !important;
+  border-color: rgba(124, 58, 237, 0.2) !important;
 }
 
 .border-yellow-500 {
-  border-color: #facc15 !important;
+  border-color: #7c3aed !important;
 }
 
 .border-emerald-500 {
-  border-color: #dc2626 !important;
+  border-color: #6d28d9 !important;
 }
 
 /* VIP Badge backgrounds or specific gradients */
 .from-amber-100.to-yellow-105 {
-  background-image: linear-gradient(to bottom right, #fffbeb, #fef9c3) !important;
-  color: #854d0e !important;
+  background-image: linear-gradient(to bottom right, #f5f3ff, #ede9fe) !important;
+  color: #5b21b6 !important;
 }
 
 /* Hover effects */
 .hover\:border-yellow-500\/25:hover,
 .hover\:border-yellow-500\/20:hover,
 .hover\:text-yellow-400:hover {
-  border-color: rgba(250, 204, 21, 0.6) !important;
-  color: #b45309 !important;
+  border-color: rgba(124, 58, 237, 0.4) !important;
+  color: #6d28d9 !important;
 }
 
 /* Infinite Marquee Left to Right with Back and Forth (Va-et-vient) */
@@ -508,9 +509,8 @@ div.font-black {
   animation: marquee-va-et-vient 30s ease-in-out infinite;
 }
 
-/* Specific override for the communiqué to use Montserrat font-family as requested */
+/* Specific override for the communiqué to use Montserrat font-family */
 .communiqué-montserrat,
 .communiqué-montserrat * {
   font-family: "Montserrat", sans-serif !important;
 }
-

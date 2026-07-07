@@ -207,7 +207,7 @@ async function startServer() {
     // Prefill central database with standard mock data if keys are absent
     const defaultData: Record<string, any> = {
       "gi_users": [
-        { id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' }
+        { id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: '72AGR', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' }
       ],
       "gi_deposits": [],
       "gi_withdrawals": [],
@@ -215,7 +215,7 @@ async function startServer() {
       "gi_commissions": [],
       "gi_notifications": [],
       "gi_bonus_codes": [
-        { code: 'AGR72', amount: 1000, maxUses: 100, usedCount: 0, usedByUsers: [] },
+        { code: '72AGR', amount: 1000, maxUses: 100, usedCount: 0, usedByUsers: [] },
         { code: 'WELCOME500', amount: 500, maxUses: 500, usedCount: 0, usedByUsers: [] },
         { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
       ],
@@ -267,8 +267,32 @@ async function startServer() {
       modified = true;
     }
 
-    // Default VIP/Airprods products should persist and not be cleared on server startup.
-    // The user can configure, edit, or delete them directly via the administrator panel.
+    // Explicitly reset the cleanup timestamp to 0 so we don't trigger cache clearing on clients' browsers,
+    // thereby protecting users' local account and purchase data and allowing automatic merge/sync.
+    if (storeData["gi_cleanup_timestamp"] !== 0) {
+      console.log("[STARTUP] Resetting gi_cleanup_timestamp to 0 to prevent client cache wipe");
+      storeData["gi_cleanup_timestamp"] = 0;
+      modified = true;
+    }
+
+    // USER REQUEST: Supprimer fixé 12345 (vip-1, vip-2, vip-3, vip-4, vip-5) et activités (category === 'activity')
+    if (storeData["gi_products"]) {
+      const initialLength = storeData["gi_products"].length;
+      storeData["gi_products"] = storeData["gi_products"].filter((p: any) => {
+        const isFixed1To5 = p.category === 'stability' && p.vipLevel >= 1 && p.vipLevel <= 5;
+        const isActivity = p.category === 'activity';
+        return !isFixed1To5 && !isActivity;
+      });
+      if (storeData["gi_products"].length !== initialLength) {
+        console.log(`[STARTUP] Filtered products from ${initialLength} to ${storeData["gi_products"].length}`);
+        modified = true;
+        setTimeout(() => {
+          saveStore(["gi_products"]).catch(err => {
+            console.error("[STARTUP] Failed to save pruned products to Supabase:", err);
+          });
+        }, 1000);
+      }
+    }
 
     if (modified) {
       saveStoreLocal();
@@ -291,7 +315,7 @@ async function startServer() {
           dailyEarnings: 0,
           totalEarnings: 0,
           bonus: 5000,
-          referralCode: 'AGR72',
+          referralCode: '72AGR',
           role: 'admin',
           isBlocked: false,
           createdAt: '2026-05-10T10:00:00Z'
@@ -349,8 +373,7 @@ async function startServer() {
     // Run active cloud sync relay in background using Supabase
     Promise.resolve().then(async () => {
       if (!supabase) {
-        console.log("[SERVER STARTUP] Supabase client is not available. Running on local db.json.");
-        await cleanupNonAdminAccounts();
+        console.log("[SERVER STARTUP] Supabase client is not available. Running on local db.json. (Automatic cleanup disabled to preserve user accounts)");
         return;
       }
       try {
@@ -400,10 +423,9 @@ async function startServer() {
           await saveStore(["gi_whatsapp_group", "gi_whatsapp_channel"]);
         }
 
-        await cleanupNonAdminAccounts();
+        console.log("[SERVER STARTUP] Database successfully loaded without running automatic account purges.");
       } catch (e) {
         console.error("[SERVER STARTUP] Supabase initial pull failed:", e);
-        await cleanupNonAdminAccounts();
       }
     });
   }
@@ -953,7 +975,7 @@ async function startServer() {
       const admins = users.filter((u: any) => u.role === "admin");
       
       if (admins.length === 0) {
-        admins.push({ id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: 'AGR72', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' });
+        admins.push({ id: 'u-admin', name: 'Administrateur Principal', whatsapp: '+237600000000', password: 'agro777', country: 'Cameroun', balance: 1250000, dailyEarnings: 0, totalEarnings: 0, bonus: 5000, referralCode: '72AGR', role: 'admin', isBlocked: false, createdAt: '2026-05-10T10:00:00Z' });
       }
 
       const previousCount = users.length;
@@ -968,6 +990,8 @@ async function startServer() {
       }));
 
       storeData["gi_users"] = cleanedAdmins;
+      storeData["gi_deleted_users"] = [];
+      storeData["gi_deleted_investments"] = [];
 
       // COMPLETELY WIPE deposits, withdrawals, investments, commissions, notifications, support messages, and proofs as requested!
       storeData["gi_deposits"] = [];
@@ -985,7 +1009,19 @@ async function startServer() {
 
       if (supabase) {
         console.log("[API CLEANUP] Overwriting Supabase remote collections with clean empty records...");
-        const tablesToOverwrite = ["gi_users", "gi_deposits", "gi_withdrawals", "gi_investments", "gi_commissions", "gi_notifications", "gi_support_messages", "gi_withdrawal_proofs", "gi_cleanup_timestamp"];
+        const tablesToOverwrite = [
+          "gi_users", 
+          "gi_deposits", 
+          "gi_withdrawals", 
+          "gi_investments", 
+          "gi_commissions", 
+          "gi_notifications", 
+          "gi_support_messages", 
+          "gi_withdrawal_proofs", 
+          "gi_deleted_users",
+          "gi_deleted_investments",
+          "gi_cleanup_timestamp"
+        ];
         for (const tbl of tablesToOverwrite) {
           await supabase.from('store').upsert({
             key: tbl,
@@ -1094,6 +1130,31 @@ async function startServer() {
       });
     } catch (e: any) {
       console.error("[API CLEANUP] Error deleting validated withdrawals:", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  app.get("/api/admin/reset-all-deposits-withdrawals", async (req, res) => {
+    try {
+      console.log("[API CLEANUP] Resetting all deposits, withdrawals and payment proofs...");
+      storeData["gi_deposits"] = [];
+      storeData["gi_withdrawals"] = [];
+      storeData["gi_withdrawal_proofs"] = [];
+      saveStoreLocal();
+
+      if (supabase) {
+        console.log("[API CLEANUP] Overwriting Supabase remote collections with empty arrays...");
+        await supabase.from('store').upsert({ key: "gi_deposits", value: [] });
+        await supabase.from('store').upsert({ key: "gi_withdrawals", value: [] });
+        await supabase.from('store').upsert({ key: "gi_withdrawal_proofs", value: [] });
+      }
+
+      res.json({
+        success: true,
+        message: "Tous les dépôts, retraits et preuves de paiement de la plateforme ont été réinitialisés avec succès !"
+      });
+    } catch (e: any) {
+      console.error("[API CLEANUP] Error resetting deposits and withdrawals:", e);
       res.status(500).json({ success: false, error: e.message });
     }
   });
@@ -1395,33 +1456,24 @@ async function startServer() {
         return res.json({ success: false, message: 'Ce numéro WhatsApp est déjà enregistré sur notre plateforme.' });
       }
 
-      // Generate unique referral code (3 letters mixed with 2 digits)
+      // Generate unique referral code (2 digits followed by 3 letters)
       let referralCode = '';
       let codeExists = true;
       const lettersPool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
       const digitsPool = '0123456789';
 
       while (codeExists) {
-        let selectedLetters = '';
-        for (let i = 0; i < 3; i++) {
-          selectedLetters += lettersPool.charAt(Math.floor(Math.random() * lettersPool.length));
-        }
-        
         let selectedDigits = '';
         for (let i = 0; i < 2; i++) {
           selectedDigits += digitsPool.charAt(Math.floor(Math.random() * digitsPool.length));
         }
-        
-        // Shuffle them to mix letters and digits
-        const combinedArray = (selectedLetters + selectedDigits).split('');
-        for (let i = combinedArray.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          const temp = combinedArray[i];
-          combinedArray[i] = combinedArray[j];
-          combinedArray[j] = temp;
+
+        let selectedLetters = '';
+        for (let i = 0; i < 3; i++) {
+          selectedLetters += lettersPool.charAt(Math.floor(Math.random() * lettersPool.length));
         }
-        
-        const potentialCode = combinedArray.join('');
+
+        const potentialCode = selectedDigits + selectedLetters;
         const isDuplicate = users.some((u: any) => u.referralCode && u.referralCode.toUpperCase() === potentialCode);
         if (!isDuplicate) {
           referralCode = potentialCode;
@@ -1471,7 +1523,7 @@ async function startServer() {
             totalEarnings: 0,
             bonus: 200,
             referralCode: codeClean,
-            referredBy: 'AGR72',
+            referredBy: '72AGR',
             role: 'user',
             isBlocked: false,
             lastModified: Date.now(),
@@ -1511,7 +1563,7 @@ async function startServer() {
       notifications.unshift({
         id: `not-${Date.now()}`,
         userId: newUser.id,
-        title: 'Bienvenue sur Aiprods !',
+        title: 'Bienvenue sur Dreampod !',
         message: 'Félicitations pour votre inscription. Un bonus de bienvenue de 200 XOF a été crédité sur votre compte.',
         type: 'bonus',
         createdAt: new Date().toISOString(),
@@ -2768,10 +2820,10 @@ async function startServer() {
       const payload = {
         invoice: {
           total_amount: amt,
-          description: `Recharge de compte Aiprods - Utilisateur: ${user.name} (${country || ''} - ${phoneNumber || ''})`
+          description: `Recharge de compte Dreampod - Utilisateur: ${user.name} (${country || ''} - ${phoneNumber || ''})`
         },
         store: {
-          name: "Aiprods",
+          name: "Dreampod",
           website_url: baseUrl
         },
         actions: {
@@ -2907,7 +2959,7 @@ async function startServer() {
           console.log("[ASHTECHPAY FALLBACK] Gracefully forwarding to direct payment link");
           return res.json({
             success: true,
-            url: "https://ashtechpay.top/pay/https://airprods.space/pay/",
+            url: "https://ashtechpay.top/pay/https://dreampod.space/pay/",
             token: fallbackToken,
             deposit: newDep
           });
@@ -3937,9 +3989,9 @@ async function startServer() {
   app.get("/manifest.json", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(JSON.stringify({
-      "name": "Aiprods",
-      "short_name": "Aiprods",
-      "description": "Investissement Audio Connecté - Aiprods",
+      "name": "Dreampod",
+      "short_name": "Dreampod",
+      "description": "Investissement Audio Connecté - Dreampod",
       "start_url": "/",
       "display": "standalone",
       "background_color": "#020617",
@@ -3989,9 +4041,9 @@ self.addEventListener('fetch', event => {
   });
 
   // Servir un fichier APK réel, signé et valide pour l'installation directe
-  app.get(["/AgroProfit.apk", "/AgroCapital.apk", "/Agrocapital.apk", "/agrocapital.apk", "/Aiprods.apk", "/aiprods.apk", "/Airprods.apk", "/airprods.apk"], async (req, res) => {
-    const localApkPath = path.join(process.cwd(), "public", "Aiprods.apk");
-    const tempApkPath = path.join(process.cwd(), "public", "Aiprods.apk.tmp");
+  app.get(["/AgroProfit.apk", "/AgroCapital.apk", "/Agrocapital.apk", "/agrocapital.apk", "/Dreampod.apk", "/dreampod.apk", "/Dreampod.apk", "/dreampod.apk"], async (req, res) => {
+    const localApkPath = path.join(process.cwd(), "public", "Dreampod.apk");
+    const tempApkPath = path.join(process.cwd(), "public", "Dreampod.apk.tmp");
     const targetUrl = "https://github.com/anthonycr/Lightning-Browser/releases/download/v5.1.0/Lightning-v5.1.0-release.apk";
 
     try {
@@ -3999,7 +4051,7 @@ self.addEventListener('fetch', event => {
       if (fs.existsSync(localApkPath)) {
         const stats = fs.statSync(localApkPath);
         if (stats.size > 4000000) { 
-          res.setHeader("Content-Disposition", 'attachment; filename="Aiprods.apk"');
+          res.setHeader("Content-Disposition", 'attachment; filename="Dreampod.apk"');
           res.setHeader("Content-Type", "application/vnd.android.package-archive");
           res.setHeader("Content-Length", stats.size.toString());
           return res.sendFile(localApkPath);
@@ -4021,7 +4073,7 @@ self.addEventListener('fetch', event => {
       if (response.ok && response.body) {
         const contentLength = response.headers.get("Content-Length");
         
-        res.setHeader("Content-Disposition", 'attachment; filename="Aiprods.apk"');
+        res.setHeader("Content-Disposition", 'attachment; filename="Dreampod.apk"');
         res.setHeader("Content-Type", "application/vnd.android.package-archive");
         if (contentLength) {
           res.setHeader("Content-Length", contentLength);

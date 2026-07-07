@@ -7,6 +7,8 @@ import {
   Eye, 
   EyeOff, 
   ArrowLeft, 
+  ChevronLeft,
+  Mail,
   Check, 
   Info, 
   AlertTriangle,
@@ -24,13 +26,13 @@ import {
 import { DataStore, syncWithBackend, safeLocalStorage } from '../dataStore';
 
 export const eligibleCountries = [
+  { name: 'Cameroun', code: '+237', flag: '🇨🇲' },
   { name: 'Togo', code: '+228', flag: '🇹🇬' },
   { name: 'Bénin', code: '+229', flag: '🇧🇯' },
   { name: 'Côte d’Ivoire', code: '+225', flag: '🇨🇮' },
   { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
   { name: 'Sénégal', code: '+221', flag: '🇸🇳' },
-  { name: 'Mali', code: '+223', flag: '🇲🇱' },
-  { name: 'Cameroun', code: '+237', flag: '🇨🇲' }
+  { name: 'Mali', code: '+223', flag: '🇲🇱' }
 ];
 
 interface AuthProps {
@@ -52,8 +54,8 @@ export default function Auth({
 
   // Sign up fields
   const [whatsapp, setWhatsapp] = useState('');
-  const [selectedCode, setSelectedCode] = useState('+228');
-  const [country, setCountry] = useState("Togo");
+  const [selectedCode, setSelectedCode] = useState('+237');
+  const [country, setCountry] = useState("Cameroun");
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
@@ -86,7 +88,7 @@ export default function Auth({
       }
 
       // 2. Synchronize with state
-      const captured = safeLocalStorage.getItem('gi_captured_ref') || 'AGR72';
+      const captured = safeLocalStorage.getItem('gi_captured_ref') || '72AGR';
       if (captured !== referralCode) {
         setReferralCode(captured);
       }
@@ -109,10 +111,15 @@ export default function Auth({
   }, [referralCode]);
 
   // Sign in fields
-  const [loginSelectedCode, setLoginSelectedCode] = useState('+228');
+  const [loginSelectedCode, setLoginSelectedCode] = useState('+237');
+  // Sign in fields
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [resetTip, setResetTip] = useState(false);
+
+  // Modal States
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   // Helper to extract clean WhatsApp number with country code, removing spaces, duplicate prefixes, leading zeros
   const getCleanWhatsappNumber = (rawNumber: string, prefixCode: string) => {
@@ -232,355 +239,418 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between py-6 p-4 relative bg-slate-50 overflow-y-auto overflow-x-hidden font-sans text-slate-900 select-none" id="auth-container">
-      {/* Immersive white AirPods background image */}
-      <div className="absolute inset-0 z-0 select-none pointer-events-none">
-        <img 
-          src="https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&w=1200&q=85" 
-          alt="Airprods Immersive Background White"
-          className="w-full h-full object-cover filter brightness-[1.04] contrast-[1.02]"
-          referrerPolicy="no-referrer"
-        />
-        {/* Soft elegant white overlay and gradients to guarantee perfect legibility of text */}
-        <div className="absolute inset-0 bg-white/70" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/50 to-white/95" />
+    <div className="min-h-screen flex flex-col justify-between py-6 p-4 relative overflow-y-auto overflow-x-hidden font-sans text-slate-900 select-none" id="auth-container">
+      
+      {/* Immersive blurred background gradient */}
+      <div className={`absolute inset-0 z-0 overflow-hidden select-none pointer-events-none transition-all duration-700 ${isRegister ? 'bg-[#5b21b6]' : 'bg-[#da1e28]'}`}>
+        {isRegister ? (
+          <>
+            {/* Soft purple and indigo glow bands with extreme blur for registration */}
+            <div className="absolute top-0 left-0 w-2/3 h-full bg-[#7c3aed] filter blur-[70px] opacity-80 mix-blend-multiply" />
+            <div className="absolute top-0 right-0 w-2/3 h-full bg-[#d8b4fe] filter blur-[70px] opacity-85 mix-blend-multiply" />
+          </>
+        ) : (
+          <>
+            {/* Soft horizontal/diagonal green and yellow bands with extreme blur */}
+            <div className="absolute top-0 left-0 w-2/3 h-full bg-[#0d8253] filter blur-[70px] opacity-80 mix-blend-multiply" />
+            <div className="absolute top-0 right-0 w-2/3 h-full bg-[#f7ca18] filter blur-[70px] opacity-85 mix-blend-multiply" />
+          </>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/15" />
       </div>
 
-      {/* Top Navigation Bar containing Back and Language Selector */}
-      <div className="w-full max-w-md mx-auto flex items-center justify-between relative z-10 mb-4 shrink-0">
+      {/* Top Navigation Bar containing Back minimalist chevron and Language Selector text */}
+      <div className="w-full max-w-md mx-auto flex items-center justify-between relative z-10 mb-6 shrink-0 px-2">
         {onBackToHome ? (
           <button
             onClick={onBackToHome}
             type="button"
-            className="w-10 h-10 rounded-full bg-white/85 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-800 transition-all active:scale-95 cursor-pointer shadow-sm"
+            className="text-slate-800 hover:text-slate-900 active:scale-95 transition-all cursor-pointer p-1"
             title="Retour"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ChevronLeft className="w-8 h-8" strokeWidth={2.5} />
           </button>
         ) : (
-          <div className="w-10 h-10 invisible" />
+          <div className="w-8 h-8" />
         )}
-
-        {/* Brand label center */}
-        <div className="flex items-center gap-1.5">
-          <Headphones className="w-4 h-4 text-[#ff7c00] animate-pulse" />
-          <span className="font-sans font-black tracking-tight text-[15px] uppercase text-slate-950">
-            Ai<span className="text-[#ff7c00]">prods</span>
-          </span>
-        </div>
 
         <button
           type="button"
-          className="w-10 h-10 rounded-full bg-white/85 border border-slate-200 flex items-center justify-center text-[#ff7c00] hover:text-slate-950 transition-colors shadow-sm"
-          title="Langue"
+          onClick={() => setShowLanguageModal(true)}
+          className="text-[14px] font-sans font-bold text-slate-800 hover:text-slate-900 active:scale-95 transition-colors cursor-pointer uppercase tracking-wider"
+          title="Sélectionner la Langue"
         >
-          <Globe className="w-5 h-5" />
+          Langue
         </button>
       </div>
 
       {/* Main Container Wrapper */}
-      <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-center relative z-10 py-2">
+      <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-center relative z-10 py-2 px-1">
         
-        {/* Header Title Section exactly like screenshot */}
-        <div className="mb-6 animate-fade-in text-left">
-          <h1 className="text-[36px] font-sans font-black tracking-tight text-slate-900 leading-tight uppercase">
-            {isRegister ? "Inscription" : "Connexion"}
-          </h1>
-          <p className="text-slate-600 text-sm font-semibold mt-1">
-            {isRegister ? "Créez votre compte d’investisseur Aiprods" : "Accédez à votre portefeuille de placements"}
-          </p>
-        </div>
-
-        {/* Premium Airprods Product Image directly under the writings */}
-        <div className="mb-6 rounded-[24px] overflow-hidden relative border border-slate-200 shadow-xl group bg-white/60 backdrop-blur-sm" id="auth-airprods-promo-card">
-          {/* Subtle glowing orange-violet brand gradients */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#7c3aed]/10 via-transparent to-[#ff7c00]/10 pointer-events-none" />
-          <div className="absolute -top-12 -left-12 w-24 h-24 rounded-full bg-[#ff7c00]/10 blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-12 -right-12 w-24 h-24 rounded-full bg-[#7c3aed]/10 blur-2xl pointer-events-none" />
-
-          <img 
-            src="https://images.unsplash.com/photo-1608156639585-b3a032ef9689?q=80&w=600&auto=format&fit=crop" 
-            alt="Airpods Pro Wireless"
-            className="w-full h-44 object-cover filter brightness-[0.98] contrast-[1.02] transition-transform duration-700 group-hover:scale-105"
-            referrerPolicy="no-referrer"
-          />
-
-          {/* Holographic glowing overlay strip */}
-          <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-white via-[#ff7c00] to-[#7c3aed]" />
-
-          {/* Translucent premium label pill on top of the image */}
-          <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-xl p-2 px-3 border border-slate-200/80 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-900">
-                Aiprods Smart Series 🎧
-              </span>
-            </div>
-            <span className="text-[9px] font-black uppercase text-white px-2 py-0.5 rounded bg-gradient-to-r from-[#ff7c00] to-[#7c3aed] shadow-xs">
-              Technologie Pro
-            </span>
+        {/* Centered Dreampod Bold Yellow Stylized Logo exactly as screenshot */}
+        <div className="flex flex-col items-center mb-8 animate-fade-in select-none">
+          <div 
+            className="text-[44px] md:text-[52px] font-sans font-black italic tracking-tighter text-[#fbbf24] leading-none select-none drop-shadow-[0_4px_8px_rgba(0,122,94,0.7)]"
+            style={{ textShadow: "2px 2px 0px #000, 3px 3px 0px #007a5e" }}
+          >
+            Dreampod
           </div>
         </div>
 
         {/* Error and Success alerts */}
         {errorMessage && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-800 font-semibold flex items-start space-x-2 shadow-sm backdrop-blur-md">
+          <div className="mb-5 p-4 rounded-3xl bg-white/95 border border-red-200 text-xs text-red-800 font-bold flex items-start space-x-2 shadow-lg backdrop-blur-md animate-fade-in">
             <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold flex items-start space-x-2 shadow-sm backdrop-blur-md">
+          <div className="mb-5 p-4 rounded-3xl bg-white/95 border border-emerald-200 text-xs text-emerald-800 font-bold flex items-start space-x-2 shadow-lg backdrop-blur-md animate-fade-in">
             <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
             <span>{successMessage}</span>
           </div>
         )}
 
-        {/* 4. Form inputs styled exactly as translucent fields but white/light themed */}
+        {/* Form inputs styled exactly as white rounded pills on the colorful background */}
         <form onSubmit={handleSubmit} className="space-y-4" id="auth-form">
           
           {isRegister ? (
             /* REGISTRATION FIELDS */
             <>
-              {/* Country-coded phone input */}
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-700 tracking-wide pl-1">
-                  Numéro de téléphone WhatsApp
-                </label>
-                <div className="bg-white border border-slate-200 rounded-2xl p-1 px-3 flex items-center justify-between gap-1 focus-within:border-[#ff7c00] focus-within:ring-1 focus-within:ring-[#ff7c00]/20 transition-all shadow-xs">
-                  <div className="flex items-center gap-1 select-none text-slate-800 font-bold text-sm shrink-0 pl-1">
-                    <span className="text-base select-none leading-none">
-                      {eligibleCountries.find(c => c.code === selectedCode)?.flag || '🇧🇫'}
-                    </span>
-                    <select
-                      id="auth-country-select"
-                      value={selectedCode}
-                      onChange={(e) => {
-                        const code = e.target.value;
-                        setSelectedCode(code);
-                        const found = eligibleCountries.find(c => c.code === code);
-                        if (found) setCountry(found.name);
-                      }}
-                      className="bg-transparent text-slate-800 font-bold text-xs md:text-sm focus:outline-none cursor-pointer pr-1"
-                    >
-                      {eligibleCountries.map((c, i) => (
-                        <option key={i} value={c.code} className="bg-white text-slate-800">
-                          {c.code}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <div className="h-5 w-[1px] bg-slate-200 mx-1 shrink-0" />
-                  </div>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="Entrez votre numéro"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    className="flex-1 bg-transparent text-slate-900 text-sm font-semibold px-2 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
-                  />
+              {/* Phone Input with pre-selected Cameroon country code */}
+              <div className="bg-white rounded-3xl p-1.5 px-4 flex items-center gap-3 shadow-[0_4px_15px_rgba(0,0,0,0.1)] border border-transparent focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/25 transition-all">
+                <Smartphone className="w-5 h-5 text-slate-400 shrink-0" />
+                <div className="flex items-center gap-1 cursor-pointer select-none relative shrink-0">
+                  <span className="text-sm font-extrabold text-slate-700">{selectedCode}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <select
+                    id="auth-country-select"
+                    value={selectedCode}
+                    onChange={(e) => {
+                      const code = e.target.value;
+                      setSelectedCode(code);
+                      const found = eligibleCountries.find(c => c.code === code);
+                      if (found) setCountry(found.name);
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                  >
+                    {eligibleCountries.map((c, i) => (
+                      <option key={i} value={c.code} className="bg-white text-slate-800 font-bold">
+                        {c.name} ({c.code})
+                      </option>
+                    ))}
+                  </select>
                 </div>
+                <div className="h-5 w-[1px] bg-slate-200 shrink-0 mx-1" />
+                <input
+                  type="tel"
+                  required
+                  placeholder="Veuillez saisir votre numéro de téléphone"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  className="flex-1 bg-transparent text-slate-800 text-sm font-semibold py-3 focus:outline-none placeholder:text-slate-400/90"
+                />
               </div>
 
-              {/* Password fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-slate-700 tracking-wide pl-1">
-                    Mot de passe
-                  </label>
-                  <div className="bg-white border border-slate-200 rounded-2xl p-1 px-3 flex items-center justify-between gap-2 focus-within:border-[#ff7c00] focus-within:ring-1 focus-within:ring-[#ff7c00]/20 transition-all shadow-xs">
-                    <div className="flex items-center gap-1.5 shrink-0 text-slate-400 pl-1">
-                      <Lock className="w-4 h-4 text-[#ff7c00]" />
-                      <div className="h-5 w-[1px] bg-slate-200 ml-1.5" />
-                    </div>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      placeholder="Entrez votre mot de passe"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="flex-1 bg-transparent text-slate-900 text-sm font-semibold px-2 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-slate-700 tracking-wide pl-1">
-                    Confirmer le mot de passe
-                  </label>
-                  <div className="bg-white border border-slate-200 rounded-2xl p-1 px-3 flex items-center justify-between gap-2 focus-within:border-[#ff7c00] focus-within:ring-1 focus-within:ring-[#ff7c00]/20 transition-all shadow-xs">
-                    <div className="flex items-center gap-1.5 shrink-0 text-slate-400 pl-1">
-                      <Lock className="w-4 h-4 text-[#ff7c00]" />
-                      <div className="h-5 w-[1px] bg-slate-200 ml-1.5" />
-                    </div>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      placeholder="Confirmez votre mot de passe"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="flex-1 bg-transparent text-slate-900 text-sm font-semibold px-2 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
-                    />
-                  </div>
-                </div>
+              {/* Password field */}
+              <div className="bg-white rounded-3xl p-1.5 px-4 flex items-center gap-3 shadow-[0_4px_15px_rgba(0,0,0,0.1)] border border-transparent focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/25 transition-all">
+                <Lock className="w-5 h-5 text-slate-400 shrink-0" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Veuillez saisir le mot de passe de connexion"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="flex-1 bg-transparent text-slate-800 text-sm font-semibold py-3 focus:outline-none placeholder:text-slate-400/90"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="p-1 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
 
-              {/* Sponsor code */}
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-700 tracking-wide pl-1">
-                  Code d'invitation (Sponsor)
-                </label>
-                <div className="bg-white border border-slate-200 rounded-2xl p-1 px-3 flex items-center justify-between gap-2 focus-within:border-[#ff7c00] focus-within:ring-1 focus-within:ring-[#ff7c00]/20 transition-all shadow-xs">
-                  <div className="flex items-center gap-1.5 shrink-0 text-slate-400 pl-1">
-                    <Shield className="w-4 h-4 text-[#ff7c00]" />
-                    <div className="h-5 w-[1px] bg-slate-200 ml-1.5" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="ADMIN228"
-                    value={referralCode}
-                    onChange={(e) => setReferralCode(e.target.value)}
-                    className="flex-1 bg-transparent text-orange-600 text-sm font-bold tracking-widest font-mono uppercase px-2 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
-                  />
-                  <Sparkles className="w-4 h-4 text-orange-500 shrink-0 mr-1 animate-pulse" />
-                </div>
+              {/* Confirm password field */}
+              <div className="bg-white rounded-3xl p-1.5 px-4 flex items-center gap-3 shadow-[0_4px_15px_rgba(0,0,0,0.1)] border border-transparent focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/25 transition-all">
+                <Lock className="w-5 h-5 text-slate-400 shrink-0" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Veuillez confirmer votre mot de passe"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="flex-1 bg-transparent text-slate-800 text-sm font-semibold py-3 focus:outline-none placeholder:text-slate-400/90"
+                />
+              </div>
+
+              {/* Invitation / Sponsor Code Field */}
+              <div className="bg-white rounded-3xl p-1.5 px-4 flex items-center gap-3 shadow-[0_4px_15px_rgba(0,0,0,0.1)] border border-transparent focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/25 transition-all">
+                <Mail className="w-5 h-5 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Saisir le code d'invitation"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  className="flex-1 bg-transparent text-slate-800 text-sm font-bold tracking-widest font-mono uppercase py-3 focus:outline-none placeholder:text-slate-400/90"
+                />
               </div>
             </>
           ) : (
             /* LOGIN SPECIFIC FIELDS */
             <>
-              {/* Phone & Country selection nested */}
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-700 tracking-wide pl-1">
-                  Numéro de téléphone
-                </label>
-                <div className="bg-white border border-slate-200 rounded-2xl p-1 px-3 flex items-center justify-between gap-1 focus-within:border-[#ff7c00] focus-within:ring-1 focus-within:ring-[#ff7c00]/20 transition-all shadow-xs">
-                  <div className="flex items-center gap-1 select-none text-slate-800 font-bold text-sm shrink-0 pl-1">
-                    <span className="text-base select-none leading-none">
-                      {eligibleCountries.find(c => c.code === loginSelectedCode)?.flag || '🇧🇫'}
-                    </span>
-                    <select
-                      id="auth-login-country-select"
-                      value={loginSelectedCode}
-                      onChange={(e) => setLoginSelectedCode(e.target.value)}
-                      className="bg-transparent text-slate-800 font-bold text-xs md:text-sm focus:outline-none cursor-pointer pr-1"
-                    >
-                      {eligibleCountries.map((c, i) => (
-                        <option key={i} value={c.code} className="bg-white text-slate-800">
-                          {c.code}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <div className="h-5 w-[1px] bg-slate-200 mx-1 shrink-0" />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Entrez votre numéro"
-                    value={loginPhone}
-                    onChange={(e) => setLoginPhone(e.target.value)}
-                    className="flex-1 bg-transparent text-slate-900 text-sm font-semibold px-2 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
-                  />
+              {/* Login Phone Input */}
+              <div className="bg-white rounded-3xl p-1.5 px-4 flex items-center gap-3 shadow-[0_4px_15px_rgba(0,0,0,0.1)] border border-transparent focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/25 transition-all">
+                <Smartphone className="w-5 h-5 text-slate-400 shrink-0" />
+                <div className="flex items-center gap-1 cursor-pointer select-none relative shrink-0">
+                  <span className="text-sm font-extrabold text-slate-700">{loginSelectedCode}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <select
+                    id="auth-login-country-select"
+                    value={loginSelectedCode}
+                    onChange={(e) => setLoginSelectedCode(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                  >
+                    {eligibleCountries.map((c, i) => (
+                      <option key={i} value={c.code} className="bg-white text-slate-800 font-bold">
+                        {c.name} ({c.code})
+                      </option>
+                    ))}
+                  </select>
                 </div>
+                <div className="h-5 w-[1px] bg-slate-200 shrink-0 mx-1" />
+                <input
+                  type="text"
+                  required
+                  placeholder="Veuillez saisir votre numéro"
+                  value={loginPhone}
+                  onChange={(e) => setLoginPhone(e.target.value)}
+                  className="flex-1 bg-transparent text-slate-800 text-sm font-semibold py-3 focus:outline-none placeholder:text-slate-400/90"
+                />
               </div>
 
-              {/* Password field with forget pass option */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center mb-1 px-1">
-                  <label className="block text-xs font-semibold text-slate-700 tracking-wide pl-1">
-                    Mot de passe
-                  </label>
-                  <button 
-                    type="button"
-                    onClick={() => setResetTip(!resetTip)}
-                    className="text-[10px] text-orange-600 hover:text-orange-700 font-bold underline cursor-pointer hover:no-underline transition-colors select-none uppercase font-mono tracking-wider font-sans"
-                  >
-                    Perdu ?
-                  </button>
-                </div>
-
-                {resetTip && (
-                  <div className="p-3 bg-white border border-orange-200 rounded-2xl text-[10px] font-bold text-slate-700 leading-relaxed text-left font-mono shadow-md mb-2">
-                    💡 Pour réinitialiser votre compte d’investisseur, veuillez contacter l'assistance officielle Aiprods via le support WhatsApp.
-                  </div>
-                )}
-
-                <div className="bg-white border border-slate-200 rounded-2xl p-1 px-3 flex items-center justify-between gap-2 focus-within:border-[#ff7c00] focus-within:ring-1 focus-within:ring-[#ff7c00]/20 transition-all shadow-xs">
-                  <div className="flex items-center gap-1.5 shrink-0 text-slate-400 pl-1">
-                    <Lock className="w-4 h-4 text-[#ff7c00]" />
-                    <div className="h-5 w-[1px] bg-slate-200 ml-1.5" />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    placeholder="Entrez votre mot de passe"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className="flex-1 bg-transparent text-slate-900 text-sm font-semibold px-2 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none transition-all w-full min-w-0"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="p-1 text-slate-400 hover:text-[#ff7c00] transition-colors mr-1 shrink-0"
-                  >
-                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
-                  </button>
-                </div>
+              {/* Login Password Input */}
+              <div className="bg-white rounded-3xl p-1.5 px-4 flex items-center gap-3 shadow-[0_4px_15px_rgba(0,0,0,0.1)] border border-transparent focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/25 transition-all">
+                <Lock className="w-5 h-5 text-slate-400 shrink-0" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Veuillez saisir le mot de passe de connexion"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="flex-1 bg-transparent text-slate-800 text-sm font-semibold py-3 focus:outline-none placeholder:text-slate-400/90"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="p-1 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+
+              {/* Lost password option */}
+              <div className="flex justify-end px-2">
+                <button 
+                  type="button"
+                  onClick={() => setResetTip(!resetTip)}
+                  className="text-xs text-white hover:text-amber-300 font-extrabold underline cursor-pointer hover:no-underline transition-colors uppercase tracking-wider font-sans"
+                >
+                  Mot de passe perdu ?
+                </button>
+              </div>
+
+              {resetTip && (
+                <div className="p-4 bg-white/95 rounded-3xl text-xs font-semibold text-slate-800 leading-relaxed text-left shadow-lg animate-fade-in border border-amber-200">
+                  💡 Pour récupérer ou réinitialiser votre compte d’investisseur, veuillez contacter notre service client en cliquant sur l'icône de l'assistance en bas à droite de votre écran.
+                </div>
+              )}
             </>
           )}
 
-          {/* Submit button - Vibrant premium orange-red gradient matching brand exactly */}
+          {/* Submit Action Button - Styled as a beautiful rounded orange gradient pill exactly like screenshot */}
           <button
             id="auth-submit-btn"
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#ff7c00] to-[#e11d48] hover:opacity-95 active:scale-[0.98] text-white font-sans font-black text-sm py-4 px-4 rounded-full flex items-center justify-center space-x-2 transition-all shadow-[0_4px_25px_rgba(255,124,0,0.25)] uppercase tracking-widest select-none cursor-pointer disabled:opacity-40 mt-6"
+            className={`w-full bg-gradient-to-r ${isRegister ? 'from-[#7c3aed] to-[#5b21b6] shadow-[0_4px_20px_rgba(124,58,237,0.35)]' : 'from-[#f07b1b] to-[#df4b13] shadow-[0_4px_20px_rgba(223,75,19,0.35)]'} hover:brightness-105 active:scale-[0.99] text-white font-sans font-bold text-base py-4 px-4 rounded-full flex items-center justify-center transition-all select-none cursor-pointer disabled:opacity-50 mt-6`}
           >
             {loading ? (
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Traitement sécurisé...</span>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Traitement en cours...</span>
               </div>
             ) : (
-              <>
-                <Sprout className="w-4 h-4 text-white shrink-0" />
-                <span>{isRegister ? "S'inscrire" : "Se connecter"}</span>
-              </>
+              <span>{isRegister ? "Inscrivez-vous maintenant" : "Vous connecter maintenant"}</span>
             )}
           </button>
         </form>
 
-        {/* Toggle option exactly like bottom link in screenshot */}
-        <div className="mt-8 text-center select-none">
-          <p className="text-slate-600 text-xs md:text-sm font-semibold">
-            {isRegister ? "Vous avez déjà un compte ? " : "Nouveau sur la plateforme ? "}
-            <button
-              id="auth-toggle-mode-btn"
-              type="button"
-              onClick={() => {
-                setIsRegister(!isRegister);
-                setErrorMessage('');
-                setSuccessMessage('');
-              }}
-              className="text-[#ff7c00] hover:text-[#e11d48] transition-colors font-bold underline cursor-pointer hover:no-underline ml-1"
-            >
-              {isRegister ? "Connectez-vous" : "Inscrivez-vous ici"}
-            </button>
-          </p>
+        {/* Toggle Mode Button - Styled as an identical rounded orange gradient pill exactly like screenshot */}
+        <div className="mt-4">
+          <button
+            id="auth-toggle-mode-btn"
+            type="button"
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setErrorMessage('');
+              setSuccessMessage('');
+            }}
+            className={`w-full bg-gradient-to-r ${isRegister ? 'from-[#7c3aed] to-[#5b21b6] shadow-[0_4px_20px_rgba(124,58,237,0.35)]' : 'from-[#f07b1b] to-[#df4b13] shadow-[0_4px_20px_rgba(223,75,19,0.35)]'} hover:brightness-105 active:scale-[0.99] text-white font-sans font-bold text-base py-4 px-4 rounded-full flex items-center justify-center transition-all select-none cursor-pointer`}
+          >
+            <span>{isRegister ? "Vous avez un compte? Se connecter" : "Pas encore de compte? S'inscrire"}</span>
+          </button>
         </div>
 
       </div>
 
       {/* Footer Branding label */}
       <div className="w-full text-center relative z-10 py-2 shrink-0">
-        <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
-          Aiprods Global • Placements Audio-Technologiques Sécurisés
+        <p className="text-[10px] font-mono font-bold text-white/90 uppercase tracking-widest drop-shadow-xs">
+          Dreampod Cameroun • Système de Placement Sécurisé
         </p>
       </div>
+
+      {/* Floating Support Representative Badge in the bottom right corner exactly like screenshot */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-center select-none animate-bounce" style={{ animationDuration: '3s' }}>
+        <button 
+          type="button"
+          onClick={() => setShowSupportModal(true)}
+          className="w-16 h-16 rounded-full bg-white shadow-2xl border-2 border-white flex items-center justify-center p-0.5 cursor-pointer hover:scale-105 active:scale-95 transition-all relative group"
+        >
+          <img 
+            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150" 
+            alt="Service Client"
+            className="w-full h-full rounded-full object-cover"
+          />
+          {/* Small pulsing green online indicator dot */}
+          <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
+        </button>
+        <span className="text-[9px] font-sans font-black text-slate-700 bg-white/95 backdrop-blur-xs px-2.5 py-0.5 rounded-full shadow-md border border-slate-100 mt-1 uppercase tracking-wider">
+          Service client
+        </span>
+      </div>
+
+      {/* Modern interactive Language Selector Modal */}
+      {showLanguageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative border border-slate-100 animate-scale-up">
+            <button 
+              onClick={() => setShowLanguageModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-base font-black text-slate-900 mb-4 pr-6 flex items-center gap-2 uppercase tracking-wide">
+              <Globe className="w-5 h-5 text-[#f07b1b]" />
+              Choisir la Langue
+            </h3>
+            <div className="space-y-3">
+              {[
+                { name: 'Français', flag: '🇫🇷', active: true },
+                { name: 'English', flag: '🇬🇧', active: false },
+                { name: 'Español', flag: '🇪🇸', active: false },
+                { name: 'Português', flag: '🇵🇹', active: false }
+              ].map((lang, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    if (lang.active) {
+                      setShowLanguageModal(false);
+                    } else {
+                      alert("Cette langue sera très bientôt disponible !");
+                    }
+                  }}
+                  className={`w-full p-4 rounded-2xl flex items-center justify-between font-bold text-sm transition-all border ${
+                    lang.active 
+                      ? 'bg-amber-50 border-amber-200 text-[#df4b13]' 
+                      : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-xl leading-none">{lang.flag}</span>
+                    <span>{lang.name}</span>
+                  </span>
+                  {lang.active && <span className="w-2.5 h-2.5 rounded-full bg-[#df4b13]" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modern interactive Customer Support Modal */}
+      {showSupportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative border border-slate-100 text-slate-800 text-left animate-scale-up">
+            <button 
+              onClick={() => setShowSupportModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 border border-slate-200 relative shrink-0">
+                <img 
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150" 
+                  alt="Service Client"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 leading-none">Support Client Dreampod</h3>
+                <span className="text-xs text-emerald-600 font-bold flex items-center gap-1 mt-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  Conseillers disponibles en continu
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-5">
+              Besoin d'aide pour votre inscription, votre dépôt ou pour obtenir votre code d'invitation ? Veuillez rejoindre notre canal d'entraide ou discuter en direct avec un conseiller de garde.
+            </p>
+
+            <div className="space-y-3 mb-5">
+              <a
+                href="https://wa.me/237600000000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full p-4 rounded-2xl flex items-center justify-between bg-emerald-50 border border-emerald-100 text-emerald-800 hover:bg-emerald-100 transition-all font-bold text-sm"
+              >
+                <span className="flex items-center gap-2.5">
+                  <Smartphone className="w-4 h-4 text-emerald-600" />
+                  <span>Discussion WhatsApp Directe</span>
+                </span>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-200/60 uppercase">En ligne</span>
+              </a>
+
+              <a
+                href="https://t.me/mdb_cameroon"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full p-4 rounded-2xl flex items-center justify-between bg-sky-50 border border-sky-100 text-sky-800 hover:bg-sky-100 transition-all font-bold text-sm"
+              >
+                <span className="flex items-center gap-2.5">
+                  <Globe className="w-4 h-4 text-sky-600" />
+                  <span>Canal Officiel Telegram</span>
+                </span>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-200/60 uppercase">Rejoindre</span>
+              </a>
+            </div>
+
+            <button
+              onClick={() => setShowSupportModal(false)}
+              className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-all text-center"
+            >
+              Fermer l'Assistance
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -326,12 +326,64 @@ export default function AdminPanel({
           } catch (e) {}
 
           setCleanupMessage(data.message);
+          setNotification({
+            message: "✅ Suppression totale terminée ! Rechargement en cours...",
+            type: "success"
+          });
           // Wait a short delay and refresh data
+          setTimeout(() => {
+            window.location.reload();
+          }, 1800);
+        } else {
+          setCleanupMessage(`Erreur : ${data.error || 'Impossible de faire le nettoyage'}`);
+          setNotification({
+            message: `⚠️ Erreur : ${data.error || 'Impossible de nettoyer'}`,
+            type: "error"
+          });
+        }
+      } else {
+        setCleanupMessage(`Erreur de communication : ${resp.status}`);
+        setNotification({
+          message: `⚠️ Erreur de communication serveur (Code : ${resp.status})`,
+          type: "error"
+        });
+      }
+    } catch (err: any) {
+      setCleanupMessage(`Exception : ${err.message || err}`);
+      setNotification({
+        message: `⚠️ Exception : ${err.message || err}`,
+        type: "error"
+      });
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
+  const [isResettingTransactions, setIsResettingTransactions] = useState(false);
+
+  const handleResetAllDepositsWithdrawals = async () => {
+    if (!window.confirm("🔴 ATTENTION CRITIQUE : Voulez-vous vraiment supprimer et réinitialiser l'INTEGRALITÉ absolue de tous les dépôts, retraits et preuves de paiement enregistrés sur la plateforme ? Cette action est irréversible.")) {
+      return;
+    }
+    try {
+      setIsResettingTransactions(true);
+      setCleanupMessage("Réinitialisation de tous les dépôts et retraits en cours...");
+      const resp = await apiFetch(getApiUrl('/api/admin/reset-all-deposits-withdrawals?t=' + Date.now()));
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.success) {
+          try {
+            safeLocalStorage.removeItem('gi_deposits');
+            safeLocalStorage.removeItem('gi_withdrawals');
+            safeLocalStorage.removeItem('gi_withdrawal_proofs');
+          } catch (e) {}
+
+          setCleanupMessage(data.message);
           setTimeout(() => {
             window.location.reload();
           }, 1500);
         } else {
-          setCleanupMessage(`Erreur : ${data.error || 'Impossible de faire le nettoyage'}`);
+          setCleanupMessage(`Erreur : ${data.error || 'Impossible de réinitialiser'}`);
         }
       } else {
         setCleanupMessage(`Erreur de communication : ${resp.status}`);
@@ -339,7 +391,7 @@ export default function AdminPanel({
     } catch (err: any) {
       setCleanupMessage(`Exception : ${err.message || err}`);
     } finally {
-      setIsCleaning(false);
+      setIsResettingTransactions(false);
     }
   };
 
@@ -2011,15 +2063,25 @@ export default function AdminPanel({
                 <span className="text-[10px] text-slate-400">Total : {users.length} comptes enregistrés</span>
               </div>
 
-              {/* Search user & Export button */}
+              {/* Search user, Export and Supprimer buttons */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                 <button
                   onClick={handleExportUsersToGoogle}
                   className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer active:scale-95"
                 >
-                  <span>📊 Exporter Contacts Google Sheets</span>
+                  <span>📊 Exporter Contacts</span>
                 </button>
-                <div className="relative w-full md:w-72">
+
+                <button
+                  onClick={handleForceCleanupUsers}
+                  disabled={isCleaning}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-500 disabled:bg-slate-800 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer active:scale-95"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>🗑️ Supprimer les comptes (Sauf Admin)</span>
+                </button>
+
+                <div className="relative w-full md:w-64">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
                     <Search className="w-4 h-4" />
                   </span>
@@ -2558,7 +2620,7 @@ export default function AdminPanel({
             </h3>
 
             <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur Aiprods.
+              Ce formulaire enverra une alerte financière instantanée visible en temps réel sur le fil de notifications de tous les membres enregistrés sur Dreampod.
             </p>
 
             <form onSubmit={handleSendGlobalAlert} className="space-y-4">
@@ -2733,7 +2795,7 @@ export default function AdminPanel({
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: goldinvest-mdbg.vercel.app ou https://mes-investissements.com"
+                  placeholder="Ex: goldinvest-dreampod.vercel.app ou https://mes-investissements.com"
                   value={referralDomain}
                   onChange={(e) => setReferralDomain(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-yellow-400 font-mono focus:outline-none"
@@ -2820,18 +2882,38 @@ export default function AdminPanel({
                 id="btn-force-cleanup-action"
                 type="button"
                 onClick={handleForceCleanupUsers}
-                disabled={isCleaning}
+                disabled={isCleaning || isResettingTransactions}
                 className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 disabled:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
               >
                 {isCleaning ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Nettoyage en cours...</span>
+                    <span>Suppression en cours...</span>
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4" />
                     <span>Supprimer Définitivement Tous les Comptes (Sauf Admin)</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                id="btn-reset-transactions-action"
+                type="button"
+                onClick={handleResetAllDepositsWithdrawals}
+                disabled={isCleaning || isResettingTransactions}
+                className="w-full py-3 rounded-xl bg-amber-650 hover:bg-amber-500 disabled:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
+              >
+                {isResettingTransactions ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Réinitialisation en cours...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Réinitialiser Tous les Dépôts et Retraits</span>
                   </>
                 )}
               </button>

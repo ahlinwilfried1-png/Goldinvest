@@ -20,6 +20,8 @@ import {
   Activity, 
   Calendar, 
   ChevronRight, 
+  ChevronLeft, 
+  ChevronDown,
   ShieldCheck, 
   Send,
   HelpCircle,
@@ -123,24 +125,8 @@ const cardVariants = {
 };
 
 const getVipImage = (vipLevel: number) => {
-  switch (vipLevel) {
-    case 1:
-      return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400';
-    case 2:
-      return 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&q=80&w=400';
-    case 3:
-      return 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&q=80&w=400';
-    case 4:
-      return 'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&q=80&w=400';
-    case 5:
-      return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=400';
-    case 6:
-      return 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&q=80&w=400';
-    case 7:
-      return 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=80&w=400';
-    default:
-      return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400';
-  }
+  // Ultra-premium white and purple-accented Dreampod image for all products
+  return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=500';
 };
 
 const getVipCropDetails = (level: number, category?: string) => {
@@ -148,22 +134,22 @@ const getVipCropDetails = (level: number, category?: string) => {
     switch (level) {
       case 1:
         return {
-          name: "Aiprods Activité 1 ⚡",
+          name: "Dreampod Activité 1 ⚡",
           desc: "Package spécial court terme basé sur la revente rapide d'écouteurs de sport."
         };
       case 2:
         return {
-          name: "Aiprods Activité 2 ⚡",
+          name: "Dreampod Activité 2 ⚡",
           desc: "Package pro à rotation rapide avec des bénéfices accumulés quotidiennement."
         };
       case 3:
         return {
-          name: "Aiprods Activité 3 ⚡",
+          name: "Dreampod Activité 3 ⚡",
           desc: "Édition premium à haut rendement sur un cycle court et sécurisé."
         };
       default:
         return {
-          name: "Aiprods Activité Spéciale ⚡",
+          name: "Dreampod Activité Spéciale ⚡",
           desc: "Édition spéciale pour booster vos revenus journaliers rapidement."
         };
     }
@@ -172,52 +158,52 @@ const getVipCropDetails = (level: number, category?: string) => {
   switch (level) {
     case 1:
       return {
-        name: "Aiprods 1 🎧",
+        name: "Dreampod 1 🎧",
         desc: "Notre modèle d'entrée de gamme offrant un rendement journalier passif et stable."
       };
     case 2:
       return {
-        name: "Aiprods 2 🎧",
+        name: "Dreampod 2 🎧",
         desc: "Système audio de deuxième génération pour des revenus journaliers accrus."
       };
     case 3:
       return {
-        name: "Aiprods 3 🎧",
+        name: "Dreampod 3 🎧",
         desc: "Équipement haut de gamme avec une rentabilité journalière optimisée."
       };
     case 4:
       return {
-        name: "Aiprods 4 🎧",
+        name: "Dreampod 4 🎧",
         desc: "Technologie avancée assurant des revenus très solides tout au long de l'année."
       };
     case 5:
       return {
-        name: "Aiprods Pro 🎧",
+        name: "Dreampod Pro 🎧",
         desc: "Le fleuron professionnel idéal pour maximiser vos gains de manière constante."
       };
     case 6:
       return {
-        name: "Aiprods Pro 2 🎧",
+        name: "Dreampod Pro 2 🎧",
         desc: "Réduction de bruit active et profits décuplés au quotidien pour les membres Elite."
       };
     case 7:
       return {
-        name: "Aiprods Max 🎧",
+        name: "Dreampod Max 🎧",
         desc: "Le summum du luxe audio et de la performance financière sur la plateforme."
       };
     case 8:
       return {
-        name: "Aiprods Ultra 🎧",
+        name: "Dreampod Ultra 🎧",
         desc: "L'équipement audio ultra-premium réservé aux investisseurs d'élite."
       };
     case 9:
       return {
-        name: "Aiprods Élite 🎧",
+        name: "Dreampod Élite 🎧",
         desc: "Système audio suprême de prestige pour des gains journaliers spectaculaires."
       };
     default:
       return {
-        name: "Aiprods Élite 🎧",
+        name: "Dreampod Élite 🎧",
         desc: "Système audio suprême réservé aux investisseurs d'élite de la communauté."
       };
   }
@@ -236,61 +222,12 @@ const ProductImage = ({
   isMini?: boolean;
   category?: string;
 }) => {
-  const level = Number(vipLevel) || 1;
-  const [errorCount, setErrorCount] = useState(0);
-
-  const getVipImageAlternate = (lvl: number, attempt: number) => {
-    // Attempt 0: Level-specific premium AirPods images
-    if (attempt === 0) {
-      if (category === 'activity') {
-        switch (lvl) {
-          case 1: return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=400';
-          case 2: return 'https://images.unsplash.com/photo-1627989580309-bfaf3e58af6f?auto=format&fit=crop&q=80&w=400';
-          case 3: return 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=400';
-          default: return 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&q=80&w=400';
-        }
-      } else {
-        switch (lvl) {
-          case 1: return 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&q=80&w=400';
-          case 2: return 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=400';
-          case 3: return 'https://images.unsplash.com/photo-1592921894725-786faf336c17?auto=format&fit=crop&q=80&w=400';
-          case 4: return 'https://images.unsplash.com/photo-1627989580309-bfaf3e58af6f?auto=format&fit=crop&q=80&w=400';
-          case 5: return 'https://images.unsplash.com/photo-1610438235354-a6fa5523c584?auto=format&fit=crop&q=80&w=400';
-          case 6: return 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&q=80&w=400';
-          case 7: return 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=80&w=400';
-          case 8: return 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&q=80&w=400';
-          case 9: return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400';
-          default: return 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&q=80&w=400';
-        }
-      }
-    }
-
-    // Attempt 1: Safe fallback 1 (Highly reliable Airpods Pro image)
-    if (attempt === 1) {
-      return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=400';
-    }
-
-    // Attempt 2: Safe fallback 2 (Airpods case image)
-    if (attempt === 2) {
-      return 'https://images.unsplash.com/photo-1592921894725-786faf336c17?auto=format&fit=crop&q=80&w=400';
-    }
-
-    // Attempt 3+: Ultimate reliable headphones/AirPods image
-    return 'https://images.unsplash.com/photo-1588449668365-d15e397f6787?auto=format&fit=crop&q=80&w=400';
-  };
-
-  const currentSrc = getVipImageAlternate(level, errorCount);
-
   return (
-    <div className="w-full h-full bg-slate-100 flex items-center justify-center overflow-hidden relative">
+    <div className="w-full h-full bg-[#1b64d9] flex items-center justify-center overflow-hidden relative">
       <img
-        src={currentSrc}
+        src={getVipImage(vipLevel)}
         alt={alt}
         className={className}
-        onError={() => {
-          // Increment error count so we try fallback images instead of displaying blank or emoji
-          setErrorCount(prev => Math.min(prev + 1, 4));
-        }}
         referrerPolicy="no-referrer"
       />
     </div>
@@ -323,6 +260,60 @@ const liveTransactions = [
   { name: "Félix S.", type: "retrait", amount: "15 000 XOF", flag: "🇧🇫", desc: "a retiré" }
 ];
 
+export const WHEEL_REWARDS = [
+  { amount: 1000, label: "1 000 F", color: "#38bdf8" }, // light sky blue
+  { amount: 5000, label: "5 000 F", color: "#eab308" }, // gold
+  { amount: 2000, label: "2 000 F", color: "#a855f7" }, // purple
+  { amount: 10000, label: "10 000 F", color: "#f97316" }, // orange
+  { amount: 1500, label: "1 500 F", color: "#ec4899" }, // pink
+  { amount: 20000, label: "20 000 F", color: "#22c55e" }, // green
+  { amount: 3000, label: "3 000 F", color: "#14b8a6" }, // teal
+  { amount: 50000, label: "50 000 F", color: "#ef4444" }  // red
+];
+
+export const DREAMPOD_SLIDES = [
+  {
+    id: 'slide-1',
+    url: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=1000',
+    title: 'Dreampod Marbre Royal 💎',
+    desc: 'Cabine de flottaison haut de gamme dans un écrin de marbre noble.',
+  },
+  {
+    id: 'slide-2',
+    url: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&q=80&w=1000',
+    title: 'Dreampod Pavillon Zen 🌸',
+    desc: 'Sensation d\'isolation et détente profonde au cœur de la nature.',
+  },
+  {
+    id: 'slide-3',
+    url: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=1000',
+    title: 'Dreampod Noir Astral 🌌',
+    desc: 'Voyage d\'introspection et réduction totale du stress quotidien.',
+  },
+  {
+    id: 'slide-4',
+    url: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&q=80&w=1000',
+    title: 'Dreampod Duo Nuit Lumineuse 🌃',
+    desc: 'Deux cocons technologiques dôtés d\'une chromothérapie d\'exception.',
+  },
+  {
+    id: 'slide-5',
+    url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=1000',
+    title: 'Dreampod Élite Cèdre Chaud 🪵',
+    desc: 'Un cocon de bien-être intimiste pour un ressourcement complet.',
+  }
+];
+
+const DEPOSIT_COUNTRIES = [
+  { name: 'Cameroun', code: '+237', flag: '🇨🇲' },
+  { name: 'Togo', code: '+228', flag: '🇹🇬' },
+  { name: 'Bénin', code: '+229', flag: '🇧🇯' },
+  { name: 'Côte d’Ivoire', code: '+225', flag: '🇨🇮' },
+  { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
+  { name: 'Sénégal', code: '+221', flag: '🇸🇳' },
+  { name: 'Mali', code: '+223', flag: '🇲🇱' }
+];
+
 interface DashboardProps {
   currentUser: User;
   onLogout: () => void;
@@ -339,11 +330,15 @@ export default function Dashboard({
   // Navigation tabs: 'dashboard', 'products', 'team', 'profile', 'deposit', 'withdraw'
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'team' | 'profile' | 'deposit' | 'withdraw'>('dashboard');
   const [referralListTab, setReferralListTab] = useState<'level1' | 'level2' | 'level3'>('level1');
+  const [productSubTab, setProductSubTab] = useState<'fixe1' | 'fixe2' | 'fixe3' | 'activity'>('fixe1');
 
   // Local lists
   const [userState, setUserState] = useState<User>(currentUser);
   const [products, setProducts] = useState<Product[]>(() => DataStore.getProducts());
   const [activeInvestments, setActiveInvestments] = useState<Investment[]>([]);
+
+  // Mission states
+  const [showMissionsModal, setShowMissionsModal] = useState<boolean>(false);
 
   // Custom check for stability product activation
   const hasStabilityActivation = activeInvestments.some(inv => {
@@ -365,6 +360,30 @@ export default function Dashboard({
   const [bannerImageError, setBannerImageError] = useState<boolean>(false);
   const [showStabilityOrders, setShowStabilityOrders] = useState<boolean>(false);
   const [showActivityOrders, setShowActivityOrders] = useState<boolean>(false);
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<'forward' | 'backward'>('forward');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => {
+        if (slideDirection === 'forward') {
+          if (prev === DREAMPOD_SLIDES.length - 1) {
+            setSlideDirection('backward');
+            return prev - 1;
+          }
+          return prev + 1;
+        } else {
+          if (prev === 0) {
+            setSlideDirection('forward');
+            return prev + 1;
+          }
+          return prev - 1;
+        }
+      });
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [slideDirection]);
 
   // Form states
   const SENDAVAPAY_COUNTRIES = [
@@ -437,7 +456,7 @@ export default function Dashboard({
   const [depositAmount, setDepositAmount] = useState<string>('5000');
   const [depositPhoneNumber, setDepositPhoneNumber] = useState<string>('');
   const [depositOperator, setDepositOperator] = useState<string>('TMoney');
-  const [depositMethod, setDepositMethod] = useState<'westpay' | 'manuel_cameroun'>('westpay');
+  const [depositMethod, setDepositMethod] = useState<'westpay' | 'manuel_cameroun'>('manuel_cameroun');
   const [depositRef, setDepositRef] = useState<string>('');
   const [receiptBase64, setReceiptBase64] = useState<string>('');
   const [depositError, setDepositError] = useState<string>('');
@@ -454,8 +473,40 @@ export default function Dashboard({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [depositStep, setDepositStep] = useState<1 | 2>(1);
   const [depositRedirectUrl, setDepositRedirectUrl] = useState<string>('');
-  const [depositCountry, setDepositCountry] = useState<string>(userState.country || "Togo 🇹🇬");
-  const [depositPhone, setDepositPhone] = useState<string>(userState.whatsapp || '');
+  const getCountryPrefix = (countryName: string): string => {
+    const c = (countryName || '').toLowerCase();
+    if (c.includes('cameroun') || c.includes('237')) return '+237';
+    if (c.includes('togo') || c.includes('228')) return '+228';
+    if (c.includes('benin') || c.includes('bénin') || c.includes('229')) return '+229';
+    if (c.includes('ivoire') || c.includes('225')) return '+225';
+    if (c.includes('burkina') || c.includes('226')) return '+226';
+    if (c.includes('senegal') || c.includes('sénégal') || c.includes('221')) return '+221';
+    if (c.includes('mali') || c.includes('223')) return '+223';
+    return '+237';
+  };
+
+  const [depositCountry, setDepositCountry] = useState<string>(() => {
+    const userCountry = (userState.country || '').toLowerCase();
+    if (userCountry.includes('cameroun')) return 'Cameroun';
+    if (userCountry.includes('togo')) return 'Togo';
+    if (userCountry.includes('benin') || userCountry.includes('bénin')) return 'Bénin';
+    if (userCountry.includes('ivoire')) return 'Côte d’Ivoire';
+    if (userCountry.includes('burkina')) return 'Burkina Faso';
+    if (userCountry.includes('senegal') || userCountry.includes('sénégal')) return 'Sénégal';
+    if (userCountry.includes('mali')) return 'Mali';
+    return 'Cameroun';
+  });
+
+  const [depositCountryCode, setDepositCountryCode] = useState<string>(() => getCountryPrefix(depositCountry));
+  const [depositPhone, setDepositPhone] = useState<string>(() => {
+    const raw = userState.whatsapp || '';
+    const prefix = getCountryPrefix(userState.country || '').replace('+', '');
+    let clean = raw.replace(/[\s\-\(\)\+]/g, '');
+    if (clean.startsWith(prefix)) {
+      clean = clean.slice(prefix.length);
+    }
+    return clean;
+  });
   const [depositNumberCopied, setDepositNumberCopied] = useState<boolean>(false);
 
   // SendavaPay specific states
@@ -470,8 +521,20 @@ export default function Dashboard({
   const [isPollingSp, setIsPollingSp] = useState<boolean>(false);
 
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
-  const [withdrawOperator, setWithdrawOperator] = useState<string>("T-Money (TG)");
-  const [withdrawNumber, setWithdrawNumber] = useState<string>('');
+  const [withdrawOperator, setWithdrawOperator] = useState<string>(() => {
+    try {
+      return localStorage.getItem('mdb_saved_operator') || "MTN (CM)";
+    } catch (e) {
+      return "MTN (CM)";
+    }
+  });
+  const [withdrawNumber, setWithdrawNumber] = useState<string>(() => {
+    try {
+      return localStorage.getItem('mdb_saved_number') || '';
+    } catch (e) {
+      return '';
+    }
+  });
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [withdrawSuccess, setWithdrawSuccess] = useState<string>('');
   const [withdrawProofBase64, setWithdrawProofBase64] = useState<string>('');
@@ -624,6 +687,37 @@ export default function Dashboard({
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState<boolean>(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState<boolean>(false);
+  const [isBankCardModalOpen, setIsBankCardModalOpen] = useState<boolean>(false);
+  const [profileSubPage, setProfileSubPage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setProfileSubPage(null);
+  }, [activeTab]);
+
+  // Bank Card Binding States
+  const [bankCardName, setBankCardName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('mdb_saved_name') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [bankCardOperator, setBankCardOperator] = useState<string>(() => {
+    try {
+      return localStorage.getItem('mdb_saved_operator') || "MTN (CM)";
+    } catch (e) {
+      return "MTN (CM)";
+    }
+  });
+  const [bankCardNumber, setBankCardNumber] = useState<string>(() => {
+    try {
+      return localStorage.getItem('mdb_saved_number') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [bankCardError, setBankCardError] = useState<string>('');
+  const [bankCardSuccess, setBankCardSuccess] = useState<string>('');
   
   // PWA installation state and hooks
   const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
@@ -684,8 +778,8 @@ export default function Dashboard({
   const handleDownloadAndInstallApp = async () => {
     // 1. Trigger the direct APK download programmatically
     const link = document.createElement('a');
-    link.href = '/Aiprods_v2.6.apk';
-    link.download = 'Aiprods_v2.6.apk';
+    link.href = '/Dreampod_v2.6.apk';
+    link.download = 'Dreampod_v2.6.apk';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -708,7 +802,7 @@ export default function Dashboard({
     // 3. Show a clear, precise alert instruction explaining what to do next & handling install errors
     openAlert(
       "Téléchargement Lancé ! 📲",
-      "Le téléchargement de l'application 'Aiprods_v2.6.apk' a commencé ! Ouvrez le fichier téléchargé pour l'installer.\n\n⚠️ IMPORTANT : Si l'installation refuse ou dit 'Application non installée', désinstallez d'abord TOUTE ancienne version (comme l'application AgroProfit ou une version précédente d'Aiprods) de votre téléphone, puis réessayez. Cela résout 100% des erreurs d'installation !",
+      "Le téléchargement de l'application 'Dreampod_v2.6.apk' a commencé ! Ouvrez le fichier téléchargé pour l'installer.\n\n⚠️ IMPORTANT : Si l'installation refuse ou dit 'Application non installée', désinstallez d'abord TOUTE ancienne version (comme l'application AgroProfit ou une version précédente de Dreampod) de votre téléphone, puis réessayez. Cela résout 100% des erreurs d'installation !",
       "success"
     );
   };
@@ -794,7 +888,7 @@ export default function Dashboard({
         openAlert('Activé avec succès 🎉', 'Vous recevrez désormais des alertes instantanées dans Chrome à chaque fois qu\'une recharge est approuvée, qu\'un gain tombe ou qu\'une annonce officielle de l\'administrateur est diffusée.', 'success');
         try {
           new Notification("Vous avez reçu une nouvelle notification", {
-            body: "Notifications de bureau Chrome activées sur Aiprods ! 🔔"
+            body: "Notifications de bureau Chrome activées sur Dreampod ! 🔔"
           });
         } catch (e) {
           console.error(e);
@@ -1522,9 +1616,20 @@ export default function Dashboard({
       return;
     }
 
+    if (!depositPhone || !depositPhone.trim()) {
+      setDepositError(`Veuillez saisir votre numéro de téléphone de paiement.`);
+      return;
+    }
+
+    if (depositPhone.trim().length < 6) {
+      setDepositError(`Veuillez saisir un numéro de téléphone de paiement valide (minimum 6 chiffres).`);
+      return;
+    }
+
     setIsSubmittingDeposit(true);
     try {
       const reference = `WP-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+      const formattedOperator = `WestPay (${depositCountry} ${depositCountryCode} ${depositPhone.trim()})`;
       let succeeded = false;
       try {
         const response = await apiFetch(getApiUrl('/api/create-deposit'), {
@@ -1535,7 +1640,7 @@ export default function Dashboard({
           body: JSON.stringify({
             userId: userState.id,
             amount: amt,
-            operator: 'WestPay',
+            operator: formattedOperator,
             reference: reference,
             receiptImage: 'westpay_link'
           })
@@ -1577,7 +1682,7 @@ export default function Dashboard({
           userId: userState.id,
           userName: user ? user.name : (userState.name || 'Utilisateur'),
           amount: amt,
-          operator: 'WestPay',
+          operator: formattedOperator,
           reference: reference,
           receiptImage: 'westpay_link',
           status: 'pending' as const,
@@ -1657,6 +1762,16 @@ export default function Dashboard({
       return;
     }
 
+    if (!depositPhone || !depositPhone.trim()) {
+      setDepositError("Veuillez saisir votre numéro de téléphone de paiement.");
+      return;
+    }
+
+    if (depositPhone.trim().length < 6) {
+      setDepositError("Veuillez saisir un numéro de téléphone de paiement valide (minimum 6 chiffres).");
+      return;
+    }
+
     if (!manualReference.trim()) {
       setDepositError("Veuillez saisir l'ID de transaction ou la référence du paiement SMS.");
       return;
@@ -1669,16 +1784,17 @@ export default function Dashboard({
 
     setIsSubmittingDeposit(true);
     try {
+      const formattedOperator = `${manualOperator} (${depositCountry} ${depositCountryCode} ${depositPhone.trim()})`;
       const dep = await DataStore.createDeposit(
         userState.id,
         amt,
-        manualOperator,
+        formattedOperator,
         manualReference.trim(),
         manualReceiptBase64
       );
 
       if (dep) {
-        setDepositSuccess(`Votre demande de recharge manuelle de ${amt.toLocaleString()} F CFA via ${manualOperator} (Réf: ${manualReference}) a été enregistrée avec succès ! Notre équipe créditera votre solde dès vérification.`);
+        setDepositSuccess(`Votre demande de recharge manuelle de ${amt.toLocaleString()} F CFA via ${formattedOperator} (Réf: ${manualReference}) a été enregistrée avec succès ! Notre équipe créditera votre solde dès vérification.`);
         setManualReference('');
         setManualReceiptBase64('');
         setManualReceiptFileName('');
@@ -1818,16 +1934,6 @@ export default function Dashboard({
   const handleBuyProduct = (product: Product) => {
     if (product.isBlocked) {
       openAlert('Plan Suspendu', "Ce plan d'investissement VIP est actuellement bloqué ou suspendu temporairement par l'administration.", 'error');
-      return;
-    }
-
-    const isStability = product.category !== 'activity';
-    if (!isStability && !hasStabilityActivation) {
-      openAlert(
-        'Accès Restreint',
-        "Vous devez obligatoirement achetez et activer au moins un produit de la catégorie Stabilité avant d'avoir accès aux produits d'Activités.",
-        'error'
-      );
       return;
     }
 
@@ -2125,7 +2231,7 @@ export default function Dashboard({
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   </div>
                   <p className="text-[10px] text-slate-500 font-semibold leading-tight truncate">
-                    Rejoignez la discussion officielle Aiprods.
+                    Rejoignez la discussion officielle Dreampod.
                   </p>
                 </div>
                 <a 
@@ -2169,12 +2275,12 @@ export default function Dashboard({
             className="fixed top-0 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-sm bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 shadow-[0_20px_45px_rgba(0,0,0,0.30)] flex items-start gap-3 text-white cursor-pointer select-none"
             onClick={() => setCurrentLiveNotif(null)}
           >
-            <div className="p-2 bg-gradient-to-tr from-emerald-500 to-orange-500 rounded-xl shrink-0">
+            <div className="p-2 bg-gradient-to-tr from-emerald-500 to-blue-600 rounded-xl shrink-0">
               <Bell className="w-5 h-5 text-white stroke-[2.5]" />
             </div>
             <div className="flex-1 text-left min-w-0">
               <div className="flex justify-between items-center mb-0.5">
-                <span className="text-[10px] font-sans font-black uppercase text-orange-400 tracking-wider">Alerte Aiprods 🔔</span>
+                <span className="text-[10px] font-sans font-black uppercase text-blue-400 tracking-wider">Alerte Dreampod 🔔</span>
                 <span className="text-[8px] opacity-60 font-mono font-bold uppercase shrink-0">À l'instant</span>
               </div>
               <p className="text-[11.5px] font-bold text-slate-100 leading-snug break-words">
@@ -2433,6 +2539,198 @@ export default function Dashboard({
         )}
       </AnimatePresence>
 
+      {/* CARTE BANCAIRE MODAL */}
+      <AnimatePresence>
+        {isBankCardModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] bg-[#fffaf5]/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => {
+              setIsBankCardModalOpen(false);
+              setBankCardError('');
+              setBankCardSuccess('');
+            }}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white border-2 border-slate-200 rounded-[32px] w-full max-w-md p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <div className="flex items-center space-x-3 text-slate-800">
+                  <div className="w-10 h-10 bg-amber-50 text-[#f07b1b] rounded-2xl flex items-center justify-center shrink-0">
+                    <UserIcon className="w-5 h-5 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="font-sans font-black text-sm uppercase tracking-wider text-slate-800">
+                      Carte Bancaire
+                    </h3>
+                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-wider font-mono">
+                      Liaison de compte de retrait
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setIsBankCardModalOpen(false);
+                    setBankCardError('');
+                    setBankCardSuccess('');
+                  }}
+                  className="p-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-500 transition-colors cursor-pointer border border-slate-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* GORGEOUS VIRTUAL CREDIT CARD SHOWING INFO */}
+              <div className="w-full h-44 rounded-2xl bg-gradient-to-br from-[#1b64d9] via-[#2575fc] to-[#f07b1b] p-5 text-white flex flex-col justify-between shadow-md relative overflow-hidden mb-5">
+                {/* Microchip and MDB branding */}
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-black uppercase tracking-wider opacity-90">DREAMPOD INVESTMENT</span>
+                    <span className="text-[7px] font-mono font-bold tracking-widest opacity-60">MEMBRE CERTIFIÉ</span>
+                  </div>
+                  <div className="w-16 h-8 rounded-md bg-white/20 flex items-center justify-center border border-white/20 px-1">
+                    <span className="text-[9px] font-black uppercase tracking-wider">Dreampod</span>
+                  </div>
+                </div>
+
+                {/* Card Number */}
+                <div className="text-center font-mono text-base tracking-widest my-1 font-bold">
+                  {bankCardNumber 
+                    ? bankCardNumber.replace(/(\d{4})/g, '$1 ').trim() 
+                    : '•••• •••• •••• ••••'}
+                </div>
+
+                {/* Operator Badge and Name */}
+                <div className="flex justify-between items-end">
+                  <div className="flex flex-col text-left">
+                    <span className="text-[7px] text-white/65 uppercase tracking-wider block font-bold">Titulaire du compte</span>
+                    <span className="text-xs font-black truncate max-w-[180px]">
+                      {bankCardName ? bankCardName.toUpperCase() : 'VOTRE NOM COMPLET'}
+                    </span>
+                  </div>
+                  <div className="text-right flex flex-col items-end">
+                    <span className="text-[7px] text-white/65 uppercase tracking-wider block font-bold">Opérateur</span>
+                    <span className="text-[11px] font-black tracking-wide bg-white/20 px-2 py-0.5 rounded-md uppercase border border-white/10">
+                      {bankCardOperator}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form */}
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setBankCardError('');
+                  setBankCardSuccess('');
+
+                  if (!bankCardName.trim()) {
+                    setBankCardError('Veuillez saisir le nom complet du titulaire.');
+                    return;
+                  }
+                  if (!bankCardNumber.trim() || bankCardNumber.length < 8) {
+                    setBankCardError('Veuillez saisir un numéro de téléphone Mobile Money valide.');
+                    return;
+                  }
+
+                  try {
+                    localStorage.setItem('mdb_saved_name', bankCardName.trim());
+                    localStorage.setItem('mdb_saved_operator', bankCardOperator);
+                    localStorage.setItem('mdb_saved_number', bankCardNumber.trim());
+
+                    // Sync the main states as well so they prefill withdrawal instantly!
+                    setWithdrawOperator(bankCardOperator);
+                    setWithdrawNumber(bankCardNumber.trim());
+
+                    setBankCardSuccess('Vos informations de paiement ont été enregistrées avec succès !');
+                    triggerToast('💳 Compte de paiement lié !', 'success');
+                    setTimeout(() => {
+                      setIsBankCardModalOpen(false);
+                      setBankCardSuccess('');
+                    }, 1500);
+                  } catch (err) {
+                    setBankCardError('Une erreur est survenue lors de la sauvegarde.');
+                  }
+                }}
+                className="space-y-4 text-left"
+              >
+                {bankCardError && (
+                  <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 font-extrabold leading-relaxed">
+                    ⚠️ {bankCardError}
+                  </div>
+                )}
+
+                {bankCardSuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-700 font-extrabold leading-relaxed animate-pulse">
+                    🎉 {bankCardSuccess}
+                  </div>
+                )}
+
+                {/* Nom titulaire */}
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">Nom du titulaire du compte</label>
+                  <input 
+                    type="text"
+                    required
+                    value={bankCardName}
+                    onChange={(e) => setBankCardName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:bg-white focus:ring-2 focus:ring-[#f07b1b]/20 focus:border-[#f07b1b] outline-none transition-all font-sans text-slate-800 font-bold"
+                    placeholder="Ex: Jean Dupont"
+                  />
+                </div>
+
+                {/* Opérateur */}
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">Sélectionnez l'Opérateur</label>
+                  <select
+                    value={bankCardOperator}
+                    onChange={(e) => setBankCardOperator(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:bg-white focus:ring-2 focus:ring-[#f07b1b]/20 focus:border-[#f07b1b] outline-none transition-all font-sans text-slate-800 font-black cursor-pointer"
+                  >
+                    <option value="MTN (CM)">MTN Mobile Money (Cameroun 🇨🇲)</option>
+                    <option value="Orange (CM)">Orange Money (Cameroun 🇨🇲)</option>
+                    <option value="T-Money (TG)">T-Money (Togo 🇹🇬)</option>
+                    <option value="Moov (TG)">Moov Money (Togo 🇹🇬)</option>
+                    <option value="MTN (BJ)">MTN MoMo (Bénin 🇧🇯)</option>
+                    <option value="Moov (BJ)">Moov Flooz (Bénin 🇧🇯)</option>
+                    <option value="Wave (CI)">Wave Money (Côte d'Ivoire 🇨🇮)</option>
+                    <option value="Orange (CI)">Orange Money (Côte d'Ivoire 🇨🇮)</option>
+                  </select>
+                </div>
+
+                {/* Numéro */}
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">Numéro Mobile Money (SANS INDICATIF)</label>
+                  <input 
+                    type="tel"
+                    required
+                    value={bankCardNumber}
+                    onChange={(e) => setBankCardNumber(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:bg-white focus:ring-2 focus:ring-[#f07b1b]/20 focus:border-[#f07b1b] outline-none transition-all font-sans text-slate-800 font-bold"
+                    placeholder="Ex: 677123456"
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full mt-2 py-3 bg-gradient-to-r from-[#1b64d9] to-[#f07b1b] text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  Sauvegarder et Lier
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* DASHBOARD TOP HEADER (STYLING OF SCREENSHOT) */}
       <div className="w-full bg-gradient-to-r from-[#1b64d9] to-[#ff7c00] text-white p-4 pt-6 pb-6 flex items-center justify-between shadow-md relative z-40 select-none">
         <div className="flex items-center space-x-3.5 max-w-[70%]">
@@ -2490,34 +2788,423 @@ export default function Dashboard({
         /* RENDER SYSTEM USER CHANNELS */
         <main className="flex-grow w-full max-w-full px-2 sm:px-6 md:px-12 xl:px-20 py-3.5 pb-24 overflow-x-hidden">
           
+          {profileSubPage && (() => {
+            const rechargeSum = allDeposits.filter(d => d.status === 'approved').reduce((acc, d) => acc + d.amount, 0);
+            const purchaseSum = activeInvestments.reduce((acc, i) => acc + i.price, 0);
+            const rechargeBal = Math.max(0, rechargeSum - purchaseSum);
+            const totalProductRevenue = activeInvestments.reduce((acc, i) => acc + (i.totalReturnClaimed || 0), 0);
+            const totalCommissions = commissions.reduce((acc, c) => acc + c.amount, 0);
+            const activeInvsCount = activeInvestments.filter(i => i.status === 'active').length;
+
+            if (profileSubPage === 'orders') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Mes Commandes</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                        Retrouvez ici tous les équipements et produits d'investissement que vous avez acquis. Vous pouvez réclamer vos revenus quotidiens à tout moment.
+                      </p>
+                      
+                      <div className="space-y-3 pt-2">
+                        {activeInvestments.length === 0 ? (
+                          <div className="text-center py-8 text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl border border-slate-100/50">
+                            Aucun produit d'investissement actif pour le moment.
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {activeInvestments.map((p) => (
+                              <InvestmentItem 
+                                key={p.id}
+                                investment={p}
+                                onClaim={handleClaimReturn}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (profileSubPage === 'balance') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Mon Solde</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">Solde de Recharge</span>
+                          <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                            FCFA {rechargeBal.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="border-l border-slate-100 pl-4">
+                          <span className="text-[10px] text-slate-400 font-bold block">Solde de Retrait</span>
+                          <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                            FCFA {userState.balance.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-1 text-center pt-1.5">
+                        <div>
+                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Revenu Produit</span>
+                          <span className="text-xs font-black text-slate-800 block mt-1">
+                            FCFA {totalProductRevenue.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="border-l border-slate-100">
+                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Commission</span>
+                          <span className="text-xs font-black text-slate-800 block mt-1">
+                            FCFA {totalCommissions.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="border-l border-slate-100">
+                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Nbre de Commandes</span>
+                          <span className="text-xs font-black text-slate-800 block mt-1">
+                            {activeInvsCount}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Opérations Rapides</h3>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <button 
+                          onClick={() => {
+                            setProfileSubPage(null);
+                            setActiveTab('deposit');
+                          }}
+                          className="flex items-center justify-center gap-2 p-3 bg-amber-50 text-[#f07b1b] rounded-2xl font-bold text-xs hover:bg-amber-100/70 transition-all border-none outline-none cursor-pointer"
+                        >
+                          <Coins className="w-4 h-4" />
+                          <span>Recharger</span>
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setProfileSubPage(null);
+                            setActiveTab('withdraw');
+                          }}
+                          className="flex items-center justify-center gap-2 p-3 bg-blue-50 text-[#1b64d9] rounded-2xl font-bold text-xs hover:bg-blue-100/70 transition-all border-none outline-none cursor-pointer"
+                        >
+                          <ArrowUpCircle className="w-4 h-4" />
+                          <span>Retirer</span>
+                        </button>
+                      </div>
+
+                      <button 
+                        onClick={() => {
+                          if (onNavigate) {
+                            onNavigate('/historique');
+                          }
+                        }}
+                        className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/70 text-slate-700 rounded-2xl text-xs font-bold transition-all border-none outline-none cursor-pointer mt-2"
+                      >
+                        <span>📋 Voir l'historique complet des revenus</span>
+                        <span>&gt;</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (profileSubPage === 'help') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Centre d'Aide</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block pl-0.5">
+                        💬 ASSISTANCE EN DIRECT
+                      </span>
+                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                        Notre équipe d'assistance est à votre écoute pour vous aider à résoudre tout problème lié à vos dépôts, retraits ou investissements.
+                      </p>
+                      
+                      <div className="space-y-2.5 pt-1">
+                        <button
+                          onClick={() => setIsLiveChatOpen(true)}
+                          className="w-full bg-[#1b64d9] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-blue-600 transition-all cursor-pointer border-none outline-none"
+                        >
+                          <Headphones className="w-4.5 h-4.5" />
+                          <span>DISCUTER PAR CHAT EN DIRECT</span>
+                        </button>
+
+                        <button
+                          onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
+                          className="w-full bg-[#25D366] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-[#20ba59] transition-all cursor-pointer border-none outline-none"
+                        >
+                          <Send className="w-4.5 h-4.5" />
+                          <span>REJOINDRE LE CANAL TELEGRAM</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Questions Fréquentes (FAQ)</h3>
+                      
+                      <div className="space-y-3 pt-1">
+                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
+                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Comment effectuer un dépôt ?</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
+                            Rendez-vous dans la rubrique "Recharge", indiquez le montant puis suivez les instructions de paiement mobile. Envoyez ensuite la preuve pour validation rapide.
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
+                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Quel est le délai de traitement des retraits ?</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
+                            Les retraits sont généralement traités sous un délai de 5 minutes à 24 heures maximum, crédités directement sur votre compte mobile configuré.
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
+                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Comment fonctionne le parrainage ?</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
+                            Invitez vos amis avec votre lien unique. Vous gagnez des commissions sur 3 niveaux (Niveau 1, Niveau 2 et Niveau 3) dès qu'un de vos filleuls investit.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (profileSubPage === 'about') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">À Propos</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <div className="flex justify-center py-2">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#1b64d9] to-[#2575fc] flex items-center justify-center text-white shadow-md">
+                          <TrendingUp className="w-8 h-8 stroke-[2.5]" />
+                        </div>
+                      </div>
+                      
+                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Dreampod Investment S.A.</h3>
+                      
+                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed text-center">
+                        Dreampod Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
+                      </p>
+
+                      <div className="border-t border-slate-50 pt-4 space-y-3.5">
+                        <div>
+                          <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-wider">🔒 Sécurité &amp; Fiabilité</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-relaxed">
+                            Tous vos investissements sont protégés par des fonds de garantie stricts. Les processus de retrait sont chiffrés et vérifiés par notre équipe d'experts financiers.
+                          </p>
+                        </div>
+
+                        <div>
+                          <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-wider">🌟 Notre Vision</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-relaxed">
+                            Démocratiser l'accès aux opportunités financières de pointe grâce aux technologies numériques modernes et au parrainage de réseau structuré.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (profileSubPage === 'settings') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Paramètres</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Informations du Compte</h3>
+                      
+                      <div className="space-y-2.5">
+                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100/50 text-xs">
+                          <span className="text-slate-400 font-bold">Nom d'utilisateur</span>
+                          <span className="font-black text-slate-800">{userState.name || 'Aucun'}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100/50 text-xs">
+                          <span className="text-slate-400 font-bold">Numéro WhatsApp</span>
+                          <span className="font-black text-slate-800">{userState.whatsapp || 'Aucun'}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100/50 text-xs">
+                          <span className="text-slate-400 font-bold">Code Sponsor Unique</span>
+                          <span className="font-mono font-black text-[#1b64d9]">{userState.referralCode}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Sécurité &amp; Mot de passe</h3>
+                      
+                      <div className="space-y-3">
+                        <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                          Modifiez votre mot de passe pour garantir la sécurité et la confidentialité de vos investissements.
+                        </p>
+                        
+                        <button
+                          onClick={() => setIsPasswordModalOpen(true)}
+                          className="w-full bg-[#1b64d9] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-blue-600 transition-all cursor-pointer border-none outline-none"
+                        >
+                          <Settings className="w-4.5 h-4.5" />
+                          <span>MODIFIER MON MOT DE PASSE</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           {/* USER SUMMARY CARDS */}
-          {activeTab === 'dashboard' && (
+          {!profileSubPage && activeTab === 'dashboard' && (
             <div className="space-y-4">
 
-              {/* AirPods Pro 2026 Premium Welcome & Visual Showcase with Background AirPods Image */}
-              <div className="w-full h-44 sm:h-48 rounded-[32px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] relative z-10 border border-slate-200/40 flex items-end">
-                {/* Background AirPods Image */}
-                <img 
-                  src="https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&w=1200&q=85" 
-                  alt="AirPods Pro Background" 
-                  className="absolute inset-0 w-full h-full object-cover select-none"
-                  referrerPolicy="no-referrer"
-                />
-                
-                {/* Dark gradient overlay to guarantee perfect text contrast */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" />
 
-                {/* Welcome text block layered on top of the image */}
-                <div className="p-5 sm:p-6 relative z-20 text-left w-full">
-                  <h3 className="text-xl sm:text-3xl font-sans font-black text-white tracking-tight leading-tight">
-                    Bienvenue, <span className="text-[#ff7c00]">{userState.name || "Cher Investisseur"}</span>
-                  </h3>
+              {/* IMMERSIVE DREAMPOD GALLERY SLIDER (VA-ET-VIENT) */}
+              <div id="dreampod-immersion-showcase" className="bg-white border border-blue-50/55 rounded-[30px] p-4.5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-slate-800 text-left overflow-hidden relative">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                  <div>
+                    <span className="text-[10px] font-sans font-black text-[#1b64d9] uppercase tracking-wider block">GALERIE ULTRA-LUXE</span>
+                    <h3 className="text-sm sm:text-base font-sans font-black text-slate-900 tracking-tight flex items-center gap-1.5 mt-0.5">
+                      🌟 Showcase Immersif Dreampod
+                    </h3>
+                  </div>
+                  <div className="bg-orange-50 text-orange-600 text-[9px] font-sans font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500"></span>
+                    </span>
+                    EXPLORER
+                  </div>
+                </div>
+
+                {/* Slider Image Container */}
+                <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden mt-3 shadow-sm border border-slate-100 bg-slate-50 group">
+                  <div className="w-full h-full relative">
+                    <img
+                      src={DREAMPOD_SLIDES[currentSlide].url}
+                      alt={DREAMPOD_SLIDES[currentSlide].title}
+                      className="w-full h-full object-cover select-none transition-transform duration-700 ease-out scale-100 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    
+                    {/* Dark gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+
+                    {/* Text Overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 text-white flex flex-col justify-end">
+                      <span className="text-[9px] text-orange-400 font-sans font-black uppercase tracking-widest mb-1 select-none">
+                        Cocon d'exception • {currentSlide + 1} / {DREAMPOD_SLIDES.length}
+                      </span>
+                      <h4 className="text-sm sm:text-base font-sans font-black uppercase tracking-wide leading-tight drop-shadow-sm">
+                        {DREAMPOD_SLIDES[currentSlide].title}
+                      </h4>
+                      <p className="text-[10.5px] sm:text-xs text-slate-300 font-semibold mt-1 drop-shadow-sm select-none leading-relaxed">
+                        {DREAMPOD_SLIDES[currentSlide].desc}
+                      </p>
+                    </div>
+
+                    {/* Left Arrow */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentSlide(prev => (prev - 1 + DREAMPOD_SLIDES.length) % DREAMPOD_SLIDES.length);
+                      }}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/15 hover:bg-white/35 backdrop-blur-md text-white border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 focus:outline-none cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4.5 h-4.5 stroke-[3]" />
+                    </button>
+
+                    {/* Right Arrow */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentSlide(prev => (prev + 1) % DREAMPOD_SLIDES.length);
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/15 hover:bg-white/35 backdrop-blur-md text-white border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 focus:outline-none cursor-pointer"
+                    >
+                      <ChevronRight className="w-4.5 h-4.5 stroke-[3]" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Navigation indicators / dots */}
+                <div className="flex justify-center items-center gap-1.5 pt-3">
+                  {DREAMPOD_SLIDES.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentSlide(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        currentSlide === idx 
+                          ? 'w-6 bg-[#1b64d9]' 
+                          : 'w-1.5 bg-slate-200 hover:bg-slate-350'
+                      }`}
+                      aria-label={`Aller au slide ${idx + 1}`}
+                    />
+                  ))}
                 </div>
               </div>
 
 
               {/* PRIMARY WHITE CARD OF SCREENSHOT */}
-              <div id="agro-primary-balance-card" className="bg-white border border-orange-100/55 rounded-[30px] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-slate-800 text-left">
+              <div id="agro-primary-balance-card" className="bg-white border border-blue-50/55 rounded-[30px] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-slate-800 text-left">
                 <div className="flex justify-between items-center pb-2">
                   <span className="text-[10px] font-sans font-black text-slate-450 uppercase tracking-wider block">SOLDE DISPONIBLE</span>
                   <div className="bg-gradient-to-r from-[#1b64d9] to-[#ff7c00] text-white text-[9px] font-sans font-black px-3 py-1.5 rounded-lg uppercase tracking-wider flex items-center gap-1 shrink-0">
@@ -2537,7 +3224,7 @@ export default function Dashboard({
                   <button
                     id="recharge-action-btn"
                     onClick={() => setActiveTab('deposit')}
-                    className="py-3.5 rounded-2xl text-xs sm:text-sm font-black bg-[#1b64d9] hover:opacity-95 text-white transition-all text-center flex items-center justify-center space-x-1 shadow-md cursor-pointer active:scale-95"
+                    className="py-3.5 rounded-2xl text-xs sm:text-sm font-black bg-[#1b64d9] hover:opacity-95 text-white transition-all text-center flex items-center justify-center space-x-1 shadow-md cursor-pointer active:scale-95 border-0"
                   >
                     <PlusCircle className="w-4.5 h-4.5 stroke-[3] mr-1" />
                     <span>Recharge</span>
@@ -2545,13 +3232,65 @@ export default function Dashboard({
                   <button
                     id="withdrawal-action-btn"
                     onClick={() => setActiveTab('withdraw')}
-                    className="py-3.5 rounded-2xl text-xs sm:text-sm font-black bg-[#ff7c00] hover:opacity-95 text-white transition-all text-center flex items-center justify-center space-x-1 shadow-md cursor-pointer active:scale-95"
+                    className="py-3.5 rounded-2xl text-xs sm:text-sm font-black bg-[#ff7c00] hover:opacity-95 text-white transition-all text-center flex items-center justify-center space-x-1 shadow-md cursor-pointer active:scale-95 border-0"
                   >
                     <ArrowUpCircle className="w-4.5 h-4.5 stroke-[3] mr-1" />
                     <span>Retrait</span>
                   </button>
                 </div>
               </div>
+
+              {/* MISSION SYSTEM INSTEAD OF LUCKY WHEEL */}
+              {(() => {
+                const directReferrals = level1Users;
+                const allInvs = DataStore.getInvestments() || [];
+                const investedReferralCount = directReferrals.filter(u => allInvs.some(inv => inv.userId === u.id)).length;
+
+                return (
+                  <div className="bg-gradient-to-br from-indigo-50/40 via-white to-blue-50/30 border border-blue-100/60 rounded-[30px] p-6 shadow-[0_8px_30px_rgba(27,100,217,0.03)] text-slate-800 text-left relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none -mr-8 -mt-8" />
+                    
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <span className="bg-indigo-50 text-indigo-600 text-[9px] font-sans font-black px-2.5 py-1 rounded-md uppercase tracking-wider inline-block">
+                          🎯 EXCLUSIF PARRAINAGE
+                        </span>
+                        <h3 className="text-lg font-sans font-black text-slate-900 tracking-tight mt-1 flex items-center gap-1.5">
+                          Missions d'Invitation
+                        </h3>
+                      </div>
+                      <div className="bg-[#1a1a1a] text-white text-[10px] font-sans font-black px-3 py-1.5 rounded-full uppercase tracking-wider">
+                        {investedReferralCount} investisseur(s)
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] sm:text-xs text-slate-500 font-bold leading-normal mt-3 max-w-md">
+                      Complétez des missions d'invitation simples pour débloquer des bonus de parrainage allant jusqu'à 8 500 FCFA crédités instantanément sur votre compte !
+                    </p>
+
+                    <div className="mt-5 flex flex-col sm:flex-row gap-3 sm:items-center justify-between bg-white/65 p-3.5 rounded-2xl border border-slate-100/80">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                          <Users className="w-5 h-5 stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-black text-slate-800 uppercase tracking-wide">Votre progression</div>
+                          <div className="text-[10px] text-slate-500 font-bold">
+                            {investedReferralCount} filleul(s) direct(s) ont investi.
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowMissionsModal(true)}
+                        className="py-2.5 px-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white font-sans font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-95 shadow-md active:scale-95 transition-all text-center shrink-0 cursor-pointer border-0"
+                      >
+                        Voir les Missions
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* 3 SECTIONS GRID: HISTORIQUE, SUPPORT, POINTAGE */}
               <div id="dashboard-quick-actions" className="grid grid-cols-3 gap-3 md:gap-4 pt-2">
@@ -2563,9 +3302,9 @@ export default function Dashboard({
                       onNavigate('/historique');
                     }
                   }}
-                  className="bg-white border border-orange-100/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
+                  className="bg-white border border-blue-50/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
                 >
-                  <div className="w-12 h-12 bg-orange-50 text-orange-600 flex items-center justify-center rounded-full">
+                  <div className="w-12 h-12 bg-[#f0f4ff] text-[#1b64d9] flex items-center justify-center rounded-full">
                     <Clock className="w-5.5 h-5.5 stroke-[2.5]" />
                   </div>
                   <span className="font-sans font-black text-[10px] sm:text-xs text-slate-800 uppercase tracking-wide">Historique</span>
@@ -2577,7 +3316,7 @@ export default function Dashboard({
                   onClick={() => {
                     setIsLiveChatOpen(true);
                   }}
-                  className="bg-white border border-orange-100/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
+                  className="bg-white border border-blue-50/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
                 >
                   <div className="w-12 h-12 bg-blue-50 text-blue-600 flex items-center justify-center rounded-full">
                     <MessageSquare className="w-5.5 h-5.5 stroke-[2.5]" />
@@ -2592,13 +3331,13 @@ export default function Dashboard({
                   className={`border rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)] ${
                     hasCheckedInToday 
                       ? 'bg-emerald-50/50 border-emerald-100/50 hover:bg-emerald-50 text-emerald-600' 
-                      : 'bg-white border-orange-100/45 hover:bg-slate-50/50 text-slate-800'
+                      : 'bg-white border-blue-50/45 hover:bg-slate-50/50 text-slate-800'
                   }`}
                 >
                   <div className={`w-12 h-12 flex items-center justify-center rounded-full transition-colors ${
                     hasCheckedInToday 
                       ? 'bg-emerald-100 text-emerald-600' 
-                      : 'bg-[#fffaf0] text-orange-500'
+                      : 'bg-[#fffaf0] text-blue-500'
                   }`}>
                     {hasCheckedInToday ? (
                       <Check className="w-5.5 h-5.5 stroke-[3]" />
@@ -2615,12 +3354,9 @@ export default function Dashboard({
               </div>
 
 
-
-
-
               {/* CONSEIL D'ÉQUIPE CARD */}
-              <div className="bg-white border border-orange-100/45 rounded-[28px] p-5 shadow-[0_4px_15px_rgba(0,0,0,0.015)] text-left flex items-start space-x-4 mt-6">
-                <div className="w-10 h-10 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center shrink-0 border border-orange-100/30">
+              <div className="bg-white border border-blue-50/45 rounded-[28px] p-5 shadow-[0_4px_15px_rgba(0,0,0,0.015)] text-left flex items-start space-x-4 mt-6">
+                <div className="w-10 h-10 bg-[#f0f4ff] text-blue-500 rounded-2xl flex items-center justify-center shrink-0 border border-blue-50/30">
                   <Megaphone className="w-5 h-5 stroke-[2.5]" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -2633,138 +3369,14 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* BANNER FLUX EN DIRECT (Va-et-vient de gauche à droite) */}
-              <div className="w-full bg-white border border-slate-200/60 rounded-2xl p-3 shadow-xs mt-3 overflow-hidden relative" id="live-ticker-container">
-                <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-100">
-                  <div className="flex items-center gap-1.5">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                      Flux d'activité en direct
-                    </span>
-                  </div>
-                  <span className="text-[8px] font-extrabold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100 uppercase tracking-wider">
-                    En direct 🔴
-                  </span>
-                </div>
-
-                <div className="relative w-full overflow-hidden py-1">
-                  {/* Edge fades */}
-                  <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-                  <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-
-                  <div className="animate-marquee-ltr flex items-center gap-4 whitespace-nowrap">
-                    {dynamicLiveTransactions.map((tx, idx) => (
-                      <div 
-                        key={`tx-${idx}`} 
-                        className="inline-flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-full px-3 py-1.5 shrink-0"
-                      >
-                        <span className="text-xs select-none">{tx.flag}</span>
-                        <span className="text-[11px] font-bold text-slate-800">{tx.name}</span>
-                        
-                        {tx.type === "recharge" ? (
-                          <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-500/20">
-                            a rechargé ⚡
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 border border-yellow-500/20">
-                            a retiré 💸
-                          </span>
-                        )}
-                        
-                        <span className="text-[11.5px] font-extrabold text-slate-900">{tx.amount}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* USINES ET CONSTRUCTEURS AIRPRODS EN MOUVEMENT */}
-              <div className="w-full mb-2 mt-6 select-none text-left border-t border-slate-100/60 pt-6">
-                <div className="px-1 mb-4">
-                  <span className="text-[10px] text-red-600 font-black uppercase tracking-widest block mb-0.5">PARTENAIRES INDUSTRIELS 🎧</span>
-                  <h4 className="text-xs sm:text-sm font-sans font-black text-slate-800 uppercase tracking-wide">
-                    Usines de Fabrication
-                  </h4>
-                  <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed mt-1">
-                    Les leaders mondiaux de la technologie audio qui conçoivent et assemblent nos équipements Airprods.
-                  </p>
-                </div>
-
-                {/* Marquee Wrapper with fading edges */}
-                <div className="relative w-full overflow-hidden bg-slate-50 py-4 rounded-2xl border border-slate-100/80">
-                  {/* Gradients to fade edges */}
-                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none" />
-                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
-
-                  <div className="animate-marquee-ltr flex items-center gap-6 whitespace-nowrap">
-                    {/* First Set of Logos */}
-                    {[
-                      { name: "Apple Audio", slug: "apple", color: "1e293b", bg: "bg-slate-100", detail: "California" },
-                      { name: "Sony Corp", slug: "sony", color: "000000", bg: "bg-slate-100/80", detail: "Tokyo" },
-                      { name: "Bose Prof", slug: "bose", color: "000000", bg: "bg-zinc-100", detail: "Boston" },
-                      { name: "Sennheiser", slug: "sennheiser", color: "000000", bg: "bg-zinc-50", detail: "Germany" },
-                      { name: "JBL Audio", slug: "jbl", color: "FF6600", bg: "bg-orange-50", detail: "Los Angeles" },
-                      { name: "Beats Elec", slug: "beatsbydre", color: "E30000", bg: "bg-red-50", detail: "Culver City" },
-                      { name: "Samsung", slug: "samsung", color: "1428A0", bg: "bg-blue-50", detail: "Seoul" },
-                      { name: "Xiaomi", slug: "xiaomi", color: "FF6700", bg: "bg-amber-50", detail: "Beijing" }
-                    ].map((brand, idx) => (
-                      <div key={`brand-1-${idx}`} className="inline-flex items-center gap-2.5 bg-white px-4 py-2.5 rounded-xl border border-slate-100 shadow-sm shrink-0">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${brand.bg} p-1.5`}>
-                          <img 
-                            src={`https://cdn.simpleicons.org/${brand.slug}/${brand.color}`} 
-                            alt={brand.name} 
-                            className="w-full h-full object-contain"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                        <div className="flex flex-col text-left">
-                          <span className="text-[10px] font-black uppercase text-slate-800 leading-none">{brand.name}</span>
-                          <span className="text-[7.5px] font-extrabold uppercase text-slate-400 tracking-wider mt-0.5">{brand.detail}</span>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Duplicate Set for Seamless Loop */}
-                    {[
-                      { name: "Apple Audio", slug: "apple", color: "1e293b", bg: "bg-slate-100", detail: "California" },
-                      { name: "Sony Corp", slug: "sony", color: "000000", bg: "bg-slate-100/80", detail: "Tokyo" },
-                      { name: "Bose Prof", slug: "bose", color: "000000", bg: "bg-zinc-100", detail: "Boston" },
-                      { name: "Sennheiser", slug: "sennheiser", color: "000000", bg: "bg-zinc-50", detail: "Germany" },
-                      { name: "JBL Audio", slug: "jbl", color: "FF6600", bg: "bg-orange-50", detail: "Los Angeles" },
-                      { name: "Beats Elec", slug: "beatsbydre", color: "E30000", bg: "bg-red-50", detail: "Culver City" },
-                      { name: "Samsung", slug: "samsung", color: "1428A0", bg: "bg-blue-50", detail: "Seoul" },
-                      { name: "Xiaomi", slug: "xiaomi", color: "FF6700", bg: "bg-amber-50", detail: "Beijing" }
-                    ].map((brand, idx) => (
-                      <div key={`brand-2-${idx}`} className="inline-flex items-center gap-2.5 bg-white px-4 py-2.5 rounded-xl border border-slate-100 shadow-sm shrink-0">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${brand.bg} p-1.5`}>
-                          <img 
-                            src={`https://cdn.simpleicons.org/${brand.slug}/${brand.color}`} 
-                            alt={brand.name} 
-                            className="w-full h-full object-contain"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                        <div className="flex flex-col text-left">
-                          <span className="text-[10px] font-black uppercase text-slate-800 leading-none">{brand.name}</span>
-                          <span className="text-[7.5px] font-extrabold uppercase text-slate-400 tracking-wider mt-0.5">{brand.detail}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
             </div>
           )}
 
           {/* CATALOGUE PRODUCTS TAB */}
-          {activeTab === 'products' && (
-            <div className="space-y-6">
+          {!profileSubPage && activeTab === 'products' && (
+            <div className="space-y-6 animate-fade-in">
               {/* STATS: NOMBRE DE PRODUITS ACHETÉS À GAUCHE ET REVENUS À DROITE */}
-              <div className="grid grid-cols-2 gap-3 max-w-4xl mx-auto animate-fade-in select-none">
+              <div className="grid grid-cols-2 gap-3 max-w-4xl mx-auto select-none">
                 {/* Nombre de produits achetés */}
                 <div className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-3xl p-5 text-left shadow-sm flex flex-col justify-between">
                   <span className="text-[10px] text-slate-500 block font-black uppercase tracking-widest leading-none mb-1">PRODUITS ACHETÉS</span>
@@ -2785,266 +3397,144 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* DYNAMIC PRODUCTS CONTAINER LIST */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto pt-4">
-                {products
-                  .filter((p) => {
-                    return p.category !== 'activity';
-                  })
-                  .map((p, index) => {
-                    const isBlocked = p.isBlocked === true;
-                    const formattedReopenTime = p.reopenDateTime 
-                      ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
-                      : null;
+              {/* SKY BLUE PRODUCT CATALOG (No sidebars or tabs) */}
+              <div className="max-w-7xl mx-auto pt-4 text-left">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products
+                    .filter(p => p.category !== 'activity')
+                    .map((p, index) => {
+                      const isBlocked = p.isBlocked === true;
+                      const formattedReopenTime = p.reopenDateTime 
+                        ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+                        : null;
 
-                    // Custom displayName formatting based on type
-                    const getVipDisplayName = (prod: Product, defaultVipLevel: number) => {
-                      if (prod.name) {
-                        return prod.name;
-                      }
+                      const getVipDisplayName = (prod: Product, defaultVipLevel: number) => {
+                        if (prod.category === 'activity') {
+                          return `Dreampod Activité ${prod.vipLevel || defaultVipLevel}`;
+                        }
+                        return `Titres à revenu fixe ${prod.vipLevel || defaultVipLevel}`;
+                      };
 
-                      if (prod.isCyclic) {
-                        return `SYSTÈME AIPRODS BIEN-ÊTRE 🌸`;
-                      }
-                      
-                      if (prod.category === 'activity') {
-                        return `SYSTÈME AIPRODS ACTIVITÉ ${prod.vipLevel || defaultVipLevel} ⚡`;
-                      }
+                      const displayName = getVipDisplayName(p, p.vipLevel || (index + 1));
+                      const purchasedCount = activeInvestments.filter(i => i.productName === p.name || i.productId === p.id).length;
 
-                      switch (prod.vipLevel) {
-                        case 1: return "SYSTÈME AIPRODS 1 🎧";
-                        case 2: return "SYSTÈME AIPRODS 2 🎧";
-                        case 3: return "SYSTÈME AIPRODS 3 🎧";
-                        case 4: return "SYSTÈME AIPRODS 4 🎧";
-                        case 5: return "SYSTÈME AIPRODS PRO 🎧";
-                        case 6: return "SYSTÈME AIPRODS PRO 2 🎧";
-                        case 7: return "SYSTÈME AIPRODS MAX 🎧";
-                        default: return `SYSTÈME AIPRODS ${prod.vipLevel || defaultVipLevel} 🎧`;
-                      }
-                    };
-
-                    const displayName = getVipDisplayName(p, p.vipLevel || (index + 1));
-                    
-                    // Card accent styles
-                    const isCyclicCard = p.isCyclic === true;
-                    const isActivityCard = p.category === 'activity';
-                    
-                    let bgStyle = "bg-[#f1f4fc]/70 backdrop-blur-md border-slate-300/60";
-                    let badgeBg = "bg-[#1b64d9]";
-                    let btnColor = "bg-[#db5129] hover:bg-[#c23f18]";
-                    let statusLabel = "Rendement garanti";
-                    let statusIcon = "⚡";
-                    let statusLabelColor = "text-[#1b64d9]";
-                    
-                    if (isCyclicCard) {
-                      bgStyle = "bg-[#f1fcf9]/70 backdrop-blur-md border-emerald-200/60";
-                      badgeBg = "bg-emerald-600";
-                      btnColor = "bg-emerald-600 hover:bg-emerald-700";
-                      statusLabel = "Rendement Bien-être";
-                      statusIcon = "🌸";
-                      statusLabelColor = "text-emerald-700";
-                    } else if (isActivityCard) {
-                      bgStyle = "bg-[#fffcf4]/70 backdrop-blur-md border-[#ffe6bf]/60";
-                      badgeBg = "bg-amber-600";
-                      btnColor = "bg-amber-655 hover:bg-amber-700";
-                      statusLabel = "Rendement Événementiel";
-                      statusIcon = "🔥";
-                      statusLabelColor = "text-amber-700";
-                    }
-
-                    const isPopular = !p.isCyclic && (p.vipLevel === 1 || index === 0);
-                    const isRecommended = !p.isCyclic && (p.vipLevel === 2 || index === 1);
-                    const purchasedCount = activeInvestments.filter(i => i.productName === p.name || i.productId === p.id).length;
-
-                    return (
-                      <div 
-                        key={p.id}
-                        className={`w-full relative border rounded-[28px] p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-lg ${bgStyle} ${isBlocked ? 'opacity-70 pointer-events-none' : ''}`}
-                      >
-                        {/* TOP BADGES ROW */}
-                        <div className="absolute top-4 right-5 flex flex-col items-end space-y-1.5 z-10 text-right">
-                          {isPopular && (
-                            <span className="text-[9px] text-white font-sans font-black uppercase bg-[#c39c36] px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
-                              POPULAIRE
-                            </span>
-                          )}
-                          {isRecommended && (
-                            <span className="text-[9px] text-white font-sans font-black uppercase bg-[#1b64d9] px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
-                              RECOMMANDÉ
-                            </span>
-                          )}
-                          {isCyclicCard && (
-                            <span className="text-[9px] text-white font-sans font-black uppercase bg-emerald-600 px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
-                              BIEN-ÊTRE
-                            </span>
-                          )}
-                          {isActivityCard && (
-                            <span className="text-[9px] text-white font-sans font-black uppercase bg-amber-600 px-3 py-1 rounded-full shadow-sm leading-none tracking-wider">
-                              SPÉCIAL ACTIVITÉ
-                            </span>
-                          )}
-                          <span className="text-[10px] text-[#1e7a5c] font-sans font-black uppercase bg-[#d7f1e9] px-2.5 py-0.5 rounded-md leading-relaxed">
-                            Achat: {purchasedCount}/3
-                          </span>
-                        </div>
-
-                        {/* PRODUCT IMAGE CARD THUMBNAIL */}
-                        <div className="w-full h-36 rounded-[20px] overflow-hidden mb-3.5 relative shadow-sm border border-slate-200/40 bg-slate-100 select-none">
-                          <ProductImage 
-                            vipLevel={p.vipLevel || (index + 1)}
-                            alt={displayName}
-                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
-                            category={p.category}
-                          />
-                          <div className="absolute bottom-2 left-2.5 bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[9px] font-sans font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                            <span>{getVipCropDetails(p.vipLevel || (index + 1), p.category).name}</span>
-                          </div>
-                        </div>
-
-                        {/* PRODUCT HEADER */}
-                        <div className="text-left mt-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className={`text-[11px] font-sans font-bold tracking-wider uppercase ${statusLabelColor}`}>
-                              {isCyclicCard ? 'PLAN BIEN-ÊTRE' : isActivityCard ? 'PLAN ACTIVITÉS' : `PLAN VIP ${p.vipLevel || (index + 1)}`}
-                            </span>
-                            <span className="text-[10px] text-emerald-650 font-bold font-sans">
-                              {getVipCropDetails(p.vipLevel || (index + 1), p.category).name.split(' ').pop()} Projet Actif
-                            </span>
-                          </div>
-                          <h4 className="font-sans font-black text-base sm:text-lg text-slate-800 leading-tight uppercase tracking-tight mt-0.5">
-                            {displayName}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1">
-                            {isCyclicCard ? "Faites fructifier vos fonds avec nos packages bien-être générateurs d'actifs." : getVipCropDetails(p.vipLevel || (index + 1), p.category).desc}
-                          </p>
-
-                          {/* DYNAMIC LIST OF TARGET GENERATED PRODUCTS FOR CYCLIC */}
-                          {isCyclicCard && p.generatedProductIds && p.generatedProductIds.length > 0 && (
-                            <div className="mt-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-3">
-                              <span className="text-[9px] text-emerald-700 font-black uppercase block mb-1.5">🚀 Produits générés à la complétion :</span>
-                              <div className="flex flex-wrap gap-1">
-                                {p.generatedProductIds.map(childId => {
-                                  const child = products.find(x => x.id === childId);
-                                  return (
-                                    <span key={childId} className="px-2 py-0.5 bg-white border border-emerald-100 text-emerald-705 font-black rounded text-[9px] leading-relaxed shadow-sm">
-                                      VIP {child ? child.vipLevel : ''} : {child ? child.name : childId}
-                                    </span>
-                                  );
-                                })}
+                      return (
+                        <div 
+                          key={p.id}
+                          className={`bg-sky-50/40 border border-sky-100 rounded-3xl p-5 shadow-[0_4px_15px_rgba(14,165,233,0.04)] hover:shadow-md hover:border-sky-200 transition-all duration-300 relative flex flex-col justify-between ${isBlocked ? 'opacity-70 pointer-events-none' : ''}`}
+                        >
+                          {/* Card Content Top Row */}
+                          <div>
+                            <div className="flex items-center gap-4 text-left">
+                              <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 border border-sky-100 bg-[#0ea5e9] p-1.5 flex items-center justify-center shadow-inner">
+                                <ProductImage 
+                                  vipLevel={p.vipLevel || (index + 1)}
+                                  alt={displayName}
+                                  className="w-full h-full object-contain rounded-xl"
+                                  category={p.category}
+                                />
+                              </div>
+                              <div className="flex flex-col text-left">
+                                <span className="text-[9px] text-[#0369a1] font-sans font-black uppercase bg-[#e0f2fe] px-2 py-0.5 rounded-md leading-relaxed w-fit mb-1">
+                                  Achat: {purchasedCount}/3
+                                </span>
+                                <h4 className="font-sans font-black text-sm text-sky-950 leading-tight">
+                                  {displayName}
+                                </h4>
+                                <div className="mt-1">
+                                  <span className="inline-flex items-center gap-1 bg-[#fffbe6] border border-[#ffe58f] text-[#d4b106] text-[10px] font-sans font-black px-2 py-0.5 rounded-full shadow-xs uppercase">
+                                    🏆 VIP{p.vipLevel || 0}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          )}
-                          
-                          {/* PRICE */}
-                          <div className="mt-2.5 flex items-baseline space-x-1.5">
-                            <span className="text-2xl sm:text-3xl font-sans font-black text-[#db4c20] tracking-tight leading-none">
-                              {p.price.toLocaleString()} {getCurrency()}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">
-                              {isCyclicCard ? "prix d'activation bien-être" : "prix fixe de location"}
-                            </span>
-                          </div>
-                        </div>
 
-                        {/* 3-COLUMN METRICS */}
-                        <div className="grid grid-cols-3 gap-2 border-t border-b border-slate-200/60 py-3.5 my-4 text-left select-none">
-                          <div>
-                            <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">REVENUS / JOUR</span>
-                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm block">
-                              +{p.dailyReturn.toLocaleString()} F
-                            </span>
-                            <span className="text-orange-600 font-extrabold font-sans text-[10px] block mt-0.5">
-                              {((p.dailyReturn / p.price) * 100).toFixed(1)}% / jour
-                            </span>
+                            {/* Key-Value Details */}
+                            <div className="mt-5 space-y-2 text-left select-none border-t border-sky-100/60 pt-4">
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-sky-600/80 font-bold">Revenu</span>
+                                <span className="text-sky-900 font-black">{p.durationDays} Jours</span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-sky-600/80 font-bold">Revenus Quotidiens</span>
+                                <span className="text-[#0ea5e9] font-black">{p.dailyReturn.toLocaleString()} {getCurrency()}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-sky-600/80 font-bold">Revenu Total</span>
+                                <span className="text-[#0284c7] font-black">{(p.dailyReturn * p.durationDays).toLocaleString()} {getCurrency()}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">DURÉE CONTRAT</span>
-                            <span className="text-slate-800 font-black font-sans text-xs sm:text-sm">
-                              {p.durationDays} Jours
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 text-[9px] block font-extrabold uppercase tracking-tight leading-none mb-1">GAINS TOTAUX</span>
-                            <span className="text-[#00bd74] font-black font-sans text-xs sm:text-sm block">
-                              {(p.dailyReturn * p.durationDays).toLocaleString()} F
-                            </span>
-                            <span className="text-emerald-600 font-extrabold font-sans text-[10px] block mt-0.5">
-                              {Math.round(((p.dailyReturn * p.durationDays) / p.price) * 100)}% total
-                            </span>
-                          </div>
-                        </div>
 
-                        {/* ERRORS LOGIC */}
-                        {productErrors[p.id] && (
-                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-600 leading-normal text-left">
-                            <span className="text-red-700 block font-black mb-0.5">⚠️ SOLDE INSUFFISANT</span>
-                            <span>{productErrors[p.id]}</span>
+                          {/* Button Area */}
+                          <div className="mt-5 text-left">
+                            {productErrors[p.id] && (
+                              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] font-bold text-red-600 leading-normal">
+                                <span className="text-red-700 block font-black mb-0.5">⚠️ SOLDE INSUFFISANT</span>
+                                <span>{productErrors[p.id]}</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveTab('deposit');
+                                  }}
+                                  className="mt-2 block text-[#0ea5e9] font-black underline uppercase tracking-wide cursor-pointer text-xs"
+                                >
+                                  📥 Recharger mon compte maintenant
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Elegant Split Button with Sky Blue Theme */}
                             <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveTab('deposit');
-                              }}
-                              className="mt-2 block text-[#1b64d9] font-black underline uppercase tracking-wide cursor-pointer text-xs"
+                              onClick={() => handleBuyProduct(p)}
+                              disabled={isBlocked}
+                              className={`w-full flex items-stretch rounded-full overflow-hidden border border-sky-200 shadow-sm transition-all active:scale-[0.98] cursor-pointer ${isBlocked ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-95'}`}
                             >
-                              📥 Recharger mon compte maintenant
+                              <div className="bg-[#f0f9ff] text-[#0369a1] font-extrabold text-xs px-4 py-3 flex items-center justify-center flex-1">
+                                {p.price.toLocaleString()} {getCurrency()}
+                              </div>
+                              <div className="bg-[#f0f9ff] flex items-center justify-center px-1 text-yellow-400 font-bold select-none text-xs">
+                                ⚡
+                              </div>
+                              <div className="bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-extrabold text-xs px-6 py-3 flex items-center justify-center flex-1 text-center uppercase tracking-wide">
+                                Investir
+                              </div>
                             </button>
                           </div>
-                        )}
 
-                        {/* BOTTOM ROW */}
-                        <div className="flex items-center justify-between mt-1 pt-1.5 space-x-3 text-left select-none">
-                          <div className="flex items-center space-x-2 text-slate-500">
-                            <span className="text-base font-extrabold">{statusIcon}</span>
-                            <div className="leading-tight">
-                              <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 block uppercase tracking-tight">{statusLabel}</span>
-                              <span className={`text-[10px] sm:text-[11px] font-black leading-none ${statusLabelColor}`}>100% active</span>
+                          {isBlocked && (
+                            <div className="absolute inset-0 rounded-[28px] bg-slate-950/30 flex flex-col items-center justify-center p-3 z-10">
+                              <div className="bg-red-500 text-white font-bold text-xs uppercase px-2.5 py-1 rounded-lg">
+                                Fermé / Suspendu
+                              </div>
+                              {formattedReopenTime && (
+                                <span className="text-[9px] text-white font-mono mt-1 bg-black/60 px-2 py-0.5 rounded">
+                                  Ouvre à: {formattedReopenTime}
+                                </span>
+                              )}
                             </div>
-                          </div>
-
-                          <button
-                            onClick={() => handleBuyProduct(p)}
-                            disabled={isBlocked}
-                            className={`py-3 px-5 rounded-[20px] text-xs font-black uppercase text-white transition-all shadow-md active:scale-95 flex items-center justify-center space-x-1 cursor-pointer min-w-[125px] shrink-0 ${btnColor} disabled:opacity-50`}
-                          >
-                            <span>{isCyclicCard ? 'Activer le Cycle' : 'Activer le Plan'}</span>
-                            {!isBlocked && <span className="text-yellow-300">⚡</span>}
-                          </button>
+                          )}
                         </div>
-                        
-                        {isBlocked && (
-                          <div className="absolute inset-0 rounded-[28px] bg-slate-950/30 flex flex-col items-center justify-center p-3">
-                            <div className="bg-red-500 text-white font-bold text-xs uppercase px-2.5 py-1 rounded-lg">
-                              Fermé / Suspendu
-                            </div>
-                            {formattedReopenTime && (
-                              <span className="text-[9px] text-white font-mono mt-1 bg-black/60 px-2 py-0.5 rounded">
-                                Ouvre à: {formattedReopenTime}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
 
-                {products.filter((p) => {
-                  return p.category !== 'activity';
-                }).length === 0 && (
-                  <div className="col-span-1 md:col-span-2 lg:col-span-3 py-16 px-4 text-center rounded-3xl bg-slate-50 border border-dashed border-slate-200/60 max-w-sm mx-auto">
-                    <span className="text-3xl">📭</span>
-                    <h5 className="font-sans font-black text-slate-700 uppercase tracking-wider text-xs mt-3">Aucun produit disponible</h5>
-                    <p className="text-[10px] text-slate-400 font-bold mt-1">
-                      Aucun plan d'investissement n'est actif pour le moment.
-                    </p>
-                  </div>
-                )}
+                  {products.length === 0 && (
+                    <div className="col-span-full py-16 px-4 text-center rounded-3xl bg-sky-50 border border-dashed border-sky-200 max-w-sm mx-auto">
+                      <span className="text-3xl">📭</span>
+                      <h5 className="font-sans font-black text-slate-700 uppercase tracking-wider text-xs mt-3">Aucun produit disponible</h5>
+                      <p className="text-[10px] text-slate-400 font-bold mt-1">
+                        Aucun plan d'investissement n'est actif pour le moment.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
           {/* DEPOSIT FORM TAB */}
-          {activeTab === 'deposit' && (() => {
+          {!profileSubPage && activeTab === 'deposit' && (() => {
             const currentUssdCode = manualOperator.includes('Orange')
               ? (manualDepositNumbers['CM_42'] || '#150*688969868*montant#')
               : (manualDepositNumbers['CM_41'] || '*126*9*677451289*montant #');
@@ -3059,46 +3549,8 @@ export default function Dashboard({
                     💸 CRÉDITER MON COMPTE
                   </span>
                   <p className="text-xs text-slate-500 font-bold mt-1">
-                    Choisissez votre méthode préférée pour recharger votre solde.
+                    Saisissez les détails du transfert et soumettez votre reçu pour recharger votre solde.
                   </p>
-                </div>
-
-                {/* METHOD TOGGLE BUTTONS */}
-                <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-slate-200/60 rounded-2xl border border-slate-200">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDepositMethod('westpay');
-                      setDepositError('');
-                      setDepositSuccess('');
-                    }}
-                    className={`py-3 text-center rounded-xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center space-x-1.5 ${
-                      depositMethod === 'westpay'
-                        ? 'bg-[#1b64d9] text-white shadow-md'
-                        : 'text-slate-650 hover:bg-slate-50/50'
-                    }`}
-                  >
-                    <span>⚡ WestPay (Auto)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDepositMethod('manuel_cameroun');
-                      setDepositError('');
-                      setDepositSuccess('');
-                      // Default operator when switching to manual Cameroon
-                      if (!manualOperator.includes('Cameroun') && !manualOperator.includes('CM')) {
-                        setManualOperator('MTN Mobile Money (Cameroun 🇨🇲)');
-                      }
-                    }}
-                    className={`py-3 text-center rounded-xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center space-x-1.5 ${
-                      depositMethod === 'manuel_cameroun'
-                        ? 'bg-[#1b64d9] text-white shadow-md'
-                        : 'text-slate-650 hover:bg-slate-50/50'
-                    }`}
-                  >
-                    <span>🇨🇲 Manuel Cameroun</span>
-                  </button>
                 </div>
 
                 {depositError && (
@@ -3182,17 +3634,57 @@ export default function Dashboard({
                           </div>
                         </div>
 
-                        <div>
-                          <label className="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-2 font-mono">
-                            Numéro de téléphone de paiement (Optionnel) 📞
+                        <div className="border-t border-blue-200/40 pt-3">
+                          <label className="block text-[10px] font-black text-[#1b64d9] uppercase tracking-wider mb-2 font-mono flex items-center gap-1">
+                            <span>🌍 Pays de paiement</span>
+                            <span className="text-red-500">*</span>
                           </label>
-                          <input
-                            type="text"
-                            placeholder="Ex: +237699999999 ou ID de transaction"
-                            value={depositPhoneNumber}
-                            onChange={(e) => setDepositPhoneNumber(e.target.value)}
-                            className="w-full bg-white border border-slate-200 focus:border-[#1b64d9] rounded-xl py-2.5 px-3 text-xs text-slate-700 font-semibold focus:outline-none shadow-sm"
-                          />
+                          <div className="relative">
+                            <select
+                              value={depositCountry}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setDepositCountry(val);
+                                const matched = DEPOSIT_COUNTRIES.find(c => c.name === val);
+                                if (matched) {
+                                  setDepositCountryCode(matched.code);
+                                }
+                              }}
+                              className="w-full bg-white border border-slate-200 focus:border-[#1b64d9] rounded-xl py-2.5 px-3 text-xs font-bold text-slate-700 focus:outline-none shadow-sm appearance-none cursor-pointer"
+                            >
+                              {DEPOSIT_COUNTRIES.map((c) => (
+                                <option key={c.name} value={c.name} className="text-slate-800">
+                                  {c.flag} {c.name} ({c.code})
+                                </option>
+                              ))}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-black text-[#1b64d9] uppercase tracking-wider mb-2 font-mono flex items-center gap-1">
+                            <span>📞 Numéro de paiement</span>
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <div className="flex items-center">
+                            <div className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl py-2.5 px-3 text-xs font-mono font-black text-slate-500 shrink-0 select-none">
+                              {depositCountryCode}
+                            </div>
+                            <input
+                              type="tel"
+                              required
+                              placeholder="Ex: 699999999"
+                              value={depositPhone}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                setDepositPhone(val);
+                              }}
+                              className="w-full bg-white border border-l-0 border-slate-200 focus:border-[#1b64d9] rounded-r-xl py-2.5 px-3 text-xs text-slate-700 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -3258,7 +3750,7 @@ export default function Dashboard({
                             onClick={() => setManualOperator('Orange Money (Cameroun 🇨🇲)')}
                             className={`p-3 text-center rounded-2xl border-2 transition-all duration-200 cursor-pointer font-sans font-black text-xs flex flex-col items-center justify-center space-y-1 ${
                               manualOperator === 'Orange Money (Cameroun 🇨🇲)'
-                                ? 'bg-orange-50 text-orange-950 border-orange-300 shadow-sm'
+                                ? 'bg-[#f0f4ff] text-blue-950 border-blue-200 shadow-sm'
                                 : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                             }`}
                           >
@@ -3293,6 +3785,70 @@ export default function Dashboard({
                         <p className="text-[10.5px] text-slate-500 font-medium italic">
                           💡 Vous pouvez également composer directement ce code sur votre téléphone pour initier le transfert.
                         </p>
+                      </div>
+
+                      {/* COUNTRY & PHONE SELECTION (REQUIRED) */}
+                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 animate-fade-in">
+                        <span className="font-black text-xs text-slate-800 uppercase tracking-wider block font-mono">
+                          🌍 Informations de Paiement (Requis)
+                        </span>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* COUNTRY SELECT */}
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1.5 font-mono flex items-center gap-1">
+                              <span>Identification du Pays</span>
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <select
+                                value={depositCountry}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setDepositCountry(val);
+                                  const matched = DEPOSIT_COUNTRIES.find(c => c.name === val);
+                                  if (matched) {
+                                    setDepositCountryCode(matched.code);
+                                  }
+                                }}
+                                className="w-full bg-white border border-slate-200 focus:border-[#1b64d9] rounded-xl py-2.5 px-3 text-xs font-bold text-slate-700 focus:outline-none shadow-sm appearance-none cursor-pointer"
+                              >
+                                {DEPOSIT_COUNTRIES.map((c) => (
+                                  <option key={c.name} value={c.name}>
+                                    {c.flag} {c.name} ({c.code})
+                                  </option>
+                                ))}
+                              </select>
+                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* PHONE INPUT */}
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1.5 font-mono flex items-center gap-1">
+                              <span>Numéro de Téléphone</span>
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <div className="flex items-center">
+                              <div className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl py-2.5 px-3 text-xs font-mono font-black text-slate-500 shrink-0 select-none">
+                                {depositCountryCode}
+                              </div>
+                              <input
+                                type="tel"
+                                required
+                                placeholder="Ex: 699999999"
+                                value={depositPhone}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/[^0-9]/g, '');
+                                  setDepositPhone(val);
+                                }}
+                                className="w-full bg-white border border-l-0 border-slate-200 focus:border-[#1b64d9] rounded-r-xl py-2.5 px-3 text-xs text-slate-700 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                       {/* TRANSACTION REFERENCE */}
@@ -3386,7 +3942,7 @@ export default function Dashboard({
           })()}
 
           {/* WITHDRAW FORM TAB */}
-          {activeTab === 'withdraw' && (
+          {!profileSubPage && activeTab === 'withdraw' && (
             <div className="max-w-md mx-auto bg-[#eef3fc] border-0 p-4 md:p-5 rounded-2xl shadow-lg text-slate-800">
               <div className="text-center mb-4">
                 <span className="text-[10px] font-black text-[#1b64d9] tracking-widest uppercase block mb-0.5">CASH OUT DETECTÉ</span>
@@ -3402,7 +3958,7 @@ export default function Dashboard({
               )}
 
               {(DataStore.areWithdrawalsBlocked() || userState.withdrawBlocked) && (
-                <div className="mb-3 p-3 rounded-xl bg-orange-100 border border-orange-200 text-[10.5px] text-orange-850 font-black text-center uppercase tracking-wide flex flex-col gap-0.5 shadow-sm">
+                <div className="mb-3 p-3 rounded-xl bg-blue-50 border border-blue-100 text-[10.5px] text-blue-900 font-black text-center uppercase tracking-wide flex flex-col gap-0.5 shadow-sm">
                   <span>⚠️ RETRAITS SUSPENDUS TEMPORAIREMENT</span>
                   <span>Les retraits sont restreints sur votre compte.</span>
                 </div>
@@ -3427,7 +3983,7 @@ export default function Dashboard({
                   <select 
                     value={withdrawOperator}
                     onChange={(e) => setWithdrawOperator(e.target.value)}
-                    className="w-full bg-white border border-orange-100 rounded-xl py-2 px-3 text-xs text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm"
+                    className="w-full bg-white border border-blue-50 rounded-xl py-2 px-3 text-xs text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm"
                   >
                     <optgroup label="Togo 🇹🇬">
                       <option value="T-Money (TG)">T-Money (TG)</option>
@@ -3480,7 +4036,7 @@ export default function Dashboard({
                     placeholder="Ex: +228 90123456"
                     value={withdrawNumber}
                     onChange={(e) => setWithdrawNumber(e.target.value)}
-                    className="w-full bg-white border border-orange-100 rounded-xl py-2 px-3 text-xs text-slate-800 font-mono font-bold tracking-wider shadow-sm"
+                    className="w-full bg-white border border-blue-50 rounded-xl py-2 px-3 text-xs text-slate-800 font-mono font-bold tracking-wider shadow-sm"
                   />
                   <span className="text-[9px] text-slate-400 block mt-1 font-bold">Assurez-vous que le numéro est actif et lié à un compte Mobile Money.</span>
                 </div>
@@ -3494,13 +4050,13 @@ export default function Dashboard({
                     placeholder={`Montant à retirer en ${getCurrency()}`}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="w-full bg-white border border-orange-100 rounded-xl py-2 px-3 text-xs text-[#1b64d9] font-black focus:outline-none"
+                    className="w-full bg-white border border-blue-50 rounded-xl py-2 px-3 text-xs text-[#1b64d9] font-black focus:outline-none"
                   />
                 </div>
 
                 {/* Real-time fee summary */}
                 {!isNaN(parseInt(withdrawAmount)) && parseInt(withdrawAmount) > 0 && (
-                  <div className="bg-[#fffdfb] p-2.5 rounded-xl border border-orange-100 text-[10.5px] font-bold text-slate-700 space-y-1 animate-fade-in shadow-sm">
+                  <div className="bg-[#fffdfb] p-2.5 rounded-xl border border-blue-50 text-[10.5px] font-bold text-slate-700 space-y-1 animate-fade-in shadow-sm">
                     <span className="font-extrabold text-[#1b64d9] text-[9px] uppercase tracking-wider block">Calcul automatique (12% Frais) :</span>
                     <div className="flex justify-between border-b border-slate-100/50 pb-0.5">
                       <span className="text-slate-500 font-semibold">Montant brut :</span>
@@ -3526,7 +4082,7 @@ export default function Dashboard({
               </form>
 
               {/* RÈGLES ET CONDITIONS DE RETRAIT EN TIRÉ/BULLETS */}
-              <div className="mt-8 pt-6 border-t border-orange-100/70 text-slate-700/90 text-left">
+              <div className="mt-8 pt-6 border-t border-blue-50/70 text-slate-700/90 text-left">
                 <span className="text-[11px] font-black text-slate-800 uppercase tracking-widest block mb-3.5">
                   📋 CONDITIONS ET PARAMÈTRES DE RETRAIT
                 </span>
@@ -3562,12 +4118,12 @@ export default function Dashboard({
 
           {/* WITHDRAWAL PROOFS FEED TAB REMOVED */}
           {false && activeTab === 'proofs' && (
-            <div className="space-y-6 max-w-4xl mx-auto text-left bg-white p-6 sm:p-8 rounded-[34px] border border-orange-100 shadow-[0_12px_45px_rgba(249,115,22,0.04)]">
+            <div className="space-y-6 max-w-4xl mx-auto text-left bg-white p-6 sm:p-8 rounded-[34px] border border-blue-50 shadow-[0_12px_45px_rgba(249,115,22,0.04)]">
               
               {/* BRAND HEADER CARD */}
               <div className="bg-slate-50 border border-slate-200/60 rounded-[28px] p-6 sm:p-8 shadow-sm text-slate-800 text-left relative overflow-hidden">
                 {/* Decorative background visual blob */}
-                <div className="absolute -top-12 -right-12 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#f0f4ff]0/5 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -3579,13 +4135,13 @@ export default function Dashboard({
                       Preuves de Retrait
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                      Découvrez les reçus réels reçus et publiés en direct par nos investisseurs Aiprods.
+                      Découvrez les reçus réels reçus et publiés en direct par nos investisseurs Dreampod.
                     </p>
                   </div>
 
                   <button
                     onClick={() => setIsPublishFormOpen(!isPublishFormOpen)}
-                    className="self-start sm:self-center px-5 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs rounded-2xl shadow-[0_4px_15px_rgba(249,115,22,0.25)] flex items-center gap-2 duration-150 transition-all cursor-pointer select-none active:scale-95 shrink-0 uppercase tracking-widest font-mono"
+                    className="self-start sm:self-center px-5 py-3 bg-gradient-to-r from-[#1b64d9] to-amber-500 hover:from-[#1b64d9] hover:to-blue-700 text-white font-bold text-xs rounded-2xl shadow-[0_4px_15px_rgba(249,115,22,0.25)] flex items-center gap-2 duration-150 transition-all cursor-pointer select-none active:scale-95 shrink-0 uppercase tracking-widest font-mono"
                   >
                     <Camera className="w-4 h-4" />
                     {isPublishFormOpen ? "Masquer le formulaire" : "Publier ma preuve"}
@@ -3603,7 +4159,7 @@ export default function Dashboard({
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-slate-50/50 border border-orange-100 rounded-3xl p-5 sm:p-6 shadow-md text-slate-800">
+                    <div className="bg-slate-50/50 border border-blue-50 rounded-3xl p-5 sm:p-6 shadow-md text-slate-800">
                       <div className="border-b border-slate-200 pb-3 mb-4">
                         <span className="text-xs sm:text-sm font-sans font-black text-slate-800 uppercase tracking-wider block">
                           📝 Partager mon expérience de paiement
@@ -3627,7 +4183,7 @@ export default function Dashboard({
                               placeholder="Ex: 25000"
                               value={proofAmount}
                               onChange={(e) => setProofAmount(e.target.value)}
-                              className="w-full bg-white border border-slate-200 focus:border-orange-500 focus:outline-[#f97316] rounded-xl text-xs sm:text-sm text-slate-800 p-3.5 font-bold transition-all focus:ring-2 focus:ring-orange-500/20 placeholder-slate-400"
+                              className="w-full bg-white border border-slate-200 focus:border-[#f0f4ff]0 focus:outline-[#1b64d9] rounded-xl text-xs sm:text-sm text-slate-800 p-3.5 font-bold transition-all focus:ring-2 focus:ring-blue-500/20 placeholder-slate-400"
                             />
                           </div>
 
@@ -3663,10 +4219,10 @@ export default function Dashboard({
                               }}
                               className={`border-2 border-dashed rounded-xl p-3 text-center flex items-center justify-center gap-3 transition-all duration-150 relative ${
                                 isDraggingProof 
-                                  ? 'border-orange-500 bg-orange-500/10' 
+                                  ? 'border-[#f0f4ff]0 bg-[#f0f4ff]0/10' 
                                   : proofImage 
                                     ? 'border-emerald-500 bg-emerald-500/10' 
-                                    : 'border-slate-250 bg-white hover:border-orange-400 hover:bg-slate-50/50'
+                                    : 'border-slate-250 bg-white hover:border-blue-300 hover:bg-slate-50/50'
                               }`}
                             >
                               <input
@@ -3716,11 +4272,11 @@ export default function Dashboard({
                                 </div>
                               ) : (
                                 <>
-                                  <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-100/50 text-orange-600 flex items-center justify-center text-sm shrink-0">
+                                  <div className="w-8 h-8 rounded-lg bg-[#f0f4ff] border border-blue-50/50 text-[#1b64d9] flex items-center justify-center text-sm shrink-0">
                                     📸
                                   </div>
                                   <div className="text-left leading-tight">
-                                    <span className="text-[10px] sm:text-[11px] text-orange-600 font-black uppercase tracking-wide block">
+                                    <span className="text-[10px] sm:text-[11px] text-[#1b64d9] font-black uppercase tracking-wide block">
                                       Choisir ou glisser l'image
                                     </span>
                                     <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold block">
@@ -3744,7 +4300,7 @@ export default function Dashboard({
                             placeholder="Partagez votre joie ! Ex: Super ! Retrait instantané de mon gain VIP sur mon compte Wave, équipe au top !"
                             value={proofMessage}
                             onChange={(e) => setProofMessage(e.target.value)}
-                            className="w-full bg-white border border-slate-200 focus:border-orange-500 focus:outline-[#f97316] rounded-xl text-xs sm:text-sm text-slate-800 p-3.5 font-bold transition-all focus:ring-2 focus:ring-orange-500/20 placeholder-slate-400 resize-none"
+                            className="w-full bg-white border border-slate-200 focus:border-[#f0f4ff]0 focus:outline-[#1b64d9] rounded-xl text-xs sm:text-sm text-slate-800 p-3.5 font-bold transition-all focus:ring-2 focus:ring-blue-500/20 placeholder-slate-400 resize-none"
                           />
                         </div>
 
@@ -3762,8 +4318,8 @@ export default function Dashboard({
                             disabled={isPublishing}
                             className={`px-6 py-3 font-bold text-xs rounded-xl flex items-center gap-2 text-white shadow-md cursor-pointer ${
                               isPublishing 
-                                ? 'bg-orange-400 opacity-80 cursor-not-allowed' 
-                                : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/10 active:scale-95 transition-all'
+                                ? 'bg-blue-400 opacity-80 cursor-not-allowed' 
+                                : 'bg-[#f0f4ff]0 hover:bg-[#1b64d9] shadow-blue-500/10 active:scale-95 transition-all'
                             }`}
                           >
                             {isPublishing ? "Publication..." : "Partager sur le Flux 🚀"}
@@ -3789,7 +4345,7 @@ export default function Dashboard({
                   withdrawalProofs.map((proof) => {
                     const hasLiked = proof.likes.includes(userState.id);
                     const colors = [
-                      'from-orange-500 to-amber-500', 
+                      'from-[#1b64d9] to-amber-500', 
                       'from-emerald-500 to-teal-500', 
                       'from-blue-500 to-indigo-500', 
                       'from-purple-500 to-pink-500'
@@ -3803,7 +4359,7 @@ export default function Dashboard({
                     return (
                       <div 
                         key={proof.id}
-                        className="bg-white border border-slate-150 hover:border-orange-200 hover:shadow-lg transition-all rounded-3xl p-5 text-left relative overflow-hidden group shadow-sm"
+                        className="bg-white border border-slate-150 hover:border-blue-100 hover:shadow-lg transition-all rounded-3xl p-5 text-left relative overflow-hidden group shadow-sm"
                       >
                         <div className="absolute top-0 right-0 w-24 h-24 bg-white/[0.01] rounded-full blur-xl pointer-events-none group-hover:bg-white/[0.02] transition-colors" />
 
@@ -3823,7 +4379,7 @@ export default function Dashboard({
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] text-orange-600 font-black uppercase tracking-wider block opacity-95">
+                                <span className="text-[10px] text-[#1b64d9] font-black uppercase tracking-wider block opacity-95">
                                   📍 {proof.userCountry}
                                 </span>
                                 <span className="text-slate-400 text-[9px] font-black tracking-normal uppercase opacity-75">
@@ -3847,7 +4403,7 @@ export default function Dashboard({
                         </div>
 
                         {proof.image && (
-                          <div className="mt-4 max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 hover:border-orange-200 transition-colors">
+                          <div className="mt-4 max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 hover:border-blue-100 transition-colors">
                             <button
                               onClick={() => setExpandedImage(proof.image || null)}
                               type="button"
@@ -3871,11 +4427,11 @@ export default function Dashboard({
                             onClick={() => handleLikeProof(proof.id)}
                             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-sans font-black tracking-wide uppercase transition-all duration-150 ${
                               hasLiked 
-                                ? 'bg-orange-50 text-orange-600 font-black saturate-150 border border-orange-200' 
+                                ? 'bg-[#f0f4ff] text-[#1b64d9] font-black saturate-150 border border-blue-100' 
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent'
                             }`}
                           >
-                            <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-orange-550 stroke-orange-550' : ''}`} />
+                            <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-[#1b64d9] stroke-[#1b64d9]' : ''}`} />
                             <span>{proof.likes.length > 0 ? `${proof.likes.length} ${proof.likes.length === 1 ? 'Like' : 'Likes'}` : 'Soutenir'}</span>
                           </button>
                         </div>
@@ -3908,7 +4464,7 @@ export default function Dashboard({
                         </span>
                         <button
                           onClick={() => setExpandedImage(null)}
-                          className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
+                          className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer border-none outline-none"
                         >
                           ✕
                         </button>
@@ -3930,121 +4486,115 @@ export default function Dashboard({
           )}
 
           {/* TEAM / MLM SYSTEM TAB */}
-          {activeTab === 'team' && (
-            <div className="space-y-4 max-w-7xl mx-auto">
-              
-              {/* BRAND ADVOCATE HEADER */}
-              <div className="bg-[#0b1229]/70 backdrop-blur-md p-5 pb-6 border border-yellow-500/15 rounded-2xl text-left grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-2 space-y-2 flex flex-col justify-center">
-                  <span className="text-xs font-black text-yellow-500 font-mono tracking-widest uppercase block">PROFIL PARRAIN</span>
-                  <h3 className="text-lg font-sans font-black text-white uppercase tracking-tight">Encouragez vos Équipes MLM</h3>
-                  <p className="text-xs text-slate-200 leading-relaxed">Distribuez votre lien personnel et gagnez des bonus de parrainage sur 3 niveaux d'investissements de votre réseau.</p>
+          {!profileSubPage && activeTab === 'team' && (
+            <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left">
+              <div className="max-w-md mx-auto w-full space-y-4">
+                
+                {/* BRAND HEADER */}
+                <div className="flex items-center space-x-2 pb-1 pt-1 pl-1 select-none">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#1b64d9] to-[#2575fc] flex items-center justify-center text-white shadow-sm">
+                    <TrendingUp className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <span className="font-sans font-black tracking-wider text-[#1b64d9] text-sm uppercase">DREAMPOD INVESTMENT</span>
                 </div>
- 
-                {/* Copy blocks */}
-                <div className="md:col-span-2 space-y-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800/80 flex flex-col justify-center">
-                  <div>
-                    <span className="text-xs text-slate-300 uppercase font-black tracking-wide block mb-1">Code Sponsor Unique :</span>
-                    <div className="flex bg-slate-900 border border-slate-800 p-2.5 px-3 rounded-lg justify-between items-center relative">
-                      <span className="font-mono text-sm font-black text-yellow-400 select-all">{userState.referralCode}</span>
-                      <button
-                        onClick={handleCopyCode}
-                        className="p-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white transition-colors text-slate-300 rounded-md flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
-                        title="Copier le code"
-                      >
-                        {copiedCode ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 text-green-400" />
-                            <span>Copié</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5" />
-                            <span>Copier</span>
-                          </>
-                        )}
-                      </button>
+
+                {/* HEADER */}
+                <div className="space-y-1 pl-1">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#1b64d9]" />
+                    <h2 className="font-sans font-black text-slate-800 text-base uppercase tracking-tight">Filleuls &amp; Récompenses d'Equipe</h2>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                    Gagnez des commissions instantanées sur 3 niveaux d'affiliation à chaque fois que vos filleuls rechargent leur compte et investissent.
+                  </p>
+                </div>
+
+                {/* STATS OVERVIEW CARD (TOTAL FILLEULS INVITÉS & COMMISSIONS) */}
+                <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#1b64d9] flex items-center justify-center shrink-0">
+                      <Users className="w-5 h-5 stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">TOTAL FILLEULS INVITÉS</span>
+                      <span className="text-sm font-black text-slate-800 block mt-0.5">{totalReferrals} invités</span>
                     </div>
                   </div>
- 
-                  <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/5 p-4 rounded-xl border-2 border-yellow-500/30 space-y-3.5" id="referral-high-visibility-system">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-yellow-400 uppercase font-black tracking-wide block">
-                        🔗 LIEN DE PARRAINAGE EXCLUSIF
-                      </span>
-                      <span className="bg-yellow-500 text-slate-950 font-mono text-[8.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">
-                        Actif
-                      </span>
-                    </div>
+                  <div className="text-right">
+                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">COMMISSIONS</span>
+                    <span className="text-sm font-black text-[#00bd74] block mt-0.5">
+                      {commissions.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} F
+                    </span>
+                  </div>
+                </div>
 
-                    <div className="space-y-2">
-                      {/* Fully visible responsive URL box (untruncated, wrapping / break-all to avoid cutting) */}
-                      <div className="relative">
-                        <textarea
-                          readOnly
-                          rows={2}
-                          value={referralURL}
-                          onClick={(e) => {
-                            (e.target as HTMLTextAreaElement).select();
-                            handleCopyLink();
-                          }}
-                          className="w-full font-mono text-xs font-bold text-yellow-300 bg-slate-900 border border-yellow-500/30 hover:border-yellow-500 p-3 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 cursor-pointer shadow-inner transition-all select-all block resize-none text-center break-all"
-                        />
-                        <button
-                          onClick={handleCopyLink}
-                          className="absolute right-2.5 top-2.5 p-2 bg-yellow-500 hover:bg-yellow-400 active:scale-90 text-slate-950 rounded-lg transition-all flex items-center justify-center shadow-md cursor-pointer border-0"
-                          title="Copier le lien de parrainage"
-                        >
-                          {copiedLink ? <Check className="w-4 h-4 text-slate-950 font-bold" /> : <Copy className="w-4 h-4 text-slate-950" />}
-                        </button>
-                      </div>
-                      
-                      <p className="text-[10px] text-slate-300 text-center font-medium leading-tight">
-                        💡 <span className="text-yellow-400 font-black">Astuce :</span> Taper une fois sur la zone ci-dessus pour copier automatiquement !
-                      </p>
+                {/* EXCLUSIVE INVITATION LINK CARD */}
+                <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                  <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block pl-0.5">
+                    🔗 VOTRE LIEN D'INVITATION EXCLUSIF
+                  </span>
+                  
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl p-2.5">
+                    <div className="flex-1 overflow-hidden">
+                      <span className="font-mono text-[10.5px] font-bold text-slate-600 select-all block truncate text-left pr-2">
+                        {referralURL}
+                      </span>
                     </div>
-
-                    {/* QR Code section & big button */}
-                    <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                      <div className="bg-white p-1.5 rounded-lg flex-shrink-0 shadow-md">
-                        <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=95x95&data=${encodeURIComponent(referralURL)}&color=0-14-38`}
-                          alt="QR Code Parrainage"
-                          className="w-[80px] h-[80px]"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                      <div className="text-center sm:text-left flex-1 space-y-1.5 w-full">
-                        <h4 className="text-[11px] font-black text-white uppercase tracking-tight">Votre QR Code d'équipe</h4>
-                        <p className="text-[9.5px] text-slate-300 leading-tight">Laissez vos filleuls scanner ce QR code pour s'inscrire sous votre parrainage instantanément.</p>
-                        
-                        <button
-                          type="button"
-                          onClick={handleCopyLink}
-                          className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 active:scale-95 text-slate-950 font-black uppercase text-[10px] tracking-wider py-2 px-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-1.5 border-0 cursor-pointer"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          {copiedLink ? 'Lien de Parrainage Copié !' : 'Copier le Lien Principal'}
-                        </button>
-                      </div>
-                    </div>
+                    <button
+                      onClick={handleCopyLink}
+                      className="bg-[#1b64d9] hover:bg-blue-600 text-white text-[10px] font-black px-4 py-2.5 rounded-xl transition-all active:scale-95 shadow-sm flex items-center justify-center shrink-0 cursor-pointer border-none outline-none"
+                    >
+                      {copiedLink ? "COPIÉ" : "COPIER"}
+                    </button>
                   </div>
 
-                  {/* SOCIAL SHARING OPTIONS */}
-                  <div className="pt-3.5 border-t border-slate-800/80 mt-1">
-                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-2 text-left">Partager sur :</span>
-                    <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-2">
+                  {/* PARTAGER AUTOMATIQUEMENT */}
+                  <div className="pt-3.5 border-t border-slate-100">
+                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block mb-2 text-left pl-0.5">PARTAGER AUTOMATIQUEMENT :</span>
+                    <div className="grid grid-cols-5 gap-2">
                       {/* WhatsApp */}
                       <a 
-                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Aiprods et gagnez des revenus quotidiens sécurisés ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Dreampod Investment et gagnez des revenus quotidiens sécurisés ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#25D366] hover:bg-[#20ba59] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm text-center"
+                        className="flex flex-col items-center justify-center p-2 bg-emerald-50 hover:bg-emerald-100/70 rounded-2xl transition-all border-none outline-none cursor-pointer"
                       >
-                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
-                          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.528 1.975 14.069 1.953 12.01 1.953c-5.438 0-9.863 4.372-9.867 9.802-.001 1.83.49 3.619 1.423 5.191l-.991 3.616 3.702-.971zm11.367-7.251c-.33-.164-1.952-.955-2.253-1.064-.3-.11-.52-.164-.74.164-.22.33-.85 1.064-1.04 1.283-.19.22-.38.246-.71.082-.33-.164-1.393-.51-2.653-1.627-.98-.868-1.64-1.94-1.83-2.268-.19-.33-.02-.508.145-.671.15-.148.33-.384.495-.576.16-.192.21-.33.32-.548.11-.219.05-.411-.02-.576-.07-.164-.74-1.765-1.01-2.422-.26-.632-.53-.547-.73-.557-.19-.01-.41-.01-.62-.01-.21 0-.55.08-.84.4-.29.32-1.12 1.083-1.12 2.641 0 1.558 1.14 3.065 1.3 3.282.16.218 2.24 3.393 5.43 4.757.76.324 1.35.518 1.81.662.76.241 1.45.207 2 .126.61-.09 1.95-.79 2.23-1.558.28-.767.28-1.422.2-1.558-.09-.137-.3-.21-.63-.375z" />
-                        </svg>
-                        <span>WhatsApp</span>
+                        <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center mb-1 text-emerald-600">
+                          <svg className="w-4 h-4 fill-emerald-600" viewBox="0 0 24 24">
+                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.528 1.975 14.069 1.953 12.01 1.953c-5.438 0-9.863 4.372-9.867 9.802-.001 1.83.49 3.619 1.423 5.191l-.991 3.616 3.702-.971zm11.367-7.251c-.33-.164-1.952-.955-2.253-1.064-.3-.11-.52-.164-.74.164-.22.33-.85 1.064-1.04 1.283-.19.22-.38.246-.71.082-.33-.164-1.393-.51-2.653-1.627-.98-.868-1.64-1.94-1.83-2.268-.19-.33-.02-.508.145-.671.15-.148.33-.384.495-.576.16-.192.21-.33.32-.548.11-.219.05-.411-.02-.576-.07-.164-.74-1.765-1.01-2.422-.26-.632-.53-.547-.73-.557-.19-.01-.41-.01-.62-.01-.21 0-.55.08-.84.4-.29.32-1.12 1.083-1.12 2.641 0 1.558 1.14 3.065 1.3 3.282.16.218 2.24 3.393 5.43 4.757.76.324 1.35.518 1.81.662.76.241 1.45.207 2 .126.61-.09 1.95-.79 2.23-1.558.28-.767.28-1.422.2-1.558-.09-.137-.3-.21-.63-.375z" />
+                          </svg>
+                        </div>
+                        <span className="text-[7.5px] font-black text-emerald-600 uppercase font-sans">WhatsApp</span>
+                      </a>
+
+                      {/* Twitter */}
+                      <a 
+                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Rejoignez Dreampod Investment et gagnez des revenus quotidiens sécurisés ! Utilisez mon lien : `)}&url=${encodeURIComponent(referralURL)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center justify-center p-2 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all border-none outline-none cursor-pointer"
+                      >
+                        <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center mb-1 text-slate-800">
+                          <svg className="w-4 h-4 fill-slate-800" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                          </svg>
+                        </div>
+                        <span className="text-[7.5px] font-black text-slate-700 uppercase font-sans">Twitter</span>
+                      </a>
+
+                      {/* Telegram */}
+                      <a 
+                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Dreampod Investment et obtenez des rendements quotidiens exceptionnels !`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center justify-center p-2 bg-[#e8f4fd] hover:bg-sky-100 rounded-2xl transition-all border-none outline-none cursor-pointer"
+                      >
+                        <div className="w-9 h-9 bg-sky-100 rounded-xl flex items-center justify-center mb-1 text-sky-600">
+                          <svg className="w-4 h-4 fill-sky-600" viewBox="0 0 24 24">
+                            <path d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.578.193l-8.534 7.701-.33 4.953c.485 0 .7-.223.972-.485l2.333-2.269 4.85 3.583c.893.492 1.535.239 1.758-.826l3.18-14.986c.325-1.3-.497-1.892-1.35-1.493z" />
+                          </svg>
+                        </div>
+                        <span className="text-[7.5px] font-black text-sky-600 uppercase font-sans">Telegram</span>
                       </a>
 
                       {/* Facebook */}
@@ -4052,551 +4602,892 @@ export default function Dashboard({
                         href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralURL)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#1877F2] hover:bg-[#166fe5] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm text-center"
+                        className="flex flex-col items-center justify-center p-2 bg-blue-50 hover:bg-blue-100/70 rounded-2xl transition-all border-none outline-none cursor-pointer"
                       >
-                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                        </svg>
-                        <span>Facebook</span>
+                        <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center mb-1 text-blue-600">
+                          <svg className="w-4 h-4 fill-blue-600" viewBox="0 0 24 24">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                          </svg>
+                        </div>
+                        <span className="text-[7.5px] font-black text-blue-600 uppercase font-sans">Facebook</span>
                       </a>
 
                       {/* Instagram */}
                       <button 
                         onClick={() => {
                           handleCopyLink();
-                          openAlert('Partager sur Instagram', 'Le lien a été copié ! Collez-le dans votre bio, story ou messages directs sur Instagram.', 'info');
+                          triggerToast('🔗 Lien copié ! Collez-le sur Instagram.', 'success');
                           setTimeout(() => {
                             window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
                           }, 1500);
                         }}
-                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:brightness-110 active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border-0 cursor-pointer text-center"
+                        className="flex flex-col items-center justify-center p-2 bg-rose-50 hover:bg-rose-100/70 rounded-2xl transition-all border-none outline-none cursor-pointer"
                       >
-                        <svg className="w-3.5 h-3.5 fill-none stroke-white stroke-[2]" viewBox="0 0 24 24">
-                          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                        </svg>
-                        <span>Instagram</span>
+                        <div className="w-9 h-9 bg-rose-100 rounded-xl flex items-center justify-center mb-1 text-rose-500">
+                          <svg className="w-4 h-4 fill-none stroke-rose-500 stroke-[2.5]" viewBox="0 0 24 24">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                          </svg>
+                        </div>
+                        <span className="text-[7.5px] font-black text-rose-600 uppercase font-sans">Instagram</span>
                       </button>
-
-                      {/* Twitter (X) */}
-                      <a 
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Rejoignez Aiprods et gagnez des revenus quotidiens sécurisés ! Utilisez mon lien : `)}&url=${encodeURIComponent(referralURL)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#000000] border border-slate-800 hover:bg-[#111] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm text-center"
-                      >
-                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                        </svg>
-                        <span>Twitter</span>
-                      </a>
-
-                      {/* YouTube */}
-                      <button 
-                        onClick={() => {
-                          handleCopyLink();
-                          openAlert('Partager sur YouTube', 'Le lien de parrainage a été copié ! Collez-le dans la description ou les commentaires de votre vidéo/Short YouTube pour attirer des filleuls.', 'info');
-                          setTimeout(() => {
-                            window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
-                          }, 1500);
-                        }}
-                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#FF0000] hover:bg-[#e60000] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border-0 cursor-pointer text-center"
-                      >
-                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
-                          <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.553a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11C4.482 20.5 12 20.5 12 20.5s7.518 0-9.388-.553a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                        </svg>
-                        <span>YouTube</span>
-                      </button>
-
-                      {/* Telegram */}
-                      <a 
-                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Aiprods et obtenez des rendements quotidiens exceptionnels sur vos équipements audio !`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 bg-[#0088cc] hover:bg-[#0077b3] active:scale-95 transition-all text-white rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm text-center"
-                      >
-                        <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
-                          <path d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.578.193l-8.534 7.701-.33 4.953c.485 0 .7-.223.972-.485l2.333-2.269 4.85 3.583c.893.492 1.535.239 1.758-.826l3.18-14.986c.325-1.3-.497-1.892-1.35-1.493z" />
-                        </svg>
-                        <span>Telegram</span>
-                      </a>
                     </div>
                   </div>
                 </div>
-              </div>
-              {/* COMMISSIONS OVERVIEW CARDS */}
-              <div className="grid grid-cols-2 gap-3 text-left">
-                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
-                  <span className="text-xs text-slate-400 uppercase tracking-wider font-extrabold block">Total Filleuls</span>
-                  <div className="text-lg sm:text-xl font-black font-mono text-white mt-1">
-                    {totalReferrals} membres
-                  </div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block mt-1">Réseau actif</span>
-                </div>
 
-                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-sm">
-                  <span className="text-xs text-orange-400 uppercase tracking-wider font-extrabold block">Commission Totale</span>
-                  <div className="text-lg sm:text-xl font-black font-mono text-orange-400 mt-1">
-                    {commissions.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} F CFA
+                {/* NETWORK STRUCTURE & DETAIL LIST */}
+                <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-50 pb-3">
+                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block pl-0.5">
+                      STRUCTURE DE L'ÉQUIPE
+                    </span>
+                    <span className="text-[9px] bg-blue-50 text-[#1b64d9] font-bold font-mono px-2 py-0.5 rounded-full border border-blue-100">
+                      {totalReferrals} membres
+                    </span>
                   </div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block mt-1">Gains parrainage</span>
-                </div>
-              </div>
- 
-              {/* LIVE NETWORK STRUCTURE - MULTI-LEVEL MLM REFERRALS DISPLAY */}
-              <div className="bg-[#0b1229]/65 border border-slate-800 rounded-2xl p-4 md:p-5 text-left space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-900 pb-3 gap-3">
-                  <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                    <span>👥</span>
-                    <span>Structure de vos Filleuls ({totalReferrals} membres)</span>
-                  </h3>
-                  
-                  {/* LEVEL SUB-TABS */}
-                  <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 gap-1 self-start sm:self-auto">
+
+                  {/* Gorgeous level selection boxes directly inspired by N1, N2, N3 from the screenshot */}
+                  <div className="grid grid-cols-3 gap-1.5 bg-slate-50 p-1 rounded-2xl border border-slate-100/50">
                     <button
                       onClick={() => setReferralListTab('level1')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all truncate ${referralListTab === 'level1' ? 'bg-[#00bd74] text-white' : 'text-slate-400 hover:text-white bg-transparent'}`}
+                      className={`py-2 px-1 rounded-xl transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
+                        referralListTab === 'level1' 
+                          ? 'bg-blue-600 text-white shadow-sm' 
+                          : 'bg-transparent text-slate-600 hover:text-slate-800'
+                      }`}
                     >
-                      Niveau 1 ({level1Users.length})
+                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full mb-1 ${
+                        referralListTab === 'level1' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-600 font-black'
+                      }`}>
+                        N1 ({mlmRates.level1 || 20}%)
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-tight">Niveau 1</span>
+                      <span className="text-[8px] opacity-85 mt-0.5 font-bold">({level1Users.length})</span>
                     </button>
+
                     <button
                       onClick={() => setReferralListTab('level2')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all truncate ${referralListTab === 'level2' ? 'bg-yellow-500 text-slate-950' : 'text-slate-400 hover:text-white bg-transparent'}`}
+                      className={`py-2 px-1 rounded-xl transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
+                        referralListTab === 'level2' 
+                          ? 'bg-amber-500 text-slate-950 shadow-sm' 
+                          : 'bg-transparent text-slate-600 hover:text-slate-800'
+                      }`}
                     >
-                      Niveau 2 ({level2Users.length})
+                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full mb-1 ${
+                        referralListTab === 'level2' ? 'bg-black/10 text-slate-950' : 'bg-amber-50 text-amber-600 font-black'
+                      }`}>
+                        N2 ({mlmRates.level2 || 2}%)
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-tight">Niveau 2</span>
+                      <span className="text-[8px] opacity-85 mt-0.5 font-bold">({level2Users.length})</span>
                     </button>
+
                     <button
                       onClick={() => setReferralListTab('level3')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all truncate ${referralListTab === 'level3' ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white bg-transparent'}`}
+                      className={`py-2 px-1 rounded-xl transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
+                        referralListTab === 'level3' 
+                          ? 'bg-emerald-600 text-white shadow-sm' 
+                          : 'bg-transparent text-slate-600 hover:text-slate-800'
+                      }`}
                     >
-                      Niveau 3 ({level3Users.length})
-                    </button>
-                  </div>
-                </div>
-
-                {/* RÉCAPITULATIF DES NIVEAUX DE PARRAINAGE AVEC MONTANT INVESTI */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-1" id="referrals-levels-investments-summary">
-                  <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-3.5 text-left">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-black uppercase tracking-wider text-[#00bd74]">Niveau 1</span>
-                      <span className="text-[10px] font-mono font-black text-white bg-[#00bd74]/15 px-2 py-0.5 rounded-full border border-[#00bd74]/20">{level1Users.length} membres</span>
-                    </div>
-                    <div className="text-xs font-bold text-slate-300 mt-2">
-                      Total Investi : <span className="text-[#00bd74] font-black font-mono">{getLevelInvestedAmount(level1Users).toLocaleString()} F CFA</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-3.5 text-left">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-black uppercase tracking-wider text-yellow-500">Niveau 2</span>
-                      <span className="text-[10px] font-mono font-black text-white bg-yellow-500/15 px-2 py-0.5 rounded-full border border-yellow-500/20">{level2Users.length} membres</span>
-                    </div>
-                    <div className="text-xs font-bold text-slate-300 mt-2">
-                      Total Investi : <span className="text-yellow-500 font-black font-mono">{getLevelInvestedAmount(level2Users).toLocaleString()} F CFA</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-3.5 text-left">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-black uppercase tracking-wider text-blue-400">Niveau 3</span>
-                      <span className="text-[10px] font-mono font-black text-white bg-blue-500/15 px-2 py-0.5 rounded-full border border-blue-500/20">{level3Users.length} membres</span>
-                    </div>
-                    <div className="text-xs font-bold text-slate-300 mt-2">
-                      Total Investi : <span className="text-blue-400 font-black font-mono">{getLevelInvestedAmount(level3Users).toLocaleString()} F CFA</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* LEVEL 1 VIEW */}
-                {referralListTab === 'level1' && (
-                  <>
-                    {level1Users.length === 0 ? (
-                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-center py-6 bg-slate-950/20 rounded-xl font-medium">
-                        Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) avec votre code de parrainage. Partagez votre lien d'inscription Aiprods pour commencer !
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {level1Users.map(u => (
-                          <div key={u.id} className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-[#00bd74]/25 transition-all duration-200">
-                            <div>
-                              <div className="flex items-center justify-between">
-                                <span className="font-black text-slate-100 text-sm truncate">{u.name}</span>
-                                <span className="text-[10px] font-black font-mono text-[#00bd74] uppercase tracking-wider bg-[#00bd74]/10 px-1.5 py-0.5 rounded border border-[#00bd74]/20">NIVEAU 1</span>
-                              </div>
-                              <span className="text-xs text-slate-400 block mt-1.5 font-medium">Sponsorisé le : {new Date(u.createdAt).toLocaleDateString()}</span>
-                              
-                              <div className="mt-2.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
-                                <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Compte WA</span>
-                                <span className="text-[#00bd74] text-[11px] font-bold font-mono">{u.whatsapp || 'Aucun'}</span>
-                              </div>
-
-                              <div className="mt-1.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
-                                <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Montant Investi</span>
-                                <span className="text-white text-[11px] font-bold font-mono">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
-                              </div>
-                            </div>
-                            <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
-                              <span className="text-slate-350 font-bold italic">{u.country}</span>
-                              <a 
-                                href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="text-green-400 font-black flex items-center space-x-1.5 hover:text-green-350 transition-colors"
-                              >
-                                <span>💬 WhatsApp</span>
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* LEVEL 2 VIEW */}
-                {referralListTab === 'level2' && (
-                  <>
-                    {level2Users.length === 0 ? (
-                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-center py-6 bg-slate-950/20 rounded-xl font-medium">
-                        Aucun filleul de Niveau 2 pour le moment. Lorsque vos filleuls directs parraineront d'autres membres, ils apparaîtront ici et vous toucherez {mlmRates.level2}% de bonus.
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {level2Users.map(u => {
-                          const cleanRef = (u.referredBy || '').trim().toUpperCase();
-                          const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
-                          return (
-                            <div key={u.id} className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-yellow-500/25 transition-all duration-200">
-                              <div>
-                                <div className="flex items-center justify-between">
-                                  <span className="font-black text-slate-100 text-sm truncate">{u.name}</span>
-                                  <span className="text-[10px] font-black font-mono text-yellow-500 uppercase tracking-wider bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">NIVEAU 2</span>
-                                </div>
-                                <span className="text-xs text-slate-400 block mt-1.5 font-medium">Sponsorisé par : <strong className="text-slate-200">{sponsor ? sponsor.name : 'Un membre L1'}</strong></span>
-                                <span className="text-xs text-slate-500 block mt-0.5">Le : {new Date(u.createdAt).toLocaleDateString()}</span>
-
-                                <div className="mt-2.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
-                                  <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Compte WA</span>
-                                  <span className="text-yellow-500 text-[11px] font-bold font-mono">{u.whatsapp || 'Aucun'}</span>
-                                </div>
-
-                                <div className="mt-1.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
-                                  <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Montant Investi</span>
-                                  <span className="text-white text-[11px] font-bold font-mono">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
-                                </div>
-                              </div>
-                              <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
-                                <span className="text-slate-350 font-bold italic">{u.country}</span>
-                                <a 
-                                  href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-green-400 font-black flex items-center space-x-1.5 hover:text-green-350 transition-colors"
-                                >
-                                  <span>💬 WhatsApp</span>
-                                </a>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* LEVEL 3 VIEW */}
-                {referralListTab === 'level3' && (
-                  <>
-                    {level3Users.length === 0 ? (
-                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-center py-6 bg-slate-950/20 rounded-xl font-medium">
-                        Aucun filleul de Niveau 3 pour le moment. Lorsque votre réseau de Niveau 2 parrainera leurs propres amis, ils s'afficheront ici et vous toucherez {mlmRates.level3}% de bonus.
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {level3Users.map(u => {
-                          const cleanRef = (u.referredBy || '').trim().toUpperCase();
-                          const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
-                          return (
-                            <div key={u.id} className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-blue-500/25 transition-all duration-200">
-                              <div>
-                                <div className="flex items-center justify-between">
-                                  <span className="font-black text-slate-100 text-sm truncate">{u.name}</span>
-                                  <span className="text-[10px] font-black font-mono text-blue-400 uppercase tracking-wider bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">NIVEAU 3</span>
-                                </div>
-                                <span className="text-xs text-slate-400 block mt-1.5 font-medium">Sponsorisé par : <strong className="text-slate-200">{sponsor ? sponsor.name : 'Un membre L2'}</strong></span>
-                                <span className="text-xs text-slate-500 block mt-0.5">Le : {new Date(u.createdAt).toLocaleDateString()}</span>
-
-                                <div className="mt-2.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
-                                  <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Compte WA</span>
-                                  <span className="text-blue-400 text-[11px] font-bold font-mono">{u.whatsapp || 'Aucun'}</span>
-                                </div>
-
-                                <div className="mt-1.5 text-xs font-mono text-slate-300 flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-900">
-                                  <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">Montant Investi</span>
-                                  <span className="text-white text-[11px] font-bold font-mono">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
-                                </div>
-                              </div>
-                              <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center text-xs">
-                                <span className="text-slate-350 font-bold italic">{u.country}</span>
-                                <a 
-                                  href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-green-400 font-black flex items-center space-x-1.5 hover:text-green-350 transition-colors"
-                                >
-                                  <span>💬 WhatsApp</span>
-                                </a>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* USER PROFILE */}
-          {activeTab === 'profile' && (
-            <div className="bg-transparent -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[90vh] text-slate-800 text-left">
-              <div className="max-w-2xl mx-auto w-full space-y-5">
-                
-                {/* SOLDE DE RETRAIT CARD */}
-                <div className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-[24px] p-5 shadow-lg space-y-5">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block">Solde de retrait</span>
-                      <h2 className="text-2xl sm:text-3xl font-black text-[#006fff] font-sans mt-1.5">
-                        {userState.balance.toLocaleString()} <span className="text-sm font-extrabold text-[#006fff]">FCFA</span>
-                      </h2>
-                    </div>
-                    <button 
-                      onClick={() => setActiveTab('withdraw')}
-                      className="bg-[#0086ff] hover:bg-[#0076ee] text-white text-[11px] font-black px-5 py-2.5 rounded-full transition-all active:scale-95 shadow-md flex items-center gap-1 cursor-pointer border-0 outline-none"
-                    >
-                      Retirer &gt;
+                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full mb-1 ${
+                        referralListTab === 'level3' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 font-black'
+                      }`}>
+                        N3 ({mlmRates.level3 || 1}%)
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-tight">Niveau 3</span>
+                      <span className="text-[8px] opacity-85 mt-0.5 font-bold">({level3Users.length})</span>
                     </button>
                   </div>
 
-                  {/* 3 Grid items inside card: Commissions, Bonus, Revenus/jour */}
-                  <div className="grid grid-cols-3 gap-2.5 pt-1.5">
-                    {/* Commissions card */}
-                    <div className="bg-slate-50/70 backdrop-blur-sm border border-slate-100/60 rounded-2xl p-3 flex flex-col items-center justify-center text-center">
-                      <span className="text-xl sm:text-2xl" role="img" aria-label="commissions">🤝</span>
-                      <span className="text-[10px] sm:text-xs text-slate-450 font-bold block mt-1 leading-tight">Commissions</span>
-                      <span className="text-[11px] sm:text-xs font-black text-slate-700 block mt-0.5">{(userState.totalEarnings || 0).toLocaleString()} F</span>
-                    </div>
-
-                    {/* Bonus card */}
-                    <div className="bg-slate-50/70 backdrop-blur-sm border border-slate-100/60 rounded-2xl p-3 flex flex-col items-center justify-center text-center">
-                      <span className="text-xl sm:text-2xl" role="img" aria-label="bonus">🎁</span>
-                      <span className="text-[10px] sm:text-xs text-slate-450 font-bold block mt-1 leading-tight">Bonus</span>
-                      <span className="text-[11px] sm:text-xs font-black text-slate-700 block mt-0.5">{(userState.bonus || 0).toLocaleString()} F</span>
-                    </div>
-
-                    {/* Revenus/jour card */}
-                    <div className="bg-slate-50/70 backdrop-blur-sm border border-slate-100/60 rounded-2xl p-3 flex flex-col items-center justify-center text-center">
-                      <span className="text-xl sm:text-2xl" role="img" aria-label="revenus">⚡</span>
-                      <span className="text-[10px] sm:text-xs text-slate-450 font-bold block mt-1 leading-tight">Revenus/jour</span>
-                      <span className="text-[11px] sm:text-xs font-black text-slate-700 block mt-0.5">{(userState.dailyEarnings || 0).toLocaleString()} F</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* RETRAIT, HISTORIQUE, POINTAGE CARD (GRID OF 3 ROUNDED CONTAINERS) */}
-                <div className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-[24px] p-5 shadow-md grid grid-cols-3 gap-3">
-                  {/* Retrait */}
-                  <button 
-                    onClick={() => setActiveTab('withdraw')}
-                    className="flex flex-col items-center justify-center text-center p-2 group hover:scale-105 transition-all cursor-pointer border-0 bg-transparent"
-                  >
-                    <div className="w-12 h-12 bg-sky-50 text-sky-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-sky-100 transition-all">
-                      <ArrowUpCircle className="w-5.5 h-5.5 stroke-[2.5]" />
-                    </div>
-                    <span className="font-sans font-extrabold text-[11px] sm:text-xs text-slate-700 mt-2.5">Retrait</span>
-                  </button>
-
-                  {/* Historique */}
-                  <button 
-                    onClick={() => {
-                      if (onNavigate) {
-                        onNavigate('/historique');
-                      }
-                    }}
-                    className="flex flex-col items-center justify-center text-center p-2 group hover:scale-105 transition-all cursor-pointer border-0 bg-transparent"
-                  >
-                    <div className="w-12 h-12 bg-purple-50 text-purple-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-purple-100 transition-all">
-                      <History className="w-5.5 h-5.5 stroke-[2.5]" />
-                    </div>
-                    <span className="font-sans font-extrabold text-[11px] sm:text-xs text-slate-700 mt-2.5">Historique</span>
-                  </button>
-
-                  {/* Pointage */}
-                  <button 
-                    onClick={handleDailyCheckin}
-                    className="flex flex-col items-center justify-center text-center p-2 group hover:scale-105 transition-all cursor-pointer border-0 bg-transparent"
-                  >
-                    <div className={`w-12 h-12 flex items-center justify-center rounded-full shadow-xs transition-all ${
-                      hasCheckedInToday 
-                        ? 'bg-emerald-100 text-emerald-600' 
-                        : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'
-                    }`}>
-                      <Calendar className="w-5.5 h-5.5 stroke-[2.5]" />
-                    </div>
-                    <span className="font-sans font-extrabold text-[11px] sm:text-xs text-slate-700 mt-2.5">
-                      {hasCheckedInToday ? 'Fait ✓' : 'Pointage'}
-                    </span>
-                  </button>
-                </div>
-
-                {/* MES PRODUITS BANNER (NO BACKGROUND IMAGE, JUST WRITING/TEXT) */}
-                <div 
-                  className="bg-white/70 backdrop-blur-md rounded-[24px] p-5 shadow-sm space-y-4 text-left border border-slate-200/60"
-                >
-                  <div 
-                    onClick={() => setShowStabilityOrders(!showStabilityOrders)}
-                    className="flex justify-between items-center cursor-pointer select-none group"
-                  >
-                    <div>
-                      <h3 className="font-sans font-black text-sm sm:text-base text-slate-800 uppercase tracking-tight">Mes produits</h3>
-                      <p className="text-[11px] sm:text-xs text-slate-400 font-extrabold mt-1 group-hover:text-slate-500 transition-colors">
-                        Achetez plus d'appareils, gagnez plus de revenus
-                      </p>
-                    </div>
-                    <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${showStabilityOrders ? 'rotate-90' : ''}`} />
+                  {/* LEVEL SUMMARY SUMMARY CARDS (TOTAL INVESTI PER LEVEL) */}
+                  <div className="grid grid-cols-1 gap-2 pt-1">
+                    {referralListTab === 'level1' && (
+                      <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-2xl flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase text-blue-700">Total investi Niveau 1 :</span>
+                        <span className="text-xs font-mono font-black text-blue-800">
+                          {getLevelInvestedAmount(level1Users).toLocaleString()} F CFA
+                        </span>
+                      </div>
+                    )}
+                    {referralListTab === 'level2' && (
+                      <div className="bg-amber-50/50 border border-amber-100 p-3 rounded-2xl flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase text-amber-700">Total investi Niveau 2 :</span>
+                        <span className="text-xs font-mono font-black text-amber-800">
+                          {getLevelInvestedAmount(level2Users).toLocaleString()} F CFA
+                        </span>
+                      </div>
+                    )}
+                    {referralListTab === 'level3' && (
+                      <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-2xl flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase text-emerald-700">Total investi Niveau 3 :</span>
+                        <span className="text-xs font-mono font-black text-emerald-800">
+                          {getLevelInvestedAmount(level3Users).toLocaleString()} F CFA
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  {showStabilityOrders && (
-                    <div className="pt-2 space-y-3.5 border-t border-slate-100">
-                      {activeInvestments.length === 0 ? (
-                        <div className="text-center py-4 text-slate-400 text-[11px] font-bold">
-                          Aucun produit d'investissement actif pour le moment.
+                  {/* ACTIVE LEVEL MEMBERS list */}
+                  {referralListTab === 'level1' && (
+                    <div className="space-y-3">
+                      {level1Users.length === 0 ? (
+                        <div className="text-center py-8 bg-slate-50/50 rounded-2xl border border-slate-100">
+                          <p className="text-[11px] text-slate-400 font-bold leading-normal">
+                            Vous n'avez pas encore de filleuls inscrits directement (Niveau 1).
+                          </p>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          {activeInvestments.map((p) => (
-                            <InvestmentItem 
-                              key={p.id}
-                              investment={p}
-                              onClaim={handleClaimReturn}
-                            />
+                        <div className="space-y-2.5">
+                          {level1Users.map(u => (
+                            <div key={u.id} className="p-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[150px]">{u.name}</span>
+                                <span className="text-[8px] font-black font-mono text-[#00bd74] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">Actif</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                <div className="bg-white p-2 rounded-xl border border-slate-100/80">
+                                  <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
+                                  <span className="text-slate-700 font-bold block mt-0.5">{u.whatsapp || 'Aucun'}</span>
+                                </div>
+                                <div className="bg-white p-2 rounded-xl border border-slate-100/80">
+                                  <span className="text-slate-400 font-bold block text-[8px] uppercase">Total Investi</span>
+                                  <span className="text-[#1b64d9] font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-100/80 pt-2 font-bold">
+                                <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
+                                <a 
+                                  href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-[#00bd74] font-black hover:underline"
+                                >
+                                  Contacter WhatsApp 💬
+                                </a>
+                              </div>
+                            </div>
                           ))}
                         </div>
                       )}
                     </div>
                   )}
+
+                  {referralListTab === 'level2' && (
+                    <div className="space-y-3">
+                      {level2Users.length === 0 ? (
+                        <div className="text-center py-8 bg-slate-50/50 rounded-2xl border border-slate-100">
+                          <p className="text-[11px] text-slate-400 font-bold leading-normal">
+                            Aucun membre de Niveau 2 enregistré dans votre réseau.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2.5">
+                          {level2Users.map(u => {
+                            const cleanRef = (u.referredBy || '').trim().toUpperCase();
+                            const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
+                            return (
+                              <div key={u.id} className="p-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[150px]">{u.name}</span>
+                                  <span className="text-[8px] font-bold text-slate-400">Sponsor: {sponsor ? sponsor.name : 'Membre L1'}</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80">
+                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
+                                    <span className="text-slate-700 font-bold block mt-0.5">{u.whatsapp || 'Aucun'}</span>
+                                  </div>
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80">
+                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Total Investi</span>
+                                    <span className="text-[#1b64d9] font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-100/80 pt-2 font-bold">
+                                  <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
+                                  <a 
+                                    href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-emerald-600 font-black hover:underline"
+                                  >
+                                    Contacter WhatsApp 💬
+                                  </a>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {referralListTab === 'level3' && (
+                    <div className="space-y-3">
+                      {level3Users.length === 0 ? (
+                        <div className="text-center py-8 bg-slate-50/50 rounded-2xl border border-slate-100">
+                          <p className="text-[11px] text-slate-400 font-bold leading-normal">
+                            Aucun membre de Niveau 3 enregistré dans votre réseau.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2.5">
+                          {level3Users.map(u => {
+                            const cleanRef = (u.referredBy || '').trim().toUpperCase();
+                            const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
+                            return (
+                              <div key={u.id} className="p-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[150px]">{u.name}</span>
+                                  <span className="text-[8px] font-bold text-slate-400">Sponsor: {sponsor ? sponsor.name : 'Membre L2'}</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80">
+                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
+                                    <span className="text-slate-700 font-bold block mt-0.5">{u.whatsapp || 'Aucun'}</span>
+                                  </div>
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80">
+                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Total Investi</span>
+                                    <span className="text-[#1b64d9] font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-100/80 pt-2 font-bold">
+                                  <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
+                                  <a 
+                                    href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-emerald-600 font-black hover:underline"
+                                  >
+                                    Contacter WhatsApp 💬
+                                  </a>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
-
-                {/* PLUS SECTION */}
-                <div className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-[24px] p-5 shadow-md space-y-4">
-                  <h4 className="text-xs text-slate-400 font-extrabold uppercase tracking-widest px-1">Plus</h4>
-                  
-                  <div className="grid grid-cols-4 gap-y-5 gap-x-2">
-                    {/* À propos */}
-                    <button 
-                      onClick={() => setIsAboutModalOpen(true)}
-                      className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
-                    >
-                      <div className="w-11 h-11 bg-sky-50 text-sky-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-sky-100 transition-colors">
-                        <Info className="w-5 h-5 stroke-[2.5]" />
-                      </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">À propos</span>
-                    </button>
-
-                    {/* Règlement */}
-                    <button 
-                      onClick={() => setIsRulesModalOpen(true)}
-                      className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
-                    >
-                      <div className="w-11 h-11 bg-purple-50 text-purple-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-purple-100 transition-colors">
-                        <BookOpen className="w-5 h-5 stroke-[2.5]" />
-                      </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Règlement</span>
-                    </button>
-
-                    {/* Historique */}
-                    <button 
-                      onClick={() => {
-                        if (onNavigate) {
-                          onNavigate('/historique');
-                        }
-                      }}
-                      className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
-                    >
-                      <div className="w-11 h-11 bg-teal-50 text-teal-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-teal-100 transition-colors">
-                        <History className="w-5 h-5 stroke-[2.5]" />
-                      </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Historique</span>
-                    </button>
-
-                    {/* Service client */}
-                    <button 
-                      onClick={() => setIsLiveChatOpen(true)}
-                      className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
-                    >
-                      <div className="w-11 h-11 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-emerald-100 transition-colors">
-                        <Headphones className="w-5 h-5 stroke-[2.5]" />
-                      </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Service client</span>
-                    </button>
-
-                    {/* Installer l'App */}
-                    <button 
-                      onClick={() => setIsInstallModalOpen(true)}
-                      className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
-                    >
-                      <div className="w-11 h-11 bg-orange-50 text-orange-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-orange-100 transition-colors">
-                        <Smartphone className="w-5 h-5 stroke-[2.5]" />
-                      </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Installer l'App</span>
-                    </button>
-
-                    {/* Canal */}
-                    <button 
-                      onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
-                      className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
-                    >
-                      <div className="w-11 h-11 bg-red-50 text-red-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-red-100 transition-colors">
-                        <MessageCircle className="w-5 h-5 stroke-[2.5]" />
-                      </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Canal</span>
-                    </button>
-
-                    {/* Modifier MDP */}
-                    <button 
-                      onClick={() => setIsPasswordModalOpen(true)}
-                      className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
-                    >
-                      <div className="w-11 h-11 bg-slate-100 text-slate-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-slate-200 transition-colors">
-                        <Lock className="w-5 h-5 stroke-[2.5]" />
-                      </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Modifier MDP</span>
-                    </button>
-
-                    {/* Déconnexion */}
-                    <button 
-                      onClick={onLogout}
-                      className="flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform cursor-pointer border-0 bg-transparent"
-                    >
-                      <div className="w-11 h-11 bg-pink-50 text-pink-600 flex items-center justify-center rounded-full shadow-xs group-hover:bg-pink-100 transition-colors">
-                        <LogOut className="w-5 h-5 stroke-[2.5]" />
-                      </div>
-                      <span className="font-sans font-extrabold text-[10px] sm:text-[11px] text-slate-655 mt-2 leading-tight">Déconnexion</span>
-                    </button>
-                  </div>
-                </div>
-
               </div>
             </div>
           )}
+
+          {/* USER PROFILE */}
+          {!profileSubPage && activeTab === 'profile' && (() => {
+            const rechargeSum = allDeposits.filter(d => d.status === 'approved').reduce((acc, d) => acc + d.amount, 0);
+            const purchaseSum = activeInvestments.reduce((acc, i) => acc + i.price, 0);
+            const rechargeBal = Math.max(0, rechargeSum - purchaseSum);
+            const totalProductRevenue = activeInvestments.reduce((acc, i) => acc + (i.totalReturnClaimed || 0), 0);
+            const totalCommissions = commissions.reduce((acc, c) => acc + c.amount, 0);
+            const activeInvsCount = activeInvestments.filter(i => i.status === 'active').length;
+
+            if (profileSubPage === 'orders') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Mes Commandes</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                        Retrouvez ici tous les équipements et produits d'investissement que vous avez acquis. Vous pouvez réclamer vos revenus quotidiens à tout moment.
+                      </p>
+                      
+                      <div className="space-y-3 pt-2">
+                        {activeInvestments.length === 0 ? (
+                          <div className="text-center py-8 text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl border border-slate-100/50">
+                            Aucun produit d'investissement actif pour le moment.
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {activeInvestments.map((p) => (
+                              <InvestmentItem 
+                                key={p.id}
+                                investment={p}
+                                onClaim={handleClaimReturn}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (profileSubPage === 'balance') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Mon Solde</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">Solde de Recharge</span>
+                          <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                            FCFA {rechargeBal.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="border-l border-slate-100 pl-4">
+                          <span className="text-[10px] text-slate-400 font-bold block">Solde de Retrait</span>
+                          <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                            FCFA {userState.balance.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-1 text-center pt-1.5">
+                        <div>
+                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Revenu Produit</span>
+                          <span className="text-xs font-black text-slate-800 block mt-1">
+                            FCFA {totalProductRevenue.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="border-l border-slate-100">
+                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Commission</span>
+                          <span className="text-xs font-black text-slate-800 block mt-1">
+                            FCFA {totalCommissions.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="border-l border-slate-100">
+                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Nbre de Commandes</span>
+                          <span className="text-xs font-black text-slate-800 block mt-1">
+                            {activeInvsCount}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Opérations Rapides</h3>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <button 
+                          onClick={() => setActiveTab('deposit')}
+                          className="flex items-center justify-center gap-2 p-3 bg-amber-50 text-[#f07b1b] rounded-2xl font-bold text-xs hover:bg-amber-100/70 transition-all border-none outline-none cursor-pointer"
+                        >
+                          <Coins className="w-4 h-4" />
+                          <span>Recharger</span>
+                        </button>
+                        <button 
+                          onClick={() => setActiveTab('withdraw')}
+                          className="flex items-center justify-center gap-2 p-3 bg-blue-50 text-[#1b64d9] rounded-2xl font-bold text-xs hover:bg-blue-100/70 transition-all border-none outline-none cursor-pointer"
+                        >
+                          <ArrowUpCircle className="w-4 h-4" />
+                          <span>Retirer</span>
+                        </button>
+                      </div>
+
+                      <button 
+                        onClick={() => {
+                          if (onNavigate) {
+                            onNavigate('/historique');
+                          }
+                        }}
+                        className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/70 text-slate-700 rounded-2xl text-xs font-bold transition-all border-none outline-none cursor-pointer mt-2"
+                      >
+                        <span>📋 Voir l'historique complet des revenus</span>
+                        <span>&gt;</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (profileSubPage === 'help') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Centre d'Aide</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block pl-0.5">
+                        💬 ASSISTANCE EN DIRECT
+                      </span>
+                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                        Notre équipe d'assistance est à votre écoute pour vous aider à résoudre tout problème lié à vos dépôts, retraits ou investissements.
+                      </p>
+                      
+                      <div className="space-y-2.5 pt-1">
+                        <button
+                          onClick={() => setIsLiveChatOpen(true)}
+                          className="w-full bg-[#1b64d9] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-blue-600 transition-all cursor-pointer border-none outline-none"
+                        >
+                          <Headphones className="w-4.5 h-4.5" />
+                          <span>DISCUTER PAR CHAT EN DIRECT</span>
+                        </button>
+
+                        <button
+                          onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
+                          className="w-full bg-[#25D366] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-[#20ba59] transition-all cursor-pointer border-none outline-none"
+                        >
+                          <Send className="w-4.5 h-4.5" />
+                          <span>REJOINDRE LE CANAL TELEGRAM</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Questions Fréquentes (FAQ)</h3>
+                      
+                      <div className="space-y-3 pt-1">
+                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
+                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Comment effectuer un dépôt ?</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
+                            Rendez-vous dans la rubrique "Recharge", indiquez le montant puis suivez les instructions de paiement mobile. Envoyez ensuite la preuve pour validation rapide.
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
+                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Quel est le délai de traitement des retraits ?</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
+                            Les retraits sont généralement traités sous un délai de 5 minutes à 24 heures maximum, crédités directement sur votre compte mobile configuré.
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
+                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Comment fonctionne le parrainage ?</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
+                            Invitez vos amis avec votre lien unique. Vous gagnez des commissions sur 3 niveaux (Niveau 1, Niveau 2 et Niveau 3) dès qu'un de vos filleuls investit.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (profileSubPage === 'about') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">À Propos</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <div className="flex justify-center py-2">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#1b64d9] to-[#2575fc] flex items-center justify-center text-white shadow-md">
+                          <TrendingUp className="w-8 h-8 stroke-[2.5]" />
+                        </div>
+                      </div>
+                      
+                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Dreampod Investment S.A.</h3>
+                      
+                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed text-center">
+                        Dreampod Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
+                      </p>
+
+                      <div className="border-t border-slate-50 pt-4 space-y-3.5">
+                        <div>
+                          <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-wider">🔒 Sécurité &amp; Fiabilité</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-relaxed">
+                            Tous vos investissements sont protégés par des fonds de garantie stricts. Les processus de retrait sont chiffrés et vérifiés par notre équipe d'experts financiers.
+                          </p>
+                        </div>
+
+                        <div>
+                          <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-wider">🌟 Notre Vision</h4>
+                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-relaxed">
+                            Démocratiser l'accès aux opportunités financières de pointe grâce aux technologies numériques modernes et au parrainage de réseau structuré.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (profileSubPage === 'settings') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Paramètres</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Informations du Compte</h3>
+                      
+                      <div className="space-y-2.5">
+                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100/50 text-xs">
+                          <span className="text-slate-400 font-bold">Nom d'utilisateur</span>
+                          <span className="font-black text-slate-800">{userState.name || 'Aucun'}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100/50 text-xs">
+                          <span className="text-slate-400 font-bold">Numéro WhatsApp</span>
+                          <span className="font-black text-slate-800">{userState.whatsapp || 'Aucun'}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100/50 text-xs">
+                          <span className="text-slate-400 font-bold">Code Sponsor Unique</span>
+                          <span className="font-mono font-black text-[#1b64d9]">{userState.referralCode}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Sécurité &amp; Mot de passe</h3>
+                      
+                      <div className="space-y-3">
+                        <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                          Modifiez votre mot de passe pour garantir la sécurité et la confidentialité de vos investissements.
+                        </p>
+                        
+                        <button
+                          onClick={() => setIsPasswordModalOpen(true)}
+                          className="w-full bg-[#1b64d9] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-blue-600 transition-all cursor-pointer border-none outline-none"
+                        >
+                          <Settings className="w-4.5 h-4.5" />
+                          <span>MODIFIER MON MOT DE PASSE</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left">
+                <div className="max-w-md mx-auto w-full space-y-4">
+                  
+                  {/* USER GREETING BANNER */}
+                  <div className="flex items-center space-x-3 pb-2 pt-1 pl-1">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-[#f07b1b] flex items-center justify-center text-white text-lg font-black shadow-sm shrink-0">
+                      {userState.name ? userState.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div>
+                      <h3 className="font-sans font-black text-slate-900 text-base leading-none">
+                        {userState.name || "Cher Investisseur"}
+                      </h3>
+                      <span className="text-[10px] text-slate-400 font-bold block mt-1 uppercase tracking-wider">
+                        {userState.whatsapp || "Aucun numéro"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* DREAMPOD PROFILE IMAGE SHOWCASE */}
+                  <div id="profile-dreampod-showcase" className="bg-white rounded-3xl overflow-hidden shadow-xs border border-slate-100 relative group">
+                    <div className="relative h-48 w-full bg-slate-900">
+                      <img
+                        src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=800"
+                        alt="Dreampod Cabine de Flottaison"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        referrerPolicy="no-referrer"
+                      />
+                      {/* Dark ambient overlay with beautiful gradients */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
+                      
+                      {/* Glowing indicator */}
+                      <span className="absolute top-3 left-3 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7c3aed] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7c3aed]"></span>
+                      </span>
+
+                      <div className="absolute bottom-4 left-4 right-4 text-white text-left">
+                        <span className="text-[8px] text-purple-300 font-black uppercase tracking-widest block mb-0.5">ÉQUIPEMENT DE BIEN-ÊTRE DE POINTE</span>
+                        <h4 className="text-sm font-black uppercase tracking-wide text-white drop-shadow-md">
+                          💎 Dreampod Cocon Sommeil &amp; Méditation
+                        </h4>
+                        <p className="text-[10px] text-slate-300 font-semibold mt-1 leading-normal drop-shadow-sm">
+                          Isolation sensorielle absolue et flottaison pour une réduction instantanée du stress et un ressourcement en profondeur.
+                        </p>
+                      </div>
+                      
+                      <div className="absolute top-3 right-3 bg-purple-600/95 text-white font-black text-[8px] tracking-wider uppercase px-2.5 py-1 rounded-full backdrop-blur-md border border-purple-400/20">
+                        🌟 Partenaire Officiel
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RECHARGE & RETRAIT CARD BUTTONS */}
+                  <div className="bg-white rounded-3xl p-4 shadow-xs border border-slate-100 flex items-center justify-between">
+                    <button 
+                      onClick={() => setActiveTab('deposit')}
+                      className="flex-1 flex items-center justify-center gap-2 font-sans font-bold text-slate-800 hover:text-[#f07b1b] transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#f07b1b]">
+                        <Coins className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs sm:text-sm">Recharge &gt;</span>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('withdraw')}
+                      className="flex-1 flex items-center justify-center gap-2 font-sans font-bold text-slate-800 hover:text-blue-600 transition-all cursor-pointer border-0 bg-transparent py-2 outline-none"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#1b64d9]">
+                        <ArrowUpCircle className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs sm:text-sm">Retrait &gt;</span>
+                    </button>
+                  </div>
+
+                   {/* 4 ACTION SHORTCUTS GRID */}
+                  <div className="bg-white rounded-3xl p-4 shadow-xs border border-slate-100 grid grid-cols-4 gap-1">
+                    <button 
+                      onClick={() => setProfileSubPage('orders')}
+                      className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                    >
+                      <div className="w-11 h-11 rounded-2xl bg-blue-50 text-[#1b64d9] flex items-center justify-center transition-transform group-hover:scale-105">
+                        <Briefcase className="w-5.5 h-5.5" />
+                      </div>
+                      <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Commandes</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setProfileSubPage('balance')}
+                      className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                    >
+                      <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center transition-transform group-hover:scale-105">
+                        <Coins className="w-5.5 h-5.5" />
+                      </div>
+                      <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Mon Solde</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setActiveTab('team')}
+                      className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                    >
+                      <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center transition-transform group-hover:scale-105">
+                        <Users className="w-5.5 h-5.5" />
+                      </div>
+                      <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Mon Équipe</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setIsBankCardModalOpen(true)}
+                      className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                    >
+                      <div className="w-11 h-11 rounded-2xl bg-amber-50 text-[#f07b1b] flex items-center justify-center transition-transform group-hover:scale-105">
+                        <UserIcon className="w-5.5 h-5.5" />
+                      </div>
+                      <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight text-center">Carte Bancaire</span>
+                    </button>
+                  </div>
+
+                  {/* MES REVENUS CARD */}
+                  <div id="mes-revenus-card" className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 space-y-4 text-left">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider pl-0.5">Mes Revenus</h3>
+                      <button 
+                        onClick={() => {
+                          if (onNavigate) {
+                            onNavigate('/historique');
+                          }
+                        }}
+                        className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none bg-transparent outline-none"
+                      >
+                        Détails des Revenus &gt;
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold block">Solde de Recharge</span>
+                        <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                          FCFA {rechargeBal.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="border-l border-slate-100 pl-4">
+                        <span className="text-[10px] text-slate-400 font-bold block">Solde de Retrait</span>
+                        <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                          FCFA {userState.balance.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-1 text-center pt-1.5">
+                      <div>
+                        <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Revenu Produit</span>
+                        <span className="text-xs font-black text-slate-800 block mt-1">
+                          FCFA {totalProductRevenue.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="border-l border-slate-100">
+                        <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Commission</span>
+                        <span className="text-xs font-black text-slate-800 block mt-1">
+                          FCFA {totalCommissions.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="border-l border-slate-100">
+                        <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Nbre de Commandes</span>
+                        <span className="text-xs font-black text-slate-800 block mt-1">
+                          {activeInvsCount}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* COLLAPSIBLE MY PRODUCTS ACCORDION */}
+                  <div id="mes-produits-section" className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 text-left space-y-4">
+                    <div 
+                      onClick={() => setShowStabilityOrders(!showStabilityOrders)}
+                      className="flex justify-between items-center cursor-pointer select-none group"
+                    >
+                      <div>
+                        <h3 className="font-sans font-black text-sm text-slate-800 uppercase tracking-wider pl-0.5">Mes produits ({activeInvestments.length})</h3>
+                        <p className="text-[10px] text-slate-400 font-extrabold mt-1 group-hover:text-slate-500 transition-colors">
+                          Achetez plus d'appareils pour maximiser vos revenus
+                        </p>
+                      </div>
+                      <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${showStabilityOrders ? 'rotate-90' : ''}`} />
+                    </div>
+
+                    {showStabilityOrders && (
+                      <div className="pt-2 space-y-3.5 border-t border-slate-100">
+                        {activeInvestments.length === 0 ? (
+                          <div className="text-center py-4 text-slate-400 text-[11px] font-bold">
+                            Aucun produit d'investissement actif pour le moment.
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {activeInvestments.map((p) => (
+                              <InvestmentItem 
+                                key={p.id}
+                                investment={p}
+                                onClaim={handleClaimReturn}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PLUS DE SERVICES SECTION */}
+                  <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 text-left space-y-4">
+                    <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider pl-0.5">Plus de services</h3>
+
+                    <div className="grid grid-cols-4 gap-y-5 gap-x-2 pt-1">
+                      {/* VIP */}
+                      <button 
+                        onClick={() => {
+                          const el = document.getElementById('vip-section');
+                          if (el) {
+                            el.scrollIntoView({ behavior: 'smooth' });
+                          } else {
+                            setActiveTab('products');
+                          }
+                        }}
+                        className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                      >
+                        <div className="w-11 h-11 bg-indigo-50 text-indigo-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
+                          <ShieldCheck className="w-5.5 h-5.5" />
+                        </div>
+                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">VIP</span>
+                      </button>
+
+                      {/* Centre d'Aide */}
+                      <button 
+                        onClick={() => setProfileSubPage('help')}
+                        className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                      >
+                        <div className="w-11 h-11 bg-teal-50 text-teal-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
+                          <Headphones className="w-5.5 h-5.5" />
+                        </div>
+                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Centre d'Aide</span>
+                      </button>
+
+                      {/* À Propos de Nous */}
+                      <button 
+                        onClick={() => setProfileSubPage('about')}
+                        className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                      >
+                        <div className="w-11 h-11 bg-rose-50 text-rose-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
+                          <BookOpen className="w-5.5 h-5.5" />
+                        </div>
+                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">À Propos</span>
+                      </button>
+
+                      {/* Telegram */}
+                      <button 
+                        onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
+                        className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                      >
+                        <div className="w-11 h-11 bg-sky-50 text-sky-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
+                          <Send className="w-5.5 h-5.5" />
+                        </div>
+                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Telegram</span>
+                      </button>
+
+                      {/* Paramètres / Changer MDP */}
+                      <button 
+                        onClick={() => setProfileSubPage('settings')}
+                        className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
+                      >
+                        <div className="w-11 h-11 bg-slate-100 text-slate-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
+                          <Settings className="w-5.5 h-5.5" />
+                        </div>
+                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Paramètres</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* DÉCONNEXION BUTTON */}
+                  <div className="w-full flex justify-center pt-2">
+                    <button 
+                      onClick={onLogout}
+                      className="w-full bg-white rounded-3xl py-4 border border-slate-100 shadow-xs text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-all font-sans font-black text-sm flex items-center justify-center gap-2 cursor-pointer outline-none"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Déconnexion</span>
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            );
+          })()}
         </main>
       )}
 
       {/* DASHBOARD MOBILE FIXED BOTTOM NAVIGATION */}
-      <footer className="fixed bottom-0 left-0 right-0 py-2.5 px-4 bg-white border-t border-orange-200/60 backdrop-blur-md z-40 lg:py-3 shadow-[0_-10px_30px_rgba(249,115,22,0.06)]">
+      <footer className="fixed bottom-0 left-0 right-0 py-2.5 px-4 bg-white border-t border-blue-100/60 backdrop-blur-md z-40 lg:py-3 shadow-[0_-10px_30px_rgba(249,115,22,0.06)]">
         <div className="max-w-2xl mx-auto flex items-center justify-between font-bold text-[10px] md:text-xs">
           
           <button
@@ -4605,7 +5496,7 @@ export default function Dashboard({
               setActiveTab('dashboard');
               setShowAnnouncementDismissible(true);
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'dashboard' && !isAdminMode ? 'text-orange-600 scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'dashboard' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
             <Activity className="w-5 h-5 stroke-[2.5]" />
             <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Accueil</span>
@@ -4616,7 +5507,7 @@ export default function Dashboard({
               setIsAdminMode(false);
               setActiveTab('products');
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'products' && !isAdminMode ? 'text-orange-600 scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'products' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
             <Briefcase className="w-5 h-5 stroke-[2.5]" />
             <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Produits</span>
@@ -4627,7 +5518,7 @@ export default function Dashboard({
               setIsAdminMode(false);
               setActiveTab('team');
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'team' && !isAdminMode ? 'text-orange-600 scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'team' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
             <Users className="w-5 h-5 stroke-[2.5]" />
             <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Équipe</span>
@@ -4638,7 +5529,7 @@ export default function Dashboard({
               setIsAdminMode(false);
               setActiveTab('profile');
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'profile' && !isAdminMode ? 'text-orange-600 scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'profile' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
             <UserIcon className="w-5 h-5 stroke-[2.5]" />
             <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Profil</span>
@@ -4676,7 +5567,7 @@ export default function Dashboard({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 15, scale: 0.95 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="fixed right-5 bottom-36 sm:right-8 z-50 bg-white border border-orange-100/40 rounded-[28px] p-5 shadow-[0_15px_45px_rgba(0,0,50,0.15)] w-72 text-left space-y-3.5"
+              className="fixed right-5 bottom-36 sm:right-8 z-50 bg-white border border-blue-50/40 rounded-[28px] p-5 shadow-[0_15px_45px_rgba(0,0,50,0.15)] w-72 text-left space-y-3.5"
             >
               <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -4765,7 +5656,7 @@ export default function Dashboard({
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border border-slate-900 animate-pulse"></span>
                   </div>
                   <div>
-                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support Aiprods</h4>
+                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support Dreampod</h4>
                     <span className="text-[9px] font-bold text-slate-100/90 block mt-1 uppercase tracking-wide">Réponse sous 2H maximum</span>
                   </div>
                 </div>
@@ -4782,7 +5673,7 @@ export default function Dashboard({
               <div className="flex-1 overflow-y-auto p-5 space-y-3.5 bg-[#f8f5f0]/50">
                 {supportMessages.length === 0 ? (
                   <div className="h-full flex flex-col justify-center items-center text-center p-6 space-y-3">
-                    <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center text-2xl shadow-inner">
+                    <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center text-2xl shadow-inner">
                       💬
                     </div>
                     <div>
@@ -4790,7 +5681,7 @@ export default function Dashboard({
                         Discuter en ligne !
                       </h5>
                       <p className="text-[11px] text-slate-500 font-semibold max-w-[240px] leading-relaxed mx-auto">
-                        Écrivez votre message ci-dessous. Un conseiller Aiprods vous répondra directement ici.
+                        Écrivez votre message ci-dessous. Un conseiller Dreampod vous répondra directement ici.
                       </p>
                     </div>
                   </div>
@@ -4829,7 +5720,7 @@ export default function Dashboard({
               {/* Chat Input form bar */}
               <form 
                 onSubmit={handleSendChatMessage}
-                className="p-3 bg-white border-t border-orange-100/40 flex items-center space-x-2 shrink-0 select-none pb-4"
+                className="p-3 bg-white border-t border-blue-50/40 flex items-center space-x-2 shrink-0 select-none pb-4"
               >
                 <input 
                   type="text"
@@ -5043,7 +5934,7 @@ export default function Dashboard({
               exit={{ scale: 0.95, y: 20, opacity: 0 }}
               transition={{ type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white border-2 border-orange-200/60 rounded-[32px] w-full max-w-lg p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(249,115,22,0.12)] relative overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white border-2 border-blue-100/60 rounded-[32px] w-full max-w-lg p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(249,115,22,0.12)] relative overflow-hidden flex flex-col max-h-[90vh]"
               id="agro-about-modal"
             >
               {/* Top Accent Gradient Bar */}
@@ -5052,7 +5943,7 @@ export default function Dashboard({
               {/* Header */}
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100/60 flex items-center justify-center text-orange-600 border border-orange-200/50 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50/60 flex items-center justify-center text-[#1b64d9] border border-blue-100/50 shrink-0">
                     <Info className="w-5 h-5 stroke-[2.5]" />
                   </div>
                   <div>
@@ -5060,7 +5951,7 @@ export default function Dashboard({
                       À Propos de Nous
                     </h3>
                     <p className="text-[9px] text-[#ea580c] font-black uppercase tracking-wider font-mono">
-                      Fonctionnement Aiprods
+                      Fonctionnement Dreampod
                     </p>
                   </div>
                 </div>
@@ -5078,22 +5969,22 @@ export default function Dashboard({
                 
                 {/* Intro paragraph */}
                 <div className="space-y-2">
-                  <span className="text-[10px] sm:text-xs font-black text-orange-600 block uppercase tracking-widest">PROPULSER LE COMMERCE TECHNOLOGIQUE EN AFRIQUE 🎧</span>
+                  <span className="text-[10px] sm:text-xs font-black text-[#1b64d9] block uppercase tracking-widest">PROPULSER LE COMMERCE TECHNOLOGIQUE EN AFRIQUE 🎧</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-600 font-medium">
-                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Aiprods</strong> est la première interface d'investissement technologique en ligne conçue pour démocratiser la distribution de systèmes audio haut de gamme modernes au Togo. Nous canalisons votre épargne vers des stocks réels d'Aiprods connectés de dernière génération afin de générer pour vous des profits stables de manière continue.
+                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Dreampod</strong> est la première interface d'investissement technologique en ligne conçue pour démocratiser la distribution de systèmes audio haut de gamme modernes au Togo. Nous canalisons votre épargne vers des stocks réels d'écouteurs et de pods intelligents connectés de dernière génération afin de générer pour vous des profits stables de manière continue.
                   </p>
                 </div>
 
                 {/* HOW IT WORKS / FONCTIONNEMENT - Clean Steps layout with Montserrat bold */}
                 <div className="space-y-4">
-                  <h4 className="font-sans font-black text-xs uppercase tracking-widest text-[#ea580c] border-b border-orange-100/55 pb-1.5" style={{ fontWeight: '900' }}>
+                  <h4 className="font-sans font-black text-xs uppercase tracking-widest text-[#ea580c] border-b border-blue-50/55 pb-1.5" style={{ fontWeight: '900' }}>
                     COMMENT FONCTIONNE NOTRE SYSTÈME INTERACTIF ?
                   </h4>
 
                   <div className="space-y-3.5">
                     {/* Step 1 */}
                     <div className="flex gap-3.5 items-start bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl" id="about-step-1">
-                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                      <div className="w-7 h-7 bg-[#f0f4ff]0 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
                         1
                       </div>
                       <div className="space-y-0.5">
@@ -5108,7 +5999,7 @@ export default function Dashboard({
 
                     {/* Step 2 */}
                     <div className="flex gap-3.5 items-start bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl" id="about-step-2">
-                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                      <div className="w-7 h-7 bg-[#f0f4ff]0 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
                         2
                       </div>
                       <div className="space-y-0.5">
@@ -5123,7 +6014,7 @@ export default function Dashboard({
 
                     {/* Step 3 */}
                     <div className="flex gap-3.5 items-start bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl" id="about-step-3">
-                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                      <div className="w-7 h-7 bg-[#f0f4ff]0 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
                         3
                       </div>
                       <div className="space-y-0.5">
@@ -5138,7 +6029,7 @@ export default function Dashboard({
 
                     {/* Step 4 */}
                     <div className="flex gap-3.5 items-start bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl" id="about-step-4">
-                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                      <div className="w-7 h-7 bg-[#f0f4ff]0 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
                         4
                       </div>
                       <div className="space-y-0.5">
@@ -5146,14 +6037,14 @@ export default function Dashboard({
                           Retraits Automatisés Instantanés vers votre Mobile Money
                         </h5>
                         <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
-                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. Aiprods valide les flux financiers intelligemment pour créditer votre compte sans délai !
+                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. Dreampod valide les flux financiers intelligemment pour créditer votre compte sans délai !
                         </p>
                       </div>
                     </div>
 
                     {/* Step 5 */}
                     <div className="flex gap-3.5 items-start bg-amber-550/5 border border-amber-550/10 p-3 rounded-2xl" id="about-step-5">
-                      <div className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
+                      <div className="w-7 h-7 bg-[#f0f4ff]0 text-white rounded-lg flex items-center justify-center text-xs font-black font-sans shrink-0" style={{ fontWeight: '900' }}>
                         5
                       </div>
                       <div className="space-y-0.5">
@@ -5169,8 +6060,8 @@ export default function Dashboard({
                 </div>
 
                 {/* Trust and Certify Badge Section */}
-                <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/15 border border-orange-200/55 p-4 rounded-2xl flex items-center gap-3 select-none">
-                  <ShieldCheck className="w-8 h-8 text-orange-600 shrink-0" />
+                <div className="bg-gradient-to-br from-[#1b64d9]/10 to-orange-600/15 border border-blue-100/55 p-4 rounded-2xl flex items-center gap-3 select-none">
+                  <ShieldCheck className="w-8 h-8 text-[#1b64d9] shrink-0" />
                   <div>
                     <span className="text-[10.5px] font-black text-slate-800 uppercase block tracking-wider" style={{ fontWeight: '900' }}>SÉCURITÉ & LIQUIDITÉ CERTIFIÉES v2.6</span>
                     <p className="text-[9.5px] text-slate-500 font-medium leading-relaxed uppercase mt-0.5">
@@ -5183,10 +6074,10 @@ export default function Dashboard({
               
               {/* Footer */}
               <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between">
-                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Aiprods &copy; 2026. Tous droits réservés.</span>
+                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Dreampod &copy; 2026. Tous droits réservés.</span>
                 <button 
                   onClick={() => setIsAboutModalOpen(false)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-95 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#1b64d9] to-orange-600 hover:opacity-95 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
                   style={{ fontWeight: '900' }}
                 >
                   Fermer
@@ -5215,22 +6106,22 @@ export default function Dashboard({
               transition={{ type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
               className="bg-slate-900 border border-slate-800 rounded-[32px] w-full max-w-lg p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(234,88,12,0.15)] relative overflow-hidden flex flex-col max-h-[92vh]"
-              id="aiprods-pin-modal"
+              id="dreampod-pin-modal"
             >
               {/* Top Accent Gradient Bar */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500" />
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1b64d9] via-orange-600 to-amber-500" />
               
               {/* Header */}
               <div className="flex justify-between items-start mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#f0f4ff]0/10 flex items-center justify-center text-blue-500 border border-[#f0f4ff]0/20 shrink-0">
                     <Smartphone className="w-5 h-5 stroke-[2.5]" />
                   </div>
                   <div>
                     <h3 className="font-sans font-black text-xs uppercase tracking-wider text-white" style={{ fontWeight: '900' }}>
                       Épingler l'application
                     </h3>
-                    <p className="text-[9px] text-orange-500 font-black uppercase tracking-wider font-mono">
+                    <p className="text-[9px] text-blue-500 font-black uppercase tracking-wider font-mono">
                       Raccourci Écran d'Accueil v2.6
                     </p>
                   </div>
@@ -5258,7 +6149,7 @@ export default function Dashboard({
                     Si votre téléphone affiche l'erreur <span className="text-yellow-300 font-bold">"Action required to load your app"</span> ou bloque l'accès, c'est que la WebView de l'application de téléchargement est limitée.
                   </p>
                   <p className="text-[10px] leading-relaxed font-bold text-white bg-slate-950/40 p-2 rounded-xl border border-amber-500/20">
-                    🚀 <strong className="text-orange-400">La solution définitive :</strong> Épinglez l'application sur votre écran d'accueil en suivant le guide ci-dessous. Elle s'ouvrira directement dans votre navigateur officiel sans aucun blocage !
+                    🚀 <strong className="text-blue-400">La solution définitive :</strong> Épinglez l'application sur votre écran d'accueil en suivant le guide ci-dessous. Elle s'ouvrira directement dans votre navigateur officiel sans aucun blocage !
                   </p>
                 </div>
 
@@ -5268,7 +6159,7 @@ export default function Dashboard({
                     onClick={() => setActiveInstallTab('android')}
                     className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-0 ${
                       activeInstallTab === 'android'
-                        ? 'bg-orange-600 text-white shadow-sm'
+                        ? 'bg-[#1b64d9] text-white shadow-sm'
                         : 'bg-transparent text-slate-400 hover:text-white'
                     }`}
                   >
@@ -5278,7 +6169,7 @@ export default function Dashboard({
                     onClick={() => setActiveInstallTab('ios')}
                     className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-0 ${
                       activeInstallTab === 'ios'
-                        ? 'bg-orange-600 text-white shadow-sm'
+                        ? 'bg-[#1b64d9] text-white shadow-sm'
                         : 'bg-transparent text-slate-400 hover:text-white'
                     }`}
                   >
@@ -5302,29 +6193,29 @@ export default function Dashboard({
                         <div className="space-y-2">
                           <button 
                             onClick={triggerPwaInstall}
-                            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-95 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 text-center cursor-pointer border-0"
+                            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#1b64d9] to-orange-600 hover:opacity-95 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 text-center cursor-pointer border-0"
                             style={{ fontWeight: '900' }}
                           >
                             <Smartphone className="w-4 h-4 stroke-[3]" />
                             Ajouter à l'Écran d'Accueil Maintenant
                           </button>
                           <p className="text-[9px] text-slate-400 text-center font-medium">
-                            En un clic, l'icône Aiprods sera ajoutée à votre écran.
+                            En un clic, l'icône Dreampod sera ajoutée à votre écran.
                           </p>
                         </div>
                       ) : (
                         <div className="space-y-3">
                           <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                            <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                            <div className="w-6 h-6 bg-slate-800 text-blue-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
                               1
                             </div>
                             <p className="text-[10.5px] font-medium leading-relaxed">
-                              Ouvrez l'application dans votre navigateur <strong className="text-orange-400">Google Chrome</strong> (ou tapez l'adresse dans Chrome).
+                              Ouvrez l'application dans votre navigateur <strong className="text-blue-400">Google Chrome</strong> (ou tapez l'adresse dans Chrome).
                             </p>
                           </div>
 
                           <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                            <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                            <div className="w-6 h-6 bg-slate-800 text-blue-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
                               2
                             </div>
                             <p className="text-[10.5px] font-medium leading-relaxed">
@@ -5333,7 +6224,7 @@ export default function Dashboard({
                           </div>
 
                           <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                            <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                            <div className="w-6 h-6 bg-slate-800 text-blue-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
                               3
                             </div>
                             <p className="text-[10.5px] font-medium leading-relaxed">
@@ -5344,7 +6235,7 @@ export default function Dashboard({
                           <div className="flex gap-3 items-start bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
                             <span className="text-sm">✨</span>
                             <p className="text-[10.5px] font-bold text-emerald-300 leading-relaxed">
-                              Félicitations ! L'application s'installe en arrière-plan. Vous trouverez l'icône Aiprods sur votre écran d'accueil avec vos autres applications.
+                              Félicitations ! L'application s'installe en arrière-plan. Vous trouverez l'icône Dreampod sur votre écran d'accueil avec vos autres applications.
                             </p>
                           </div>
                         </div>
@@ -5362,24 +6253,24 @@ export default function Dashboard({
                       <button 
                         onClick={() => {
                           const link = document.createElement('a');
-                          link.href = '/Aiprods_v2.6.apk';
-                          link.download = 'Aiprods_v2.6.apk';
+                          link.href = '/Dreampod_v2.6.apk';
+                          link.download = 'Dreampod_v2.6.apk';
                           document.body.appendChild(link);
                           link.click();
                           document.body.removeChild(link);
                           openAlert(
                             "Téléchargement APK !",
-                            "Le téléchargement de l'APK Aiprods a commencé. N'oubliez pas de désinstaller les anciennes versions de votre téléphone avant d'installer ce fichier !",
+                            "Le téléchargement de l'APK Dreampod a commencé. N'oubliez pas de désinstaller les anciennes versions de votre téléphone avant d'installer ce fichier !",
                             "success"
                           );
                         }}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all border border-slate-700 cursor-pointer shadow-xs"
                       >
-                        <Download className="w-3.5 h-3.5 text-orange-500" />
+                        <Download className="w-3.5 h-3.5 text-blue-500" />
                         Télécharger le Fichier APK (Direct)
                       </button>
                       <p className="text-[9px] text-slate-500 leading-tight">
-                        ⚠️ <strong className="text-amber-400">Rappel :</strong> Pour éviter l'erreur de package ou l'échec de l'installation, supprimez l'ancienne application <strong className="text-yellow-400">"AgroProfit"</strong> ou <strong className="text-yellow-400">"Aiprods"</strong> de votre appareil au préalable.
+                        ⚠️ <strong className="text-amber-400">Rappel :</strong> Pour éviter l'erreur de package ou l'échec de l'installation, supprimez l'ancienne application <strong className="text-yellow-400">"AgroProfit"</strong> ou <strong className="text-yellow-400">"Dreampod"</strong> de votre appareil au préalable.
                       </p>
                     </div>
                   </div>
@@ -5398,16 +6289,16 @@ export default function Dashboard({
                       
                       <div className="space-y-3">
                         <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                          <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                          <div className="w-6 h-6 bg-slate-800 text-blue-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
                             1
                           </div>
                           <p className="text-[10.5px] font-medium leading-relaxed">
-                            Ouvrez obligatoirement l'application dans le navigateur officiel <strong className="text-orange-400">Safari</strong> de votre iPhone.
+                            Ouvrez obligatoirement l'application dans le navigateur officiel <strong className="text-blue-400">Safari</strong> de votre iPhone.
                           </p>
                         </div>
 
                         <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                          <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                          <div className="w-6 h-6 bg-slate-800 text-blue-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
                             2
                           </div>
                           <p className="text-[10.5px] font-medium leading-relaxed">
@@ -5416,7 +6307,7 @@ export default function Dashboard({
                         </div>
 
                         <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                          <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                          <div className="w-6 h-6 bg-slate-800 text-blue-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
                             3
                           </div>
                           <p className="text-[10.5px] font-medium leading-relaxed">
@@ -5425,18 +6316,18 @@ export default function Dashboard({
                         </div>
 
                         <div className="flex gap-3 items-start bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                          <div className="w-6 h-6 bg-slate-800 text-orange-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
+                          <div className="w-6 h-6 bg-slate-800 text-blue-500 rounded-lg flex items-center justify-center text-xs font-black shrink-0">
                             4
                           </div>
                           <p className="text-[10.5px] font-medium leading-relaxed">
-                            Appuyez sur le bouton <strong className="text-orange-400 font-bold">"Ajouter"</strong> situé dans le coin supérieur droit.
+                            Appuyez sur le bouton <strong className="text-blue-400 font-bold">"Ajouter"</strong> situé dans le coin supérieur droit.
                           </p>
                         </div>
 
                         <div className="flex gap-3 items-start bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
                           <span className="text-sm">✨</span>
                           <p className="text-[10.5px] font-bold text-emerald-300 leading-relaxed">
-                            Terminé ! L'application Aiprods s'affiche sur l'écran d'accueil de votre iPhone. Ouvrez-la pour vous connecter normalement et en toute sécurité.
+                            Terminé ! L'application Dreampod s'affiche sur l'écran d'accueil de votre iPhone. Ouvrez-la pour vous connecter normalement et en toute sécurité.
                           </p>
                         </div>
                       </div>
@@ -5448,7 +6339,7 @@ export default function Dashboard({
               
               {/* Footer */}
               <div className="border-t border-slate-800 pt-4 mt-4 flex items-center justify-between">
-                <span className="text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">Aiprods © 2026</span>
+                <span className="text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">Dreampod © 2026</span>
                 <button 
                   onClick={() => setIsInstallModalOpen(false)}
                   className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer border border-slate-700"
@@ -5458,6 +6349,153 @@ export default function Dashboard({
                 </button>
               </div>
 
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+      {/* MISSIONS MODAL SYSTEM */}
+      <AnimatePresence>
+        {showMissionsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[99999] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#f8f9fa] rounded-[32px] w-full max-w-sm overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-white p-6 text-slate-800 relative"
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowMissionsModal(false)}
+                className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer border-0 z-10 active:scale-95"
+              >
+                <X className="w-4 h-4 stroke-[3]" />
+              </button>
+
+              <div className="text-left mb-4">
+                <h3 className="text-3xl font-sans font-black text-slate-900 tracking-tight leading-none" style={{ fontWeight: 900 }}>
+                  Missions
+                </h3>
+              </div>
+
+              {/* Missions Card Wrapper */}
+              <div className="bg-white border border-slate-100 rounded-[28px] p-5 space-y-5 shadow-[0_4px_15px_rgba(0,0,0,0.015)] text-left">
+                {(() => {
+                  const directReferrals = level1Users;
+                  const allInvs = DataStore.getInvestments() || [];
+                  const investedReferralCount = directReferrals.filter(u => allInvs.some(inv => inv.userId === u.id)).length;
+                  const claimed = (userState as any).claimedMissions || [];
+
+                  const MISSIONS = [
+                    { id: 'invite_3', target: 3, reward: 1000, label: 'Inviter 3 investisseurs' },
+                    { id: 'invite_10', target: 10, reward: 2500, label: 'Inviter 10 investisseurs' },
+                    { id: 'invite_30', target: 30, reward: 5000, label: 'Inviter 30 investisseurs' }
+                  ];
+
+                  const handleClaimMission = (missionId: string, reward: number, target: number) => {
+                    if (investedReferralCount < target) return;
+                    if (claimed.includes(missionId)) return;
+
+                    const newBalance = userState.balance + reward;
+                    const newClaimed = [...claimed, missionId];
+
+                    const updatedUser: User = {
+                      ...userState,
+                      balance: newBalance,
+                      claimedMissions: newClaimed as any
+                    };
+
+                    DataStore.saveCurrentUser(updatedUser);
+                    const allUsers = DataStore.getUsers();
+                    const idx = allUsers.findIndex(u => u.id === updatedUser.id);
+                    if (idx !== -1) {
+                      allUsers[idx] = updatedUser;
+                      DataStore.saveUsers(allUsers);
+                    }
+
+                    setUserState(updatedUser);
+                    if (onRefreshUser) {
+                      onRefreshUser(updatedUser);
+                    }
+
+                    triggerToast(`Félicitations ! Votre bonus de +${reward.toLocaleString()} FCFA a été ajouté à votre solde ! 🎯`, "success");
+                  };
+
+                  return (
+                    <div className="space-y-4">
+                      {MISSIONS.map((m, index) => {
+                        const isCompleted = investedReferralCount >= m.target;
+                        const isClaimed = claimed.includes(m.id);
+                        const progressNum = Math.min(investedReferralCount, m.target);
+
+                        return (
+                          <div key={m.id} className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                              {/* Left: Icon and Title */}
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-[#1a1a1a] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+                                  <Users className="w-5.5 h-5.5 stroke-[2]" />
+                                </div>
+                                <div>
+                                  <h4 className="font-sans font-black text-sm text-slate-900 leading-tight">
+                                    {m.label.split(' ').slice(0, 2).join(' ')}
+                                  </h4>
+                                  <p className="font-sans font-black text-sm text-slate-900 leading-tight">
+                                    {m.label.split(' ').slice(2).join(' ')}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Right: Reward and Progress */}
+                              <div className="text-right flex flex-col items-end shrink-0">
+                                <span className="text-sm font-sans font-black text-slate-900 tracking-tight leading-none mb-1">
+                                  + {m.reward.toLocaleString()} FCFA
+                                </span>
+                                <span className="text-[10px] font-sans font-black text-slate-400 leading-none">
+                                  {progressNum}/{m.target}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Button alignment and spacing strictly matching the mockup */}
+                            <div className="flex justify-end pt-1">
+                              {isClaimed ? (
+                                <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 py-2 px-4 rounded-full text-[10.5px] font-sans font-black flex items-center gap-1 select-none">
+                                  ✓ Récupéré
+                                </span>
+                              ) : isCompleted ? (
+                                <button
+                                  onClick={() => handleClaimMission(m.id, m.reward, m.target)}
+                                  className="bg-slate-900 text-white hover:bg-black py-2 px-4 rounded-full text-[10.5px] font-sans font-black transition-all active:scale-95 cursor-pointer shadow-md border-0"
+                                >
+                                  Récupérer le bonus
+                                </button>
+                              ) : (
+                                <button
+                                  disabled
+                                  className="bg-[#e9ecef] text-slate-400 py-2 px-4 rounded-full text-[10.5px] font-sans font-black cursor-not-allowed border-0"
+                                >
+                                  Récupérer le bonus
+                                </button>
+                              )}
+                            </div>
+
+                            {index < MISSIONS.length - 1 && (
+                              <div className="border-b border-slate-100/95 pt-2" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
             </motion.div>
           </motion.div>
         )}
