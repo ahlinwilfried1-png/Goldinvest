@@ -2796,6 +2796,155 @@ export default function Dashboard({
             const totalCommissions = commissions.reduce((acc, c) => acc + c.amount, 0);
             const activeInvsCount = activeInvestments.filter(i => i.status === 'active').length;
 
+            if (profileSubPage === 'missions') {
+              const directReferrals = level1Users;
+              const allInvs = DataStore.getInvestments() || [];
+              const investedReferralCount = directReferrals.filter(u => allInvs.some(inv => inv.userId === u.id)).length;
+              const claimed = (userState as any).claimedMissions || [];
+
+              const MISSIONS = [
+                { id: 'invite_3', target: 3, reward: 1000, label: 'Inviter 3 investisseurs actifs' },
+                { id: 'invite_10', target: 10, reward: 2500, label: 'Inviter 10 investisseurs actifs' },
+                { id: 'invite_30', target: 30, reward: 5000, label: 'Inviter 30 investisseurs actifs' }
+              ];
+
+              const handleClaimMission = (missionId: string, reward: number, target: number) => {
+                if (investedReferralCount < target) return;
+                if (claimed.includes(missionId)) return;
+
+                const newBalance = userState.balance + reward;
+                const newClaimed = [...claimed, missionId];
+
+                const updatedUser: User = {
+                  ...userState,
+                  balance: newBalance,
+                  claimedMissions: newClaimed as any
+                };
+
+                DataStore.saveCurrentUser(updatedUser);
+                const allUsers = DataStore.getUsers();
+                const idx = allUsers.findIndex(u => u.id === updatedUser.id);
+                if (idx !== -1) {
+                  allUsers[idx] = updatedUser;
+                  DataStore.saveUsers(allUsers);
+                }
+
+                setUserState(updatedUser);
+                if (onRefreshUser) {
+                  onRefreshUser(updatedUser);
+                }
+
+                triggerToast(`Félicitations ! Votre bonus de +${reward.toLocaleString()} FCFA a été ajouté à votre solde ! 🎯`, "success");
+              };
+
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Missions d'Invitation</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-5 animate-fade-in">
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-[#1b64d9] font-sans font-black uppercase tracking-wider block">🎯 BONUS DE PARRAINAGE</span>
+                        <h3 className="text-xl font-sans font-black text-slate-900 tracking-tight">Gagnez jusqu'à 8 500 FCFA</h3>
+                      </div>
+                      
+                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                        Complétez des missions d'invitation simples pour débloquer des bonus de parrainage crédités instantanément sur votre compte ! Vos filleuls doivent être des investisseurs actifs (ayant acheté au moins un pack d'appareil Dreampod).
+                      </p>
+
+                      <div className="bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">Progression de l'Équipe</span>
+                          <span className="text-base font-sans font-black text-slate-800 block mt-0.5">
+                            {investedReferralCount} filleul(s) actif(s) direct(s)
+                          </span>
+                        </div>
+                        <div className="w-10 h-10 bg-indigo-50 text-indigo-650 rounded-xl flex items-center justify-center">
+                          <Users className="w-5 h-5 stroke-[2.5]" />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4 pt-1">
+                        {MISSIONS.map((m, index) => {
+                          const isCompleted = investedReferralCount >= m.target;
+                          const isClaimed = claimed.includes(m.id);
+                          const progressNum = Math.min(investedReferralCount, m.target);
+
+                          return (
+                            <div key={m.id} className="space-y-3 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-11 h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+                                    <Users className="w-5 h-5 stroke-[2.5]" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-sans font-black text-xs text-slate-900 leading-tight">
+                                      {m.label}
+                                    </h4>
+                                    <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
+                                      Bonus de {m.reward.toLocaleString()} FCFA
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="text-right flex flex-col items-end shrink-0">
+                                  <span className="text-xs font-sans font-black text-[#1b64d9] tracking-tight leading-none mb-1">
+                                    +{m.reward.toLocaleString()} F
+                                  </span>
+                                  <span className="text-[10px] font-sans font-black text-slate-400 leading-none">
+                                    {progressNum}/{m.target}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Progress bar */}
+                              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                  className="bg-[#1b64d9] h-1.5 rounded-full transition-all duration-500" 
+                                  style={{ width: `${(progressNum / m.target) * 100}%` }}
+                                />
+                              </div>
+
+                              <div className="flex justify-between items-center pt-2 border-t border-slate-100/50">
+                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Statut</span>
+                                {isClaimed ? (
+                                  <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 py-1.5 px-3.5 rounded-full text-[10.5px] font-sans font-black flex items-center gap-1 select-none">
+                                    ✓ Récupéré
+                                  </span>
+                                ) : isCompleted ? (
+                                  <button
+                                    onClick={() => handleClaimMission(m.id, m.reward, m.target)}
+                                    className="bg-[#1b64d9] text-white hover:bg-blue-700 py-1.5 px-3.5 rounded-full text-[10.5px] font-sans font-black transition-all active:scale-95 cursor-pointer shadow-md border-0"
+                                  >
+                                    Récupérer le bonus
+                                  </button>
+                                ) : (
+                                  <button
+                                    disabled
+                                    className="bg-[#e9ecef] text-slate-400 py-1.5 px-3.5 rounded-full text-[10.5px] font-sans font-black cursor-not-allowed border-0"
+                                  >
+                                    En cours
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             if (profileSubPage === 'orders') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
@@ -3282,7 +3431,7 @@ export default function Dashboard({
                       </div>
                       
                       <button
-                        onClick={() => setShowMissionsModal(true)}
+                        onClick={() => setProfileSubPage('missions')}
                         className="py-2.5 px-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white font-sans font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-95 shadow-md active:scale-95 transition-all text-center shrink-0 cursor-pointer border-0"
                       >
                         Voir les Missions
@@ -5399,6 +5548,62 @@ export default function Dashboard({
                     )}
                   </div>
 
+                  {/* DREAMPOD APP INSTALLATION CARD */}
+                  <div className="bg-gradient-to-r from-[#1b64d9] via-[#2c77f2] to-blue-800 rounded-3xl p-5 text-white text-left relative overflow-hidden shadow-md animate-fade-in">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none -mr-6 -mt-6" />
+                    
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <span className="bg-white/20 text-white text-[9px] font-sans font-black px-2.5 py-1 rounded-md uppercase tracking-wider inline-block">
+                          📲 APPLICATION MOBILE DREAMPOD
+                        </span>
+                        <h3 className="text-base font-sans font-black tracking-tight mt-1 flex items-center gap-1.5 text-white">
+                          Installer l'application Dreampod
+                        </h3>
+                      </div>
+                      <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
+                        <Download className="w-5 h-5 text-white stroke-[2.5]" />
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-white/80 font-medium leading-relaxed mt-2.5 max-w-sm">
+                      Téléchargez et installez l'application officielle Dreampod pour une expérience plus rapide, des alertes de gains instantanées et une connexion automatique sécurisée.
+                    </p>
+
+                    <div className="mt-4 grid grid-cols-2 gap-2.5 pt-1">
+                      {/* TELECHARGER APK */}
+                      <button
+                        onClick={() => {
+                          triggerToast("Téléchargement de l'application Dreampod commencé (Fichier APK)...", "success");
+                          // Simulate an APK download with a stub or trigger standard browser download
+                          const blob = new Blob(["Dreampod Mobile App Installer"], {type: "application/vnd.android.package-archive"});
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'dreampod_app.apk';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }}
+                        className="py-3 px-4 bg-white text-[#1b64d9] font-sans font-black text-[11px] uppercase tracking-wider rounded-xl text-center active:scale-95 transition-all shadow-xs cursor-pointer border-0 flex items-center justify-center gap-1.5"
+                      >
+                        <Smartphone className="w-4 h-4 shrink-0" />
+                        <span>Télécharger APK</span>
+                      </button>
+
+                      {/* INSTALLER PWA / SHORTCUT */}
+                      <button
+                        onClick={() => {
+                          triggerToast("Pour installer Dreampod : Cliquez sur l'icône de partage de votre navigateur puis sur 'Ajouter à l'écran d'accueil'. 📲", "info");
+                        }}
+                        className="py-3 px-4 bg-white/10 text-white hover:bg-white/15 font-sans font-black text-[11px] uppercase tracking-wider rounded-xl text-center active:scale-95 transition-all cursor-pointer border-0 flex items-center justify-center gap-1.5"
+                      >
+                        <Share className="w-4 h-4 shrink-0" />
+                        <span>Guide d'installation</span>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* PLUS DE SERVICES SECTION */}
                   <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 text-left space-y-4">
                     <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider pl-0.5">Plus de services</h3>
@@ -6354,152 +6559,6 @@ export default function Dashboard({
         )}
       </AnimatePresence>
 
-
-      {/* MISSIONS MODAL SYSTEM */}
-      <AnimatePresence>
-        {showMissionsModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[99999] flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#f8f9fa] rounded-[32px] w-full max-w-sm overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-white p-6 text-slate-800 relative"
-            >
-              {/* Close button */}
-              <button
-                onClick={() => setShowMissionsModal(false)}
-                className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer border-0 z-10 active:scale-95"
-              >
-                <X className="w-4 h-4 stroke-[3]" />
-              </button>
-
-              <div className="text-left mb-4">
-                <h3 className="text-3xl font-sans font-black text-slate-900 tracking-tight leading-none" style={{ fontWeight: 900 }}>
-                  Missions
-                </h3>
-              </div>
-
-              {/* Missions Card Wrapper */}
-              <div className="bg-white border border-slate-100 rounded-[28px] p-5 space-y-5 shadow-[0_4px_15px_rgba(0,0,0,0.015)] text-left">
-                {(() => {
-                  const directReferrals = level1Users;
-                  const allInvs = DataStore.getInvestments() || [];
-                  const investedReferralCount = directReferrals.filter(u => allInvs.some(inv => inv.userId === u.id)).length;
-                  const claimed = (userState as any).claimedMissions || [];
-
-                  const MISSIONS = [
-                    { id: 'invite_3', target: 3, reward: 1000, label: 'Inviter 3 investisseurs' },
-                    { id: 'invite_10', target: 10, reward: 2500, label: 'Inviter 10 investisseurs' },
-                    { id: 'invite_30', target: 30, reward: 5000, label: 'Inviter 30 investisseurs' }
-                  ];
-
-                  const handleClaimMission = (missionId: string, reward: number, target: number) => {
-                    if (investedReferralCount < target) return;
-                    if (claimed.includes(missionId)) return;
-
-                    const newBalance = userState.balance + reward;
-                    const newClaimed = [...claimed, missionId];
-
-                    const updatedUser: User = {
-                      ...userState,
-                      balance: newBalance,
-                      claimedMissions: newClaimed as any
-                    };
-
-                    DataStore.saveCurrentUser(updatedUser);
-                    const allUsers = DataStore.getUsers();
-                    const idx = allUsers.findIndex(u => u.id === updatedUser.id);
-                    if (idx !== -1) {
-                      allUsers[idx] = updatedUser;
-                      DataStore.saveUsers(allUsers);
-                    }
-
-                    setUserState(updatedUser);
-                    if (onRefreshUser) {
-                      onRefreshUser(updatedUser);
-                    }
-
-                    triggerToast(`Félicitations ! Votre bonus de +${reward.toLocaleString()} FCFA a été ajouté à votre solde ! 🎯`, "success");
-                  };
-
-                  return (
-                    <div className="space-y-4">
-                      {MISSIONS.map((m, index) => {
-                        const isCompleted = investedReferralCount >= m.target;
-                        const isClaimed = claimed.includes(m.id);
-                        const progressNum = Math.min(investedReferralCount, m.target);
-
-                        return (
-                          <div key={m.id} className="space-y-3">
-                            <div className="flex items-center justify-between gap-3">
-                              {/* Left: Icon and Title */}
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-[#1a1a1a] text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
-                                  <Users className="w-5.5 h-5.5 stroke-[2]" />
-                                </div>
-                                <div>
-                                  <h4 className="font-sans font-black text-sm text-slate-900 leading-tight">
-                                    {m.label.split(' ').slice(0, 2).join(' ')}
-                                  </h4>
-                                  <p className="font-sans font-black text-sm text-slate-900 leading-tight">
-                                    {m.label.split(' ').slice(2).join(' ')}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Right: Reward and Progress */}
-                              <div className="text-right flex flex-col items-end shrink-0">
-                                <span className="text-sm font-sans font-black text-slate-900 tracking-tight leading-none mb-1">
-                                  + {m.reward.toLocaleString()} FCFA
-                                </span>
-                                <span className="text-[10px] font-sans font-black text-slate-400 leading-none">
-                                  {progressNum}/{m.target}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Button alignment and spacing strictly matching the mockup */}
-                            <div className="flex justify-end pt-1">
-                              {isClaimed ? (
-                                <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 py-2 px-4 rounded-full text-[10.5px] font-sans font-black flex items-center gap-1 select-none">
-                                  ✓ Récupéré
-                                </span>
-                              ) : isCompleted ? (
-                                <button
-                                  onClick={() => handleClaimMission(m.id, m.reward, m.target)}
-                                  className="bg-slate-900 text-white hover:bg-black py-2 px-4 rounded-full text-[10.5px] font-sans font-black transition-all active:scale-95 cursor-pointer shadow-md border-0"
-                                >
-                                  Récupérer le bonus
-                                </button>
-                              ) : (
-                                <button
-                                  disabled
-                                  className="bg-[#e9ecef] text-slate-400 py-2 px-4 rounded-full text-[10.5px] font-sans font-black cursor-not-allowed border-0"
-                                >
-                                  Récupérer le bonus
-                                </button>
-                              )}
-                            </div>
-
-                            {index < MISSIONS.length - 1 && (
-                              <div className="border-b border-slate-100/95 pt-2" />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
 
       {/* FLOATING TOAST NOTIFICATIONS */}
