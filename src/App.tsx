@@ -8,7 +8,7 @@ import { DataStore, syncWithBackend, safeLocalStorage } from './dataStore';
 export default function App() {
   // Navigation Path & URL Syncing
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
-  const [isRegisterFlow, setIsRegisterFlow] = useState(false);
+  const [isRegisterFlow, setIsRegisterFlow] = useState(true);
   const [user, setUser] = useState<User | null>(() => DataStore.getCurrentUser());
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -148,11 +148,7 @@ export default function App() {
       if (active) {
         setUser(active);
       } else {
-        if (refCode) {
-          setIsRegisterFlow(true);
-        } else {
-          setIsRegisterFlow(false);
-        }
+        setIsRegisterFlow(true);
       }
     };
 
@@ -190,12 +186,12 @@ export default function App() {
   const handleLogout = () => {
     DataStore.saveCurrentUser(null);
     setUser(null);
-    setIsRegisterFlow(false);
+    setIsRegisterFlow(true);
     navigateTo('/');
   };
 
   const navigateToAuth = (isRegister: boolean) => {
-    setIsRegisterFlow(false);
+    setIsRegisterFlow(isRegister);
     setUser(null);
     navigateTo('/');
   };
@@ -203,11 +199,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-transparent font-sans tracking-tight leading-normal overflow-x-hidden select-none relative text-slate-900">
       
-      {/* Immersive White Dreampod background image for the entire site */}
+      {/* Immersive White Goldspeed background image for the entire site */}
       <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden select-none" id="site-global-brand-background">
         <img 
           src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=85" 
-          alt="Site Dreampod Background White" 
+          alt="Site Goldspeed Background White" 
           className="w-full h-full object-cover filter brightness-[1.05] contrast-[1.01]"
           referrerPolicy="no-referrer"
         />

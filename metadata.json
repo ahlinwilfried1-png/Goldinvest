@@ -1,6 +1,6 @@
 {
-  "name": "Dreampod",
-  "description": "Plateforme d'investissement technologique moderne, sécurisée et professionnelle avec tableau de bord premium, système de parrainage MLM et panneau d'administration pour écouteurs et produits audio connectés.",
+  "name": "Goldspeed",
+  "description": "Plateforme d'investissement aurifère et de gestion de fortune de premier plan, offrant des rendements stables et un système de parrainage MLM de pointe.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

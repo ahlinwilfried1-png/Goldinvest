@@ -538,6 +538,7 @@ export default function AdminPanel({
   const [editProductDailyReturn, setEditProductDailyReturn] = useState<number>(1000);
   const [editProductDuration, setEditProductDuration] = useState<number>(10);
   const [editProductTag, setEditProductTag] = useState<string>('');
+  const [editProductImageUrl, setEditProductImageUrl] = useState<string>('');
   const [editVipIsCyclic, setEditVipIsCyclic] = useState<boolean>(false);
   const [editVipGeneratedProductIds, setEditVipGeneratedProductIds] = useState<string[]>([]);
   const [editVipCategory, setEditVipCategory] = useState<'stability' | 'wellbeing' | 'activity'>('stability');
@@ -549,6 +550,7 @@ export default function AdminPanel({
   const [newVipDaily, setNewVipDaily] = useState(1000);
   const [newVipDuration, setNewVipDuration] = useState(10);
   const [newVipTag, setNewVipTag] = useState('');
+  const [newVipImageUrl, setNewVipImageUrl] = useState('');
   const [newVipIsCyclic, setNewVipIsCyclic] = useState<boolean>(false);
   const [newVipGeneratedProductIds, setNewVipGeneratedProductIds] = useState<string[]>([]);
   const [newVipCategory, setNewVipCategory] = useState<'stability' | 'wellbeing' | 'activity'>('stability');
@@ -873,7 +875,8 @@ export default function AdminPanel({
       isCyclic: newVipIsCyclic,
       generatedProductIds: newVipGeneratedProductIds,
       category: newVipCategory,
-      totalReturn: newVipDaily * newVipDuration
+      totalReturn: newVipDaily * newVipDuration,
+      imageUrl: newVipImageUrl || undefined
     };
 
     try {
@@ -896,6 +899,7 @@ export default function AdminPanel({
 
     setNewVipName('');
     setNewVipTag('');
+    setNewVipImageUrl('');
     setNewVipIsCyclic(false);
     setNewVipGeneratedProductIds([]);
     setNewVipCategory('stability');
@@ -950,6 +954,7 @@ export default function AdminPanel({
     setEditProductDailyReturn(product.dailyReturn);
     setEditProductDuration(product.durationDays);
     setEditProductTag(product.tag || '');
+    setEditProductImageUrl(product.imageUrl || '');
     setEditVipIsCyclic(product.isCyclic || false);
     setEditVipGeneratedProductIds(product.generatedProductIds || []);
     setEditVipCategory(product.category || 'stability');
@@ -967,7 +972,8 @@ export default function AdminPanel({
         isCyclic: editVipIsCyclic,
         generatedProductIds: editVipGeneratedProductIds,
         category: editVipCategory,
-        totalReturn: editProductDailyReturn * editProductDuration
+        totalReturn: editProductDailyReturn * editProductDuration,
+        imageUrl: editProductImageUrl || undefined
       };
 
       try {
@@ -1484,6 +1490,17 @@ export default function AdminPanel({
                   value={editProductTag}
                   onChange={(e) => setEditProductTag(e.target.value)}
                   placeholder="Ex: Populaire, Offre Spéciale"
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">URL de l'image du produit (Optionnel)</label>
+                <input
+                  type="text"
+                  value={editProductImageUrl}
+                  onChange={(e) => setEditProductImageUrl(e.target.value)}
+                  placeholder="Laisser vide pour utiliser l'image d'or par défaut"
                   className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
                 />
               </div>
@@ -2538,6 +2555,17 @@ export default function AdminPanel({
                   placeholder="Ex: Populaire, Offre Spéciale"
                   value={newVipTag}
                   onChange={(e) => setNewVipTag(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">URL de l'image du produit (Optionnel)</label>
+                <input
+                  type="text"
+                  placeholder="Laisser vide pour utiliser l'image d'or par défaut"
+                  value={newVipImageUrl}
+                  onChange={(e) => setNewVipImageUrl(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none"
                 />
               </div>

@@ -136,9 +136,64 @@ const cardVariants = {
   }
 };
 
-const getVipImage = (vipLevel: number) => {
-  // Ultra-premium white and purple-accented Dreampod image for all products
-  return 'https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=500';
+const getVipImage = (vipLevel: number, category?: string) => {
+  // Exclusively return 100% pure gold images (ingots, gold bars, coins) to match the user's request.
+  // ABSOLUTELY NO hands, charts, credit cards, jewelry, cosmetics, or crowns. Only pure gold.
+  
+  const goldCoins = 'https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=500'; // Pure shiny gold coins pile
+  const goldBarsStack = 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=500'; // Stacked pure gold bars
+  const goldSingleBar = 'https://images.unsplash.com/photo-1599690925058-90e1a0b41144?auto=format&fit=crop&q=80&w=500'; // Elegant single gold ingot
+  const goldBarsPile = 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=500'; // Array of multiple gold bars
+  const goldVault = 'https://images.unsplash.com/photo-1563013544-824ae1d704d3?auto=format&fit=crop&q=80&w=500'; // Massive gold bricks in bank vault
+  const goldBullionCloseUp = 'https://images.unsplash.com/photo-1614028674026-a65e31bfd27c?auto=format&fit=crop&q=80&w=500'; // Heavy reflective golden bullion close-up
+
+  if (category === 'activity') {
+    switch (vipLevel) {
+      case 1:
+        return goldCoins;
+      case 2:
+        return goldSingleBar;
+      case 3:
+        return goldBarsStack;
+      default:
+        return goldBarsPile;
+    }
+  } else if (category === 'wellbeing') {
+    switch (vipLevel) {
+      case 1:
+        return goldSingleBar;
+      case 2:
+        return goldBarsPile;
+      case 3:
+        return goldBullionCloseUp;
+      default:
+        return goldVault;
+    }
+  } else {
+    // Stability / fixed-income titles / default
+    switch (vipLevel) {
+      case 1:
+        return goldCoins;
+      case 2:
+        return goldSingleBar;
+      case 3:
+        return goldBarsStack;
+      case 4:
+        return goldBarsPile;
+      case 5:
+        return goldVault;
+      case 6:
+        return goldBullionCloseUp;
+      case 7:
+        return goldBarsStack;
+      case 8:
+        return goldVault;
+      case 9:
+        return goldBullionCloseUp;
+      default:
+        return goldBarsStack;
+    }
+  }
 };
 
 const getVipCropDetails = (level: number, category?: string) => {
@@ -146,23 +201,23 @@ const getVipCropDetails = (level: number, category?: string) => {
     switch (level) {
       case 1:
         return {
-          name: "Dreampod Activité 1 ⚡",
-          desc: "Package spécial court terme basé sur la revente rapide d'écouteurs de sport."
+          name: "Goldspeed Épargne Express ⚡",
+          desc: "Package spécial court terme basé sur la rotation de micro-lingots d'or."
         };
       case 2:
         return {
-          name: "Dreampod Activité 2 ⚡",
-          desc: "Package pro à rotation rapide avec des bénéfices accumulés quotidiennement."
+          name: "Goldspeed Rendement Éclair ⚡",
+          desc: "Plan promotionnel à rotation rapide avec intérêts crédités quotidiennement."
         };
       case 3:
         return {
-          name: "Dreampod Activité 3 ⚡",
-          desc: "Édition premium à haut rendement sur un cycle court et sécurisé."
+          name: "Goldspeed Option Flash Or ⚡",
+          desc: "Édition limitée à très haut rendement sur un cycle court et ultra-sécurisé."
         };
       default:
         return {
-          name: "Dreampod Activité Spéciale ⚡",
-          desc: "Édition spéciale pour booster vos revenus journaliers rapidement."
+          name: "Goldspeed Offre Spéciale ⚡",
+          desc: "Édition spéciale exclusive pour booster vos revenus journaliers de manière sécurisée."
         };
     }
   }
@@ -170,53 +225,53 @@ const getVipCropDetails = (level: number, category?: string) => {
   switch (level) {
     case 1:
       return {
-        name: "Dreampod 1 🎧",
-        desc: "Notre modèle d'entrée de gamme offrant un rendement journalier passif et stable."
+        name: "Goldspeed Lingot Classique 🪙",
+        desc: "Notre formule d'entrée de gamme offrant un rendement journalier passif, régulier et stable."
       };
     case 2:
       return {
-        name: "Dreampod 2 🎧",
-        desc: "Système audio de deuxième génération pour des revenus journaliers accrus."
+        name: "Goldspeed Lingot Bronze 🥉",
+        desc: "Deuxième niveau d'investissement aurifère pour des revenus journaliers plus solides."
       };
     case 3:
       return {
-        name: "Dreampod 3 🎧",
-        desc: "Équipement haut de gamme avec une rentabilité journalière optimisée."
+        name: "Goldspeed Lingot Argent 🥈",
+        desc: "Rendement journalier optimisé sur l'achat et la conservation de réserves d'or intermédiaire."
       };
     case 4:
       return {
-        name: "Dreampod 4 🎧",
-        desc: "Technologie avancée assurant des revenus très solides tout au long de l'année."
+        name: "Goldspeed Lingot Or Jaune 🥇",
+        desc: "Plan performant assurant des revenus très solides et réguliers sur l'or d'investissement."
       };
     case 5:
       return {
-        name: "Dreampod Pro 🎧",
-        desc: "Le fleuron professionnel idéal pour maximiser vos gains de manière constante."
+        name: "Goldspeed Pack Premium Gold 💎",
+        desc: "Le fleuron haut de gamme idéal pour maximiser vos gains sur des lingots purs de 100g."
       };
     case 6:
       return {
-        name: "Dreampod Pro 2 🎧",
-        desc: "Réduction de bruit active et profits décuplés au quotidien pour les membres Elite."
+        name: "Goldspeed Or d'Investissement 🛡️",
+        desc: "Plan à forte rentabilité soutenu par des coffres physiques assurés et un taux majoré."
       };
     case 7:
       return {
-        name: "Dreampod Max 🎧",
-        desc: "Le summum du luxe audio et de la performance financière sur la plateforme."
+        name: "Goldspeed Lingot d'Or Pur ✨",
+        desc: "Le summum du placement et de la performance financière pour les investisseurs VIP."
       };
     case 8:
       return {
-        name: "Dreampod Ultra 🎧",
-        desc: "L'équipement audio ultra-premium réservé aux investisseurs d'élite."
+        name: "Goldspeed Réserve Souveraine 🏛️",
+        desc: "Placement institutionnel de prestige à haut rendement réservé aux investisseurs majeurs."
       };
     case 9:
       return {
-        name: "Dreampod Élite 🎧",
-        desc: "Système audio suprême de prestige pour des gains journaliers spectaculaires."
+        name: "Goldspeed Trésor Impérial 👑",
+        desc: "Trésor de prestige ultime offrant des gains passifs spectaculaires et sécurisés."
       };
     default:
       return {
-        name: "Dreampod Élite 🎧",
-        desc: "Système audio suprême réservé aux investisseurs d'élite de la communauté."
+        name: "Goldspeed Trésor Impérial 👑",
+        desc: "Formule de prestige ultime réservée aux investisseurs d'élite de la communauté."
       };
   }
 };
@@ -224,22 +279,24 @@ const getVipCropDetails = (level: number, category?: string) => {
 const ProductImage = ({ 
   vipLevel, 
   alt, 
-  className = "w-full h-full object-cover",
+  className = "w-full h-full object-cover rounded-xl",
   isMini = false,
-  category
+  category,
+  imageUrl
 }: { 
   vipLevel: number; 
   alt: string; 
   className?: string;
   isMini?: boolean;
   category?: string;
+  imageUrl?: string;
 }) => {
   return (
-    <div className="w-full h-full bg-[#1b64d9] flex items-center justify-center overflow-hidden relative">
+    <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-amber-100 flex items-center justify-center overflow-hidden relative rounded-xl border border-amber-200 shadow-xs">
       <img
-        src={getVipImage(vipLevel)}
+        src={imageUrl || getVipImage(vipLevel, category)}
         alt={alt}
-        className={className}
+        className={`${className} transition-transform duration-500 hover:scale-110`}
         referrerPolicy="no-referrer"
       />
     </div>
@@ -283,36 +340,36 @@ export const WHEEL_REWARDS = [
   { amount: 50000, label: "50 000 F", color: "#ef4444" }  // red
 ];
 
-export const DREAMPOD_SLIDES = [
+export const GOLDSPEED_SLIDES = [
   {
     id: 'slide-1',
-    url: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=1000',
-    title: 'Dreampod Marbre Royal 💎',
-    desc: 'Cabine de flottaison haut de gamme dans un écrin de marbre noble.',
+    url: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=1000',
+    title: 'Goldspeed Lingot d\'Or Pur 💎',
+    desc: 'Bénéficiez de la sécurité absolue d\'un investissement aurifère de premier choix.',
   },
   {
     id: 'slide-2',
-    url: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&q=80&w=1000',
-    title: 'Dreampod Pavillon Zen 🌸',
-    desc: 'Sensation d\'isolation et détente profonde au cœur de la nature.',
+    url: 'https://images.unsplash.com/photo-1563013544-824ae1d704d3?auto=format&fit=crop&q=80&w=1000',
+    title: 'Goldspeed Coffre Sécurisé 🛡️',
+    desc: 'Votre capital est stocké physiquement dans des chambres fortes hautement gardées.',
   },
   {
     id: 'slide-3',
-    url: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=1000',
-    title: 'Dreampod Noir Astral 🌌',
-    desc: 'Voyage d\'introspection et réduction totale du stress quotidien.',
+    url: 'https://images.unsplash.com/photo-1599690925058-90e1a0b41144?auto=format&fit=crop&q=80&w=1000',
+    title: 'Goldspeed Rendement Garanti ✨',
+    desc: 'Un taux d\'intérêt quotidien stable et protégé contre l\'inflation mondiale.',
   },
   {
     id: 'slide-4',
-    url: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&q=80&w=1000',
-    title: 'Dreampod Duo Nuit Lumineuse 🌃',
-    desc: 'Deux cocons technologiques dôtés d\'une chromothérapie d\'exception.',
+    url: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=1000',
+    title: 'Goldspeed Réserve Souveraine 🏛️',
+    desc: 'Des obligations d\'or souveraines assurant un revenu passif pérenne.',
   },
   {
     id: 'slide-5',
-    url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=1000',
-    title: 'Dreampod Élite Cèdre Chaud 🪵',
-    desc: 'Un cocon de bien-être intimiste pour un ressourcement complet.',
+    url: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=1000',
+    title: 'Goldspeed Trésor Impérial 👑',
+    desc: 'Accédez à des opportunités d\'investissement exclusives réservées aux membres d\'élite.',
   }
 ];
 
@@ -409,7 +466,7 @@ export default function Dashboard({
     const interval = setInterval(() => {
       setCurrentSlide(prev => {
         if (slideDirection === 'forward') {
-          if (prev === DREAMPOD_SLIDES.length - 1) {
+          if (prev === GOLDSPEED_SLIDES.length - 1) {
             setSlideDirection('backward');
             return prev - 1;
           }
@@ -819,8 +876,8 @@ export default function Dashboard({
   const handleDownloadAndInstallApp = async () => {
     // 1. Trigger the direct APK download programmatically
     const link = document.createElement('a');
-    link.href = '/Dreampod_v2.6.apk';
-    link.download = 'Dreampod_v2.6.apk';
+    link.href = '/Goldspeed_v2.6.apk';
+    link.download = 'Goldspeed_v2.6.apk';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -843,7 +900,7 @@ export default function Dashboard({
     // 3. Show a clear, precise alert instruction explaining what to do next & handling install errors
     openAlert(
       "Téléchargement Lancé ! 📲",
-      "Le téléchargement de l'application 'Dreampod_v2.6.apk' a commencé ! Ouvrez le fichier téléchargé pour l'installer.\n\n⚠️ IMPORTANT : Si l'installation refuse ou dit 'Application non installée', désinstallez d'abord TOUTE ancienne version (comme l'application AgroProfit ou une version précédente de Dreampod) de votre téléphone, puis réessayez. Cela résout 100% des erreurs d'installation !",
+      "Le téléchargement de l'application 'Goldspeed_v2.6.apk' a commencé ! Ouvrez le fichier téléchargé pour l'installer.\n\n⚠️ IMPORTANT : Si l'installation refuse ou dit 'Application non installée', désinstallez d'abord TOUTE ancienne version (comme l'application Goldspeed ou AgroProfit) de votre téléphone, puis réessayez. Cela résout 100% des erreurs d'installation !",
       "success"
     );
   };
@@ -929,7 +986,7 @@ export default function Dashboard({
         openAlert('Activé avec succès 🎉', 'Vous recevrez désormais des alertes instantanées dans Chrome à chaque fois qu\'une recharge est approuvée, qu\'un gain tombe ou qu\'une annonce officielle de l\'administrateur est diffusée.', 'success');
         try {
           new Notification("Vous avez reçu une nouvelle notification", {
-            body: "Notifications de bureau Chrome activées sur Dreampod ! 🔔"
+            body: "Notifications de bureau Chrome activées sur Goldspeed ! 🔔"
           });
         } catch (e) {
           console.error(e);
@@ -2354,7 +2411,7 @@ export default function Dashboard({
                       Groupe WhatsApp Officiel
                     </h4>
                     <p className="text-[10.5px] text-emerald-600/80 font-bold leading-tight">
-                      Discutez directement avec d'autres membres et notre équipe d'assistance de Dreampod.
+                      Discutez directement avec d'autres membres et notre équipe d'assistance de Goldspeed.
                     </p>
                   </div>
                 </div>
@@ -2424,12 +2481,12 @@ export default function Dashboard({
             className="fixed top-0 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-sm bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 shadow-[0_20px_45px_rgba(0,0,0,0.30)] flex items-start gap-3 text-white cursor-pointer select-none"
             onClick={() => setCurrentLiveNotif(null)}
           >
-            <div className="p-2 bg-gradient-to-tr from-emerald-500 to-blue-600 rounded-xl shrink-0">
+            <div className="p-2 bg-gradient-to-tr from-emerald-500 to-amber-500 rounded-xl shrink-0">
               <Bell className="w-5 h-5 text-white stroke-[2.5]" />
             </div>
             <div className="flex-1 text-left min-w-0">
               <div className="flex justify-between items-center mb-0.5">
-                <span className="text-[10px] font-sans font-black uppercase text-blue-400 tracking-wider">Alerte Dreampod 🔔</span>
+                <span className="text-[10px] font-sans font-black uppercase text-yellow-500 tracking-wider">Alerte Goldspeed 🔔</span>
                 <span className="text-[8px] opacity-60 font-mono font-bold uppercase shrink-0">À l'instant</span>
               </div>
               <p className="text-[11.5px] font-bold text-slate-100 leading-snug break-words">
@@ -2740,15 +2797,15 @@ export default function Dashboard({
               </div>
 
               {/* GORGEOUS VIRTUAL CREDIT CARD SHOWING INFO */}
-              <div className="w-full h-44 rounded-2xl bg-gradient-to-br from-[#1b64d9] via-[#2575fc] to-[#f07b1b] p-5 text-white flex flex-col justify-between shadow-md relative overflow-hidden mb-5">
+              <div className="w-full h-44 rounded-2xl bg-gradient-to-br from-amber-600 via-yellow-500 to-slate-900 p-5 text-white flex flex-col justify-between shadow-md relative overflow-hidden mb-5">
                 {/* Microchip and MDB branding */}
                 <div className="flex justify-between items-start">
                   <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-black uppercase tracking-wider opacity-90">DREAMPOD INVESTMENT</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider opacity-90">GOLDSPEED INVESTMENT</span>
                     <span className="text-[7px] font-mono font-bold tracking-widest opacity-60">MEMBRE CERTIFIÉ</span>
                   </div>
                   <div className="w-16 h-8 rounded-md bg-white/20 flex items-center justify-center border border-white/20 px-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider">Dreampod</span>
+                    <span className="text-[9px] font-black uppercase tracking-wider">Goldspeed</span>
                   </div>
                 </div>
 
@@ -2966,7 +3023,7 @@ export default function Dashboard({
                       </div>
                       
                       <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                        Complétez des missions d'invitation simples pour débloquer des bonus de parrainage crédités instantanément sur votre compte ! Vos filleuls doivent être des investisseurs actifs (ayant acheté au moins un pack d'appareil Dreampod).
+                        Complétez des missions d'invitation simples pour débloquer des bonus de parrainage crédités instantanément sur votre compte ! Vos filleuls doivent être des investisseurs actifs (ayant acheté au moins un pack de produit d'or Goldspeed).
                       </p>
 
                       <div className="bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
@@ -3284,10 +3341,10 @@ export default function Dashboard({
                         </div>
                       </div>
                       
-                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Dreampod Investment S.A.</h3>
+                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Goldspeed Investment S.A.</h3>
                       
                       <p className="text-[11px] text-slate-400 font-bold leading-relaxed text-center">
-                        Dreampod Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
+                        Goldspeed Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
                       </p>
 
                       <div className="border-t border-slate-50 pt-4 space-y-3.5">
@@ -3489,7 +3546,7 @@ export default function Dashboard({
 
                         {/* Share to earn more spins */}
                         <p className="text-[10.5px] text-slate-500 font-bold leading-relaxed max-w-xs mx-auto pt-1">
-                          💡 Astuce : Invitez de nouveaux membres sur Dreampod pour obtenir des tickets de tirage supplémentaires !
+                          💡 Astuce : Invitez de nouveaux membres sur Goldspeed pour obtenir des tickets de tirage supplémentaires !
                         </p>
                       </div>
 
@@ -3534,23 +3591,32 @@ export default function Dashboard({
           {!profileSubPage && activeTab === 'dashboard' && (
             <div className="space-y-4 text-left animate-fadeIn">
 
-              {/* 1. ROCKY GOLD HERO BANNER */}
+              {/* 1. AUTO-PLAYING GOLD SLIDER CAROUSEL */}
               <div className="relative rounded-[32px] overflow-hidden aspect-[16/9] w-full shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-amber-500/25 bg-slate-950 flex flex-col justify-between p-5 text-left group">
-                {/* Visual Dreampod Product Asset Background */}
-                <img 
-                  src="https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=1000" 
-                  alt="Dreampod Smart Audio" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-45 mix-blend-lighten pointer-events-none select-none transition-transform duration-700 group-hover:scale-105 z-0"
-                  referrerPolicy="no-referrer"
-                />
+                {/* Visual Gold Asset Slide with AnimatePresence */}
+                <div className="absolute inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none">
+                  <AnimatePresence mode="popLayout">
+                    <motion.img 
+                      key={currentSlide}
+                      src={GOLDSPEED_SLIDES[currentSlide].url} 
+                      alt={GOLDSPEED_SLIDES[currentSlide].title} 
+                      initial={{ opacity: 0, scale: 1.05 }}
+                      animate={{ opacity: 0.75, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.8, ease: "easeInOut" }}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </AnimatePresence>
+                </div>
 
                 {/* Immersive gold gradient vein overlay */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/20 via-slate-950 to-slate-950 pointer-events-none" />
-                <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -top-12 -left-12 w-48 h-48 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/20 via-slate-950/70 to-slate-950 pointer-events-none z-10" />
+                <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-yellow-500/15 rounded-full blur-3xl pointer-events-none z-10" />
+                <div className="absolute -top-12 -left-12 w-48 h-48 bg-amber-600/15 rounded-full blur-3xl pointer-events-none z-10" />
                 
                 {/* Gold sparkle highlights */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent z-10 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/35 to-transparent z-15 pointer-events-none" />
                 
                 {/* Top content */}
                 <div className="relative z-20 flex justify-between items-start">
@@ -3558,21 +3624,35 @@ export default function Dashboard({
                     OFFICIEL • MEMBRE VIP
                   </span>
                   <div className="text-right">
-                    <span className="text-[9px] text-slate-450 font-sans font-black block leading-none uppercase tracking-wider">SOLDE ACTUEL</span>
+                    <span className="text-[9px] text-slate-400 font-sans font-black block leading-none uppercase tracking-wider">SOLDE ACTUEL</span>
                     <span className="text-base sm:text-lg font-sans font-black text-yellow-300 block mt-0.5 font-mono">
                       {userState.balance.toLocaleString()} F CFA
                     </span>
                   </div>
                 </div>
 
-                {/* Bottom Title & Tagline */}
-                <div className="relative z-20">
-                  <h1 className="text-3xl sm:text-4xl font-sans font-extrabold tracking-[0.1em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-500 uppercase leading-none drop-shadow-[0_2px_12px_rgba(245,158,11,0.25)]">
-                    DREAMPOD
+                {/* Bottom Title & Dynamic Slide Info */}
+                <div className="relative z-20 pr-12">
+                  <h1 className="text-xl sm:text-2xl font-sans font-extrabold tracking-[0.05em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-200 to-yellow-400 uppercase leading-tight drop-shadow-[0_2px_12px_rgba(245,158,11,0.25)]">
+                    {GOLDSPEED_SLIDES[currentSlide].title}
                   </h1>
-                  <p className="text-[9px] sm:text-[10px] font-sans font-bold tracking-[0.25em] text-amber-200/75 uppercase mt-1 pl-0.5 select-none leading-none">
-                    PREMIUM. AUDIOPHILE. FUTURE.
+                  <p className="text-[10px] sm:text-[11px] font-sans font-bold text-slate-200 uppercase mt-1 pl-0.5 select-none leading-tight">
+                    {GOLDSPEED_SLIDES[currentSlide].desc}
                   </p>
+                </div>
+
+                {/* Slide Indicators / Dots */}
+                <div className="absolute bottom-4 right-5 z-25 flex gap-1.5">
+                  {GOLDSPEED_SLIDES.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentSlide(idx);
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === currentSlide ? 'w-5 bg-yellow-400' : 'w-1.5 bg-white/40'}`}
+                    />
+                  ))}
                 </div>
               </div>
 
@@ -3783,10 +3863,10 @@ export default function Dashboard({
 
                         const getVipDisplayName = (prod: Product, defaultVipLevel: number) => {
                           if (prod.category === 'activity') {
-                            return `Dreampod Activité ${prod.vipLevel || defaultVipLevel}`;
+                            return `Goldspeed Activité ${prod.vipLevel || defaultVipLevel}`;
                           }
                           if (prod.category === 'wellbeing') {
-                            return `Dreampod Bien-être ${prod.vipLevel || defaultVipLevel}`;
+                            return `Goldspeed Bien-être ${prod.vipLevel || defaultVipLevel}`;
                           }
                           return `Titres à revenu fixe ${prod.vipLevel || defaultVipLevel}`;
                         };
@@ -3843,29 +3923,39 @@ export default function Dashboard({
                           >
                             {/* Card Content Top Row */}
                             <div>
-                              <div className="flex items-center gap-4 text-left">
-                                <div className={`w-16 h-16 rounded-2xl overflow-hidden shrink-0 p-1.5 flex items-center justify-center shadow-inner ${theme.imgBg}`}>
-                                  <ProductImage 
-                                    vipLevel={p.vipLevel || (index + 1)}
-                                    alt={displayName}
-                                    className="w-full h-full object-contain rounded-xl"
-                                    category={p.category}
-                                  />
+                              {/* Enlarged Gold Image with VIP level text written directly on it */}
+                              <div className="relative w-full h-40 rounded-2xl overflow-hidden mb-4 shadow-sm border border-amber-500/10 bg-slate-950 group">
+                                <ProductImage 
+                                  vipLevel={p.vipLevel || (index + 1)}
+                                  alt={displayName}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                  category={p.category}
+                                  imageUrl={p.imageUrl}
+                                />
+                                {/* Soft gradient overlay for text readability */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-black/35 pointer-events-none" />
+
+                                {/* VIP level badge written directly on the image */}
+                                <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-sans font-black text-[10px] px-2.5 py-1 rounded-xl uppercase tracking-wider shadow-md border border-yellow-200/50 flex items-center gap-1">
+                                  🏆 VIP {p.vipLevel || 0}
                                 </div>
-                                <div className="flex flex-col text-left">
-                                  <h4 className="font-sans font-black text-sm text-slate-850 leading-tight">
+
+                                {purchasedCount > 0 && (
+                                  <div className="absolute top-3 right-3 bg-emerald-500 text-white font-sans font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-wider shadow-md">
+                                    Actif ({purchasedCount})
+                                  </div>
+                                )}
+
+                                {/* Display name written directly on the image overlay */}
+                                <div className="absolute bottom-3 left-3 right-3 text-left">
+                                  <h4 className="font-sans font-black text-sm text-white drop-shadow-md leading-tight tracking-wide">
                                     {displayName}
                                   </h4>
-                                  <div className="mt-1">
-                                    <span className="inline-flex items-center gap-1 bg-[#fffbe6] border border-[#ffe58f] text-[#d4b106] text-[10px] font-sans font-black px-2 py-0.5 rounded-full shadow-xs uppercase">
-                                      🏆 VIP{p.vipLevel || 0}
-                                    </span>
-                                  </div>
                                 </div>
                               </div>
 
                               {/* Key-Value Details */}
-                              <div className="mt-5 space-y-2 text-left select-none border-t border-slate-100 pt-4">
+                              <div className="mt-2 space-y-2 text-left select-none border-t border-slate-100 pt-3">
                                 <div className="flex justify-between items-center text-xs">
                                   <span className={`${theme.statLabel} font-bold`}>Revenus Quotidiens</span>
                                   <span className={`${theme.statVal} font-black`}>{p.dailyReturn.toLocaleString()} {getCurrency()}</span>
@@ -4360,47 +4450,47 @@ export default function Dashboard({
 
           {/* WITHDRAW FORM TAB */}
           {!profileSubPage && activeTab === 'withdraw' && (
-            <div className="max-w-md mx-auto bg-[#eef3fc] border-0 p-4 md:p-5 rounded-2xl shadow-lg text-slate-800">
-              <div className="text-center mb-4">
-                <span className="text-[10px] font-black text-[#1b64d9] tracking-widest uppercase block mb-0.5">CASH OUT DETECTÉ</span>
-                <h3 className="text-lg font-display font-black text-slate-800 uppercase tracking-tight">Demande de Retrait</h3>
-                <p className="text-[11px] text-slate-500 font-bold mt-0.5">Saisissez vos paramètres de transfert de solde.</p>
+            <div className="max-w-xl mx-auto bg-white border border-slate-200 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800">
+              <div className="text-center mb-6">
+                <span className="text-xs md:text-sm font-black text-[#1b64d9] tracking-widest uppercase block mb-1">CASH OUT DETECTÉ</span>
+                <h3 className="text-xl md:text-2xl font-display font-black text-slate-800 uppercase tracking-tight">Demande de Retrait</h3>
+                <p className="text-sm text-slate-500 font-bold mt-1">Saisissez vos paramètres de transfert de solde.</p>
               </div>
 
               {(new Date().getHours() < 9 || new Date().getHours() >= 17) && (
-                <div className="mb-3 p-3 rounded-xl bg-amber-100 border border-amber-200 text-[10.5px] text-amber-850 font-black text-center uppercase tracking-wide flex flex-col gap-0.5 shadow-sm">
+                <div className="mb-4 p-4 rounded-xl bg-amber-100 border border-amber-200 text-xs md:text-sm text-amber-850 font-black text-center uppercase tracking-wide flex flex-col gap-1 shadow-sm">
                   <span>⚠️ SYSTÈME HORS PLAGE HORAIRE</span>
                   <span>Les retraits sont ouverts uniquement de 09h00 à 17h00 chaque jour.</span>
                 </div>
               )}
 
               {(DataStore.areWithdrawalsBlocked() || userState.withdrawBlocked) && (
-                <div className="mb-3 p-3 rounded-xl bg-blue-50 border border-blue-100 text-[10.5px] text-blue-900 font-black text-center uppercase tracking-wide flex flex-col gap-0.5 shadow-sm">
+                <div className="mb-4 p-4 rounded-xl bg-blue-50 border border-blue-100 text-xs md:text-sm text-blue-900 font-black text-center uppercase tracking-wide flex flex-col gap-1 shadow-sm">
                   <span>⚠️ RETRAITS SUSPENDUS TEMPORAIREMENT</span>
                   <span>Les retraits sont restreints sur votre compte.</span>
                 </div>
               )}
 
               {withdrawError && (
-                <div className="mb-3 p-2.5 rounded-xl bg-red-100 border border-red-200 text-xs text-red-700 font-bold">{withdrawError}</div>
+                <div className="mb-4 p-3.5 rounded-xl bg-red-100 border border-red-200 text-sm text-red-700 font-bold">{withdrawError}</div>
               )}
               {withdrawSuccess && (
-                <div className="mb-3 p-3 rounded-xl bg-green-100 border border-green-200 text-xs text-green-700 font-bold">{withdrawSuccess}</div>
+                <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-sm text-green-700 font-bold">{withdrawSuccess}</div>
               )}
 
-              <div className="mb-4 bg-white border-0 rounded-xl p-3 shadow-sm text-center">
-                <span className="text-slate-400 font-extrabold uppercase text-[9px] tracking-wide block">Solde Actuel Disponible :</span>
-                <div className="text-xl sm:text-2xl font-black text-[#00bd74] mt-0.5 solde-bold">{userState.balance.toLocaleString()} {getCurrency()}</div>
+              <div className="mb-6 bg-slate-50 border border-slate-100 rounded-2xl p-5 shadow-inner text-center">
+                <span className="text-slate-500 font-extrabold uppercase text-xs tracking-wider block">Solde Actuel Disponible :</span>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-black text-[#00bd74] mt-1.5 solde-bold">{userState.balance.toLocaleString()} {getCurrency()}</div>
               </div>
 
-              <form onSubmit={submitWithdrawal} className="space-y-3 text-left">
+              <form onSubmit={submitWithdrawal} className="space-y-5 text-left">
                 {/* Operator select */}
                 <div>
-                  <label className="block text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1">Opérateur de réception</label>
+                  <label className="block text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider mb-2">Opérateur de réception</label>
                   <select 
                     value={withdrawOperator}
                     onChange={(e) => setWithdrawOperator(e.target.value)}
-                    className="w-full bg-white border border-blue-50 rounded-xl py-2 px-3 text-xs text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm"
+                    className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#1b64d9] rounded-xl py-3 px-4 text-sm text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm transition-colors"
                   >
                     <optgroup label="Togo 🇹🇬">
                       <option value="T-Money (TG)">T-Money (TG)</option>
@@ -4446,64 +4536,64 @@ export default function Dashboard({
 
                 {/* Target phone number with WhatsApp placeholder */}
                 <div>
-                  <label className="block text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1">Numéro de téléphone de réception</label>
+                  <label className="block text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider mb-2">Numéro de téléphone de réception</label>
                   <input
                     type="tel"
                     required
                     placeholder="Ex: +228 90123456"
                     value={withdrawNumber}
                     onChange={(e) => setWithdrawNumber(e.target.value)}
-                    className="w-full bg-white border border-blue-50 rounded-xl py-2 px-3 text-xs text-slate-800 font-mono font-bold tracking-wider shadow-sm"
+                    className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#1b64d9] rounded-xl py-3 px-4 text-sm text-slate-800 font-mono font-bold tracking-wider shadow-sm transition-colors"
                   />
-                  <span className="text-[9px] text-slate-400 block mt-1 font-bold">Assurez-vous que le numéro est actif et lié à un compte Mobile Money.</span>
+                  <span className="text-xs text-slate-400 block mt-1.5 font-bold">Assurez-vous que le numéro est actif et lié à un compte Mobile Money.</span>
                 </div>
 
                 {/* Withdraw value */}
                 <div>
-                  <label className="block text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1">Montant à extraire ({getCurrency()})</label>
+                  <label className="block text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider mb-2">Montant à extraire ({getCurrency()})</label>
                   <input
                     type="number"
                     required
                     placeholder={`Montant à retirer en ${getCurrency()}`}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="w-full bg-white border border-blue-50 rounded-xl py-2 px-3 text-xs text-[#1b64d9] font-black focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#1b64d9] rounded-xl py-3 px-4 text-sm text-[#1b64d9] font-black focus:outline-none transition-colors"
                   />
                 </div>
 
                 {/* Real-time fee summary */}
                 {!isNaN(parseInt(withdrawAmount)) && parseInt(withdrawAmount) > 0 && (
-                  <div className="bg-[#fffdfb] p-2.5 rounded-xl border border-blue-50 text-[10.5px] font-bold text-slate-700 space-y-1 animate-fade-in shadow-sm">
-                    <span className="font-extrabold text-[#1b64d9] text-[9px] uppercase tracking-wider block">Calcul automatique (12% Frais) :</span>
-                    <div className="flex justify-between border-b border-slate-100/50 pb-0.5">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs md:text-sm font-bold text-slate-700 space-y-2 animate-fade-in shadow-sm">
+                    <span className="font-extrabold text-[#1b64d9] text-[11px] uppercase tracking-wider block">Calcul automatique (12% Frais) :</span>
+                    <div className="flex justify-between border-b border-slate-150 pb-1">
                       <span className="text-slate-500 font-semibold">Montant brut :</span>
                       <span className="font-mono">{parseInt(withdrawAmount).toLocaleString()} {getCurrency()}</span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-100/50 pb-0.5 text-red-500">
+                    <div className="flex justify-between border-b border-slate-150 pb-1 text-red-500">
                       <span className="font-semibold">Frais (12%) :</span>
                       <span className="font-mono">-{Math.round(parseInt(withdrawAmount) * 0.12).toLocaleString()} {getCurrency()}</span>
                     </div>
-                    <div className="pt-0.5 flex justify-between text-[#00bd74] text-[10.5px] font-black">
+                    <div className="pt-1 flex justify-between text-[#00bd74] text-sm md:text-base font-black">
                       <span>Montant net crédité :</span>
-                      <span className="text-xs font-mono">{Math.max(0, parseInt(withdrawAmount) - Math.round(parseInt(withdrawAmount) * 0.12)).toLocaleString()} {getCurrency()}</span>
+                      <span className="font-mono">{Math.max(0, parseInt(withdrawAmount) - Math.round(parseInt(withdrawAmount) * 0.12)).toLocaleString()} {getCurrency()}</span>
                     </div>
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 text-white font-sans font-black text-xs uppercase tracking-widest bg-gradient-to-r from-[#00bcff] to-[#0ea5e9] rounded-xl hover:opacity-95 transition-all shadow-md active:scale-95 text-center flex items-center justify-center"
+                  className="w-full py-4 text-white font-sans font-black text-sm uppercase tracking-widest bg-gradient-to-r from-[#00bcff] to-[#0ea5e9] rounded-xl hover:opacity-95 transition-all shadow-md active:scale-95 text-center flex items-center justify-center cursor-pointer border-none"
                 >
                   Envoyer la demande de Retrait
                 </button>
               </form>
 
               {/* RÈGLES ET CONDITIONS DE RETRAIT EN TIRÉ/BULLETS */}
-              <div className="mt-8 pt-6 border-t border-blue-50/70 text-slate-700/90 text-left">
-                <span className="text-[11px] font-black text-slate-800 uppercase tracking-widest block mb-3.5">
+              <div className="mt-8 pt-6 border-t border-slate-200 text-slate-700/90 text-left">
+                <span className="text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest block mb-4">
                   📋 CONDITIONS ET PARAMÈTRES DE RETRAIT
                 </span>
-                <ul className="space-y-2.5 text-xs font-bold leading-relaxed">
+                <ul className="space-y-3 text-xs md:text-sm font-bold leading-relaxed">
                   <li className="flex items-start gap-2.5">
                     <span className="text-[#1b64d9] font-black shrink-0 mt-0.5">•</span>
                     <span><strong>Disponibilité quotidienne :</strong> Les demandes de retrait peuvent être soumises tous les jours de la semaine sans exception.</span>
@@ -4551,7 +4641,7 @@ export default function Dashboard({
                     <div className="space-y-1">
                       <div className="inline-flex items-center space-x-2 bg-amber-500/15 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-                        <span>Dreampod Officiel</span>
+                        <span>Goldspeed Officiel</span>
                       </div>
                       <h2 className="text-xl sm:text-2xl font-sans font-black tracking-tight text-white uppercase leading-tight">
                         Avis &amp; Communiqués
@@ -4710,7 +4800,7 @@ export default function Dashboard({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 relative z-10">
                   <div className="space-y-1.5 flex-1">
                     <h2 className="text-2xl sm:text-3xl font-sans font-black tracking-tight leading-none text-white">
-                      Forum Dreampod
+                      Forum Goldspeed
                     </h2>
                     <p className="text-xs text-slate-300 font-medium max-w-lg">
                       Partagez vos astuces de minage d'or, vos objectifs, ou discutez en direct avec d'autres investisseurs de la communauté !
@@ -4738,7 +4828,7 @@ export default function Dashboard({
                       rows={3}
                       value={forumMessageInput}
                       onChange={(e) => setForumMessageInput(e.target.value)}
-                      placeholder="Partagez votre expérience ! (Ex: Dreampod est vraiment fiable, merci à l'équipe!)"
+                      placeholder="Partagez votre expérience ! (Ex: Goldspeed est vraiment fiable, merci à l'équipe!)"
                       maxLength={500}
                       className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/25 focus:border-[#1b64d9] transition-all resize-none shadow-xs"
                     />
@@ -5242,42 +5332,16 @@ export default function Dashboard({
                             </p>
                           </div>
                         ) : (
-                          <div className="space-y-3">
+                          <div className="space-y-2.5">
                             {level1Users.map(u => (
-                              <div key={u.id} className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-3 hover:border-slate-200 transition-colors">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[180px]">{u.name}</span>
-                                  <span className={`text-[8px] font-black font-mono px-2 py-0.5 rounded border uppercase tracking-wider ${
-                                    getUserInvestedAmount(u.id) > 0 
-                                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50' 
-                                      : 'bg-slate-100 text-slate-500 border-slate-200/50'
-                                  }`}>
-                                    {getUserInvestedAmount(u.id) > 0 ? 'Actif' : 'Inactif'}
-                                  </span>
+                              <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
+                                <div className="flex flex-col text-left">
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Numéro du filleul</span>
+                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{maskPhoneNumber(u.whatsapp || u.id)}</span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
-                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
-                                    <span className="text-slate-700 font-bold block mt-0.5">{maskPhoneNumber(u.whatsapp)}</span>
-                                  </div>
-                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
-                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Montant Investi</span>
-                                    <span className="text-emerald-600 font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
-                                  </div>
-                                </div>
-                                <div className="flex justify-between items-center text-[9px] text-slate-500 border-t border-slate-100 pt-2.5 font-bold">
-                                  <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
-                                  {u.whatsapp && (
-                                    <a 
-                                      href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer" 
-                                      className="text-emerald-600 font-black hover:underline flex items-center space-x-1"
-                                    >
-                                      <span>Contacter</span>
-                                      <span>💬</span>
-                                    </a>
-                                  )}
+                                <div className="flex flex-col text-right">
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
+                                  <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
                                 </div>
                               </div>
                             ))}
@@ -5293,45 +5357,19 @@ export default function Dashboard({
                             </p>
                           </div>
                         ) : (
-                          <div className="space-y-3">
-                            {level2Users.map(u => {
-                              const cleanRef = (u.referredBy || '').trim().toUpperCase();
-                              const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
-                              return (
-                                <div key={u.id} className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-3 hover:border-slate-200 transition-colors">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[180px]">{u.name}</span>
-                                    <span className="text-[9px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200/50">
-                                      Par: {sponsor ? sponsor.name : 'Membre N1'}
-                                    </span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                    <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
-                                      <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
-                                      <span className="text-slate-700 font-bold block mt-0.5">{maskPhoneNumber(u.whatsapp)}</span>
-                                    </div>
-                                    <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
-                                      <span className="text-slate-400 font-bold block text-[8px] uppercase">Montant Investi</span>
-                                      <span className="text-emerald-600 font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between items-center text-[9px] text-slate-500 border-t border-slate-100 pt-2.5 font-bold">
-                                    <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
-                                    {u.whatsapp && (
-                                      <a 
-                                        href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="text-emerald-600 font-black hover:underline flex items-center space-x-1"
-                                      >
-                                        <span>Contacter</span>
-                                        <span>💬</span>
-                                      </a>
-                                    )}
-                                  </div>
+                          <div className="space-y-2.5">
+                            {level2Users.map(u => (
+                              <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
+                                <div className="flex flex-col text-left">
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Numéro du filleul</span>
+                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{maskPhoneNumber(u.whatsapp || u.id)}</span>
                                 </div>
-                              );
-                            })}
+                                <div className="flex flex-col text-right">
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
+                                  <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )
                       )}
@@ -5344,45 +5382,19 @@ export default function Dashboard({
                             </p>
                           </div>
                         ) : (
-                          <div className="space-y-3">
-                            {level3Users.map(u => {
-                              const cleanRef = (u.referredBy || '').trim().toUpperCase();
-                              const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
-                              return (
-                                <div key={u.id} className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-3 hover:border-slate-200 transition-colors">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[180px]">{u.name}</span>
-                                    <span className="text-[9px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200/50">
-                                      Par: {sponsor ? sponsor.name : 'Membre N2'}
-                                    </span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                    <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
-                                      <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
-                                      <span className="text-slate-700 font-bold block mt-0.5">{maskPhoneNumber(u.whatsapp)}</span>
-                                    </div>
-                                    <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
-                                      <span className="text-slate-400 font-bold block text-[8px] uppercase">Montant Investi</span>
-                                      <span className="text-emerald-600 font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between items-center text-[9px] text-slate-500 border-t border-slate-100 pt-2.5 font-bold">
-                                    <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
-                                    {u.whatsapp && (
-                                      <a 
-                                        href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="text-emerald-600 font-black hover:underline flex items-center space-x-1"
-                                      >
-                                        <span>Contacter</span>
-                                        <span>💬</span>
-                                      </a>
-                                    )}
-                                  </div>
+                          <div className="space-y-2.5">
+                            {level3Users.map(u => (
+                              <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
+                                <div className="flex flex-col text-left">
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Numéro du filleul</span>
+                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{maskPhoneNumber(u.whatsapp || u.id)}</span>
                                 </div>
-                              );
-                            })}
+                                <div className="flex flex-col text-right">
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
+                                  <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )
                       )}
@@ -5397,7 +5409,7 @@ export default function Dashboard({
                     <div className="grid grid-cols-4 gap-2.5 font-sans">
                       {/* WhatsApp */}
                       <a 
-                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Dreampod et obtenez des rendements quotidiens exceptionnels ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Goldspeed et obtenez des rendements quotidiens exceptionnels ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex flex-col items-center justify-center p-3 bg-emerald-50 hover:bg-emerald-100/70 rounded-2xl transition-all text-emerald-600 border-none cursor-pointer"
@@ -5408,7 +5420,7 @@ export default function Dashboard({
 
                       {/* Telegram */}
                       <a 
-                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Dreampod et obtenez des rendements quotidiens exceptionnels !`)}`}
+                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Goldspeed et obtenez des rendements quotidiens exceptionnels !`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex flex-col items-center justify-center p-3 bg-sky-50 hover:bg-sky-100/70 rounded-2xl transition-all text-sky-600 border-none cursor-pointer"
@@ -5683,10 +5695,10 @@ export default function Dashboard({
                         </div>
                       </div>
                       
-                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Dreampod Investment S.A.</h3>
+                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Goldspeed Investment S.A.</h3>
                       
                       <p className="text-[11px] text-slate-400 font-bold leading-relaxed text-center">
-                        Dreampod Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
+                        Goldspeed Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
                       </p>
 
                       <div className="border-t border-slate-50 pt-4 space-y-3.5">
@@ -5793,12 +5805,12 @@ export default function Dashboard({
                     </div>
                   </div>
 
-                  {/* DREAMPOD PROFILE IMAGE SHOWCASE */}
+                  {/* GOLDSPEED PROFILE IMAGE SHOWCASE */}
                   <div id="profile-dreampod-showcase" className="bg-white rounded-3xl overflow-hidden shadow-xs border border-slate-100 relative group">
                     <div className="relative h-48 w-full bg-slate-900">
                       <img
-                        src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=800"
-                        alt="Dreampod Cabine de Flottaison"
+                        src="https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=800"
+                        alt="Goldspeed Lingot d'Or Pur"
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         referrerPolicy="no-referrer"
                       />
@@ -5807,21 +5819,21 @@ export default function Dashboard({
                       
                       {/* Glowing indicator */}
                       <span className="absolute top-3 left-3 flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7c3aed] opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7c3aed]"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                       </span>
 
                       <div className="absolute bottom-4 left-4 right-4 text-white text-left">
-                        <span className="text-[8px] text-purple-300 font-black uppercase tracking-widest block mb-0.5">ÉQUIPEMENT DE BIEN-ÊTRE DE POINTE</span>
+                        <span className="text-[8px] text-yellow-300 font-black uppercase tracking-widest block mb-0.5">OR PUR ET INVESTISSEMENTS SÉCURISÉS</span>
                         <h4 className="text-sm font-black uppercase tracking-wide text-white drop-shadow-md">
-                          💎 Dreampod Cocon Sommeil &amp; Méditation
+                          💎 Goldspeed Lingot d'Or Pur &amp; Placement
                         </h4>
                         <p className="text-[10px] text-slate-300 font-semibold mt-1 leading-normal drop-shadow-sm">
-                          Isolation sensorielle absolue et flottaison pour une réduction instantanée du stress et un ressourcement en profondeur.
+                          Rendements passifs et garantis grâce à l'investissement aurifère hautement sécurisé au Togo.
                         </p>
                       </div>
                       
-                      <div className="absolute top-3 right-3 bg-purple-600/95 text-white font-black text-[8px] tracking-wider uppercase px-2.5 py-1 rounded-full backdrop-blur-md border border-purple-400/20">
+                      <div className="absolute top-3 right-3 bg-amber-600/95 text-white font-black text-[8px] tracking-wider uppercase px-2.5 py-1 rounded-full backdrop-blur-md border border-amber-400/20">
                         🌟 Partenaire Officiel
                       </div>
                     </div>
@@ -6280,7 +6292,7 @@ export default function Dashboard({
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border border-slate-900 animate-pulse"></span>
                   </div>
                   <div>
-                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support Dreampod</h4>
+                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support Goldspeed</h4>
                     <span className="text-[9px] font-bold text-slate-100/90 block mt-1 uppercase tracking-wide">Réponse sous 2H maximum</span>
                   </div>
                 </div>
@@ -6305,7 +6317,7 @@ export default function Dashboard({
                         Discuter en ligne !
                       </h5>
                       <p className="text-[11px] text-slate-500 font-semibold max-w-[240px] leading-relaxed mx-auto">
-                        Écrivez votre message ci-dessous. Un conseiller Dreampod vous répondra directement ici.
+                        Écrivez votre message ci-dessous. Un conseiller Goldspeed vous répondra directement ici.
                       </p>
                     </div>
                   </div>
@@ -6575,7 +6587,7 @@ export default function Dashboard({
                       À Propos de Nous
                     </h3>
                     <p className="text-[9px] text-[#ea580c] font-black uppercase tracking-wider font-mono">
-                      Fonctionnement Dreampod
+                      Fonctionnement Goldspeed
                     </p>
                   </div>
                 </div>
@@ -6595,7 +6607,7 @@ export default function Dashboard({
                 <div className="space-y-2">
                   <span className="text-[10px] sm:text-xs font-black text-[#1b64d9] block uppercase tracking-widest">PROPULSER LE COMMERCE TECHNOLOGIQUE EN AFRIQUE 🎧</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-600 font-medium">
-                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Dreampod</strong> est la première interface d'investissement technologique en ligne conçue pour démocratiser la distribution de systèmes audio haut de gamme modernes au Togo. Nous canalisons votre épargne vers des stocks réels d'écouteurs et de pods intelligents connectés de dernière génération afin de générer pour vous des profits stables de manière continue.
+                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Goldspeed</strong> est la première interface d'investissement technologique en ligne conçue pour démocratiser la distribution de systèmes audio haut de gamme modernes au Togo. Nous canalisons votre épargne vers des stocks réels d'écouteurs et de pods intelligents connectés de dernière génération afin de générer pour vous des profits stables de manière continue.
                   </p>
                 </div>
 
@@ -6661,7 +6673,7 @@ export default function Dashboard({
                           Retraits Automatisés Instantanés vers votre Mobile Money
                         </h5>
                         <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
-                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. Dreampod valide les flux financiers intelligemment pour créditer votre compte sans délai !
+                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. Goldspeed valide les flux financiers intelligemment pour créditer votre compte sans délai !
                         </p>
                       </div>
                     </div>
@@ -6698,7 +6710,7 @@ export default function Dashboard({
               
               {/* Footer */}
               <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between">
-                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Dreampod &copy; 2026. Tous droits réservés.</span>
+                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Goldspeed &copy; 2026. Tous droits réservés.</span>
                 <button 
                   onClick={() => setIsAboutModalOpen(false)}
                   className="px-5 py-2.5 bg-gradient-to-r from-[#1b64d9] to-orange-600 hover:opacity-95 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
@@ -6824,7 +6836,7 @@ export default function Dashboard({
                             Ajouter à l'Écran d'Accueil Maintenant
                           </button>
                           <p className="text-[9px] text-slate-400 text-center font-medium">
-                            En un clic, l'icône Dreampod sera ajoutée à votre écran.
+                            En un clic, l'icône Goldspeed sera ajoutée à votre écran.
                           </p>
                         </div>
                       ) : (
@@ -6859,7 +6871,7 @@ export default function Dashboard({
                           <div className="flex gap-3 items-start bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
                             <span className="text-sm">✨</span>
                             <p className="text-[10.5px] font-bold text-emerald-300 leading-relaxed">
-                              Félicitations ! L'application s'installe en arrière-plan. Vous trouverez l'icône Dreampod sur votre écran d'accueil avec vos autres applications.
+                              Félicitations ! L'application s'installe en arrière-plan. Vous trouverez l'icône Goldspeed sur votre écran d'accueil avec vos autres applications.
                             </p>
                           </div>
                         </div>
@@ -6877,14 +6889,14 @@ export default function Dashboard({
                       <button 
                         onClick={() => {
                           const link = document.createElement('a');
-                          link.href = '/Dreampod_v2.6.apk';
-                          link.download = 'Dreampod_v2.6.apk';
+                          link.href = '/Goldspeed_v2.6.apk';
+                          link.download = 'Goldspeed_v2.6.apk';
                           document.body.appendChild(link);
                           link.click();
                           document.body.removeChild(link);
                           openAlert(
                             "Téléchargement APK !",
-                            "Le téléchargement de l'APK Dreampod a commencé. N'oubliez pas de désinstaller les anciennes versions de votre téléphone avant d'installer ce fichier !",
+                            "Le téléchargement de l'APK Goldspeed a commencé. N'oubliez pas de désinstaller les anciennes versions de votre téléphone avant d'installer ce fichier !",
                             "success"
                           );
                         }}
@@ -6894,7 +6906,7 @@ export default function Dashboard({
                         Télécharger le Fichier APK (Direct)
                       </button>
                       <p className="text-[9px] text-slate-500 leading-tight">
-                        ⚠️ <strong className="text-amber-400">Rappel :</strong> Pour éviter l'erreur de package ou l'échec de l'installation, supprimez l'ancienne application <strong className="text-yellow-400">"AgroProfit"</strong> ou <strong className="text-yellow-400">"Dreampod"</strong> de votre appareil au préalable.
+                        ⚠️ <strong className="text-amber-400">Rappel :</strong> Pour éviter l'erreur de package ou l'échec de l'installation, supprimez l'ancienne application <strong className="text-yellow-400">"AgroProfit"</strong> ou <strong className="text-yellow-400">"Goldspeed"</strong> de votre appareil au préalable.
                       </p>
                     </div>
                   </div>
@@ -6951,7 +6963,7 @@ export default function Dashboard({
                         <div className="flex gap-3 items-start bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
                           <span className="text-sm">✨</span>
                           <p className="text-[10.5px] font-bold text-emerald-300 leading-relaxed">
-                            Terminé ! L'application Dreampod s'affiche sur l'écran d'accueil de votre iPhone. Ouvrez-la pour vous connecter normalement et en toute sécurité.
+                            Terminé ! L'application Goldspeed s'affiche sur l'écran d'accueil de votre iPhone. Ouvrez-la pour vous connecter normalement et en toute sécurité.
                           </p>
                         </div>
                       </div>
@@ -6963,7 +6975,7 @@ export default function Dashboard({
               
               {/* Footer */}
               <div className="border-t border-slate-800 pt-4 mt-4 flex items-center justify-between">
-                <span className="text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">Dreampod © 2026</span>
+                <span className="text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">Goldspeed © 2026</span>
                 <button 
                   onClick={() => setIsInstallModalOpen(false)}
                   className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer border border-slate-700"

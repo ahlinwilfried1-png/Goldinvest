@@ -43,7 +43,7 @@ interface AuthProps {
 }
 
 export default function Auth({ 
-  initialIsRegister = false, 
+  initialIsRegister = true, 
   onAuthSuccess, 
   onBackToHome 
 }: AuthProps) {
@@ -324,12 +324,12 @@ export default function Auth({
         
         <div className="w-full flex flex-col justify-center shrink-0">
           
-          {/* Centered Dreampod Bold Blue/Yellow Stylized Logo */}
+          {/* Centered Goldspeed Bold Golden Stylized Logo */}
           <div className="flex flex-col items-center mb-6 animate-fade-in select-none">
             <div 
-              className="text-[40px] md:text-[48px] font-sans font-black italic tracking-tighter text-[#0b5cd5] leading-none select-none drop-shadow-sm"
+              className="text-[40px] md:text-[48px] font-sans font-black italic tracking-tighter text-[#d97706] leading-none select-none drop-shadow-sm"
             >
-              Dreampod
+              Goldspeed
             </div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Placement Sécurisé</span>
           </div>
@@ -359,7 +359,27 @@ export default function Auth({
           {successMessage && (
             <div className="mb-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-xs text-emerald-800 font-bold flex items-start space-x-2 animate-fade-in">
               <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <span>{successMessage}</span>
+              <div className="flex-1">
+                {sentOtpCode && successMessage.includes(sentOtpCode) ? (
+                  <span>
+                    🔑 CODE OTP ENVOYÉ : Saisissez le code{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtpCode(sentOtpCode);
+                        setSuccessMessage("🔑 Code OTP rempli automatiquement dans le cadre !");
+                      }}
+                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-sans font-black px-2.5 py-1 rounded-md cursor-pointer transition-colors mx-1 inline-block animate-pulse border border-emerald-300 shadow-sm"
+                      title="Cliquez pour insérer automatiquement le code"
+                    >
+                      {sentOtpCode}
+                    </button>{" "}
+                    (Cliquez sur le code pour le remplir automatiquement)
+                  </span>
+                ) : (
+                  <span>{successMessage}</span>
+                )}
+              </div>
             </div>
           )}
 
@@ -618,7 +638,7 @@ export default function Auth({
       {/* Footer Branding label */}
       <div className="w-full text-center relative z-10 py-2 shrink-0">
         <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest drop-shadow-xs">
-          Dreampod • Système de Placement Sécurisé
+          Goldspeed • Système de Placement Sécurisé
         </p>
       </div>
 
@@ -630,7 +650,7 @@ export default function Auth({
           className="w-16 h-16 rounded-full bg-white shadow-2xl border-2 border-white flex items-center justify-center p-0.5 cursor-pointer hover:scale-105 active:scale-95 transition-all relative group"
         >
           <img 
-            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150" 
+            src="https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=150" 
             alt="Service Client"
             className="w-full h-full rounded-full object-cover"
           />
@@ -704,13 +724,13 @@ export default function Auth({
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 border border-slate-200 relative shrink-0">
                 <img 
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150" 
+                  src="https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=150" 
                   alt="Service Client"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900 leading-none">Support Client Dreampod</h3>
+                <h3 className="text-base font-black text-slate-900 leading-none">Support Client Goldspeed</h3>
                 <span className="text-xs text-emerald-600 font-bold flex items-center gap-1 mt-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                   Conseillers disponibles en continu

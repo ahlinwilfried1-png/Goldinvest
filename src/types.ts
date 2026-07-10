@@ -55,6 +55,7 @@ export interface Product {
   durationDays: number;
   totalReturn: number;
   tag?: string;
+  imageUrl?: string;
   isBlocked?: boolean;
   reopenDateTime?: string;
   isCyclic?: boolean;
