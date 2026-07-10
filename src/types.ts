@@ -59,7 +59,7 @@ export interface Product {
   reopenDateTime?: string;
   isCyclic?: boolean;
   generatedProductIds?: string[];
-  category?: 'stability' | 'activity';
+  category?: 'stability' | 'wellbeing' | 'activity';
   lastModified?: number;
 }
 
@@ -75,7 +75,7 @@ export interface Investment {
   totalReturnClaimed: number;
   lastClaimDate: string; // ISO string or short date
   status: 'active' | 'completed';
-  category?: 'stability' | 'activity' | string;
+  category?: 'stability' | 'wellbeing' | 'activity' | string;
   createdAt: string;
   lastModified?: number;
 }

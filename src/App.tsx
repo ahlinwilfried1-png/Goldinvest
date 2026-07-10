@@ -8,7 +8,7 @@ import { DataStore, syncWithBackend, safeLocalStorage } from './dataStore';
 export default function App() {
   // Navigation Path & URL Syncing
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
-  const [isRegisterFlow, setIsRegisterFlow] = useState(true);
+  const [isRegisterFlow, setIsRegisterFlow] = useState(false);
   const [user, setUser] = useState<User | null>(() => DataStore.getCurrentUser());
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -148,7 +148,11 @@ export default function App() {
       if (active) {
         setUser(active);
       } else {
-        setIsRegisterFlow(true);
+        if (refCode) {
+          setIsRegisterFlow(true);
+        } else {
+          setIsRegisterFlow(false);
+        }
       }
     };
 
@@ -186,12 +190,12 @@ export default function App() {
   const handleLogout = () => {
     DataStore.saveCurrentUser(null);
     setUser(null);
-    setIsRegisterFlow(true);
+    setIsRegisterFlow(false);
     navigateTo('/');
   };
 
   const navigateToAuth = (isRegister: boolean) => {
-    setIsRegisterFlow(isRegister);
+    setIsRegisterFlow(false);
     setUser(null);
     navigateTo('/');
   };

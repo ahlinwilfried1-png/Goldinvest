@@ -11,10 +11,14 @@ import {
   ArrowUpCircle,
   Bell, 
   User as UserIcon, 
+  Home,
+  Heart,
+  Zap,
   Copy, 
   Check, 
   MessageSquare, 
   Gift, 
+  Trophy,
   LogOut, 
   Settings, 
   Activity, 
@@ -40,6 +44,7 @@ import {
   Megaphone,
   Share,
   Camera,
+  Wallet,
   ThumbsUp,
   Trash2,
   RefreshCw,
@@ -100,6 +105,13 @@ const compressImage = (file: File, maxWidth: number = 500, quality: number = 0.4
       resolve('');
     };
   });
+};
+
+const maskPhoneNumber = (num: string) => {
+  if (!num) return 'Aucun';
+  const clean = num.replace(/\s/g, '');
+  if (clean.length <= 6) return clean;
+  return clean.slice(0, 3) + '••••' + clean.slice(-3);
 };
 
 const containerVariants = {
@@ -327,10 +339,10 @@ export default function Dashboard({
   onRefreshUser,
   onNavigate
 }: DashboardProps) {
-  // Navigation tabs: 'dashboard', 'products', 'team', 'profile', 'deposit', 'withdraw'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'team' | 'profile' | 'deposit' | 'withdraw'>('dashboard');
+  // Navigation tabs: 'dashboard', 'products', 'team', 'profile', 'deposit', 'withdraw', 'proofs', 'forum'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'team' | 'profile' | 'deposit' | 'withdraw' | 'proofs' | 'forum'>('dashboard');
   const [referralListTab, setReferralListTab] = useState<'level1' | 'level2' | 'level3'>('level1');
-  const [productSubTab, setProductSubTab] = useState<'fixe1' | 'fixe2' | 'fixe3' | 'activity'>('fixe1');
+  const [productSubTab, setProductSubTab] = useState<'stability' | 'wellbeing' | 'activity'>('stability');
 
   // Local lists
   const [userState, setUserState] = useState<User>(currentUser);
@@ -357,9 +369,38 @@ export default function Dashboard({
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>([]);
   const [withdrawalProofs, setWithdrawalProofs] = useState<WithdrawalProof[]>([]);
+  const [selectedAvisImage, setSelectedAvisImage] = useState<string | null>(null);
   const [bannerImageError, setBannerImageError] = useState<boolean>(false);
   const [showStabilityOrders, setShowStabilityOrders] = useState<boolean>(false);
   const [showActivityOrders, setShowActivityOrders] = useState<boolean>(false);
+  const [showMissionsList, setShowMissionsList] = useState<boolean>(false);
+
+  // Wheel of Fortune state variables
+  const [isWheelModalOpen, setIsWheelModalOpen] = useState<boolean>(false);
+  const [isSpinning, setIsSpinning] = useState<boolean>(false);
+  const [wheelSpinAngle, setWheelSpinAngle] = useState<number>(0);
+  const [wonReward, setWonReward] = useState<any>(null);
+  const [wheelSpinCount, setWheelSpinCount] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem('gi_wheel_spins_v3');
+      return stored ? parseInt(stored) : 2;
+    } catch (e) {
+      return 2;
+    }
+  });
+
+  // Forum state variables
+  const [forumPosts, setForumPosts] = useState<any[]>(() => {
+    try {
+      const stored = localStorage.getItem('rockygold_forum_posts_v3');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  });
+  const [forumMessageInput, setForumMessageInput] = useState<string>('');
+  const [forumCommentInputs, setForumCommentInputs] = useState<Record<string, string>>({});
+  const [forumImage1, setForumImage1] = useState<string | null>(null);
+  const [forumImage2, setForumImage2] = useState<string | null>(null);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'forward' | 'backward'>('forward');
@@ -1155,7 +1196,7 @@ export default function Dashboard({
         amount: wth.amount,
         type: 'Retrait',
         status: mappedStatus,
-        details: `Retrait Mobile Money (${wth.operator}) vers ${wth.number}`,
+        details: `Retrait Mobile Money (${wth.operator}) vers ${maskPhoneNumber(wth.number)}`,
         rawDate: new Date(wth.createdAt)
       });
     });
@@ -1455,6 +1496,59 @@ export default function Dashboard({
     }
   };
 
+  const handleSpinWheel = () => {
+    if (isSpinning) return;
+    if (wheelSpinCount <= 0) {
+      triggerToast("Oups ! Vous n'avez plus de tirages disponibles. Invitez des filleuls pour en gagner !", "error");
+      return;
+    }
+
+    setIsSpinning(true);
+    setWonReward(null);
+
+    const randomIndex = Math.floor(Math.random() * WHEEL_REWARDS.length);
+    const selected = WHEEL_REWARDS[randomIndex];
+
+    const segmentAngle = 360 / WHEEL_REWARDS.length;
+    // Calculate final spin rotation (multiple full spins + segment target)
+    const targetAngle = 3600 - (randomIndex * segmentAngle) - (segmentAngle / 2);
+    setWheelSpinAngle(targetAngle);
+
+    setTimeout(() => {
+      setIsSpinning(false);
+      setWonReward(selected);
+      setWheelSpinCount(prev => {
+        const next = Math.max(0, prev - 1);
+        try { localStorage.setItem('gi_wheel_spins_v3', next.toString()); } catch (e) {}
+        return next;
+      });
+
+      const rewardAmt = selected.amount;
+      const updatedUser = {
+        ...userState,
+        balance: userState.balance + rewardAmt,
+        totalEarnings: (userState.totalEarnings || 0) + rewardAmt
+      };
+      
+      DataStore.saveCurrentUser(updatedUser);
+      syncDashboardData();
+      syncWithBackend();
+
+      const newNotif = {
+        id: 'wheel-win-' + Date.now(),
+        userId: userState.id,
+        title: "Gain à la Roue de la chance 🎡",
+        message: `Félicitations ! Vous avez gagné ${rewardAmt.toLocaleString()} F CFA au tirage au sort !`,
+        type: 'reward' as const,
+        createdAt: new Date().toISOString(),
+        isRead: false
+      };
+      setNotifications(prev => [newNotif, ...prev]);
+
+      triggerToast(`Félicitations ! Vous avez gagné +${rewardAmt.toLocaleString()} F CFA !`, "success");
+    }, 4500);
+  };
+
   // Claim specific investment return simulation (Click pay)
   const handleClaimReturn = async (invId: string) => {
     const res = await DataStore.claimInvestmentReturn(userState.id, invId);
@@ -1464,6 +1558,114 @@ export default function Dashboard({
     } else {
       openAlert('Erreur', res.message, 'error');
     }
+  };
+
+  // Forum actions
+  const handlePostForumMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forumMessageInput.trim()) {
+      triggerToast("⚠️ Veuillez saisir un message ou commentaire.", "error");
+      return;
+    }
+
+    const newPost = {
+      id: 'f-user-' + Date.now(),
+      authorName: (userState.name || 'Membre') + ' ' + (userState.country === 'Cameroun' ? '🇨🇲' : userState.country === 'Togo' ? '🇹🇬' : userState.country === 'Bénin' ? '🇧🇯' : userState.country === 'Côte d’Ivoire' ? '🇨🇮' : userState.country === 'Burkina Faso' ? '🇧🇫' : userState.country === 'Sénégal' ? '🇸🇳' : userState.country === 'Mali' ? '🇲🇱' : '🌍'),
+      avatarLetter: (userState.name || 'M').charAt(0).toUpperCase(),
+      text: forumMessageInput,
+      image1: forumImage1 || undefined,
+      image2: forumImage2 || undefined,
+      likes: 0,
+      hasLiked: false,
+      createdAt: new Date().toISOString(),
+      comments: []
+    };
+
+    const updated = [newPost, ...forumPosts];
+    setForumPosts(updated);
+    setForumMessageInput('');
+    setForumImage1(null);
+    setForumImage2(null);
+    try {
+      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(updated));
+    } catch (err) {}
+    triggerToast("Votre message a été publié sur le Forum !", "success");
+  };
+
+  const handleLikeForumPost = (postId: string) => {
+    const updated = forumPosts.map(p => {
+      if (p.id === postId) {
+        return {
+          ...p,
+          likes: p.hasLiked ? p.likes - 1 : p.likes + 1,
+          hasLiked: !p.hasLiked
+        };
+      }
+      return p;
+    });
+    setForumPosts(updated);
+    try {
+      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(updated));
+    } catch (err) {}
+  };
+
+  const handlePostForumComment = (postId: string) => {
+    const commentText = forumCommentInputs[postId] || '';
+    if (!commentText.trim()) return;
+
+    const updated = forumPosts.map(p => {
+      if (p.id === postId) {
+        return {
+          ...p,
+          comments: [
+            ...(p.comments || []),
+            { author: userState.name || 'Membre', text: commentText }
+          ]
+        };
+      }
+      return p;
+    });
+
+    setForumPosts(updated);
+    setForumCommentInputs(prev => ({ ...prev, [postId]: '' }));
+    try {
+      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(updated));
+    } catch (err) {}
+    triggerToast("Commentaire ajouté !", "success");
+  };
+
+  const handleClaimMission = (missionId: string, reward: number, target: number) => {
+    const directReferrals = level1Users;
+    const allInvs = DataStore.getInvestments() || [];
+    const investedReferralCount = directReferrals.filter(u => allInvs.some(inv => inv.userId === u.id)).length;
+    const claimed = (userState as any).claimedMissions || [];
+
+    if (investedReferralCount < target) return;
+    if (claimed.includes(missionId)) return;
+
+    const newBalance = userState.balance + reward;
+    const newClaimed = [...claimed, missionId];
+
+    const updatedUser: User = {
+      ...userState,
+      balance: newBalance,
+      claimedMissions: newClaimed as any
+    };
+
+    DataStore.saveCurrentUser(updatedUser);
+    const allUsers = DataStore.getUsers();
+    const idx = allUsers.findIndex(u => u.id === updatedUser.id);
+    if (idx !== -1) {
+      allUsers[idx] = updatedUser;
+      DataStore.saveUsers(allUsers);
+    }
+
+    setUserState(updatedUser);
+    if (onRefreshUser) {
+      onRefreshUser(updatedUser);
+    }
+
+    triggerToast(`Félicitations ! Votre bonus de +${reward.toLocaleString()} FCFA a été ajouté à votre solde ! 🎯`, "success");
   };
 
   // Deposit events
@@ -1986,6 +2188,10 @@ export default function Dashboard({
   // Submit withdrawal proof
   const handlePublishProof = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (userState.role !== 'admin') {
+      triggerToast("⚠️ Seul l'administrateur peut publier sur la page Avis.", 'error');
+      return;
+    }
     if (!proofAmount.trim() || !proofMessage.trim()) {
       triggerToast('⚠️ Veuillez remplir le montant et votre message.', 'error');
       return;
@@ -2128,119 +2334,62 @@ export default function Dashboard({
             {/* Title */}
             <div className="flex items-center space-x-2.5 mb-4 border-b border-slate-100 pb-3">
               <div className="w-8 h-8 rounded-lg bg-[#1b64d9] flex items-center justify-center text-white text-base shadow-md">
-                <span>🎉</span>
+                <span>📢</span>
               </div>
               <div>
-                <h3 className="text-sm font-sans font-black text-slate-900 uppercase tracking-wider">Inscription Réussie !</h3>
-                <p className="text-[10px] text-slate-500 font-bold">Vos informations de départ :</p>
+                <h3 className="text-sm font-sans font-black text-slate-900 uppercase tracking-wider">Rejoignez la Communauté</h3>
+                <p className="text-[10px] text-slate-500 font-bold">Ne manquez aucune information importante :</p>
               </div>
             </div>
 
-            <div className="space-y-3 text-[11px]">
-              {/* Stats pillar con UN COMMUNIQUÉ EN ÉCRITURE BLANCHE de design moderne */}
-              <div className="space-y-2 bg-gradient-to-br from-[#1b64d9] to-[#044ab0] p-4 rounded-xl text-white shadow-md border border-[#1b64d9]/10">
-                <div className="flex items-start space-x-2">
-                  <span className="text-xs select-none">🌍</span>
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="font-bold text-white/95">Pays :</span>
-                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Togo 🇹🇬
-                    </span>
-                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Bénin 🇧🇯
-                    </span>
-                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Côte d’Ivoire 🇨🇮
-                    </span>
-                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Burkina Faso 🇧🇫
-                    </span>
-                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Sénégal 🇸🇳
-                    </span>
-                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Mali 🇲🇱
-                    </span>
-                    <span className="bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded font-extrabold text-[9px]">
-                      Cameroun 🇨🇲
-                    </span>
+            <div className="space-y-4 text-[11px]">
+              {/* WhatsApp Segment */}
+              <div className="bg-emerald-50/50 border border-emerald-150 rounded-2xl p-4 flex flex-col gap-3 transition-all shadow-xs">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center text-xl shrink-0">
+                    💬
                   </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs select-none">🎁</span>
-                  <div>
-                    <span className="font-bold text-white/95">Bonus d'inscription :</span>{' '}
-                    <span className="text-white font-black text-xs ml-0.5">200 {getCurrency()}</span>
+                  <div className="space-y-1 text-left">
+                    <h4 className="font-sans font-black text-emerald-800 text-[12px] uppercase tracking-wide">
+                      Groupe WhatsApp Officiel
+                    </h4>
+                    <p className="text-[10.5px] text-emerald-600/80 font-bold leading-tight">
+                      Discutez directement avec d'autres membres et notre équipe d'assistance de Dreampod.
+                    </p>
                   </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs select-none">📥</span>
-                  <div>
-                    <span className="font-bold text-white/95">Recharge minimale :</span>{' '}
-                    <span className="text-white font-mono font-black text-xs ml-0.5">2 500 {getCurrency()}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs select-none">📤</span>
-                  <div className="flex items-center flex-wrap gap-1">
-                    <span className="font-bold text-white/95">Retrait minimum :</span>{' '}
-                    <span className="font-mono font-black text-xs text-white">1 000 {getCurrency()}</span>{' '}
-                    <span className="text-[8px] font-sans font-black uppercase bg-white/10 text-white px-1 py-0.2 rounded border border-white/5">(12% frais)</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs select-none">🔥</span>
-                  <div>
-                    <span className="font-bold text-white/95">Bonus de connexion :</span>{' '}
-                    <span className="text-white font-black text-xs ml-0.5">20 {getCurrency()} / jour</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Referral Pillar with High Contrast */}
-              <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-xl space-y-2 text-slate-800 shadow-sm">
-                <div className="flex items-center space-x-1.5">
-                  <span className="text-xs select-none">🤝</span>
-                  <span className="font-bold text-slate-900">Parrainage MLM :</span>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5 font-mono text-[8px] text-center">
-                  <span className="bg-white text-slate-800 p-1.5 rounded-lg border border-slate-100 flex flex-col items-center justify-center">
-                    <span className="opacity-90 mb-0.5 text-slate-500 font-bold">🥇 Niv. 1</span>
-                    <span className="font-black text-[10px] text-slate-900">20%</span>
-                  </span>
-                  <span className="bg-white text-slate-800 p-1.5 rounded-lg border border-slate-100 flex flex-col items-center justify-center">
-                    <span className="opacity-90 mb-0.5 text-slate-500 font-bold">🥈 Niv. 2</span>
-                    <span className="font-black text-[10px] text-slate-900">3%</span>
-                  </span>
-                  <span className="bg-white text-slate-800 p-1.5 rounded-lg border border-slate-100 flex flex-col items-center justify-center">
-                    <span className="opacity-90 mb-0.5 text-slate-500 font-bold">🥉 Niv. 3</span>
-                    <span className="font-black text-[10px] text-slate-900">1%</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Official Group Link Segment */}
-              <div className="bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl p-3 flex items-center justify-between gap-2.5 transition-all shadow-sm">
-                <div className="space-y-0.5 text-left flex-1 min-w-0">
-                  <div className="flex items-center space-x-1 text-slate-900 font-extrabold text-[9px] uppercase tracking-wider">
-                    <span>💬 Groupe officiel</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 font-semibold leading-tight truncate">
-                    Rejoignez la discussion officielle Dreampod.
-                  </p>
                 </div>
                 <a 
                   href={DataStore.getWhatsAppGroup()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-2.5 py-1.5 bg-[#00bd74] hover:bg-emerald-500 text-white font-sans font-black text-[9px] uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center justify-center space-x-0.5 shrink-0 cursor-pointer text-center"
+                  className="w-full py-3 bg-[#25D366] hover:bg-emerald-600 text-white font-sans font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer text-center"
                 >
-                  <span>Rejoindre 👉</span>
+                  <span>Rejoindre le Groupe WhatsApp</span>
+                </a>
+              </div>
+
+              {/* Telegram Segment */}
+              <div className="bg-blue-50/50 border border-blue-150 rounded-2xl p-4 flex flex-col gap-3 transition-all shadow-xs">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-xl shrink-0">
+                    📢
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <h4 className="font-sans font-black text-blue-800 text-[12px] uppercase tracking-wide">
+                      Canal Telegram Officiel
+                    </h4>
+                    <p className="text-[10.5px] text-blue-600/80 font-bold leading-tight">
+                      Recevez les communiqués urgents, les guides exclusifs et les annonces de maintenance.
+                    </p>
+                  </div>
+                </div>
+                <a 
+                  href={DataStore.getWhatsAppChannel()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-sans font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer text-center"
+                >
+                  <span>Rejoindre le Canal Telegram</span>
                 </a>
               </div>
             </div>
@@ -2539,6 +2688,8 @@ export default function Dashboard({
         )}
       </AnimatePresence>
 
+      {/* ROUE DE LA CHANCE MODAL REMOVED (NOW A SUBPAGE) */}
+
       {/* CARTE BANCAIRE MODAL */}
       <AnimatePresence>
         {isBankCardModalOpen && (
@@ -2731,49 +2882,7 @@ export default function Dashboard({
         )}
       </AnimatePresence>
 
-      {/* DASHBOARD TOP HEADER (STYLING OF SCREENSHOT) */}
-      <div className="w-full bg-gradient-to-r from-[#1b64d9] to-[#ff7c00] text-white p-4 pt-6 pb-6 flex items-center justify-between shadow-md relative z-40 select-none">
-        <div className="flex items-center space-x-3.5 max-w-[70%]">
-          {/* Avatar frame */}
-          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[#1b64d9] shadow-sm shrink-0">
-            <UserIcon className="w-6 h-6 stroke-[2.5]" />
-          </div>
-          <div className="text-left truncate">
-            <div className="text-xs sm:text-sm font-sans font-black tracking-wide text-white uppercase truncate">
-              {userState.name || `INVESTISSEUR ${userState.whatsapp ? userState.whatsapp.replace(/\D/g, '') : userState.id}`}
-            </div>
-            <div className="text-[10px] md:text-xs text-white/85 font-mono font-bold mt-1 tracking-wider">
-              {userState.whatsapp ? userState.whatsapp.replace(/\D/g, '') : userState.id}
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          {userState.role === 'admin' && (
-            <button
-              onClick={() => setIsAdminMode(!isAdminMode)}
-              className="px-3 py-1.5 rounded-xl border border-white bg-white/10 text-white text-[10px] font-black uppercase tracking-wide transition-all hover:bg-white/20 scale-95"
-            >
-              <span>{isAdminMode ? "Client" : "Admin"}</span>
-            </button>
-          )}
-          <button 
-            onClick={() => {
-              triggerToast("🔔 Aucun message non Lu", "info");
-            }}
-            className="text-white hover:text-white/80 transition-colors p-1"
-          >
-            <Bell className="w-6 h-6 stroke-[2]" />
-          </button>
-          <button 
-            onClick={onLogout}
-            className="text-white hover:text-white/80 transition-colors p-1"
-            title="Déconnexion"
-          >
-            <LogOut className="w-6 h-6 stroke-[2]" />
-          </button>
-        </div>
-      </div>
+
 
       {/* RENDER ADMIN MODE SEPARATELY IF ACTIVATED */}
       {isAdminMode && userState.role === 'admin' ? (
@@ -2961,7 +3070,7 @@ export default function Dashboard({
 
                     <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
                       <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                        Retrouvez ici tous les équipements et produits d'investissement que vous avez acquis. Vous pouvez réclamer vos revenus quotidiens à tout moment.
+                        Retrouvez ici vos équipements acquis. Les revenus de vos plans Stabilité et d'Activité s'accumulent de jour en jour et sont versés automatiquement à la fin de leur cycle respectif.
                       </p>
                       
                       <div className="space-y-3 pt-2">
@@ -3004,14 +3113,14 @@ export default function Dashboard({
                     <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
                       <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold block">Solde de Recharge</span>
-                          <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                          <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Recharge</span>
+                          <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
                             FCFA {rechargeBal.toLocaleString()}
                           </span>
                         </div>
                         <div className="border-l border-slate-100 pl-4">
-                          <span className="text-[10px] text-slate-400 font-bold block">Solde de Retrait</span>
-                          <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                          <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Retrait</span>
+                          <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
                             FCFA {userState.balance.toLocaleString()}
                           </span>
                         </div>
@@ -3258,263 +3367,346 @@ export default function Dashboard({
                 </div>
               );
             }
+
+            if (profileSubPage === 'wheel') {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn relative">
+                  <div className="max-w-md mx-auto w-full space-y-6">
+                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                      <button 
+                        disabled={isSpinning}
+                        onClick={() => setProfileSubPage(null)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Roue de la chance</h2>
+                    </div>
+
+                    <div className="bg-white border border-slate-200 rounded-[36px] w-full p-6 sm:p-8 shadow-[0_15px_45px_rgba(0,0,0,0.06)] relative overflow-hidden flex flex-col items-center text-center">
+                      {/* Gold sparkle header decoration */}
+                      <div className="absolute -top-12 -left-12 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                      {/* Title & info */}
+                      <div className="space-y-1 mb-6">
+                        <span className="text-[10px] text-amber-500 font-sans font-black uppercase tracking-widest block">
+                          ACTIVITÉ DE BIEN-ÊTRE
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-sans font-black text-slate-800 uppercase tracking-tight">
+                          🎡 Roue de la chance
+                        </h3>
+                        <p className="text-xs text-slate-500 font-bold max-w-xs mx-auto">
+                          Tournez la roue magique et gagnez des bonus crédités instantanément sur votre solde !
+                        </p>
+                      </div>
+
+                      {/* Circular Wheel Viewport Container */}
+                      <div className="relative my-4 select-none w-72 h-72 flex items-center justify-center">
+                        
+                        {/* Visual arrow pin pointing down at top center */}
+                        <div 
+                          className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-10 bg-amber-500 z-40 transition-all duration-300 animate-pulse"
+                          style={{
+                            clipPath: 'polygon(50% 100%, 0 0, 100% 0)',
+                            filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.3))'
+                          }}
+                        />
+
+                        {/* Outer shining border frame */}
+                        <div className="absolute inset-0 rounded-full border-[6px] border-amber-500 bg-amber-500/10 shadow-[0_0_25px_rgba(245,158,11,0.25)] pointer-events-none z-20" />
+
+                        {/* Spinning Wheel Body */}
+                        <div 
+                          className="w-full h-full rounded-full bg-slate-800 overflow-hidden relative border border-slate-700 transition-transform duration-[4500ms] ease-[cubic-bezier(0.15,0.85,0.15,1)]"
+                          style={{ 
+                            transform: `rotate(${wheelSpinAngle}deg)`,
+                          }}
+                        >
+                          {WHEEL_REWARDS.map((rew, idx) => {
+                            const angle = idx * 45; // 360 / 8 segments
+                            return (
+                              <div 
+                                key={idx}
+                                className="absolute top-0 left-0 w-full h-full origin-center flex flex-col items-center"
+                                style={{ 
+                                  transform: `rotate(${angle}deg)`,
+                                }}
+                              >
+                                {/* Triangular piece slice using CSS clip-path */}
+                                <div 
+                                  className="absolute top-0 w-full h-1/2 origin-bottom transition-all duration-300"
+                                  style={{
+                                    clipPath: 'polygon(50% 100%, 14.6% 0, 85.4% 0)', // exactly 45 degrees slice width
+                                    backgroundColor: rew.color,
+                                    opacity: 0.85
+                                  }}
+                                />
+
+                                {/* Text label vertically centered inside segment */}
+                                <div 
+                                  className="absolute top-8 text-center text-white font-sans font-black text-xs tracking-wider uppercase select-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                                  style={{
+                                    transform: 'rotate(0deg)',
+                                  }}
+                                >
+                                  {rew.label}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Golden Center Hub Pin */}
+                        <div className="absolute w-14 h-14 rounded-full bg-slate-800 border-[4px] border-amber-500 shadow-xl flex flex-col items-center justify-center z-30 select-none">
+                          <div className="w-4 h-4 bg-yellow-500 rounded-full animate-ping absolute opacity-75" />
+                          <span className="text-[10px] font-mono font-black text-amber-500 uppercase tracking-widest leading-none">VIP</span>
+                          <span className="text-[9px] font-sans font-black text-white uppercase tracking-widest mt-0.5 leading-none">GOLD</span>
+                        </div>
+                      </div>
+
+                      {/* Status & Spins info */}
+                      <div className="mt-4 space-y-4 w-full">
+                        <div className="bg-slate-100 rounded-2xl p-3.5 border border-slate-200/60 inline-flex items-center gap-2">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                          <span className="text-xs font-sans font-black text-slate-700 tracking-wide uppercase">
+                            {wheelSpinCount} Tirage(s) disponible(s)
+                          </span>
+                        </div>
+
+                        {/* Spin CTA Button */}
+                        <button
+                          disabled={isSpinning || wheelSpinCount <= 0}
+                          onClick={handleSpinWheel}
+                          className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 disabled:from-slate-200 disabled:to-slate-300 text-white font-sans font-black text-xs py-4 px-6 rounded-2xl flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer active:scale-95 disabled:scale-100 disabled:cursor-not-allowed uppercase tracking-wider border-none outline-none"
+                        >
+                          <Trophy className="w-5 h-5 stroke-[2.5]" />
+                          <span>{isSpinning ? "Tirage en cours..." : "LANCER LE TIRAGE"}</span>
+                        </button>
+
+                        {/* Share to earn more spins */}
+                        <p className="text-[10.5px] text-slate-500 font-bold leading-relaxed max-w-xs mx-auto pt-1">
+                          💡 Astuce : Invitez de nouveaux membres sur Dreampod pour obtenir des tickets de tirage supplémentaires !
+                        </p>
+                      </div>
+
+                      {/* Win announcement overlay overlay */}
+                      {wonReward && !isSpinning && (
+                        <div className="absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center p-6 animate-fadeIn animate-duration-300">
+                          <div className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center animate-bounce mb-4 border border-amber-500/20">
+                            <Trophy className="w-10 h-10 stroke-[2.25]" />
+                          </div>
+                          <span className="text-[11px] text-amber-500 font-sans font-black uppercase tracking-widest">
+                            SUCCÈS DU TIRAGE
+                          </span>
+                          <h4 className="text-2xl sm:text-3xl font-sans font-black text-slate-850 uppercase mt-1 leading-tight tracking-tight">
+                            Félicitations !
+                          </h4>
+                          <p className="text-sm text-slate-500 font-bold max-w-xs mt-2">
+                            Vous avez remporté un bonus de
+                          </p>
+                          <div className="text-3xl sm:text-4xl font-sans font-black text-yellow-500 my-4 tracking-wider font-mono">
+                            +{wonReward.amount.toLocaleString()} F CFA
+                          </div>
+                          <p className="text-xs text-emerald-600 font-black uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl">
+                            ✓ Crédité sur votre solde
+                          </p>
+                          <button
+                            onClick={() => setWonReward(null)}
+                            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-sans font-black text-xs py-3 px-6 rounded-xl transition-all cursor-pointer border-0 active:scale-95"
+                          >
+                            D'ACCORD !
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
             return null;
           })()}
 
           {/* USER SUMMARY CARDS */}
           {!profileSubPage && activeTab === 'dashboard' && (
-            <div className="space-y-4">
+            <div className="space-y-4 text-left animate-fadeIn">
 
+              {/* 1. ROCKY GOLD HERO BANNER */}
+              <div className="relative rounded-[32px] overflow-hidden aspect-[16/9] w-full shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-amber-500/25 bg-slate-950 flex flex-col justify-between p-5 text-left group">
+                {/* Visual Dreampod Product Asset Background */}
+                <img 
+                  src="https://images.unsplash.com/photo-1608156639585-b3a032ef9689?auto=format&fit=crop&q=80&w=1000" 
+                  alt="Dreampod Smart Audio" 
+                  className="absolute inset-0 w-full h-full object-cover opacity-45 mix-blend-lighten pointer-events-none select-none transition-transform duration-700 group-hover:scale-105 z-0"
+                  referrerPolicy="no-referrer"
+                />
 
-              {/* IMMERSIVE DREAMPOD GALLERY SLIDER (VA-ET-VIENT) */}
-              <div id="dreampod-immersion-showcase" className="bg-white border border-blue-50/55 rounded-[30px] p-4.5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-slate-800 text-left overflow-hidden relative">
-                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-                  <div>
-                    <span className="text-[10px] font-sans font-black text-[#1b64d9] uppercase tracking-wider block">GALERIE ULTRA-LUXE</span>
-                    <h3 className="text-sm sm:text-base font-sans font-black text-slate-900 tracking-tight flex items-center gap-1.5 mt-0.5">
-                      🌟 Showcase Immersif Dreampod
-                    </h3>
-                  </div>
-                  <div className="bg-orange-50 text-orange-600 text-[9px] font-sans font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500"></span>
-                    </span>
-                    EXPLORER
-                  </div>
-                </div>
-
-                {/* Slider Image Container */}
-                <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden mt-3 shadow-sm border border-slate-100 bg-slate-50 group">
-                  <div className="w-full h-full relative">
-                    <img
-                      src={DREAMPOD_SLIDES[currentSlide].url}
-                      alt={DREAMPOD_SLIDES[currentSlide].title}
-                      className="w-full h-full object-cover select-none transition-transform duration-700 ease-out scale-100 group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
-                    
-                    {/* Dark gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
-
-                    {/* Text Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 text-white flex flex-col justify-end">
-                      <span className="text-[9px] text-orange-400 font-sans font-black uppercase tracking-widest mb-1 select-none">
-                        Cocon d'exception • {currentSlide + 1} / {DREAMPOD_SLIDES.length}
-                      </span>
-                      <h4 className="text-sm sm:text-base font-sans font-black uppercase tracking-wide leading-tight drop-shadow-sm">
-                        {DREAMPOD_SLIDES[currentSlide].title}
-                      </h4>
-                      <p className="text-[10.5px] sm:text-xs text-slate-300 font-semibold mt-1 drop-shadow-sm select-none leading-relaxed">
-                        {DREAMPOD_SLIDES[currentSlide].desc}
-                      </p>
-                    </div>
-
-                    {/* Left Arrow */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentSlide(prev => (prev - 1 + DREAMPOD_SLIDES.length) % DREAMPOD_SLIDES.length);
-                      }}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/15 hover:bg-white/35 backdrop-blur-md text-white border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 focus:outline-none cursor-pointer"
-                    >
-                      <ChevronLeft className="w-4.5 h-4.5 stroke-[3]" />
-                    </button>
-
-                    {/* Right Arrow */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentSlide(prev => (prev + 1) % DREAMPOD_SLIDES.length);
-                      }}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/15 hover:bg-white/35 backdrop-blur-md text-white border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 focus:outline-none cursor-pointer"
-                    >
-                      <ChevronRight className="w-4.5 h-4.5 stroke-[3]" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Navigation indicators / dots */}
-                <div className="flex justify-center items-center gap-1.5 pt-3">
-                  {DREAMPOD_SLIDES.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentSlide(idx)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        currentSlide === idx 
-                          ? 'w-6 bg-[#1b64d9]' 
-                          : 'w-1.5 bg-slate-200 hover:bg-slate-350'
-                      }`}
-                      aria-label={`Aller au slide ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-
-              {/* PRIMARY WHITE CARD OF SCREENSHOT */}
-              <div id="agro-primary-balance-card" className="bg-white border border-blue-50/55 rounded-[30px] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-slate-800 text-left">
-                <div className="flex justify-between items-center pb-2">
-                  <span className="text-[10px] font-sans font-black text-slate-450 uppercase tracking-wider block">SOLDE DISPONIBLE</span>
-                  <div className="bg-gradient-to-r from-[#1b64d9] to-[#ff7c00] text-white text-[9px] font-sans font-black px-3 py-1.5 rounded-lg uppercase tracking-wider flex items-center gap-1 shrink-0">
-                    VIP VERIFIÉ
-                  </div>
-                </div>
-
-                <div className="pt-4 pb-4">
-                  <div id="main-balance-text" className="text-4xl sm:text-5xl font-sans font-black text-slate-900 tracking-tight flex items-baseline gap-1.5 solde-bold mt-1.5">
-                    {userState.balance.toLocaleString()}{' '}
-                    <span className="text-slate-900 text-lg sm:text-xl font-bold uppercase select-none">XOF</span>
-                  </div>
-                </div>
-
-                {/* Sub-buttons for recharging & withdrawing */}
-                <div className="grid grid-cols-2 gap-3.5 pt-2">
-                  <button
-                    id="recharge-action-btn"
-                    onClick={() => setActiveTab('deposit')}
-                    className="py-3.5 rounded-2xl text-xs sm:text-sm font-black bg-[#1b64d9] hover:opacity-95 text-white transition-all text-center flex items-center justify-center space-x-1 shadow-md cursor-pointer active:scale-95 border-0"
-                  >
-                    <PlusCircle className="w-4.5 h-4.5 stroke-[3] mr-1" />
-                    <span>Recharge</span>
-                  </button>
-                  <button
-                    id="withdrawal-action-btn"
-                    onClick={() => setActiveTab('withdraw')}
-                    className="py-3.5 rounded-2xl text-xs sm:text-sm font-black bg-[#ff7c00] hover:opacity-95 text-white transition-all text-center flex items-center justify-center space-x-1 shadow-md cursor-pointer active:scale-95 border-0"
-                  >
-                    <ArrowUpCircle className="w-4.5 h-4.5 stroke-[3] mr-1" />
-                    <span>Retrait</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* MISSION SYSTEM INSTEAD OF LUCKY WHEEL */}
-              {(() => {
-                const directReferrals = level1Users;
-                const allInvs = DataStore.getInvestments() || [];
-                const investedReferralCount = directReferrals.filter(u => allInvs.some(inv => inv.userId === u.id)).length;
-
-                return (
-                  <div className="bg-gradient-to-br from-indigo-50/40 via-white to-blue-50/30 border border-blue-100/60 rounded-[30px] p-6 shadow-[0_8px_30px_rgba(27,100,217,0.03)] text-slate-800 text-left relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none -mr-8 -mt-8" />
-                    
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <span className="bg-indigo-50 text-indigo-600 text-[9px] font-sans font-black px-2.5 py-1 rounded-md uppercase tracking-wider inline-block">
-                          🎯 EXCLUSIF PARRAINAGE
-                        </span>
-                        <h3 className="text-lg font-sans font-black text-slate-900 tracking-tight mt-1 flex items-center gap-1.5">
-                          Missions d'Invitation
-                        </h3>
-                      </div>
-                      <div className="bg-[#1a1a1a] text-white text-[10px] font-sans font-black px-3 py-1.5 rounded-full uppercase tracking-wider">
-                        {investedReferralCount} investisseur(s)
-                      </div>
-                    </div>
-
-                    <p className="text-[11px] sm:text-xs text-slate-500 font-bold leading-normal mt-3 max-w-md">
-                      Complétez des missions d'invitation simples pour débloquer des bonus de parrainage allant jusqu'à 8 500 FCFA crédités instantanément sur votre compte !
-                    </p>
-
-                    <div className="mt-5 flex flex-col sm:flex-row gap-3 sm:items-center justify-between bg-white/65 p-3.5 rounded-2xl border border-slate-100/80">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                          <Users className="w-5 h-5 stroke-[2.5]" />
-                        </div>
-                        <div>
-                          <div className="text-[11px] font-black text-slate-800 uppercase tracking-wide">Votre progression</div>
-                          <div className="text-[10px] text-slate-500 font-bold">
-                            {investedReferralCount} filleul(s) direct(s) ont investi.
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <button
-                        onClick={() => setProfileSubPage('missions')}
-                        className="py-2.5 px-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white font-sans font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-95 shadow-md active:scale-95 transition-all text-center shrink-0 cursor-pointer border-0"
-                      >
-                        Voir les Missions
-                      </button>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* 3 SECTIONS GRID: HISTORIQUE, SUPPORT, POINTAGE */}
-              <div id="dashboard-quick-actions" className="grid grid-cols-3 gap-3 md:gap-4 pt-2">
-                {/* Historique Card */}
-                <div 
-                  id="action-historique"
-                  onClick={() => {
-                    if (onNavigate) {
-                      onNavigate('/historique');
-                    }
-                  }}
-                  className="bg-white border border-blue-50/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
-                >
-                  <div className="w-12 h-12 bg-[#f0f4ff] text-[#1b64d9] flex items-center justify-center rounded-full">
-                    <Clock className="w-5.5 h-5.5 stroke-[2.5]" />
-                  </div>
-                  <span className="font-sans font-black text-[10px] sm:text-xs text-slate-800 uppercase tracking-wide">Historique</span>
-                </div>
-
-                {/* Support Live Card */}
-                <div 
-                  id="action-support"
-                  onClick={() => {
-                    setIsLiveChatOpen(true);
-                  }}
-                  className="bg-white border border-blue-50/45 rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer hover:bg-slate-50/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)]"
-                >
-                  <div className="w-12 h-12 bg-blue-50 text-blue-600 flex items-center justify-center rounded-full">
-                    <MessageSquare className="w-5.5 h-5.5 stroke-[2.5]" />
-                  </div>
-                  <span className="font-sans font-black text-[10px] sm:text-xs text-slate-800 uppercase tracking-wide">Support live</span>
-                </div>
-
-                {/* Pointage Check-in Card */}
-                <div 
-                  id="action-checkin"
-                  onClick={handleDailyCheckin}
-                  className={`border rounded-3xl p-5 flex flex-col items-center justify-center space-y-2.5 cursor-pointer transition-all shadow-[0_4px_15px_rgba(0,0,0,0.015)] ${
-                    hasCheckedInToday 
-                      ? 'bg-emerald-50/50 border-emerald-100/50 hover:bg-emerald-50 text-emerald-600' 
-                      : 'bg-white border-blue-50/45 hover:bg-slate-50/50 text-slate-800'
-                  }`}
-                >
-                  <div className={`w-12 h-12 flex items-center justify-center rounded-full transition-colors ${
-                    hasCheckedInToday 
-                      ? 'bg-emerald-100 text-emerald-600' 
-                      : 'bg-[#fffaf0] text-blue-500'
-                  }`}>
-                    {hasCheckedInToday ? (
-                      <Check className="w-5.5 h-5.5 stroke-[3]" />
-                    ) : (
-                      <Gift className="w-5.5 h-5.5 stroke-[2.5]" />
-                    )}
-                  </div>
-                  <span className={`font-sans font-black text-[10px] sm:text-xs uppercase tracking-wide ${
-                    hasCheckedInToday ? 'text-emerald-700' : 'text-slate-800'
-                  }`}>
-                    {hasCheckedInToday ? 'Fait ✓' : 'Pointage'}
+                {/* Immersive gold gradient vein overlay */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/20 via-slate-950 to-slate-950 pointer-events-none" />
+                <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -top-12 -left-12 w-48 h-48 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
+                
+                {/* Gold sparkle highlights */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent z-10 pointer-events-none" />
+                
+                {/* Top content */}
+                <div className="relative z-20 flex justify-between items-start">
+                  <span className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[9px] font-sans font-black px-2.5 py-1 rounded-full uppercase tracking-widest select-none">
+                    OFFICIEL • MEMBRE VIP
                   </span>
+                  <div className="text-right">
+                    <span className="text-[9px] text-slate-450 font-sans font-black block leading-none uppercase tracking-wider">SOLDE ACTUEL</span>
+                    <span className="text-base sm:text-lg font-sans font-black text-yellow-300 block mt-0.5 font-mono">
+                      {userState.balance.toLocaleString()} F CFA
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Title & Tagline */}
+                <div className="relative z-20">
+                  <h1 className="text-3xl sm:text-4xl font-sans font-extrabold tracking-[0.1em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-500 uppercase leading-none drop-shadow-[0_2px_12px_rgba(245,158,11,0.25)]">
+                    DREAMPOD
+                  </h1>
+                  <p className="text-[9px] sm:text-[10px] font-sans font-bold tracking-[0.25em] text-amber-200/75 uppercase mt-1 pl-0.5 select-none leading-none">
+                    PREMIUM. AUDIOPHILE. FUTURE.
+                  </p>
                 </div>
               </div>
 
+              {/* 2. QUICK ACCESS BUTTONS ROW (4 BUTTONS) */}
+              <div className="grid grid-cols-4 gap-2 pt-2 pb-1.5">
+                {/* Recharger */}
+                <button
+                  onClick={() => setActiveTab('deposit')}
+                  className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
+                >
+                  <div className="w-12 h-12 bg-indigo-50/80 text-blue-600 flex items-center justify-center rounded-[18px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-xs">
+                    <Wallet className="w-5 h-5 stroke-[2.25]" />
+                  </div>
+                  <span className="font-sans font-bold text-[10.5px] text-slate-700 mt-2 block tracking-wide truncate max-w-full">
+                    Recharger
+                  </span>
+                </button>
 
-              {/* CONSEIL D'ÉQUIPE CARD */}
-              <div className="bg-white border border-blue-50/45 rounded-[28px] p-5 shadow-[0_4px_15px_rgba(0,0,0,0.015)] text-left flex items-start space-x-4 mt-6">
-                <div className="w-10 h-10 bg-[#f0f4ff] text-blue-500 rounded-2xl flex items-center justify-center shrink-0 border border-blue-50/30">
-                  <Megaphone className="w-5 h-5 stroke-[2.5]" />
+                {/* Retirer */}
+                <button
+                  onClick={() => setActiveTab('withdraw')}
+                  className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
+                >
+                  <div className="w-12 h-12 bg-indigo-50/80 text-blue-600 flex items-center justify-center rounded-[18px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-xs">
+                    <ArrowUpCircle className="w-5 h-5 stroke-[2.25]" />
+                  </div>
+                  <span className="font-sans font-bold text-[10.5px] text-slate-700 mt-2 block tracking-wide truncate max-w-full">
+                    Retirer
+                  </span>
+                </button>
+
+                {/* Mon Équipe */}
+                <button
+                  onClick={() => setActiveTab('team')}
+                  className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
+                >
+                  <div className="w-12 h-12 bg-indigo-50/80 text-blue-600 flex items-center justify-center rounded-[18px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-xs">
+                    <Users className="w-5 h-5 stroke-[2.25]" />
+                  </div>
+                  <span className="font-sans font-bold text-[10.5px] text-slate-700 mt-2 block tracking-wide truncate max-w-full">
+                    Mon Équipe
+                  </span>
+                </button>
+
+                {/* Telegram */}
+                <button
+                  onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
+                  className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
+                >
+                  <div className="w-12 h-12 bg-indigo-50/80 text-blue-600 flex items-center justify-center rounded-[18px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-xs">
+                    <Send className="w-5 h-5 stroke-[2.25] -rotate-12 translate-x-[1px]" />
+                  </div>
+                  <span className="font-sans font-bold text-[10.5px] text-slate-700 mt-2 block tracking-wide truncate max-w-full">
+                    Telegram
+                  </span>
+                </button>
+              </div>
+
+              {/* 3. CARD: RÉCOMPENSES D'INVITATION */}
+              <div className="bg-white rounded-[28px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <h3 className="font-sans font-black text-slate-800 text-[14px] uppercase tracking-tight">
+                      Récompenses d'invitation
+                    </h3>
+                    <p className="text-[10.5px] text-slate-400 font-bold leading-none">
+                      Investissez ensemble, enrichissez-vous ensemble
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-amber-100/70 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
+                    <Gift className="w-5 h-5 stroke-[2.25]" />
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-xs sm:text-sm font-sans font-black text-slate-800 uppercase tracking-wide">
-                    CONSEIL D'ÉQUIPE
-                  </h4>
-                  <p className="text-[11px] sm:text-xs text-slate-500 font-bold leading-normal mt-1">
-                    Invitez des partenaires pour maximiser vos gains ! Vous recevez cumulativement {mlmRates.level1}% au Niveau 1, {mlmRates.level2}% au Niveau 2, et {mlmRates.level3}% au Niveau 3 sur chacune de leurs souscriptions financières.
-                  </p>
+
+                <div className="bg-slate-50/70 rounded-2xl p-3 border border-slate-100/60 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
+                      <Share className="w-4.5 h-4.5 stroke-[2.25]" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[9.5px] text-slate-400 font-black block leading-none uppercase tracking-wider">
+                        Lien d'invitation
+                      </span>
+                      <span className="text-xs text-indigo-600 font-black truncate block mt-1 font-mono">
+                        {`${window.location.origin}/register?ref=${userState.referralCode || ''}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const shareLink = `${window.location.origin}/register?ref=${userState.referralCode || ''}`;
+                      navigator.clipboard.writeText(shareLink);
+                      triggerToast("Lien d'invitation copié ! 📋", "success");
+                    }}
+                    className="bg-[#e05638] text-white hover:bg-[#c94125] py-1.5 px-4 rounded-full text-xs font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0"
+                  >
+                    Copier
+                  </button>
+                </div>
+              </div>
+
+              {/* 4. CARD: CENTRE D'ACTIVITÉS DE BIEN-ÊTRE */}
+              <div className="bg-white rounded-[28px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-4">
+                <div className="space-y-0.5">
+                  <h3 className="font-sans font-black text-slate-800 text-[14px] uppercase tracking-tight">
+                    Centre d'activités de bien-être
+                  </h3>
+                </div>
+
+                <div className="space-y-3.5 pt-1">
+                  {/* Roue de la chance row */}
+                  <div className="flex items-center justify-between gap-3 p-1">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 bg-amber-50 text-amber-500 rounded-[18px] flex items-center justify-center shrink-0 border border-amber-100/40">
+                        <Trophy className="w-5.5 h-5.5 stroke-[2.25]" />
+                      </div>
+                      <div>
+                        <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
+                          Roue de la chance
+                        </h4>
+                        <span className="text-[10.5px] text-slate-400 font-bold block mt-0.5">
+                          Taux de gain du tirage au sort de 100%
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setProfileSubPage('wheel')}
+                      className="bg-[#e05638] text-white hover:bg-[#c94125] py-1.5 px-3 rounded-full text-[11px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 shrink-0"
+                    >
+                      Tirage au sort
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -3524,159 +3716,235 @@ export default function Dashboard({
           {/* CATALOGUE PRODUCTS TAB */}
           {!profileSubPage && activeTab === 'products' && (
             <div className="space-y-6 animate-fade-in">
-              {/* STATS: NOMBRE DE PRODUITS ACHETÉS À GAUCHE ET REVENUS À DROITE */}
-              <div className="grid grid-cols-2 gap-3 max-w-4xl mx-auto select-none">
-                {/* Nombre de produits achetés */}
-                <div className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-3xl p-5 text-left shadow-sm flex flex-col justify-between">
-                  <span className="text-[10px] text-slate-500 block font-black uppercase tracking-widest leading-none mb-1">PRODUITS ACHETÉS</span>
-                  <span className="text-2xl sm:text-3xl font-sans font-black text-slate-800 leading-none">{activeInvestments.length}</span>
+              {/* TWO-COLUMN PRODUCT CATALOG WITH SIDEBAR TABS */}
+              <div className="max-w-7xl mx-auto pt-4 text-left flex flex-col md:flex-row gap-6 items-start">
+                
+                {/* Left Column: Sidebar Tabs */}
+                <div className="w-full md:w-60 shrink-0 flex md:flex-row md:flex-col overflow-x-auto md:overflow-visible gap-2 border-b md:border-b-0 md:border-r border-slate-200/60 pb-3 md:pb-0 md:pr-4 scrollbar-none select-none">
+                  {/* Stabilité */}
+                  <button
+                    type="button"
+                    onClick={() => setProductSubTab('stability')}
+                    className={`flex items-center space-x-3 px-4 py-3 md:py-3.5 rounded-2xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
+                      productSubTab === 'stability'
+                        ? 'bg-[#0ea5e9]/10 text-[#0ea5e9] border border-[#0ea5e9]/20 shadow-[0_4px_12px_rgba(14,165,233,0.06)]'
+                        : 'bg-white/50 text-slate-500 border border-transparent hover:bg-white hover:text-slate-800'
+                    }`}
+                  >
+                    <TrendingUp className="w-4 h-4 shrink-0" />
+                    <span>Stabilité</span>
+                  </button>
+
+                  {/* Bien-être */}
+                  <button
+                    type="button"
+                    onClick={() => setProductSubTab('wellbeing')}
+                    className={`flex items-center space-x-3 px-4 py-3 md:py-3.5 rounded-2xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
+                      productSubTab === 'wellbeing'
+                        ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20 shadow-[0_4px_12px_rgba(168,85,247,0.06)]'
+                        : 'bg-white/50 text-slate-500 border border-transparent hover:bg-white hover:text-slate-800'
+                    }`}
+                  >
+                    <Heart className="w-4 h-4 shrink-0 text-purple-500" />
+                    <span>Bien-être</span>
+                  </button>
+
+                  {/* Activité */}
+                  <button
+                    type="button"
+                    onClick={() => setProductSubTab('activity')}
+                    className={`flex items-center space-x-3 px-4 py-3 md:py-3.5 rounded-2xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
+                      productSubTab === 'activity'
+                        ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-[0_4px_12px_rgba(16,185,129,0.06)]'
+                        : 'bg-white/50 text-slate-500 border border-transparent hover:bg-white hover:text-slate-800'
+                    }`}
+                  >
+                    <Zap className="w-4 h-4 shrink-0 text-emerald-500" />
+                    <span>Activité</span>
+                  </button>
                 </div>
 
-                {/* Revenus cumulés */}
-                <div className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-3xl p-5 text-left shadow-sm flex flex-col justify-between">
-                  <span className="text-[10px] text-slate-500 block font-black uppercase tracking-widest leading-none mb-1">REVENUS</span>
-                  <div className="flex items-baseline space-x-1">
-                    <span className="text-2xl sm:text-3xl font-sans font-black text-slate-800 leading-none">
-                      {(userState.totalEarnings || 0).toLocaleString()}
-                    </span>
-                    <span className="text-xs sm:text-sm font-sans font-black text-slate-500 uppercase">
-                      {getCurrency()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* SKY BLUE PRODUCT CATALOG (No sidebars or tabs) */}
-              <div className="max-w-7xl mx-auto pt-4 text-left">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {products
-                    .filter(p => p.category !== 'activity')
-                    .map((p, index) => {
-                      const isBlocked = p.isBlocked === true;
-                      const formattedReopenTime = p.reopenDateTime 
-                        ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
-                        : null;
-
-                      const getVipDisplayName = (prod: Product, defaultVipLevel: number) => {
-                        if (prod.category === 'activity') {
-                          return `Dreampod Activité ${prod.vipLevel || defaultVipLevel}`;
+                {/* Right Column: Products List */}
+                <div className="flex-1 w-full">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {products
+                      .filter(p => {
+                        if (productSubTab === 'stability') {
+                          return p.category === 'stability' || !p.category;
                         }
-                        return `Titres à revenu fixe ${prod.vipLevel || defaultVipLevel}`;
-                      };
+                        return p.category === productSubTab;
+                      })
+                      .sort((a, b) => (a.price || 0) - (b.price || 0))
+                      .map((p, index) => {
+                        const isBlocked = p.isBlocked === true;
+                        const formattedReopenTime = p.reopenDateTime 
+                          ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+                          : null;
 
-                      const displayName = getVipDisplayName(p, p.vipLevel || (index + 1));
-                      const purchasedCount = activeInvestments.filter(i => i.productName === p.name || i.productId === p.id).length;
+                        const getVipDisplayName = (prod: Product, defaultVipLevel: number) => {
+                          if (prod.category === 'activity') {
+                            return `Dreampod Activité ${prod.vipLevel || defaultVipLevel}`;
+                          }
+                          if (prod.category === 'wellbeing') {
+                            return `Dreampod Bien-être ${prod.vipLevel || defaultVipLevel}`;
+                          }
+                          return `Titres à revenu fixe ${prod.vipLevel || defaultVipLevel}`;
+                        };
 
-                      return (
-                        <div 
-                          key={p.id}
-                          className={`bg-sky-50/40 border border-sky-100 rounded-3xl p-5 shadow-[0_4px_15px_rgba(14,165,233,0.04)] hover:shadow-md hover:border-sky-200 transition-all duration-300 relative flex flex-col justify-between ${isBlocked ? 'opacity-70 pointer-events-none' : ''}`}
-                        >
-                          {/* Card Content Top Row */}
-                          <div>
-                            <div className="flex items-center gap-4 text-left">
-                              <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 border border-sky-100 bg-[#0ea5e9] p-1.5 flex items-center justify-center shadow-inner">
-                                <ProductImage 
-                                  vipLevel={p.vipLevel || (index + 1)}
-                                  alt={displayName}
-                                  className="w-full h-full object-contain rounded-xl"
-                                  category={p.category}
-                                />
+                        const getCardStyle = (cat?: string) => {
+                          if (cat === 'activity') {
+                            return {
+                              container: 'bg-emerald-50/40 border border-emerald-100 rounded-3xl p-5 shadow-[0_4px_15px_rgba(16,185,129,0.04)] hover:shadow-md hover:border-emerald-200 transition-all duration-300 relative flex flex-col justify-between',
+                              imgBg: 'bg-[#10b981] border border-emerald-100',
+                              badge: 'text-[#047857] bg-[#d1fae5]',
+                              statLabel: 'text-emerald-600/80',
+                              statVal: 'text-[#10b981]',
+                              statValTotal: 'text-[#047857]',
+                              buttonLeft: 'bg-[#f0fdf4] text-[#047857]',
+                              buttonRight: 'bg-[#10b981] hover:bg-[#047857]',
+                              buttonBorder: 'border-emerald-200'
+                            };
+                          }
+                          if (cat === 'wellbeing') {
+                            return {
+                              container: 'bg-purple-50/40 border border-purple-100 rounded-3xl p-5 shadow-[0_4px_15px_rgba(168,85,247,0.04)] hover:shadow-md hover:border-purple-200 transition-all duration-300 relative flex flex-col justify-between',
+                              imgBg: 'bg-[#a855f7] border border-purple-100',
+                              badge: 'text-[#7e22ce] bg-[#f3e8ff]',
+                              statLabel: 'text-purple-600/80',
+                              statVal: 'text-[#a855f7]',
+                              statValTotal: 'text-[#7e22ce]',
+                              buttonLeft: 'bg-[#faf5ff] text-[#7e22ce]',
+                              buttonRight: 'bg-[#a855f7] hover:bg-[#7e22ce]',
+                              buttonBorder: 'border-purple-200'
+                            };
+                          }
+                          // Default stability (sky blue)
+                          return {
+                            container: 'bg-sky-50/40 border border-sky-100 rounded-3xl p-5 shadow-[0_4px_15px_rgba(14,165,233,0.04)] hover:shadow-md hover:border-sky-200 transition-all duration-300 relative flex flex-col justify-between',
+                            imgBg: 'bg-[#0ea5e9] border border-sky-100',
+                            badge: 'text-[#0369a1] bg-[#e0f2fe]',
+                            statLabel: 'text-sky-600/80',
+                            statVal: 'text-[#0ea5e9]',
+                            statValTotal: 'text-[#0284c7]',
+                            buttonLeft: 'bg-[#f0f9ff] text-[#0369a1]',
+                            buttonRight: 'bg-[#0ea5e9] hover:bg-[#0284c7]',
+                            buttonBorder: 'border-sky-200'
+                          };
+                        };
+
+                        const theme = getCardStyle(p.category);
+                        const displayName = getVipDisplayName(p, p.vipLevel || (index + 1));
+                        const purchasedCount = activeInvestments.filter(i => i.productName === p.name || i.productId === p.id).length;
+
+                        return (
+                          <div 
+                            key={p.id}
+                            className={`${theme.container} ${isBlocked ? 'opacity-70 pointer-events-none' : ''}`}
+                          >
+                            {/* Card Content Top Row */}
+                            <div>
+                              <div className="flex items-center gap-4 text-left">
+                                <div className={`w-16 h-16 rounded-2xl overflow-hidden shrink-0 p-1.5 flex items-center justify-center shadow-inner ${theme.imgBg}`}>
+                                  <ProductImage 
+                                    vipLevel={p.vipLevel || (index + 1)}
+                                    alt={displayName}
+                                    className="w-full h-full object-contain rounded-xl"
+                                    category={p.category}
+                                  />
+                                </div>
+                                <div className="flex flex-col text-left">
+                                  <h4 className="font-sans font-black text-sm text-slate-850 leading-tight">
+                                    {displayName}
+                                  </h4>
+                                  <div className="mt-1">
+                                    <span className="inline-flex items-center gap-1 bg-[#fffbe6] border border-[#ffe58f] text-[#d4b106] text-[10px] font-sans font-black px-2 py-0.5 rounded-full shadow-xs uppercase">
+                                      🏆 VIP{p.vipLevel || 0}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex flex-col text-left">
-                                <span className="text-[9px] text-[#0369a1] font-sans font-black uppercase bg-[#e0f2fe] px-2 py-0.5 rounded-md leading-relaxed w-fit mb-1">
-                                  Achat: {purchasedCount}/3
-                                </span>
-                                <h4 className="font-sans font-black text-sm text-sky-950 leading-tight">
-                                  {displayName}
-                                </h4>
-                                <div className="mt-1">
-                                  <span className="inline-flex items-center gap-1 bg-[#fffbe6] border border-[#ffe58f] text-[#d4b106] text-[10px] font-sans font-black px-2 py-0.5 rounded-full shadow-xs uppercase">
-                                    🏆 VIP{p.vipLevel || 0}
-                                  </span>
+
+                              {/* Key-Value Details */}
+                              <div className="mt-5 space-y-2 text-left select-none border-t border-slate-100 pt-4">
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className={`${theme.statLabel} font-bold`}>Revenus Quotidiens</span>
+                                  <span className={`${theme.statVal} font-black`}>{p.dailyReturn.toLocaleString()} {getCurrency()}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className={`${theme.statLabel} font-bold`}>Revenu Total</span>
+                                  <span className={`${theme.statValTotal} font-black`}>{(p.dailyReturn * p.durationDays).toLocaleString()} {getCurrency()}</span>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Key-Value Details */}
-                            <div className="mt-5 space-y-2 text-left select-none border-t border-sky-100/60 pt-4">
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-sky-600/80 font-bold">Revenu</span>
-                                <span className="text-sky-900 font-black">{p.durationDays} Jours</span>
-                              </div>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-sky-600/80 font-bold">Revenus Quotidiens</span>
-                                <span className="text-[#0ea5e9] font-black">{p.dailyReturn.toLocaleString()} {getCurrency()}</span>
-                              </div>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-sky-600/80 font-bold">Revenu Total</span>
-                                <span className="text-[#0284c7] font-black">{(p.dailyReturn * p.durationDays).toLocaleString()} {getCurrency()}</span>
-                              </div>
-                            </div>
-                          </div>
+                            {/* Button Area */}
+                            <div className="mt-5 text-left">
+                              {productErrors[p.id] && (
+                                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] font-bold text-red-600 leading-normal">
+                                  <span className="text-red-700 block font-black mb-0.5">⚠️ SOLDE INSUFFISANT</span>
+                                  <span>{productErrors[p.id]}</span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveTab('deposit');
+                                    }}
+                                    className="mt-2 block text-[#0ea5e9] font-black underline uppercase tracking-wide cursor-pointer text-xs"
+                                  >
+                                    📥 Recharger mon compte maintenant
+                                  </button>
+                                </div>
+                              )}
 
-                          {/* Button Area */}
-                          <div className="mt-5 text-left">
-                            {productErrors[p.id] && (
-                              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-[11px] font-bold text-red-600 leading-normal">
-                                <span className="text-red-700 block font-black mb-0.5">⚠️ SOLDE INSUFFISANT</span>
-                                <span>{productErrors[p.id]}</span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveTab('deposit');
-                                  }}
-                                  className="mt-2 block text-[#0ea5e9] font-black underline uppercase tracking-wide cursor-pointer text-xs"
-                                >
-                                  📥 Recharger mon compte maintenant
-                                </button>
+                              {/* Elegant Split Button with Sky Blue Theme */}
+                              <button
+                                onClick={() => handleBuyProduct(p)}
+                                disabled={isBlocked}
+                                className={`w-full flex items-stretch rounded-full overflow-hidden border shadow-sm transition-all active:scale-[0.98] cursor-pointer ${theme.buttonBorder} ${isBlocked ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-95'}`}
+                              >
+                                <div className={`${theme.buttonLeft} font-extrabold text-xs px-4 py-3 flex items-center justify-center flex-1`}>
+                                  {p.price.toLocaleString()} {getCurrency()}
+                                </div>
+                                <div className={`${theme.buttonLeft} flex items-center justify-center px-1 font-bold select-none text-xs`}>
+                                  ⚡
+                                </div>
+                                <div className={`${theme.buttonRight} text-white font-extrabold text-xs px-6 py-3 flex items-center justify-center flex-1 text-center uppercase tracking-wide`}>
+                                  Investir
+                                </div>
+                              </button>
+                            </div>
+
+                            {isBlocked && (
+                              <div className="absolute inset-0 rounded-[28px] bg-slate-950/30 flex flex-col items-center justify-center p-3 z-10">
+                                <div className="bg-red-500 text-white font-bold text-xs uppercase px-2.5 py-1 rounded-lg">
+                                  Fermé / Suspendu
+                                </div>
+                                {formattedReopenTime && (
+                                  <span className="text-[9px] text-white font-mono mt-1 bg-black/60 px-2 py-0.5 rounded">
+                                    Ouvre à: {formattedReopenTime}
+                                  </span>
+                                )}
                               </div>
                             )}
-
-                            {/* Elegant Split Button with Sky Blue Theme */}
-                            <button
-                              onClick={() => handleBuyProduct(p)}
-                              disabled={isBlocked}
-                              className={`w-full flex items-stretch rounded-full overflow-hidden border border-sky-200 shadow-sm transition-all active:scale-[0.98] cursor-pointer ${isBlocked ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-95'}`}
-                            >
-                              <div className="bg-[#f0f9ff] text-[#0369a1] font-extrabold text-xs px-4 py-3 flex items-center justify-center flex-1">
-                                {p.price.toLocaleString()} {getCurrency()}
-                              </div>
-                              <div className="bg-[#f0f9ff] flex items-center justify-center px-1 text-yellow-400 font-bold select-none text-xs">
-                                ⚡
-                              </div>
-                              <div className="bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-extrabold text-xs px-6 py-3 flex items-center justify-center flex-1 text-center uppercase tracking-wide">
-                                Investir
-                              </div>
-                            </button>
                           </div>
+                        );
+                      })}
 
-                          {isBlocked && (
-                            <div className="absolute inset-0 rounded-[28px] bg-slate-950/30 flex flex-col items-center justify-center p-3 z-10">
-                              <div className="bg-red-500 text-white font-bold text-xs uppercase px-2.5 py-1 rounded-lg">
-                                Fermé / Suspendu
-                              </div>
-                              {formattedReopenTime && (
-                                <span className="text-[9px] text-white font-mono mt-1 bg-black/60 px-2 py-0.5 rounded">
-                                  Ouvre à: {formattedReopenTime}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                  {products.length === 0 && (
-                    <div className="col-span-full py-16 px-4 text-center rounded-3xl bg-sky-50 border border-dashed border-sky-200 max-w-sm mx-auto">
-                      <span className="text-3xl">📭</span>
-                      <h5 className="font-sans font-black text-slate-700 uppercase tracking-wider text-xs mt-3">Aucun produit disponible</h5>
-                      <p className="text-[10px] text-slate-400 font-bold mt-1">
-                        Aucun plan d'investissement n'est actif pour le moment.
-                      </p>
-                    </div>
-                  )}
+                    {products.filter(p => {
+                      if (productSubTab === 'stability') {
+                        return p.category === 'stability' || !p.category;
+                      }
+                      return p.category === productSubTab;
+                    }).length === 0 && (
+                      <div className="col-span-full py-16 px-4 text-center rounded-3xl bg-slate-50 border border-dashed border-slate-200 max-w-sm mx-auto">
+                        <span className="text-3xl">📭</span>
+                        <h5 className="font-sans font-black text-slate-700 uppercase tracking-wider text-xs mt-3">Aucun produit disponible</h5>
+                        <p className="text-[10px] text-slate-400 font-bold mt-1">
+                          Aucun plan d'investissement n'est actif dans cette catégorie pour le moment.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -4265,485 +4533,888 @@ export default function Dashboard({
             </div>
           )}
 
-          {/* WITHDRAWAL PROOFS FEED TAB REMOVED */}
-          {false && activeTab === 'proofs' && (
-            <div className="space-y-6 max-w-4xl mx-auto text-left bg-white p-6 sm:p-8 rounded-[34px] border border-blue-50 shadow-[0_12px_45px_rgba(249,115,22,0.04)]">
-              
-              {/* BRAND HEADER CARD */}
-              <div className="bg-slate-50 border border-slate-200/60 rounded-[28px] p-6 sm:p-8 shadow-sm text-slate-800 text-left relative overflow-hidden">
-                {/* Decorative background visual blob */}
-                <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#f0f4ff]0/5 rounded-full blur-2xl pointer-events-none" />
-                <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-[10px] font-sans font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-emerald-250/40">
-                      ✅ Communauté Active
+          {/* WITHDRAWAL PROOFS FEED TAB (AVIS) */}
+          {activeTab === 'proofs' && (
+            <div className="space-y-6 max-w-2xl mx-auto text-left animate-fadeIn animate-duration-300">
+              {/* Header Card */}
+              <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-950 border border-slate-800 rounded-[32px] p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
+                <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+                
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+                  <div className="flex items-center gap-4">
+                    {/* Elevated and stylized Avis logo */}
+                    <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-2xl shadow-[0_8px_20px_rgba(245,158,11,0.15)] relative overflow-hidden shrink-0 -mt-1 hover:scale-105 transition-transform duration-300">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/15 via-transparent to-transparent" />
+                      📢
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-sans font-black text-slate-800 tracking-tight leading-none mt-1">
-                      Preuves de Retrait
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                      Découvrez les reçus réels reçus et publiés en direct par nos investisseurs Dreampod.
-                    </p>
+                    <div className="space-y-1">
+                      <div className="inline-flex items-center space-x-2 bg-amber-500/15 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                        <span>Dreampod Officiel</span>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-sans font-black tracking-tight text-white uppercase leading-tight">
+                        Avis &amp; Communiqués
+                      </h2>
+                    </div>
                   </div>
-
-                  <button
-                    onClick={() => setIsPublishFormOpen(!isPublishFormOpen)}
-                    className="self-start sm:self-center px-5 py-3 bg-gradient-to-r from-[#1b64d9] to-amber-500 hover:from-[#1b64d9] hover:to-blue-700 text-white font-bold text-xs rounded-2xl shadow-[0_4px_15px_rgba(249,115,22,0.25)] flex items-center gap-2 duration-150 transition-all cursor-pointer select-none active:scale-95 shrink-0 uppercase tracking-widest font-mono"
-                  >
-                    <Camera className="w-4 h-4" />
-                    {isPublishFormOpen ? "Masquer le formulaire" : "Publier ma preuve"}
-                  </button>
+                  
+                  {userState.role === 'admin' && (
+                    <button
+                      onClick={() => {
+                        setIsAdminMode(true);
+                      }}
+                      className="whitespace-nowrap px-4 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-sans font-black text-xs rounded-xl shadow-lg hover:shadow-yellow-500/20 active:scale-95 duration-150 flex items-center space-x-1.5 uppercase tracking-wider border-0 cursor-pointer"
+                    >
+                      <span>✍️ Publier un Avis</span>
+                    </button>
+                  )}
+                </div>
+                <div className="mt-3 pl-0 sm:pl-[72px]">
+                  <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-md">
+                    Suivez les annonces de maintenance, les notes de sécurité de l'administration et les reçus de gains officiels de la plateforme.
+                  </p>
                 </div>
               </div>
 
-              {/* PUBLISH PROOF SHEET / CARD */}
-              <AnimatePresence>
-                {isPublishFormOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, y: -10 }}
-                    animate={{ opacity: 1, height: 'auto', y: 0 }}
-                    exit={{ opacity: 0, height: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="bg-slate-50/50 border border-blue-50 rounded-3xl p-5 sm:p-6 shadow-md text-slate-800">
-                      <div className="border-b border-slate-200 pb-3 mb-4">
-                        <span className="text-xs sm:text-sm font-sans font-black text-slate-800 uppercase tracking-wider block">
-                          📝 Partager mon expérience de paiement
-                        </span>
-                        <span className="text-[10px] sm:text-xs text-slate-500 block mt-0.5 opacity-90">
-                          Racontez votre retrait pour inspirer notre communauté de producteurs. Votre nom et pays seront joints !
-                        </span>
-                      </div>
-
-                      <form onSubmit={handlePublishProof} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Amount Input */}
-                          <div className="space-y-1">
-                            <label className="text-[10px] sm:text-xs font-sans font-black text-slate-700 uppercase tracking-wider block">
-                              Montant retiré (FCFA / XOF) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="number"
-                              required
-                              min="1"
-                              placeholder="Ex: 25000"
-                              value={proofAmount}
-                              onChange={(e) => setProofAmount(e.target.value)}
-                              className="w-full bg-white border border-slate-200 focus:border-[#f0f4ff]0 focus:outline-[#1b64d9] rounded-xl text-xs sm:text-sm text-slate-800 p-3.5 font-bold transition-all focus:ring-2 focus:ring-blue-500/20 placeholder-slate-400"
-                            />
-                          </div>
-
-                          {/* Image Attachment widget with full drag and drop */}
-                          <div className="space-y-1">
-                            <label className="text-[10px] sm:text-xs font-sans font-black text-slate-700 uppercase tracking-wider block">
-                              Capture d'écran du reçu Mobile Money (Optionnel)
-                            </label>
-                            
-                            <div 
-                              onDragOver={(e) => {
-                                e.preventDefault();
-                                setIsDraggingProof(true);
-                              }}
-                              onDragLeave={() => setIsDraggingProof(false)}
-                              onDrop={async (e) => {
-                                e.preventDefault();
-                                setIsDraggingProof(false);
-                                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                                  const file = e.dataTransfer.files[0];
-                                  setProofImageFileName(file.name);
-                                  try {
-                                    const compressed = await compressImage(file, 500, 0.45);
-                                    setProofImage(compressed);
-                                  } catch (err) {
-                                    const reader = new FileReader();
-                                    reader.readAsDataURL(file);
-                                    reader.onload = () => {
-                                      setProofImage(reader.result as string);
-                                    };
-                                  }
-                                }
-                              }}
-                              className={`border-2 border-dashed rounded-xl p-3 text-center flex items-center justify-center gap-3 transition-all duration-150 relative ${
-                                isDraggingProof 
-                                  ? 'border-[#f0f4ff]0 bg-[#f0f4ff]0/10' 
-                                  : proofImage 
-                                    ? 'border-emerald-500 bg-emerald-500/10' 
-                                    : 'border-slate-250 bg-white hover:border-blue-300 hover:bg-slate-50/50'
-                              }`}
-                            >
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={async (e) => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    const file = e.target.files[0];
-                                    setProofImageFileName(file.name);
-                                    try {
-                                      const compressed = await compressImage(file, 500, 0.45);
-                                      setProofImage(compressed);
-                                    } catch (err) {
-                                      const reader = new FileReader();
-                                      reader.readAsDataURL(file);
-                                      reader.onload = () => {
-                                        setProofImage(reader.result as string);
-                                      };
-                                    }
-                                  }
-                                }}
-                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                              />
-
-                              {proofImage ? (
-                                <div className="flex items-center justify-between w-full z-20 px-1">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-500/30">
-                                      <img src={proofImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                    </div>
-                                    <div className="text-left leading-tight truncate max-w-[150px] sm:max-w-[200px]">
-                                      <span className="text-[10px] text-slate-700 font-bold block truncate">{proofImageFileName || 'reçu_retrait.jpg'}</span>
-                                      <span className="text-[9px] text-emerald-600 font-black uppercase tracking-wider block">Chargé</span>
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setProofImage('');
-                                      setProofImageFileName('');
-                                    }}
-                                    className="text-[9px] text-red-600 hover:text-red-700 font-black uppercase tracking-wider px-2.5 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200/50 rounded-lg transition-colors z-30"
-                                  >
-                                    Enlever
-                                  </button>
-                                </div>
-                              ) : (
-                                <>
-                                  <div className="w-8 h-8 rounded-lg bg-[#f0f4ff] border border-blue-50/50 text-[#1b64d9] flex items-center justify-center text-sm shrink-0">
-                                    📸
-                                  </div>
-                                  <div className="text-left leading-tight">
-                                    <span className="text-[10px] sm:text-[11px] text-[#1b64d9] font-black uppercase tracking-wide block">
-                                      Choisir ou glisser l'image
-                                    </span>
-                                    <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold block">
-                                      PNG, JPG (Reçu de transaction)
-                                    </span>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Text Message Input */}
-                        <div className="space-y-1">
-                          <label className="text-[10px] sm:text-xs font-sans font-black text-slate-700 uppercase tracking-wider block">
-                            Votre Message / Témoignage <span className="text-red-500">*</span>
-                          </label>
-                          <textarea
-                            required
-                            rows={3}
-                            placeholder="Partagez votre joie ! Ex: Super ! Retrait instantané de mon gain VIP sur mon compte Wave, équipe au top !"
-                            value={proofMessage}
-                            onChange={(e) => setProofMessage(e.target.value)}
-                            className="w-full bg-white border border-slate-200 focus:border-[#f0f4ff]0 focus:outline-[#1b64d9] rounded-xl text-xs sm:text-sm text-slate-800 p-3.5 font-bold transition-all focus:ring-2 focus:ring-blue-500/20 placeholder-slate-400 resize-none"
-                          />
-                        </div>
-
-                        {/* Submit Actions */}
-                        <div className="flex gap-2.5 justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setIsPublishFormOpen(false)}
-                            className="px-4 py-3 border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-xs rounded-xl transition-all cursor-pointer"
-                          >
-                            Annuler
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={isPublishing}
-                            className={`px-6 py-3 font-bold text-xs rounded-xl flex items-center gap-2 text-white shadow-md cursor-pointer ${
-                              isPublishing 
-                                ? 'bg-blue-400 opacity-80 cursor-not-allowed' 
-                                : 'bg-[#f0f4ff]0 hover:bg-[#1b64d9] shadow-blue-500/10 active:scale-95 transition-all'
-                            }`}
-                          >
-                            {isPublishing ? "Publication..." : "Partager sur le Flux 🚀"}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* TIMELINE OF PROOFS */}
+              {/* Announcements Feed */}
               <div className="space-y-4">
                 {withdrawalProofs.length === 0 ? (
-                  <div className="bg-slate-50 border border-slate-200/60 rounded-3xl p-12 text-center text-slate-700">
-                    <span className="text-3xl block">🌾</span>
-                    <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider mt-2.5">Aucun témoignage publié</h3>
-                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto font-medium opacity-90">
-                      Soyez le premier à partager votre joie et à publier votre preuve de retrait pour inspirer de nouveaux membres.
+                  <div className="text-center py-16 px-6 rounded-[32px] bg-white border border-blue-50 shadow-sm">
+                    <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                      <span className="text-2xl">📭</span>
+                    </div>
+                    <h3 className="text-sm font-sans font-black text-slate-700 uppercase tracking-wider">Aucun communiqué disponible</h3>
+                    <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                      L'administration n'a pas encore publié d'annonce officielle pour le moment.
                     </p>
                   </div>
                 ) : (
-                  withdrawalProofs.map((proof) => {
-                    const hasLiked = proof.likes.includes(userState.id);
-                    const colors = [
-                      'from-[#1b64d9] to-amber-500', 
-                      'from-emerald-500 to-teal-500', 
-                      'from-blue-500 to-indigo-500', 
-                      'from-purple-500 to-pink-500'
-                    ];
-                    let hash = 0;
-                    for (let i = 0; i < proof.userName.length; i++) {
-                      hash += proof.userName.charCodeAt(i);
-                    }
-                    const avatarGradient = colors[hash % colors.length];
-
-                    return (
-                      <div 
-                        key={proof.id}
-                        className="bg-white border border-slate-150 hover:border-blue-100 hover:shadow-lg transition-all rounded-3xl p-5 text-left relative overflow-hidden group shadow-sm"
-                      >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/[0.01] rounded-full blur-xl pointer-events-none group-hover:bg-white/[0.02] transition-colors" />
-
-                        <div className="flex justify-between items-start">
-                          <div className="flex gap-3">
-                            <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${avatarGradient} text-white font-sans font-black flex items-center justify-center text-sm shadow-md`}>
-                              {proof.userName.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="leading-tight">
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-sans font-black text-slate-800 text-sm block">
-                                  {proof.userName}
-                                </span>
-                                <span className="bg-emerald-50 text-emerald-700 text-[8px] font-sans font-black px-1.5 py-0.5 rounded uppercase tracking-wider border border-emerald-200/50 flex items-center gap-0.5 select-none animate-pulse">
-                                  <span>PAYÉ</span>
-                                  <span>★</span>
-                                </span>
+                  [...withdrawalProofs]
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .map((proof) => {
+                      const userHasLiked = proof.likes?.includes(userState.id) || false;
+                      return (
+                        <div
+                          key={proof.id}
+                          className="bg-white border border-blue-50/70 rounded-[32px] p-5 sm:p-6 shadow-[0_12px_40px_rgba(27,100,217,0.02)] space-y-4 hover:border-blue-100 transition-all duration-150"
+                        >
+                          {/* Post Header */}
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-slate-100 border border-slate-200/60 rounded-2xl flex items-center justify-center font-display font-bold text-lg text-slate-700 shadow-inner">
+                                {proof.userName.toLowerCase().includes('admin') || proof.userName.toLowerCase().includes('officiel') ? '👑' : '📢'}
                               </div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] text-[#1b64d9] font-black uppercase tracking-wider block opacity-95">
-                                  📍 {proof.userCountry}
-                                </span>
-                                <span className="text-slate-400 text-[9px] font-black tracking-normal uppercase opacity-75">
-                                  {new Date(proof.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              <div>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-sans font-black text-xs text-slate-800 tracking-tight">
+                                    {proof.userName}
+                                  </span>
+                                  <span className="bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-lg">
+                                    {proof.userCountry || 'Officiel'}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                                  📅 {new Date(proof.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
                             </div>
+
+                            {/* Optional Amount badge */}
+                            {proof.amount > 0 && (
+                              <div className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 px-3 py-1.5 rounded-2xl text-[11px] font-mono font-black shadow-sm">
+                                +{proof.amount.toLocaleString('fr-FR')} XOF
+                              </div>
+                            )}
                           </div>
 
-                          <div className="text-right leading-none">
-                            <span className="text-emerald-600 font-mono font-black text-base sm:text-lg tracking-tight block">
-                              +{proof.amount.toLocaleString()} XOF
+                          {/* Message Body */}
+                          <div className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans whitespace-pre-wrap pl-1 font-medium">
+                            {proof.message}
+                          </div>
+
+                          {/* Optional Transaction confirmation banner */}
+                          {proof.amount > 0 && (
+                            <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-2xl p-3 flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-xl bg-emerald-100/60 flex items-center justify-center text-emerald-600 font-bold text-xs">
+                                ✓
+                              </div>
+                              <div className="text-left">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 block">Paiement Effectué avec Succès</span>
+                                <span className="text-[9px] text-emerald-600/90 font-medium block mt-0.5">La somme de {proof.amount.toLocaleString('fr-FR')} XOF a été versée sur le compte mobile money du bénéficiaire.</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Image Attachment with Lightbox Zoom option */}
+                          {proof.image && (
+                            <div 
+                              onClick={() => setSelectedAvisImage(proof.image || null)}
+                              className="relative rounded-2xl overflow-hidden border border-slate-100 max-h-72 bg-slate-50 flex justify-center items-center cursor-zoom-in group shadow-sm"
+                            >
+                              <img
+                                src={proof.image}
+                                alt="Communiqué ou Preuve de retrait"
+                                className="w-full max-h-72 object-cover group-hover:scale-[1.02] transition-transform duration-200 animate-fadeIn"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="bg-slate-900/85 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl shadow-lg border border-slate-750">
+                                  🔍 Cliquer pour agrandir
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Likes & Interactions footer */}
+                          <div className="flex items-center justify-between border-t border-slate-50 pt-3.5 pl-1">
+                            <button
+                              onClick={() => handleLikeProof(proof.id)}
+                              className={`flex items-center space-x-2 text-[11px] font-bold py-1.5 px-3 rounded-xl border transition-all duration-150 cursor-pointer ${
+                                userHasLiked
+                                  ? 'bg-blue-50 text-[#1b64d9] border-blue-100 scale-105 shadow-sm'
+                                  : 'bg-slate-50 hover:bg-slate-100 text-slate-500 border-slate-100'
+                              }`}
+                            >
+                              <span className={userHasLiked ? 'animate-bounce block' : ''}>👍</span>
+                              <span>{proof.likes?.length || 0}</span>
+                              <span className="text-[10px] opacity-70">Apprécier</span>
+                            </button>
+
+                            {userState.role === 'admin' && (
+                              <button
+                                onClick={() => handleDeleteProof(proof.id)}
+                                className="px-3 py-1.5 text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-100 hover:border-transparent rounded-xl text-[10px] font-bold transition-all duration-150 cursor-pointer"
+                              >
+                                Supprimer du flux
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* FORUM / COMMUNICATION TAB */}
+          {!profileSubPage && activeTab === 'forum' && (
+            <div className="space-y-6 max-w-4xl mx-auto text-left bg-white p-6 sm:p-8 rounded-[34px] border border-blue-50 shadow-[0_12px_45px_rgba(249,115,22,0.04)] animate-fadeIn">
+              
+              {/* FORUM HEADER CARD */}
+              <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-950 border border-slate-800 rounded-[28px] p-6 sm:p-8 text-white text-left relative overflow-hidden shadow-lg">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+                
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 relative z-10">
+                  <div className="space-y-1.5 flex-1">
+                    <h2 className="text-2xl sm:text-3xl font-sans font-black tracking-tight leading-none text-white">
+                      Forum Dreampod
+                    </h2>
+                    <p className="text-xs text-slate-300 font-medium max-w-lg">
+                      Partagez vos astuces de minage d'or, vos objectifs, ou discutez en direct avec d'autres investisseurs de la communauté !
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* POST A NEW MESSAGE FORM */}
+              <div className="bg-slate-50 border border-slate-200/60 rounded-[28px] p-5 sm:p-6 shadow-sm">
+                <form onSubmit={handlePostForumMessage} className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-[#1b64d9]/10 text-[#1b64d9] flex items-center justify-center text-sm font-black">
+                        ✍️
+                      </div>
+                      <span className="font-sans font-black text-xs text-slate-800 uppercase tracking-wider">
+                        Publier sur le forum
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <textarea
+                      rows={3}
+                      value={forumMessageInput}
+                      onChange={(e) => setForumMessageInput(e.target.value)}
+                      placeholder="Partagez votre expérience ! (Ex: Dreampod est vraiment fiable, merci à l'équipe!)"
+                      maxLength={500}
+                      className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/25 focus:border-[#1b64d9] transition-all resize-none shadow-xs"
+                    />
+                    <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold px-1 select-none">
+                      <span>Auteur : {userState.name || 'Moi'} ({userState.country || 'Cameroun'})</span>
+                      <span>{forumMessageInput.length}/500 caractères</span>
+                    </div>
+                  </div>
+
+                  {/* Optional Image Attachments */}
+                  <div className="space-y-2 bg-white/70 border border-slate-200 p-4 rounded-2xl text-left">
+                    <label className="text-[10.5px] font-sans font-black text-slate-600 uppercase tracking-wider block">
+                      📸 Ajouter des images (optionnel)
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Image 1 Selector */}
+                      <div className="relative border-2 border-dashed border-slate-200 hover:border-[#1b64d9]/50 rounded-2xl bg-white p-3 flex flex-col items-center justify-center min-h-[110px] text-center cursor-pointer transition-colors group">
+                        {forumImage1 ? (
+                          <div className="w-full h-full relative">
+                            <img src={forumImage1} className="w-full h-24 object-cover rounded-xl" alt="Image 1" referrerPolicy="no-referrer" />
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setForumImage1(null); }}
+                              className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center hover:bg-rose-600 transition-colors animate-fadeIn"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                            <span className="text-xl mb-1 group-hover:scale-110 transition-transform">📥</span>
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-wide">Image 1</span>
+                            <span className="text-[8px] text-slate-400 font-bold block mt-0.5">Ajouter une photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const r = new FileReader();
+                                  r.onloadend = () => setForumImage1(r.result as string);
+                                  r.readAsDataURL(file);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+
+                      {/* Image 2 Selector */}
+                      <div className="relative border-2 border-dashed border-slate-200 hover:border-[#1b64d9]/50 rounded-2xl bg-white p-3 flex flex-col items-center justify-center min-h-[110px] text-center cursor-pointer transition-colors group">
+                        {forumImage2 ? (
+                          <div className="w-full h-full relative">
+                            <img src={forumImage2} className="w-full h-24 object-cover rounded-xl" alt="Image 2" referrerPolicy="no-referrer" />
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setForumImage2(null); }}
+                              className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center hover:bg-rose-600 transition-colors animate-fadeIn"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                            <span className="text-xl mb-1 group-hover:scale-110 transition-transform">📥</span>
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-wide">Image 2</span>
+                            <span className="text-[8px] text-slate-400 font-bold block mt-0.5">Ajouter une photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const r = new FileReader();
+                                  r.onloadend = () => setForumImage2(r.result as string);
+                                  r.readAsDataURL(file);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      className="px-6 py-3 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-xs rounded-2xl shadow-md flex items-center gap-2 duration-150 transition-all cursor-pointer select-none active:scale-95 uppercase tracking-wider"
+                    >
+                      <Send className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>Publier sur le Forum</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* FORUM TIMELINE OF POSTS */}
+              <div className="space-y-4">
+                {forumPosts.map((post) => {
+                  const hasLiked = post.hasLiked;
+                  const commentInputVal = forumCommentInputs[post.id] || '';
+
+                  return (
+                    <div
+                      key={post.id}
+                      className="bg-white border border-slate-150 hover:border-blue-100 hover:shadow-md transition-all rounded-3xl p-5 text-left shadow-xs"
+                    >
+                      {/* Author row */}
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white font-sans font-black flex items-center justify-center text-sm shadow-sm">
+                            {post.avatarLetter || post.authorName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="leading-tight">
+                            <span className="font-sans font-black text-slate-800 text-sm block">
+                              {post.authorName}
+                            </span>
+                            <span className="text-slate-400 text-[9px] font-black tracking-normal uppercase opacity-75 mt-0.5 block">
+                              {new Date(post.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
                         </div>
+                      </div>
 
-                        <div className="mt-4 bg-slate-50 border border-slate-100 p-4 rounded-xl">
-                          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold whitespace-pre-wrap">
-                            {proof.message}
-                          </p>
-                        </div>
+                      {/* Content block */}
+                      <div className="mt-4 bg-slate-50/50 border border-slate-100/60 p-4 rounded-2xl">
+                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold whitespace-pre-wrap">
+                          {post.text}
+                        </p>
+                      </div>
 
-                        {proof.image && (
-                          <div className="mt-4 max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 hover:border-blue-100 transition-colors">
-                            <button
-                              onClick={() => setExpandedImage(proof.image || null)}
-                              type="button"
-                              className="w-full relative focus:outline-none focus:ring-0 select-none cursor-zoom-in overflow-hidden"
-                              title="Cliquer pour zoomer sur le reçu de retrait"
+                      {/* Image attachments side-by-side (collaged) */}
+                      {(post.image1 || post.image2) && (
+                        <div className={`mt-3 grid gap-2 bg-slate-100 p-2 rounded-2xl border border-slate-200 ${post.image1 && post.image2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                          {post.image1 && (
+                            <div 
+                              onClick={() => setSelectedAvisImage(post.image1)}
+                              className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center cursor-zoom-in group shadow-xs"
                             >
-                              <img 
-                                src={proof.image} 
-                                className="w-full max-h-[350px] object-contain transition-transform duration-300 hover:scale-[1.02] block mx-auto" 
-                                referrerPolicy="no-referrer" 
+                              <img
+                                src={post.image1}
+                                alt="Image 1"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                referrerPolicy="no-referrer"
                               />
-                              <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] text-white font-mono font-black uppercase tracking-wider flex items-center gap-1 border border-white/10 shadow-md">
-                                <span>🔍 Agrandir l'image</span>
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">
+                                  Agrandir 🔍
+                                </span>
                               </div>
-                            </button>
-                          </div>
-                        )}
+                            </div>
+                          )}
 
-                        <div className="flex justify-start items-center border-t border-slate-100 mt-4 pt-3">
+                          {post.image2 && (
+                            <div 
+                              onClick={() => setSelectedAvisImage(post.image2)}
+                              className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center cursor-zoom-in group shadow-xs"
+                            >
+                              <img
+                                src={post.image2}
+                                alt="Image 2"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">
+                                  Agrandir 🔍
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Social counts & Likes */}
+                      <div className="flex justify-between items-center border-t border-slate-100 mt-4 pt-3 text-slate-500">
+                        <button
+                          type="button"
+                          onClick={() => handleLikeForumPost(post.id)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-sans font-black tracking-wide uppercase transition-all duration-150 ${
+                            hasLiked
+                              ? 'bg-[#f0f4ff] text-[#1b64d9] font-black saturate-150 border border-blue-100'
+                              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent'
+                          }`}
+                        >
+                          <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-[#1b64d9] stroke-[#1b64d9]' : ''}`} />
+                          <span>{post.likes} Likes</span>
+                        </button>
+
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          💬 {post.comments?.length || 0} Commentaires
+                        </div>
+                      </div>
+
+                      {/* Comments Feed section */}
+                      <div className="mt-3 space-y-2.5 pl-3 border-l-2 border-slate-100 pt-1">
+                        {post.comments && post.comments.map((comment: any, idx: number) => (
+                          <div key={idx} className="bg-slate-50 p-2.5 rounded-xl text-left leading-snug">
+                            <span className="font-sans font-black text-[10px] text-[#1b64d9] block">
+                              {comment.author}
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-600">
+                              {comment.text}
+                            </span>
+                          </div>
+                        ))}
+
+                        {/* Add a comment form */}
+                        <div className="flex gap-2 items-center pt-1.5">
+                          <input
+                            type="text"
+                            value={commentInputVal}
+                            onChange={(e) => setForumCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                            placeholder="Ajouter un commentaire..."
+                            className="flex-1 bg-slate-50 border border-slate-250 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/10 focus:border-[#1b64d9] transition-all"
+                          />
                           <button
-                            onClick={() => handleLikeProof(proof.id)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-sans font-black tracking-wide uppercase transition-all duration-150 ${
-                              hasLiked 
-                                ? 'bg-[#f0f4ff] text-[#1b64d9] font-black saturate-150 border border-blue-100' 
-                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent'
-                            }`}
+                            type="button"
+                            onClick={() => handlePostForumComment(post.id)}
+                            disabled={!commentInputVal.trim()}
+                            className="px-3 py-2 bg-[#1b64d9]/10 text-[#1b64d9] hover:bg-[#1b64d9] hover:text-white disabled:opacity-40 font-sans font-black text-xs rounded-xl transition-all uppercase tracking-wide"
                           >
-                            <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-[#1b64d9] stroke-[#1b64d9]' : ''}`} />
-                            <span>{proof.likes.length > 0 ? `${proof.likes.length} ${proof.likes.length === 1 ? 'Like' : 'Likes'}` : 'Soutenir'}</span>
+                            Répondre
                           </button>
                         </div>
                       </div>
-                    );
-                  })
-                )}
+
+                    </div>
+                  );
+                })}
               </div>
-
-              {/* ENLARGED FULLSCREEN RECEIPT MODAL OVERLAY */}
-              <AnimatePresence>
-                {expandedImage && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => setExpandedImage(null)}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 cursor-zoom-out"
-                  >
-                    <motion.div
-                      initial={{ scale: 0.95 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0.95 }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="max-w-4xl max-h-[85vh] overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 flex flex-col justify-between relative shadow-[0_25px_60px_rgba(0,0,0,0.85)]"
-                    >
-                      <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-950/40">
-                        <span className="font-sans font-black text-xs text-white uppercase tracking-widest block">
-                          Verified Cash Transaction Receipt
-                        </span>
-                        <button
-                          onClick={() => setExpandedImage(null)}
-                          className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer border-none outline-none"
-                        >
-                          ✕
-                        </button>
-                      </div>
-
-                      <div className="p-4 flex-grow overflow-auto flex items-center justify-center max-h-[70vh]">
-                        <img 
-                          src={expandedImage} 
-                          className="max-w-full max-h-[62vh] object-contain rounded-2xl border border-slate-800 shadow-inner" 
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
             </div>
           )}
 
           {/* TEAM / MLM SYSTEM TAB */}
-          {!profileSubPage && activeTab === 'team' && (
-            <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left">
-              <div className="max-w-md mx-auto w-full space-y-4">
-                
-                {/* BRAND HEADER */}
-                <div className="flex items-center space-x-2 pb-1 pt-1 pl-1 select-none">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#1b64d9] to-[#2575fc] flex items-center justify-center text-white shadow-sm">
-                    <TrendingUp className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                  <span className="font-sans font-black tracking-wider text-[#1b64d9] text-sm uppercase">DREAMPOD INVESTMENT</span>
-                </div>
+          {!profileSubPage && activeTab === 'team' && (() => {
+            const getActiveUsersCount = (list: any[]) => {
+              return list.filter(u => getUserInvestedAmount(u.id) > 0).length;
+            };
 
-                {/* HEADER */}
-                <div className="space-y-1 pl-1">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-[#1b64d9]" />
-                    <h2 className="font-sans font-black text-slate-800 text-base uppercase tracking-tight">Filleuls &amp; Récompenses d'Equipe</h2>
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                    Gagnez des commissions instantanées sur 3 niveaux d'affiliation à chaque fois que vos filleuls rechargent leur compte et investissent.
-                  </p>
-                </div>
-
-                {/* STATS OVERVIEW CARD (TOTAL FILLEULS INVITÉS & COMMISSIONS) */}
-                <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#1b64d9] flex items-center justify-center shrink-0">
-                      <Users className="w-5 h-5 stroke-[2.5]" />
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">TOTAL FILLEULS INVITÉS</span>
-                      <span className="text-sm font-black text-slate-800 block mt-0.5">{totalReferrals} invités</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">COMMISSIONS</span>
-                    <span className="text-sm font-black text-[#00bd74] block mt-0.5">
-                      {commissions.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} F
-                    </span>
-                  </div>
-                </div>
-
-                {/* EXCLUSIVE INVITATION LINK CARD */}
-                <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
-                  <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block pl-0.5">
-                    🔗 VOTRE LIEN D'INVITATION EXCLUSIF
-                  </span>
+            return (
+              <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn animate-duration-300">
+                <div className="max-w-xl mx-auto w-full space-y-6">
                   
-                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl p-2.5">
-                    <div className="flex-1 overflow-hidden">
-                      <span className="font-mono text-[10.5px] font-bold text-slate-600 select-all block truncate text-left pr-2">
-                        {referralURL}
+                  {/* INVITATION REWARDS SECTION */}
+                  <div className="space-y-4">
+                    {/* Header with Star */}
+                    <div className="flex items-center justify-between pl-1">
+                      <div className="space-y-1">
+                        <h2 className="text-xl sm:text-2xl font-sans font-black tracking-tight text-slate-900">
+                          Récompenses d'invitation
+                        </h2>
+                        <p className="text-xs text-slate-500 font-bold">
+                          Investissez ensemble, enrichissez-vous ensemble
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 text-2xl animate-pulse">
+                        🌟
+                      </div>
+                    </div>
+
+                    {/* Invitation Cards */}
+                    <div className="space-y-3">
+                      {/* Invitation Code Card */}
+                      <div className="bg-[#ebfbf2] rounded-3xl p-4 sm:p-5 flex items-center justify-between border border-emerald-100 shadow-sm transition-transform hover:scale-[1.01]">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                          <div className="w-11 h-11 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-emerald-600 shrink-0">
+                            <Copy className="w-5.5 h-5.5 stroke-[2.5]" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] sm:text-[11px] text-emerald-800 font-black uppercase tracking-wider block">Code d'invitation</span>
+                            <span className="text-base sm:text-lg font-sans font-black text-slate-900 block mt-0.5 select-all">{userState.referralCode}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleCopyCode}
+                          className="px-5 py-2.5 bg-[#2cb1fc] hover:bg-sky-500 text-white text-[11px] font-black rounded-full shadow-md hover:shadow-sky-500/15 transition-all active:scale-95 duration-150 uppercase tracking-widest cursor-pointer border-none outline-none"
+                        >
+                          {copiedCode ? "Copier..." : "Copier"}
+                        </button>
+                      </div>
+
+                      {/* Invitation Link Card */}
+                      <div className="bg-[#ebfbf2] rounded-3xl p-4 sm:p-5 flex items-center justify-between border border-emerald-100 shadow-sm transition-transform hover:scale-[1.01]">
+                        <div className="flex items-center space-x-3 sm:space-x-4 overflow-hidden mr-2">
+                          <div className="w-11 h-11 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-emerald-600 shrink-0">
+                            <Share className="w-5.5 h-5.5 stroke-[2.5]" />
+                          </div>
+                          <div className="overflow-hidden">
+                            <span className="text-[10px] sm:text-[11px] text-emerald-800 font-black uppercase tracking-wider block">Lien d'invitation</span>
+                            <span className="text-xs font-sans font-bold text-slate-500 block mt-0.5 truncate select-all">{referralURL}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleCopyLink}
+                          className="px-5 py-2.5 bg-[#2cb1fc] hover:bg-sky-500 text-white text-[11px] font-black rounded-full shadow-md hover:shadow-sky-500/15 transition-all active:scale-95 duration-150 uppercase tracking-widest cursor-pointer border-none outline-none shrink-0"
+                        >
+                          {copiedLink ? "Copier..." : "Copier"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TEAM LEVELS SECTION */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between pl-1">
+                      <h3 className="font-sans font-black text-slate-800 text-base sm:text-lg uppercase tracking-tight">
+                        Niveau d'équipe
+                      </h3>
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById('team-list-section');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="text-blue-600 hover:text-blue-700 text-xs font-extrabold flex items-center space-x-1.5 uppercase tracking-wider cursor-pointer bg-transparent border-none outline-none"
+                      >
+                        <span>Détails de l'équipe</span>
+                        <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    </div>
+
+                    {/* Level Cards */}
+                    <div className="space-y-3">
+                      
+                      {/* Level 1 (N1) - Golden Card */}
+                      <div 
+                        onClick={() => setReferralListTab('level1')}
+                        className={`bg-[#fef9c3] rounded-3xl p-4 sm:p-5 flex items-center justify-between border transition-all duration-200 cursor-pointer ${
+                          referralListTab === 'level1' 
+                            ? 'border-yellow-400 ring-2 ring-yellow-400 ring-offset-4 ring-offset-white scale-[1.01]' 
+                            : 'border-yellow-200/40 hover:border-yellow-300/60'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3.5 sm:space-x-5 flex-1">
+                          <div className="w-12 h-12 rounded-2xl bg-yellow-100 flex items-center justify-center text-3xl filter drop-shadow-sm shrink-0">
+                            🥇
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-2 sm:gap-4 flex-1 text-left">
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{mlmRates.level1 || 30}%</span>
+                              <span className="text-[9px] sm:text-[10px] text-amber-800/80 font-black uppercase tracking-tight block mt-0.5">Remise Niv 1</span>
+                            </div>
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{level1Users.length}</span>
+                              <span className="text-[9px] sm:text-[10px] text-amber-800/80 font-black uppercase tracking-tight block mt-0.5">Total invité</span>
+                            </div>
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{getActiveUsersCount(level1Users)}</span>
+                              <span className="text-[9px] sm:text-[10px] text-amber-800/80 font-black uppercase tracking-tight block mt-0.5">Activé</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-amber-800/65 pl-2">
+                          <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+                        </div>
+                      </div>
+
+                      {/* Level 2 (N2) - Mint Card */}
+                      <div 
+                        onClick={() => setReferralListTab('level2')}
+                        className={`bg-[#eefcf3] rounded-3xl p-4 sm:p-5 flex items-center justify-between border transition-all duration-200 cursor-pointer ${
+                          referralListTab === 'level2' 
+                            ? 'border-emerald-400 ring-2 ring-emerald-400 ring-offset-4 ring-offset-white scale-[1.01]' 
+                            : 'border-emerald-200/40 hover:border-emerald-300/60'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3.5 sm:space-x-5 flex-1">
+                          <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-3xl filter drop-shadow-sm shrink-0">
+                            🥈
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-2 sm:gap-4 flex-1 text-left">
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-emerald-950 block leading-tight">{mlmRates.level2 || 5}%</span>
+                              <span className="text-[9px] sm:text-[10px] text-emerald-800/80 font-black uppercase tracking-tight block mt-0.5">Lv 2 Rebate</span>
+                            </div>
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-emerald-950 block leading-tight">{level2Users.length}</span>
+                              <span className="text-[9px] sm:text-[10px] text-emerald-800/80 font-black uppercase tracking-tight block mt-0.5">Total invité</span>
+                            </div>
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-emerald-950 block leading-tight">{getActiveUsersCount(level2Users)}</span>
+                              <span className="text-[9px] sm:text-[10px] text-emerald-800/80 font-black uppercase tracking-tight block mt-0.5">Activé</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-emerald-800/65 pl-2">
+                          <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+                        </div>
+                      </div>
+
+                      {/* Level 3 (N3) - Soft Peach/Yellow Card */}
+                      <div 
+                        onClick={() => setReferralListTab('level3')}
+                        className={`bg-[#fffbeb] rounded-3xl p-4 sm:p-5 flex items-center justify-between border transition-all duration-200 cursor-pointer ${
+                          referralListTab === 'level3' 
+                            ? 'border-amber-400 ring-2 ring-amber-400 ring-offset-4 ring-offset-white scale-[1.01]' 
+                            : 'border-amber-200/40 hover:border-amber-300/60'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3.5 sm:space-x-5 flex-1">
+                          <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl filter drop-shadow-sm shrink-0">
+                            🥉
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-2 sm:gap-4 flex-1 text-left">
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{mlmRates.level3 || 1}%</span>
+                              <span className="text-[9px] sm:text-[10px] text-amber-800/80 font-black uppercase tracking-tight block mt-0.5">Lv 3 Rebate</span>
+                            </div>
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{level3Users.length}</span>
+                              <span className="text-[9px] sm:text-[10px] text-amber-800/80 font-black uppercase tracking-tight block mt-0.5">Total invité</span>
+                            </div>
+                            <div>
+                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{getActiveUsersCount(level3Users)}</span>
+                              <span className="text-[9px] sm:text-[10px] text-amber-800/80 font-black uppercase tracking-tight block mt-0.5">Activé</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-amber-800/65 pl-2">
+                          <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* COMMISSIONS SUMMARY CARD */}
+                  <div className="bg-white border border-slate-100 rounded-[28px] p-4.5 flex items-center justify-between shadow-xs">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-[#00bd74] flex items-center justify-center font-bold text-lg">
+                        💰
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block">SOLDE DE COMMISSIONS</span>
+                        <span className="text-base font-black text-[#00bd74] block mt-0.5">
+                          {commissions.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} XOF
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block">TOTAL INVITÉS</span>
+                      <span className="text-sm font-black text-slate-800 block mt-0.5">
+                        {totalReferrals} membres
                       </span>
                     </div>
-                    <button
-                      onClick={handleCopyLink}
-                      className="bg-[#1b64d9] hover:bg-blue-600 text-white text-[10px] font-black px-4 py-2.5 rounded-xl transition-all active:scale-95 shadow-sm flex items-center justify-center shrink-0 cursor-pointer border-none outline-none"
-                    >
-                      {copiedLink ? "COPIÉ" : "COPIER"}
-                    </button>
                   </div>
 
-                  {/* PARTAGER AUTOMATIQUEMENT */}
-                  <div className="pt-3.5 border-t border-slate-100">
-                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block mb-2 text-left pl-0.5">PARTAGER AUTOMATIQUEMENT :</span>
-                    <div className="grid grid-cols-5 gap-2">
+                  {/* DETAILED LIST OF MEMBERS */}
+                  <div id="team-list-section" className="bg-white rounded-[32px] p-5 sm:p-6 border border-slate-100 shadow-xs space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <span className="text-[11px] text-slate-700 font-black uppercase tracking-wider block pl-0.5">
+                        DÉTAILS : {referralListTab === 'level1' ? 'Niveau 1' : referralListTab === 'level2' ? 'Niveau 2' : 'Niveau 3'}
+                      </span>
+                      <span className="text-[9px] bg-blue-50 text-blue-600 font-bold font-mono px-2.5 py-1 rounded-full border border-blue-100/50 uppercase tracking-wide">
+                        {referralListTab === 'level1' ? level1Users.length : referralListTab === 'level2' ? level2Users.length : level3Users.length} membres
+                      </span>
+                    </div>
+
+                    {/* Total Invested Per Level Banner */}
+                    <div className="pt-1">
+                      {referralListTab === 'level1' && (
+                        <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex justify-between items-center text-xs">
+                          <span className="font-sans font-black uppercase tracking-tight text-amber-800">Total investi Niveau 1 :</span>
+                          <span className="font-mono font-black text-amber-700">
+                            {getLevelInvestedAmount(level1Users).toLocaleString()} XOF
+                          </span>
+                        </div>
+                      )}
+                      {referralListTab === 'level2' && (
+                        <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-2xl flex justify-between items-center text-xs">
+                          <span className="font-sans font-black uppercase tracking-tight text-emerald-800">Total investi Niveau 2 :</span>
+                          <span className="font-mono font-black text-emerald-700">
+                            {getLevelInvestedAmount(level2Users).toLocaleString()} XOF
+                          </span>
+                        </div>
+                      )}
+                      {referralListTab === 'level3' && (
+                        <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex justify-between items-center text-xs">
+                          <span className="font-sans font-black uppercase tracking-tight text-amber-800">Total investi Niveau 3 :</span>
+                          <span className="font-mono font-black text-amber-700">
+                            {getLevelInvestedAmount(level3Users).toLocaleString()} XOF
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Member Items */}
+                    <div className="space-y-3 pt-1">
+                      {referralListTab === 'level1' && (
+                        level1Users.length === 0 ? (
+                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
+                              Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) dans votre équipe.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {level1Users.map(u => (
+                              <div key={u.id} className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-3 hover:border-slate-200 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[180px]">{u.name}</span>
+                                  <span className={`text-[8px] font-black font-mono px-2 py-0.5 rounded border uppercase tracking-wider ${
+                                    getUserInvestedAmount(u.id) > 0 
+                                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50' 
+                                      : 'bg-slate-100 text-slate-500 border-slate-200/50'
+                                  }`}>
+                                    {getUserInvestedAmount(u.id) > 0 ? 'Actif' : 'Inactif'}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
+                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
+                                    <span className="text-slate-700 font-bold block mt-0.5">{maskPhoneNumber(u.whatsapp)}</span>
+                                  </div>
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
+                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Montant Investi</span>
+                                    <span className="text-emerald-600 font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center text-[9px] text-slate-500 border-t border-slate-100 pt-2.5 font-bold">
+                                  <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
+                                  {u.whatsapp && (
+                                    <a 
+                                      href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="text-emerald-600 font-black hover:underline flex items-center space-x-1"
+                                    >
+                                      <span>Contacter</span>
+                                      <span>💬</span>
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      )}
+
+                      {referralListTab === 'level2' && (
+                        level2Users.length === 0 ? (
+                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
+                              Aucun membre de Niveau 2 enregistré dans votre réseau.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {level2Users.map(u => {
+                              const cleanRef = (u.referredBy || '').trim().toUpperCase();
+                              const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
+                              return (
+                                <div key={u.id} className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-3 hover:border-slate-200 transition-colors">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[180px]">{u.name}</span>
+                                    <span className="text-[9px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200/50">
+                                      Par: {sponsor ? sponsor.name : 'Membre N1'}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                    <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
+                                      <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
+                                      <span className="text-slate-700 font-bold block mt-0.5">{maskPhoneNumber(u.whatsapp)}</span>
+                                    </div>
+                                    <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
+                                      <span className="text-slate-400 font-bold block text-[8px] uppercase">Montant Investi</span>
+                                      <span className="text-emerald-600 font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-between items-center text-[9px] text-slate-500 border-t border-slate-100 pt-2.5 font-bold">
+                                    <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
+                                    {u.whatsapp && (
+                                      <a 
+                                        href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="text-emerald-600 font-black hover:underline flex items-center space-x-1"
+                                      >
+                                        <span>Contacter</span>
+                                        <span>💬</span>
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )
+                      )}
+
+                      {referralListTab === 'level3' && (
+                        level3Users.length === 0 ? (
+                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
+                              Aucun membre de Niveau 3 enregistré dans votre réseau.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {level3Users.map(u => {
+                              const cleanRef = (u.referredBy || '').trim().toUpperCase();
+                              const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
+                              return (
+                                <div key={u.id} className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-3 hover:border-slate-200 transition-colors">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[180px]">{u.name}</span>
+                                    <span className="text-[9px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200/50">
+                                      Par: {sponsor ? sponsor.name : 'Membre N2'}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                    <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
+                                      <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
+                                      <span className="text-slate-700 font-bold block mt-0.5">{maskPhoneNumber(u.whatsapp)}</span>
+                                    </div>
+                                    <div className="bg-white p-2 rounded-xl border border-slate-100/80 shadow-3xs">
+                                      <span className="text-slate-400 font-bold block text-[8px] uppercase">Montant Investi</span>
+                                      <span className="text-emerald-600 font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-between items-center text-[9px] text-slate-500 border-t border-slate-100 pt-2.5 font-bold">
+                                    <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
+                                    {u.whatsapp && (
+                                      <a 
+                                        href={`https://wa.me/${u.whatsapp.replace(/[^0-9]/g, '')}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="text-emerald-600 font-black hover:underline flex items-center space-x-1"
+                                      >
+                                        <span>Contacter</span>
+                                        <span>💬</span>
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* AUTO SHARE SECTION */}
+                  <div className="bg-white rounded-[32px] p-5 sm:p-6 border border-slate-100 shadow-xs space-y-4">
+                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block pl-0.5">
+                      Partager l'invitation sur les réseaux
+                    </span>
+                    <div className="grid grid-cols-4 gap-2.5 font-sans">
                       {/* WhatsApp */}
                       <a 
-                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Dreampod Investment et gagnez des revenus quotidiens sécurisés ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Dreampod et obtenez des rendements quotidiens exceptionnels ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex flex-col items-center justify-center p-2 bg-emerald-50 hover:bg-emerald-100/70 rounded-2xl transition-all border-none outline-none cursor-pointer"
+                        className="flex flex-col items-center justify-center p-3 bg-emerald-50 hover:bg-emerald-100/70 rounded-2xl transition-all text-emerald-600 border-none cursor-pointer"
                       >
-                        <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center mb-1 text-emerald-600">
-                          <svg className="w-4 h-4 fill-emerald-600" viewBox="0 0 24 24">
-                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.528 1.975 14.069 1.953 12.01 1.953c-5.438 0-9.863 4.372-9.867 9.802-.001 1.83.49 3.619 1.423 5.191l-.991 3.616 3.702-.971zm11.367-7.251c-.33-.164-1.952-.955-2.253-1.064-.3-.11-.52-.164-.74.164-.22.33-.85 1.064-1.04 1.283-.19.22-.38.246-.71.082-.33-.164-1.393-.51-2.653-1.627-.98-.868-1.64-1.94-1.83-2.268-.19-.33-.02-.508.145-.671.15-.148.33-.384.495-.576.16-.192.21-.33.32-.548.11-.219.05-.411-.02-.576-.07-.164-.74-1.765-1.01-2.422-.26-.632-.53-.547-.73-.557-.19-.01-.41-.01-.62-.01-.21 0-.55.08-.84.4-.29.32-1.12 1.083-1.12 2.641 0 1.558 1.14 3.065 1.3 3.282.16.218 2.24 3.393 5.43 4.757.76.324 1.35.518 1.81.662.76.241 1.45.207 2 .126.61-.09 1.95-.79 2.23-1.558.28-.767.28-1.422.2-1.558-.09-.137-.3-.21-.63-.375z" />
-                          </svg>
-                        </div>
-                        <span className="text-[7.5px] font-black text-emerald-600 uppercase font-sans">WhatsApp</span>
-                      </a>
-
-                      {/* Twitter */}
-                      <a 
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Rejoignez Dreampod Investment et gagnez des revenus quotidiens sécurisés ! Utilisez mon lien : `)}&url=${encodeURIComponent(referralURL)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex flex-col items-center justify-center p-2 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all border-none outline-none cursor-pointer"
-                      >
-                        <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center mb-1 text-slate-800">
-                          <svg className="w-4 h-4 fill-slate-800" viewBox="0 0 24 24">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                          </svg>
-                        </div>
-                        <span className="text-[7.5px] font-black text-slate-700 uppercase font-sans">Twitter</span>
+                        <span className="text-xl mb-1">💬</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider">WhatsApp</span>
                       </a>
 
                       {/* Telegram */}
                       <a 
-                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Dreampod Investment et obtenez des rendements quotidiens exceptionnels !`)}`}
+                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Dreampod et obtenez des rendements quotidiens exceptionnels !`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex flex-col items-center justify-center p-2 bg-[#e8f4fd] hover:bg-sky-100 rounded-2xl transition-all border-none outline-none cursor-pointer"
+                        className="flex flex-col items-center justify-center p-3 bg-sky-50 hover:bg-sky-100/70 rounded-2xl transition-all text-sky-600 border-none cursor-pointer"
                       >
-                        <div className="w-9 h-9 bg-sky-100 rounded-xl flex items-center justify-center mb-1 text-sky-600">
-                          <svg className="w-4 h-4 fill-sky-600" viewBox="0 0 24 24">
-                            <path d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.578.193l-8.534 7.701-.33 4.953c.485 0 .7-.223.972-.485l2.333-2.269 4.85 3.583c.893.492 1.535.239 1.758-.826l3.18-14.986c.325-1.3-.497-1.892-1.35-1.493z" />
-                          </svg>
-                        </div>
-                        <span className="text-[7.5px] font-black text-sky-600 uppercase font-sans">Telegram</span>
+                        <span className="text-xl mb-1">✈️</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider">Telegram</span>
                       </a>
 
                       {/* Facebook */}
@@ -4751,14 +5422,10 @@ export default function Dashboard({
                         href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralURL)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex flex-col items-center justify-center p-2 bg-blue-50 hover:bg-blue-100/70 rounded-2xl transition-all border-none outline-none cursor-pointer"
+                        className="flex flex-col items-center justify-center p-3 bg-blue-50 hover:bg-blue-100/70 rounded-2xl transition-all text-blue-600 border-none cursor-pointer"
                       >
-                        <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center mb-1 text-blue-600">
-                          <svg className="w-4 h-4 fill-blue-600" viewBox="0 0 24 24">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                          </svg>
-                        </div>
-                        <span className="text-[7.5px] font-black text-blue-600 uppercase font-sans">Facebook</span>
+                        <span className="text-xl mb-1">👥</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider">Facebook</span>
                       </a>
 
                       {/* Instagram */}
@@ -4768,261 +5435,20 @@ export default function Dashboard({
                           triggerToast('🔗 Lien copié ! Collez-le sur Instagram.', 'success');
                           setTimeout(() => {
                             window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
-                          }, 1500);
+                          }, 1000);
                         }}
-                        className="flex flex-col items-center justify-center p-2 bg-rose-50 hover:bg-rose-100/70 rounded-2xl transition-all border-none outline-none cursor-pointer"
+                        className="flex flex-col items-center justify-center p-3 bg-rose-50 hover:bg-rose-100/70 rounded-2xl transition-all text-rose-600 border-none cursor-pointer outline-none"
                       >
-                        <div className="w-9 h-9 bg-rose-100 rounded-xl flex items-center justify-center mb-1 text-rose-500">
-                          <svg className="w-4 h-4 fill-none stroke-rose-500 stroke-[2.5]" viewBox="0 0 24 24">
-                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                          </svg>
-                        </div>
-                        <span className="text-[7.5px] font-black text-rose-600 uppercase font-sans">Instagram</span>
+                        <span className="text-xl mb-1">📸</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider">Instagram</span>
                       </button>
                     </div>
                   </div>
-                </div>
-
-                {/* NETWORK STRUCTURE & DETAIL LIST */}
-                <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-50 pb-3">
-                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block pl-0.5">
-                      STRUCTURE DE L'ÉQUIPE
-                    </span>
-                    <span className="text-[9px] bg-blue-50 text-[#1b64d9] font-bold font-mono px-2 py-0.5 rounded-full border border-blue-100">
-                      {totalReferrals} membres
-                    </span>
-                  </div>
-
-                  {/* Gorgeous level selection boxes directly inspired by N1, N2, N3 from the screenshot */}
-                  <div className="grid grid-cols-3 gap-1.5 bg-slate-50 p-1 rounded-2xl border border-slate-100/50">
-                    <button
-                      onClick={() => setReferralListTab('level1')}
-                      className={`py-2 px-1 rounded-xl transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
-                        referralListTab === 'level1' 
-                          ? 'bg-blue-600 text-white shadow-sm' 
-                          : 'bg-transparent text-slate-600 hover:text-slate-800'
-                      }`}
-                    >
-                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full mb-1 ${
-                        referralListTab === 'level1' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-600 font-black'
-                      }`}>
-                        N1 ({mlmRates.level1 || 20}%)
-                      </span>
-                      <span className="text-[10px] font-black uppercase tracking-tight">Niveau 1</span>
-                      <span className="text-[8px] opacity-85 mt-0.5 font-bold">({level1Users.length})</span>
-                    </button>
-
-                    <button
-                      onClick={() => setReferralListTab('level2')}
-                      className={`py-2 px-1 rounded-xl transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
-                        referralListTab === 'level2' 
-                          ? 'bg-amber-500 text-slate-950 shadow-sm' 
-                          : 'bg-transparent text-slate-600 hover:text-slate-800'
-                      }`}
-                    >
-                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full mb-1 ${
-                        referralListTab === 'level2' ? 'bg-black/10 text-slate-950' : 'bg-amber-50 text-amber-600 font-black'
-                      }`}>
-                        N2 ({mlmRates.level2 || 2}%)
-                      </span>
-                      <span className="text-[10px] font-black uppercase tracking-tight">Niveau 2</span>
-                      <span className="text-[8px] opacity-85 mt-0.5 font-bold">({level2Users.length})</span>
-                    </button>
-
-                    <button
-                      onClick={() => setReferralListTab('level3')}
-                      className={`py-2 px-1 rounded-xl transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
-                        referralListTab === 'level3' 
-                          ? 'bg-emerald-600 text-white shadow-sm' 
-                          : 'bg-transparent text-slate-600 hover:text-slate-800'
-                      }`}
-                    >
-                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full mb-1 ${
-                        referralListTab === 'level3' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 font-black'
-                      }`}>
-                        N3 ({mlmRates.level3 || 1}%)
-                      </span>
-                      <span className="text-[10px] font-black uppercase tracking-tight">Niveau 3</span>
-                      <span className="text-[8px] opacity-85 mt-0.5 font-bold">({level3Users.length})</span>
-                    </button>
-                  </div>
-
-                  {/* LEVEL SUMMARY SUMMARY CARDS (TOTAL INVESTI PER LEVEL) */}
-                  <div className="grid grid-cols-1 gap-2 pt-1">
-                    {referralListTab === 'level1' && (
-                      <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-2xl flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase text-blue-700">Total investi Niveau 1 :</span>
-                        <span className="text-xs font-mono font-black text-blue-800">
-                          {getLevelInvestedAmount(level1Users).toLocaleString()} F CFA
-                        </span>
-                      </div>
-                    )}
-                    {referralListTab === 'level2' && (
-                      <div className="bg-amber-50/50 border border-amber-100 p-3 rounded-2xl flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase text-amber-700">Total investi Niveau 2 :</span>
-                        <span className="text-xs font-mono font-black text-amber-800">
-                          {getLevelInvestedAmount(level2Users).toLocaleString()} F CFA
-                        </span>
-                      </div>
-                    )}
-                    {referralListTab === 'level3' && (
-                      <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-2xl flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase text-emerald-700">Total investi Niveau 3 :</span>
-                        <span className="text-xs font-mono font-black text-emerald-800">
-                          {getLevelInvestedAmount(level3Users).toLocaleString()} F CFA
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ACTIVE LEVEL MEMBERS list */}
-                  {referralListTab === 'level1' && (
-                    <div className="space-y-3">
-                      {level1Users.length === 0 ? (
-                        <div className="text-center py-8 bg-slate-50/50 rounded-2xl border border-slate-100">
-                          <p className="text-[11px] text-slate-400 font-bold leading-normal">
-                            Vous n'avez pas encore de filleuls inscrits directement (Niveau 1).
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2.5">
-                          {level1Users.map(u => (
-                            <div key={u.id} className="p-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[150px]">{u.name}</span>
-                                <span className="text-[8px] font-black font-mono text-[#00bd74] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">Actif</span>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                <div className="bg-white p-2 rounded-xl border border-slate-100/80">
-                                  <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
-                                  <span className="text-slate-700 font-bold block mt-0.5">{u.whatsapp || 'Aucun'}</span>
-                                </div>
-                                <div className="bg-white p-2 rounded-xl border border-slate-100/80">
-                                  <span className="text-slate-400 font-bold block text-[8px] uppercase">Total Investi</span>
-                                  <span className="text-[#1b64d9] font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
-                                </div>
-                              </div>
-                              <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-100/80 pt-2 font-bold">
-                                <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
-                                <a 
-                                  href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-[#00bd74] font-black hover:underline"
-                                >
-                                  Contacter WhatsApp 💬
-                                </a>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {referralListTab === 'level2' && (
-                    <div className="space-y-3">
-                      {level2Users.length === 0 ? (
-                        <div className="text-center py-8 bg-slate-50/50 rounded-2xl border border-slate-100">
-                          <p className="text-[11px] text-slate-400 font-bold leading-normal">
-                            Aucun membre de Niveau 2 enregistré dans votre réseau.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2.5">
-                          {level2Users.map(u => {
-                            const cleanRef = (u.referredBy || '').trim().toUpperCase();
-                            const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
-                            return (
-                              <div key={u.id} className="p-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[150px]">{u.name}</span>
-                                  <span className="text-[8px] font-bold text-slate-400">Sponsor: {sponsor ? sponsor.name : 'Membre L1'}</span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80">
-                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
-                                    <span className="text-slate-700 font-bold block mt-0.5">{u.whatsapp || 'Aucun'}</span>
-                                  </div>
-                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80">
-                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Total Investi</span>
-                                    <span className="text-[#1b64d9] font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
-                                  </div>
-                                </div>
-                                <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-100/80 pt-2 font-bold">
-                                  <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
-                                  <a 
-                                    href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="text-emerald-600 font-black hover:underline"
-                                  >
-                                    Contacter WhatsApp 💬
-                                  </a>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {referralListTab === 'level3' && (
-                    <div className="space-y-3">
-                      {level3Users.length === 0 ? (
-                        <div className="text-center py-8 bg-slate-50/50 rounded-2xl border border-slate-100">
-                          <p className="text-[11px] text-slate-400 font-bold leading-normal">
-                            Aucun membre de Niveau 3 enregistré dans votre réseau.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2.5">
-                          {level3Users.map(u => {
-                            const cleanRef = (u.referredBy || '').trim().toUpperCase();
-                            const sponsor = cleanRef ? allUsers.find(sp => sp.id.toUpperCase() === cleanRef || (sp.referralCode && sp.referralCode.toUpperCase() === cleanRef)) : undefined;
-                            return (
-                              <div key={u.id} className="p-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl text-left space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-sans font-black text-slate-800 text-xs truncate max-w-[150px]">{u.name}</span>
-                                  <span className="text-[8px] font-bold text-slate-400">Sponsor: {sponsor ? sponsor.name : 'Membre L2'}</span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80">
-                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Compte WhatsApp</span>
-                                    <span className="text-slate-700 font-bold block mt-0.5">{u.whatsapp || 'Aucun'}</span>
-                                  </div>
-                                  <div className="bg-white p-2 rounded-xl border border-slate-100/80">
-                                    <span className="text-slate-400 font-bold block text-[8px] uppercase">Total Investi</span>
-                                    <span className="text-[#1b64d9] font-black block mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} F CFA</span>
-                                  </div>
-                                </div>
-                                <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-100/80 pt-2 font-bold">
-                                  <span>Inscrit le {new Date(u.createdAt).toLocaleDateString()}</span>
-                                  <a 
-                                    href={`https://wa.me/${(u.whatsapp || '').replace(/[^0-9]/g, '')}`} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="text-emerald-600 font-black hover:underline"
-                                  >
-                                    Contacter WhatsApp 💬
-                                  </a>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* USER PROFILE */}
           {!profileSubPage && activeTab === 'profile' && (() => {
@@ -5049,7 +5475,7 @@ export default function Dashboard({
 
                     <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
                       <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                        Retrouvez ici tous les équipements et produits d'investissement que vous avez acquis. Vous pouvez réclamer vos revenus quotidiens à tout moment.
+                        Retrouvez ici vos équipements acquis. Les revenus de vos plans Stabilité et d'Activité s'accumulent de jour en jour et sont versés automatiquement à la fin de leur cycle respectif.
                       </p>
                       
                       <div className="space-y-3 pt-2">
@@ -5092,14 +5518,14 @@ export default function Dashboard({
                     <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
                       <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold block">Solde de Recharge</span>
-                          <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                          <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Recharge</span>
+                          <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
                             FCFA {rechargeBal.toLocaleString()}
                           </span>
                         </div>
                         <div className="border-l border-slate-100 pl-4">
-                          <span className="text-[10px] text-slate-400 font-bold block">Solde de Retrait</span>
-                          <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                          <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Retrait</span>
+                          <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
                             FCFA {userState.balance.toLocaleString()}
                           </span>
                         </div>
@@ -5351,9 +5777,16 @@ export default function Dashboard({
                       {userState.name ? userState.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div>
-                      <h3 className="font-sans font-black text-slate-900 text-base leading-none">
-                        {userState.name || "Cher Investisseur"}
-                      </h3>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="font-sans font-black text-slate-900 text-base leading-none">
+                          {userState.name || "Cher Investisseur"}
+                        </h3>
+                        {userState.role === 'admin' && (
+                          <span className="bg-red-500 text-white text-[7px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider">
+                            Admin
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[10px] text-slate-400 font-bold block mt-1 uppercase tracking-wider">
                         {userState.whatsapp || "Aucun numéro"}
                       </span>
@@ -5477,14 +5910,14 @@ export default function Dashboard({
 
                     <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">Solde de Recharge</span>
-                        <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                        <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Recharge</span>
+                        <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
                           FCFA {rechargeBal.toLocaleString()}
                         </span>
                       </div>
                       <div className="border-l border-slate-100 pl-4">
-                        <span className="text-[10px] text-slate-400 font-bold block">Solde de Retrait</span>
-                        <span className="text-base sm:text-lg font-black text-[#1b64d9] block mt-1">
+                        <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Retrait</span>
+                        <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
                           FCFA {userState.balance.toLocaleString()}
                         </span>
                       </div>
@@ -5521,7 +5954,7 @@ export default function Dashboard({
                       <div>
                         <h3 className="font-sans font-black text-sm text-slate-800 uppercase tracking-wider pl-0.5">Mes produits ({activeInvestments.length})</h3>
                         <p className="text-[10px] text-slate-400 font-extrabold mt-1 group-hover:text-slate-500 transition-colors">
-                          Achetez plus d'appareils pour maximiser vos revenus
+                          Les gains s'accumulent au quotidien et sont versés à la fin de chaque cycle.
                         </p>
                       </div>
                       <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${showStabilityOrders ? 'rotate-90' : ''}`} />
@@ -5548,61 +5981,7 @@ export default function Dashboard({
                     )}
                   </div>
 
-                  {/* DREAMPOD APP INSTALLATION CARD */}
-                  <div className="bg-gradient-to-r from-[#1b64d9] via-[#2c77f2] to-blue-800 rounded-3xl p-5 text-white text-left relative overflow-hidden shadow-md animate-fade-in">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none -mr-6 -mt-6" />
-                    
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <span className="bg-white/20 text-white text-[9px] font-sans font-black px-2.5 py-1 rounded-md uppercase tracking-wider inline-block">
-                          📲 APPLICATION MOBILE DREAMPOD
-                        </span>
-                        <h3 className="text-base font-sans font-black tracking-tight mt-1 flex items-center gap-1.5 text-white">
-                          Installer l'application Dreampod
-                        </h3>
-                      </div>
-                      <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-                        <Download className="w-5 h-5 text-white stroke-[2.5]" />
-                      </div>
-                    </div>
 
-                    <p className="text-[11px] text-white/80 font-medium leading-relaxed mt-2.5 max-w-sm">
-                      Téléchargez et installez l'application officielle Dreampod pour une expérience plus rapide, des alertes de gains instantanées et une connexion automatique sécurisée.
-                    </p>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2.5 pt-1">
-                      {/* TELECHARGER APK */}
-                      <button
-                        onClick={() => {
-                          triggerToast("Téléchargement de l'application Dreampod commencé (Fichier APK)...", "success");
-                          // Simulate an APK download with a stub or trigger standard browser download
-                          const blob = new Blob(["Dreampod Mobile App Installer"], {type: "application/vnd.android.package-archive"});
-                          const url = window.URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = 'dreampod_app.apk';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                        }}
-                        className="py-3 px-4 bg-white text-[#1b64d9] font-sans font-black text-[11px] uppercase tracking-wider rounded-xl text-center active:scale-95 transition-all shadow-xs cursor-pointer border-0 flex items-center justify-center gap-1.5"
-                      >
-                        <Smartphone className="w-4 h-4 shrink-0" />
-                        <span>Télécharger APK</span>
-                      </button>
-
-                      {/* INSTALLER PWA / SHORTCUT */}
-                      <button
-                        onClick={() => {
-                          triggerToast("Pour installer Dreampod : Cliquez sur l'icône de partage de votre navigateur puis sur 'Ajouter à l'écran d'accueil'. 📲", "info");
-                        }}
-                        className="py-3 px-4 bg-white/10 text-white hover:bg-white/15 font-sans font-black text-[11px] uppercase tracking-wider rounded-xl text-center active:scale-95 transition-all cursor-pointer border-0 flex items-center justify-center gap-1.5"
-                      >
-                        <Share className="w-4 h-4 shrink-0" />
-                        <span>Guide d'installation</span>
-                      </button>
-                    </div>
-                  </div>
 
                   {/* PLUS DE SERVICES SECTION */}
                   <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 text-left space-y-4">
@@ -5670,6 +6049,22 @@ export default function Dashboard({
                         </div>
                         <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Paramètres</span>
                       </button>
+
+                      {/* Admin Access (only for admins) */}
+                      {userState.role === 'admin' && (
+                        <button 
+                          onClick={() => {
+                            setIsAdminMode(true);
+                            triggerToast("🔑 Mode Administrateur Activé", "success");
+                          }}
+                          className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none animate-pulse"
+                        >
+                          <div className="w-11 h-11 bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
+                            <Lock className="w-5.5 h-5.5" />
+                          </div>
+                          <span className="text-[10px] font-sans font-black text-red-600 mt-2 leading-tight uppercase tracking-wider">Admin</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -5698,18 +6093,20 @@ export default function Dashboard({
           <button
             onClick={() => {
               setIsAdminMode(false);
+              setProfileSubPage(null);
               setActiveTab('dashboard');
               setShowAnnouncementDismissible(true);
             }}
             className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'dashboard' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <Activity className="w-5 h-5 stroke-[2.5]" />
+            <Home className="w-5 h-5 stroke-[2.5]" />
             <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Accueil</span>
           </button>
 
           <button
             onClick={() => {
               setIsAdminMode(false);
+              setProfileSubPage(null);
               setActiveTab('products');
             }}
             className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'products' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
@@ -5721,23 +6118,45 @@ export default function Dashboard({
           <button
             onClick={() => {
               setIsAdminMode(false);
-              setActiveTab('team');
+              setProfileSubPage(null);
+              setActiveTab('proofs');
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'team' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className="flex flex-col items-center flex-1 transition-all relative -top-3.5 z-50 cursor-pointer"
           >
-            <Users className="w-5 h-5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Équipe</span>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(27,100,217,0.18)] transition-all duration-200 border-2 ${
+              activeTab === 'proofs' && !isAdminMode 
+                ? 'bg-[#1b64d9] text-white border-white scale-110 shadow-blue-500/25' 
+                : 'bg-white text-slate-500 border-slate-100/60 hover:text-slate-700 hover:border-slate-200'
+            }`}>
+              <Megaphone className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <span className={`font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px] mt-1 transition-colors ${
+              activeTab === 'proofs' && !isAdminMode ? 'text-[#1b64d9]' : 'text-slate-500'
+            }`}>Avis</span>
           </button>
 
           <button
             onClick={() => {
               setIsAdminMode(false);
+              setProfileSubPage(null);
+              setActiveTab('forum');
+            }}
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'forum' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+          >
+            <MessageSquare className="w-5 h-5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Forum</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setIsAdminMode(false);
+              setProfileSubPage(null);
               setActiveTab('profile');
             }}
             className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'profile' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
             <UserIcon className="w-5 h-5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Profil</span>
+            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Moi</span>
           </button>
 
         </div>
@@ -6560,6 +6979,40 @@ export default function Dashboard({
       </AnimatePresence>
 
 
+
+      {/* IMAGE LIGHTBOX OVERLAY */}
+      <AnimatePresence>
+        {selectedAvisImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedAvisImage(null)}
+            className="fixed inset-0 z-[110] bg-slate-950/95 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-4xl max-h-[85vh] overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 p-2 flex flex-col justify-center"
+            >
+              <img
+                src={selectedAvisImage}
+                alt="Agrandissement"
+                className="max-w-full max-h-[80vh] object-contain rounded-2xl"
+                referrerPolicy="no-referrer"
+              />
+              <button
+                onClick={() => setSelectedAvisImage(null)}
+                className="absolute top-4 right-4 w-10 h-10 bg-slate-950/80 hover:bg-slate-950 rounded-full flex items-center justify-center text-white border border-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* FLOATING TOAST NOTIFICATIONS */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-sm px-4 pointer-events-none">

@@ -3919,7 +3919,7 @@ async function startServer() {
       tag: p.tag || 'Special Offer',
       isCyclic: p.isCyclic || false,
       generatedProductIds: p.generatedProductIds || [],
-      category: 'stability',
+      category: p.category || 'stability',
       lastModified: Date.now()
     });
     storeData["gi_products"] = list;
@@ -3954,7 +3954,7 @@ async function startServer() {
          ...current,
          ...updatedP,
          totalReturn: updatedP.totalReturn !== undefined ? updatedP.totalReturn : fallbackTotal,
-         category: 'stability',
+         category: updatedP.category || current.category || 'stability',
          lastModified: Date.now()
        };
        await saveStore();

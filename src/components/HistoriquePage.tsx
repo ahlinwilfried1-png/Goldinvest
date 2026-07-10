@@ -27,6 +27,13 @@ interface HistoriquePageProps {
   onNavigate: (path: string) => void;
 }
 
+const maskPhoneNumber = (num: string) => {
+  if (!num) return 'Aucun';
+  const clean = num.replace(/\s/g, '');
+  if (clean.length <= 6) return clean;
+  return clean.slice(0, 3) + '••••' + clean.slice(-3);
+};
+
 export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps) {
   const [activeTab, setActiveTab] = useState<'recharge' | 'retrait' | 'achat' | 'commission' | 'revenu'>('recharge');
   
@@ -421,6 +428,9 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                           <span className="font-mono font-medium text-[11px]">{formatDate(wth.createdAt)}</span>
                         </div>
                         <div className="font-mono text-[9px] text-slate-400">ID: {wth.id}</div>
+                        <div className="text-[10px] text-slate-600 font-bold">
+                          Vers: {wth.operator} ({maskPhoneNumber(wth.number)})
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-right">
                         <span className="font-mono font-black text-rose-600 text-[13px]">

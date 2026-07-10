@@ -834,10 +834,21 @@ export class DataStore {
   }
 
   static getMLMRates(): { level1: number, level2: number, level3: number } {
+    let l1 = getFromStore<number>('gi_mlm_level1_rate', 30);
+    let l2 = getFromStore<number>('gi_mlm_level2_rate', 5);
+    let l3 = getFromStore<number>('gi_mlm_level3_rate', 1);
+    
+    if (l1 === 20) {
+      l1 = 30;
+    }
+    if (l2 === 2 || l2 === 3) {
+      l2 = 5;
+    }
+    
     return {
-      level1: getFromStore<number>('gi_mlm_level1_rate', 20),
-      level2: getFromStore<number>('gi_mlm_level2_rate', 3),
-      level3: getFromStore<number>('gi_mlm_level3_rate', 1),
+      level1: l1,
+      level2: l2,
+      level3: l3,
     };
   }
 
@@ -1993,10 +2004,13 @@ export class DataStore {
     }
 
     const isActivity = inv.category === 'activity' || (inv as any).isCyclic;
-    if (isActivity) {
+    const isStability = inv.category === 'stability';
+    const isWellbeing = inv.category === 'wellbeing';
+    if (isActivity || isStability || isWellbeing) {
+      const planName = isWellbeing ? 'Bien-être' : isStability ? 'Stabilité VIP' : 'Activité de Cycle Court';
       return { 
         success: false, 
-        message: `Les revenus de cette Activité de Cycle Court (${inv.productName}) vous seront versés automatiquement et en intégralité à la fin de son cycle de ${inv.durationDays} jours.`, 
+        message: `Les revenus de ce plan ${planName} (${inv.productName}) vous seront versés automatiquement et en intégralité à la fin de son cycle de ${inv.durationDays} jours.`, 
         amount: 0 
       };
     }
@@ -2229,8 +2243,16 @@ export class DataStore {
     userCountry: string, 
     amount: number, 
     message: string, 
-    image?: string
-  ): Promise<{ success: boolean, proof?: WithdrawalProof }> {
+    image?: string,
+    status?: 'pending' | 'approved' | 'rejected'
+  ): Promise<{ success: boolean, error?: string, proof?: WithdrawalProof }> {
+    // Only allow administrative users to publish
+    const users = this.getUsers();
+    const user = users.find(u => u.id === userId || (userId === 'admin' && u.role === 'admin'));
+    if (userId !== 'admin' && (!user || user.role !== 'admin')) {
+      return { success: false, error: "Seul l'administrateur est autorisé à publier des avis." };
+    }
+
     const proofs = this.getWithdrawalProofs();
     const newProof: WithdrawalProof = {
       id: `proof-${Date.now()}`,
@@ -2241,7 +2263,7 @@ export class DataStore {
       message,
       image,
       likes: [],
-      status: 'pending',
+      status: status || (userId === 'admin' ? 'approved' : 'pending'),
       createdAt: new Date().toISOString(),
       lastModified: Date.now()
     };
@@ -2368,13 +2390,16 @@ export class DataStore {
       // If more days should have processed than currently tracked
       if (expectedDays > inv.daysPassed) {
         const isActivity = inv.category === 'activity' || (inv as any).isCyclic;
+        const isStability = inv.category === 'stability';
+        const isWellbeing = inv.category === 'wellbeing';
 
-        if (isActivity) {
-          // No daily earnings credited during the cycle duration for short-cycle activity
+        if (isActivity || isStability || isWellbeing) {
           if (expectedDays >= inv.durationDays) {
-            // End of complete cycle: payout is capital + profit (i.e. totalReturn)
-            const totalPayout = (inv as any).totalReturn || (inv.price + (inv.dailyReturn * inv.durationDays));
-            const netProfit = totalPayout - inv.price;
+            // End of complete cycle
+            const totalPayout = isActivity 
+              ? ((inv as any).totalReturn || (inv.price + (inv.dailyReturn * inv.durationDays)))
+              : (inv.dailyReturn * inv.durationDays);
+            const netProfit = isActivity ? (totalPayout - inv.price) : totalPayout;
 
             const uIdx = users.findIndex(u => u.id === inv.userId);
             if (uIdx !== -1) {
@@ -2384,8 +2409,16 @@ export class DataStore {
               notifications.unshift({
                 id: `not-cyclecomplete-${Date.now()}-${inv.id}`,
                 userId: inv.userId,
-                title: `⚡ Activité Terminée (${inv.productName})`,
-                message: `Félicitations ! Votre cycle d'activité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`,
+                title: isActivity 
+                  ? `⚡ Activité Terminée (${inv.productName})` 
+                  : isWellbeing 
+                  ? `🌸 Plan Bien-être Terminé (${inv.productName})` 
+                  : `💎 Plan Stabilité VIP Terminé (${inv.productName})`,
+                message: isActivity
+                  ? `Félicitations ! Votre cycle d'activité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`
+                  : isWellbeing
+                  ? `Félicitations ! Votre plan bien-être "${inv.productName}" de ${inv.durationDays} jours est terminé. Vos revenus de bien-être cumulés de ${totalPayout.toLocaleString()} XOF ont été automatiquement crédités sur votre compte.`
+                  : `Félicitations ! Votre plan de stabilité "${inv.productName}" de ${inv.durationDays} jours est terminé. Vos revenus de stabilité cumulés de ${totalPayout.toLocaleString()} XOF ont été automatiquement crédités sur votre compte.`,
                 type: 'plan',
                 createdAt: new Date().toISOString(),
                 read: false
@@ -2405,22 +2438,20 @@ export class DataStore {
             changed = true;
           }
         } else {
-          // Standard VIP stability plans (daily dividend credited daily)
+          // Fallback for any other custom plan categories
           const missingDays = expectedDays - inv.daysPassed;
           const totalPayout = inv.dailyReturn * missingDays;
 
-          // Find and credit the investor
           const uIdx = users.findIndex(u => u.id === inv.userId);
           if (uIdx !== -1) {
             users[uIdx].balance += totalPayout;
             users[uIdx].totalEarnings += totalPayout;
             
-            // Unshift a live system alert to showcase the automatic pay drop
             notifications.unshift({
               id: `not-autodrop-${Date.now()}-${inv.id}-${inv.daysPassed}`,
               userId: inv.userId,
               title: `💰 Gain automatique reçu (${inv.productName})`,
-              message: `Félicitations, votre gain quotidien de ${totalPayout.toLocaleString()} XOF est tombé automatiquement à l'heure d'activation de votre plan VIP.`,
+              message: `Félicitations, votre gain de ${totalPayout.toLocaleString()} XOF est tombé automatiquement.`,
               type: 'plan',
               createdAt: new Date().toISOString(),
               read: false

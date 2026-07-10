@@ -18,7 +18,10 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
     return () => clearInterval(timer);
   }, []);
 
-  const isActivity = investment.category === 'activity' || (investment as any).isCyclic;
+  const isActivityOriginal = investment.category === 'activity' || (investment as any).isCyclic;
+  const isStability = investment.category === 'stability';
+  const isWellbeing = investment.category === 'wellbeing';
+  const isAutomatic = isActivityOriginal || isStability || isWellbeing;
   const isCompleted = investment.status === 'completed' || investment.daysPassed >= investment.durationDays;
 
   // Calculate times
@@ -26,13 +29,13 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
   const oneDayMs = 24 * 60 * 60 * 1000;
 
   let nextClaimTime = 0;
-  if (isActivity) {
+  if (isAutomatic) {
     nextClaimTime = createdTime + investment.durationDays * oneDayMs;
   } else {
     nextClaimTime = createdTime + (investment.daysPassed + 1) * oneDayMs;
   }
 
-  const isReady = !isCompleted && !isActivity && now >= nextClaimTime;
+  const isReady = !isCompleted && !isAutomatic && now >= nextClaimTime;
   const diff = nextClaimTime - now;
 
   let timeLeftStr = '';
@@ -41,7 +44,7 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
   if (isCompleted) {
     timeLeftStr = 'Complété';
     cyclePercent = 100;
-  } else if (isActivity) {
+  } else if (isAutomatic) {
     if (diff <= 0) {
       timeLeftStr = 'Cycle terminé - En cours de versement';
       cyclePercent = 100;
@@ -103,11 +106,11 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
       <div className="flex justify-between items-start">
         <div className="space-y-0.5">
           <h5 className="font-sans font-black text-slate-850 text-xs sm:text-[13px] uppercase tracking-tight flex items-center gap-1.5">
-            {isActivity && <Flame className="w-4 h-4 text-orange-500 fill-orange-100" />}
+            {isActivityOriginal && <Flame className="w-4 h-4 text-orange-500 fill-orange-100" />}
             {investment.productName}
           </h5>
           <span className="text-[10px] text-slate-400 font-bold block">
-            Plan {isActivity ? 'Cycle Court' : 'Stabilité'} • Jour {investment.daysPassed} sur {investment.durationDays}
+            Plan {isActivityOriginal ? 'Cycle Court' : isWellbeing ? 'Bien-être' : 'Stabilité'} • Jour {investment.daysPassed} sur {investment.durationDays}
           </span>
         </div>
         <div className="text-right">
@@ -134,7 +137,7 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
         <div className="flex justify-between items-center">
           <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1">
             <Clock className={`w-3.5 h-3.5 ${isReady ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`} />
-            {isActivity ? 'Cycle finalisé le' : 'Prochain gain quotidien'}
+            {isAutomatic ? 'Cycle finalisé le' : 'Prochain gain quotidien'}
           </span>
           <span className="font-sans font-black text-[9px] uppercase tracking-wider text-slate-400 font-mono">
             {formattedDate} à {formattedTime}
@@ -181,10 +184,27 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
               <CheckCircle className="w-3 h-3 text-slate-400" />
               Terminé
             </span>
-          ) : isActivity ? (
-            <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-600 font-black uppercase text-[8.5px] px-2.5 py-1.5 rounded-lg border border-orange-200 animate-pulse">
-              <Flame className="w-3 h-3 text-orange-500" />
-              Automatique
+          ) : isAutomatic ? (
+            <span className="inline-flex flex-col items-end">
+              <span className={`inline-flex items-center gap-1 font-black uppercase text-[8.5px] px-2 py-1 rounded-lg border ${
+                isStability 
+                  ? 'bg-blue-50 text-[#1b64d9] border-blue-100' 
+                  : isWellbeing
+                  ? 'bg-purple-50 text-purple-600 border-purple-100'
+                  : 'bg-orange-50 text-orange-600 border-orange-200 animate-pulse'
+              }`}>
+                {isStability ? (
+                  <Clock className="w-3 h-3 text-[#1b64d9]" />
+                ) : isWellbeing ? (
+                  <CheckCircle className="w-3 h-3 text-purple-500" />
+                ) : (
+                  <Flame className="w-3 h-3 text-orange-500" />
+                )}
+                {isStability || isWellbeing ? 'Fin de cycle' : 'Automatique'}
+              </span>
+              <span className="text-[9.5px] text-slate-500 font-extrabold mt-1 uppercase block leading-none">
+                Cumulé: {((investment.dailyReturn * investment.daysPassed)).toLocaleString()} F
+              </span>
             </span>
           ) : isReady ? (
             <button

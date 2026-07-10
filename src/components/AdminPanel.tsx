@@ -45,6 +45,14 @@ export default function AdminPanel({
   const [investments, setInvestments] = useState<Investment[]>(() => DataStore.getInvestments());
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>(() => DataStore.getSupportMessages());
   const [withdrawalProofs, setWithdrawalProofs] = useState<WithdrawalProof[]>(() => DataStore.getWithdrawalProofs());
+  
+  // States for Admin Announcements Form (Avis)
+  const [adminAuthorName, setAdminAuthorName] = useState('Dreampod Officiel');
+  const [adminAuthorBadge, setAdminAuthorBadge] = useState('Officiel');
+  const [adminAmount, setAdminAmount] = useState('');
+  const [adminMessage, setAdminMessage] = useState('');
+  const [adminImage, setAdminImage] = useState('');
+  const [isPublishingAvis, setIsPublishingAvis] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [adminReplyInput, setAdminReplyInput] = useState('');
 
@@ -174,6 +182,68 @@ export default function AdminPanel({
         message: "Erreur: " + err.message,
         type: "error"
       });
+    }
+  };
+
+  const handleAvisImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAdminImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePublishAdminAvis = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminMessage.trim()) {
+      setNotification({
+        message: "⚠️ Veuillez saisir le message du communiqué ou de l'avis.",
+        type: "error"
+      });
+      return;
+    }
+
+    setIsPublishingAvis(true);
+    try {
+      const amt = adminAmount ? parseInt(adminAmount, 10) : 0;
+      const res = await DataStore.publishWithdrawalProof(
+        'admin',
+        adminAuthorName || 'Dreampod Officiel',
+        adminAuthorBadge || 'Officiel',
+        amt,
+        adminMessage,
+        adminImage || undefined,
+        'approved'
+      );
+
+      if (res.success) {
+        setNotification({
+          message: "🎉 Avis/Communiqué publié avec succès !",
+          type: "success"
+        });
+        setAdminMessage('');
+        setAdminAmount('');
+        setAdminImage('');
+        // Sync local list
+        setWithdrawalProofs(DataStore.getWithdrawalProofs());
+        onRefreshData();
+      } else {
+        setNotification({
+          message: "Erreur lors de la publication de l'avis.",
+          type: "error"
+        });
+      }
+    } catch (err: any) {
+      console.error("Error publishing admin avis:", err);
+      setNotification({
+        message: "Erreur: " + err.message,
+        type: "error"
+      });
+    } finally {
+      setIsPublishingAvis(false);
     }
   };
 
@@ -470,7 +540,7 @@ export default function AdminPanel({
   const [editProductTag, setEditProductTag] = useState<string>('');
   const [editVipIsCyclic, setEditVipIsCyclic] = useState<boolean>(false);
   const [editVipGeneratedProductIds, setEditVipGeneratedProductIds] = useState<string[]>([]);
-  const [editVipCategory, setEditVipCategory] = useState<'stability' | 'activity'>('stability');
+  const [editVipCategory, setEditVipCategory] = useState<'stability' | 'wellbeing' | 'activity'>('stability');
 
   // New product form state
   const [newVipLevel, setNewVipLevel] = useState(1);
@@ -481,7 +551,7 @@ export default function AdminPanel({
   const [newVipTag, setNewVipTag] = useState('');
   const [newVipIsCyclic, setNewVipIsCyclic] = useState<boolean>(false);
   const [newVipGeneratedProductIds, setNewVipGeneratedProductIds] = useState<string[]>([]);
-  const [newVipCategory, setNewVipCategory] = useState<'stability' | 'activity'>('stability');
+  const [newVipCategory, setNewVipCategory] = useState<'stability' | 'wellbeing' | 'activity'>('stability');
 
   // Global notify state
   const [globalNotifTitle, setGlobalNotifTitle] = useState('');
@@ -802,7 +872,7 @@ export default function AdminPanel({
       tag: newVipTag || undefined,
       isCyclic: newVipIsCyclic,
       generatedProductIds: newVipGeneratedProductIds,
-      category: 'stability' as const,
+      category: newVipCategory,
       totalReturn: newVipDaily * newVipDuration
     };
 
@@ -896,7 +966,7 @@ export default function AdminPanel({
         tag: editProductTag || undefined,
         isCyclic: editVipIsCyclic,
         generatedProductIds: editVipGeneratedProductIds,
-        category: 'stability' as const,
+        category: editVipCategory,
         totalReturn: editProductDailyReturn * editProductDuration
       };
 
@@ -1418,6 +1488,19 @@ export default function AdminPanel({
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Catégorie du Produit</label>
+                <select
+                  value={editVipCategory}
+                  onChange={(e) => setEditVipCategory(e.target.value as 'stability' | 'wellbeing' | 'activity')}
+                  className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                >
+                  <option value="stability">Stabilité (Plans standard)</option>
+                  <option value="wellbeing">Bien-être (Plans bien-être)</option>
+                  <option value="activity">Activité (Plans court terme)</option>
+                </select>
+              </div>
+
              </div>
  
              <div className="pt-4 flex gap-3 border-t border-slate-800 shrink-0 mt-2">
@@ -1622,7 +1705,13 @@ export default function AdminPanel({
             </span>
           )}
         </button>
-        {/* Preuves tab button removed */}
+        <button
+          onClick={() => setActiveAdminTab('proofs')}
+          className={`py-3 px-4 text-xs font-bold tracking-wider uppercase border-b-2 whitespace-nowrap transition-colors flex items-center space-x-2 ${activeAdminTab === 'proofs' ? 'border-yellow-500 text-yellow-400' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <span className="text-sm">📢</span>
+          <span>Avis & Annonces</span>
+        </button>
       </div>
 
       {/* SYSTEM DIAGNOSTICS & SYNC MONITOR */}
@@ -2453,6 +2542,19 @@ export default function AdminPanel({
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Catégorie du Produit</label>
+                <select
+                  value={newVipCategory}
+                  onChange={(e) => setNewVipCategory(e.target.value as 'stability' | 'wellbeing' | 'activity')}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
+                >
+                  <option value="stability">Stabilité (Plans standard)</option>
+                  <option value="wellbeing">Bien-être (Plans bien-être)</option>
+                  <option value="activity">Activité (Plans court terme)</option>
+                </select>
+              </div>
+
 
 
               <div className="md:col-span-3 pt-3">
@@ -2472,10 +2574,10 @@ export default function AdminPanel({
             {/* 1. Plans Stabilité VIP */}
             <div>
               <h4 className="text-sm font-display font-bold text-yellow-500 uppercase tracking-widest mb-4">
-                💎 Plans Stabilité (VIP - Dividendes quotidiens)
+                📦 Catalogue de tous les Produits (Stabilité, Bien-être & Activité)
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {products.filter(p => p.category !== 'activity').map((p) => {
+                {products.map((p) => {
                   const isCurrentlyBlocked = p.isBlocked === true;
                   const formattedReopenTime = p.reopenDateTime 
                     ? new Date(p.reopenDateTime).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
@@ -2486,11 +2588,20 @@ export default function AdminPanel({
                       <div>
                         <div className="flex justify-between items-start">
                           <div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 flex-wrap gap-1.5">
                               <span className="text-[10px] text-yellow-500 font-mono uppercase font-bold">Niveau {p.vipLevel}</span>
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-sans font-bold uppercase tracking-wider ${
+                                p.category === 'wellbeing'
+                                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                  : p.category === 'activity'
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                              }`}>
+                                {p.category === 'wellbeing' ? '🌸 Bien-être' : p.category === 'activity' ? '⚡ Activité' : '💎 Stabilité'}
+                              </span>
                               <span className={`w-1.5 h-1.5 rounded-full ${isCurrentlyBlocked ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></span>
                             </div>
-                            <h4 className="font-display font-medium text-white text-sm block mt-0.5">{p.name}</h4>
+                            <h4 className="font-display font-medium text-white text-sm block mt-1.5">{p.name}</h4>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <button
@@ -3490,134 +3601,206 @@ export default function AdminPanel({
         );
       })()}
 
-      {/* PROOFS TAB REMOVED */}
-      {false && activeAdminTab === 'proofs' && (() => {
+      {/* PROOFS / AVIS TAB */}
+      {activeAdminTab === 'proofs' && (() => {
         return (
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-800">
               <div>
                 <h3 className="font-display font-black text-lg text-white uppercase tracking-wider flex items-center gap-2">
-                  <span>📸 Modération des Preuves de Retrait</span>
+                  <span>📢 Publication &amp; Gestion des Avis Officiels</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Gérez, vérifiez et supprimez les captures d'écran et messages publiés par vos utilisateurs sur le canal public.
+                  Créez, publiez et modérez les communiqués officiels, informations de plateforme, nouveautés et témoignages de retraits de Dreampod.
                 </p>
               </div>
               <div className="bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300">
-                Total Preuves: <span className="text-yellow-400 font-bold">{withdrawalProofs.length}</span>
+                Total Avis/Publications: <span className="text-yellow-400 font-bold">{withdrawalProofs.length}</span>
               </div>
             </div>
 
-            {withdrawalProofs.length === 0 ? (
-              <div className="text-center py-12 px-4 rounded-2xl bg-slate-950/40 border border-dashed border-slate-850">
-                <p className="text-slate-400 text-xs">Aucune preuve de retrait n'a été publiée pour le moment par les utilisateurs.</p>
+            {/* FORM TO PUBLISH AN AVIS */}
+            <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center space-x-2 text-yellow-500 pb-2 border-b border-slate-850">
+                <span className="text-sm">✍️</span>
+                <span className="font-sans font-black text-xs uppercase tracking-wider text-slate-200">
+                  Créer et publier une nouvelle annonce / avis
+                </span>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {withdrawalProofs.map((proof) => {
-                  return (
-                    <div 
-                      key={proof.id} 
-                      className="bg-slate-950 border border-slate-850 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-800 transition-all space-y-3"
+
+              <form onSubmit={handlePublishAdminAvis} className="space-y-4 text-left">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Auteur de la publication</label>
+                    <input
+                      type="text"
+                      value={adminAuthorName}
+                      onChange={(e) => setAdminAuthorName(e.target.value)}
+                      placeholder="Ex: Dreampod Officiel"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:border-yellow-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Badge / Localisation</label>
+                    <input
+                      type="text"
+                      value={adminAuthorBadge}
+                      onChange={(e) => setAdminAuthorBadge(e.target.value)}
+                      placeholder="Ex: Officiel, Cameroun, Sénégal"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:border-yellow-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Montant Transaction (Facultatif - XOF)</label>
+                    <input
+                      type="number"
+                      value={adminAmount}
+                      onChange={(e) => setAdminAmount(e.target.value)}
+                      placeholder="Ex: 150000 (Laissez vide si non applicable)"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:border-yellow-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Texte de l'avis ou du communiqué</label>
+                  <textarea
+                    rows={4}
+                    value={adminMessage}
+                    onChange={(e) => setAdminMessage(e.target.value)}
+                    placeholder="Saisissez le contenu du communiqué, de l'annonce ou du témoignage de gain..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:border-yellow-500 focus:outline-none resize-none font-sans"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Importer une capture d'écran / image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvisImageFileChange}
+                      className="w-full bg-slate-900 border border-slate-850 rounded-xl p-2.5 text-xs text-slate-400 file:mr-4 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-yellow-500 file:text-slate-950 hover:file:bg-yellow-400 file:cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ou coller l'URL d'une image</label>
+                    <input
+                      type="text"
+                      value={adminImage}
+                      onChange={(e) => setAdminImage(e.target.value)}
+                      placeholder="Ex: https://images.unsplash.com/photo-..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:border-yellow-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {adminImage && (
+                  <div className="pt-2 flex items-center space-x-4">
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
+                      <img src={adminImage} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAdminImage('')}
+                      className="px-3 py-1.5 bg-rose-500/10 text-rose-450 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-bold duration-150 border border-rose-500/10"
                     >
-                      <div className="space-y-3">
-                        {/* Upper row: User & Details */}
-                        <div className="flex justify-between items-start gap-2">
-                          <div>
-                            <span className="font-sans font-black text-xs text-slate-100 block">
-                              {proof.userName}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-medium">
-                              📍 {proof.userCountry || 'Inconnu'} • {new Date(proof.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-lg text-[10px] font-black font-mono">
-                            +{proof.amount.toLocaleString('en-US')} F
-                          </div>
-                        </div>
+                      Supprimer la photo
+                    </button>
+                  </div>
+                )}
 
-                        {/* Status Badge */}
-                        <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                          <span className="text-slate-500">Statut :</span>
-                          {proof.status === 'rejected' ? (
-                            <span className="bg-rose-500/10 text-rose-450 border border-rose-500/20 px-2 py-0.5 rounded font-bold uppercase text-[9px]">Rejetée ❌</span>
-                          ) : proof.status === 'approved' || !proof.status ? (
-                            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase text-[9px]">Approuvée & Publique ✅</span>
-                          ) : (
-                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-bold uppercase text-[9px] animate-pulse">En attente ⏳</span>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={isPublishingAvis || !adminMessage.trim()}
+                    className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 font-sans font-black text-xs rounded-xl shadow-md transition-all active:scale-95 duration-150 disabled:opacity-40 uppercase tracking-widest flex items-center gap-2 cursor-pointer"
+                  >
+                    {isPublishingAvis ? 'Publication en cours...' : '🚀 Publier l\'Avis Officiel'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* LIST OF PUBLISHED AVIS */}
+            <div className="space-y-4">
+              <h4 className="text-xs text-slate-400 font-bold uppercase tracking-wider text-left pl-1">
+                Publications Actuelles sur la page Avis
+              </h4>
+
+              {withdrawalProofs.length === 0 ? (
+                <div className="text-center py-12 px-4 rounded-2xl bg-slate-950/40 border border-dashed border-slate-850">
+                  <p className="text-slate-400 text-xs">Aucun communiqué ou avis officiel n'a été publié pour le moment.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {withdrawalProofs.map((proof) => {
+                    return (
+                      <div 
+                        key={proof.id} 
+                        className="bg-slate-950 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between hover:border-slate-800 transition-all space-y-4 text-left"
+                      >
+                        <div className="space-y-3">
+                          {/* Upper row: User & Details */}
+                          <div className="flex justify-between items-start gap-2">
+                            <div>
+                              <span className="font-sans font-black text-xs text-slate-100 flex items-center gap-1.5">
+                                <span className="text-yellow-500">📢</span>
+                                {proof.userName}
+                                <span className="bg-yellow-500/10 text-yellow-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-yellow-500/20 animate-pulse">
+                                  {proof.userCountry || 'Officiel'}
+                                </span>
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-medium mt-1 block">
+                                Publié le : {new Date(proof.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            
+                            {proof.amount > 0 && (
+                              <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-xl text-[10.5px] font-black font-mono">
+                                +{proof.amount.toLocaleString('en-US')} F
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Public message */}
+                          <div className="bg-slate-900/60 border border-slate-850 rounded-xl p-3.5 text-xs text-slate-300 leading-relaxed whitespace-pre-wrap font-medium">
+                            {proof.message}
+                          </div>
+
+                          {/* Image screenshot if exists */}
+                          {proof.image && (
+                            <div className="relative group rounded-xl overflow-hidden border border-slate-800 h-40 bg-slate-900 flex justify-center items-center">
+                              <img 
+                                src={proof.image} 
+                                alt="Preuve / Annonce" 
+                                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
                           )}
                         </div>
 
-                        {/* Public message */}
-                        {proof.message && (
-                          <div className="bg-slate-900/60 border border-slate-850 rounded-xl p-3 text-xs text-slate-300 italic leading-relaxed">
-                            "{proof.message}"
-                          </div>
-                        )}
-
-                        {/* Image screenshot if exists */}
-                        {proof.image ? (
-                          <div className="relative group rounded-xl overflow-hidden border border-slate-800 h-48 bg-slate-900 flex justify-center items-center">
-                            <img 
-                              src={proof.image} 
-                              alt="Preuve" 
-                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
-                              referrerPolicy="no-referrer"
-                            />
-                            <button
-                              onClick={() => setLightboxImg(proof.image || '')}
-                              className="absolute top-2 right-2 bg-slate-950/80 hover:bg-slate-900 p-1.5 rounded-lg text-slate-300 border border-slate-800"
-                              title="Agrandir l'image"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="bg-slate-900/30 rounded-xl p-3 border border-slate-850/40 text-[10px] text-slate-500 text-center uppercase tracking-wider font-mono">
-                            Pas de média joint
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Actions for moderation */}
-                      <div className="border-t border-slate-850/60 pt-3 space-y-2">
-                        {/* Status change actions */}
-                        <div className="flex gap-2">
-                          {(proof.status === 'rejected' || proof.status === 'pending') && (
-                            <button
-                              onClick={() => handleUpdateProofStatus(proof.id, 'approved')}
-                              className="flex-1 py-1.5 bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 hover:border-transparent rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1"
-                            >
-                              <span>Approuver</span>
-                            </button>
-                          )}
-                          {(proof.status === 'approved' || !proof.status || proof.status === 'pending') && (
-                            <button
-                              onClick={() => handleUpdateProofStatus(proof.id, 'rejected')}
-                              className="flex-1 py-1.5 bg-amber-500/10 hover:bg-amber-600 text-amber-450 hover:text-white border border-amber-500/20 hover:border-transparent rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1"
-                            >
-                              <span>Rejeter</span>
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Delete moderation button */}
-                        <div className="flex justify-between items-center text-[10px]">
+                        {/* Actions for moderation */}
+                        <div className="border-t border-slate-850/60 pt-3 flex justify-between items-center text-[10px]">
                           <span className="text-slate-500 font-mono text-[9px]">{proof.id}</span>
                           <button
                             onClick={() => handleDeleteProof(proof.id)}
-                            className="px-2.5 py-1.5 bg-rose-600/10 text-rose-450 hover:bg-rose-600 hover:text-white border border-rose-600/20 hover:border-transparent rounded-lg font-bold transition-all flex items-center space-x-1"
+                            className="px-3 py-1.5 bg-rose-600/15 text-rose-450 hover:bg-rose-600 hover:text-white border border-rose-600/20 hover:border-transparent rounded-xl font-bold transition-all flex items-center space-x-1 duration-150 cursor-pointer"
                           >
-                            <Trash2 className="w-3 h-3" />
-                            <span>Supprimer</span>
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Supprimer la publication</span>
                           </button>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         );
       })()}
