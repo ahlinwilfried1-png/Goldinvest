@@ -97,30 +97,15 @@ export default function Auth({
                       getParamInsensitive('sponsor');
       if (refCode) {
         safeLocalStorage.setItem('gi_captured_ref', refCode.toUpperCase());
-      }
-
-      // 2. Synchronize with state
-      const captured = safeLocalStorage.getItem('gi_captured_ref') || '72AGR';
-      if (captured !== referralCode) {
+        setReferralCode(refCode.toUpperCase());
+      } else {
+        const captured = safeLocalStorage.getItem('gi_captured_ref') || '72AGR';
         setReferralCode(captured);
       }
     };
 
     parseUrlAndSync();
-    
-    // Listen to all link clicks and storage checks
-    window.addEventListener('click', parseUrlAndSync);
-    window.addEventListener('popstate', parseUrlAndSync);
-    window.addEventListener('hashchange', parseUrlAndSync);
-    const interval = setInterval(parseUrlAndSync, 500);
-
-    return () => {
-      window.removeEventListener('click', parseUrlAndSync);
-      window.removeEventListener('popstate', parseUrlAndSync);
-      window.removeEventListener('hashchange', parseUrlAndSync);
-      clearInterval(interval);
-    };
-  }, [referralCode]);
+  }, []);
 
   // Sign in fields
   const [loginSelectedCode, setLoginSelectedCode] = useState('+228');
@@ -132,6 +117,15 @@ export default function Auth({
   // Modal States
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+
+  const [officialBanners, setOfficialBanners] = useState(() => DataStore.getOfficialBanners());
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      setOfficialBanners(DataStore.getOfficialBanners());
+    };
+    window.addEventListener('gi_store_updated', handleUpdate);
+    return () => window.removeEventListener('gi_store_updated', handleUpdate);
+  }, []);
 
   // Helper to extract clean WhatsApp number with country code, removing spaces, duplicate prefixes, leading zeros
   const getCleanWhatsappNumber = (rawNumber: string, prefixCode: string) => {
@@ -485,6 +479,12 @@ export default function Auth({
                     />
                     <Link className="w-5 h-5 text-slate-400 shrink-0" />
                   </div>
+                  {referralCode && (
+                    <p className="text-[10px] font-sans font-bold text-amber-600 bg-amber-500/5 border border-amber-500/10 rounded-lg px-2.5 py-1 mt-1 flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-amber-500 animate-ping"></span>
+                      Sponsor actif : <span className="text-[#0b5cd5] font-black">{referralCode}</span> (Rempli automatiquement)
+                    </p>
+                  )}
                 </div>
 
                 {/* Code de vérification (OTP) Field with ENVOYER action */}
@@ -630,6 +630,46 @@ export default function Auth({
           </form>
 
         </div>
+
+        {/* Display Official Trust Certificates / Banners if set */}
+        {(officialBanners.image1 || officialBanners.image2) && (
+          <div className="mt-6 w-full animate-fade-in max-w-sm mx-auto">
+            <div className="text-center mb-3">
+              <span className="text-[11px] font-sans font-black text-slate-500 uppercase tracking-widest block">
+                🛡️ Documents de Confiance Goldspeed
+              </span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase block mt-0.5">
+                Certificats d'enregistrement officiels & garanties
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 bg-white p-2.5 rounded-3xl border border-slate-100 shadow-sm">
+              {officialBanners.image1 ? (
+                <div className="relative rounded-2xl overflow-hidden border border-slate-100 aspect-[4/3] bg-slate-50 flex justify-center items-center shadow-xs">
+                  <img
+                    src={officialBanners.image1}
+                    alt="Certificat 1"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center text-[8px] text-slate-400 font-bold text-center p-1">Sans Image 1</div>
+              )}
+              {officialBanners.image2 ? (
+                <div className="relative rounded-2xl overflow-hidden border border-slate-100 aspect-[4/3] bg-slate-50 flex justify-center items-center shadow-xs">
+                  <img
+                    src={officialBanners.image2}
+                    alt="Certificat 2"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center text-[8px] text-slate-400 font-bold text-center p-1">Sans Image 2</div>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
 

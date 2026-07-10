@@ -578,7 +578,8 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_withdrawal_proofs',
           'gi_deleted_investments',
           'gi_deleted_users',
-          'gi_manual_deposit_numbers'
+          'gi_manual_deposit_numbers',
+          'gi_official_banners'
         ];
         
         // Ensure standard keys are read with their default fallback if they are not in local storage yet
@@ -835,14 +836,16 @@ export class DataStore {
 
   static getMLMRates(): { level1: number, level2: number, level3: number } {
     let l1 = getFromStore<number>('gi_mlm_level1_rate', 30);
-    let l2 = getFromStore<number>('gi_mlm_level2_rate', 5);
+    let l2 = getFromStore<number>('gi_mlm_level2_rate', 2);
     let l3 = getFromStore<number>('gi_mlm_level3_rate', 1);
     
     if (l1 === 20) {
       l1 = 30;
+      setToStore<number>('gi_mlm_level1_rate', 30);
     }
-    if (l2 === 2 || l2 === 3) {
-      l2 = 5;
+    if (l2 === 5 || l2 === 3) {
+      l2 = 2;
+      setToStore<number>('gi_mlm_level2_rate', 2);
     }
     
     return {
@@ -924,6 +927,25 @@ export class DataStore {
         gi_whatsapp_support_number: numberStr.trim()
       })
     }).catch(err => console.error("Error saving WhatsApp support number to server", err));
+  }
+
+  static getOfficialBanners(): { image1: string; image2: string } {
+    const defaults = {
+      image1: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=500',
+      image2: 'https://images.unsplash.com/photo-1599690925058-90e1a0b41144?auto=format&fit=crop&q=80&w=500'
+    };
+    return getFromStore<{ image1: string; image2: string }>('gi_official_banners', defaults);
+  }
+
+  static saveOfficialBanners(banners: { image1: string; image2: string }): void {
+    setToStore<{ image1: string; image2: string }>('gi_official_banners', banners);
+    apiFetch(getApiUrl('/api/save-store'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gi_official_banners: banners
+      })
+    }).catch(err => console.error("Error saving official banners to server", err));
   }
 
   static getManualDepositNumbers(): Record<string, string> {

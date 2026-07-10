@@ -293,8 +293,8 @@ const ProductImage = ({
 }) => {
   return (
     <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-amber-100 flex items-center justify-center overflow-hidden relative rounded-xl border border-amber-200 shadow-xs">
-      <img
-        src={imageUrl || getVipImage(vipLevel, category)}
+      <img 
+        src={getVipImage(vipLevel, category)}
         alt={alt}
         className={`${className} transition-transform duration-500 hover:scale-110`}
         referrerPolicy="no-referrer"
@@ -330,14 +330,14 @@ const liveTransactions = [
 ];
 
 export const WHEEL_REWARDS = [
-  { amount: 1000, label: "1 000 F", color: "#38bdf8" }, // light sky blue
-  { amount: 5000, label: "5 000 F", color: "#eab308" }, // gold
-  { amount: 2000, label: "2 000 F", color: "#a855f7" }, // purple
-  { amount: 10000, label: "10 000 F", color: "#f97316" }, // orange
-  { amount: 1500, label: "1 500 F", color: "#ec4899" }, // pink
-  { amount: 20000, label: "20 000 F", color: "#22c55e" }, // green
-  { amount: 3000, label: "3 000 F", color: "#14b8a6" }, // teal
-  { amount: 50000, label: "50 000 F", color: "#ef4444" }  // red
+  { amount: 20, label: "20 F", color: "#38bdf8" }, // light sky blue
+  { amount: 25, label: "25 F", color: "#eab308" }, // gold
+  { amount: 50, label: "50 F", color: "#a855f7" }, // purple
+  { amount: 200, label: "200 F", color: "#f97316" }, // orange
+  { amount: 500, label: "500 F", color: "#ec4899" }, // pink
+  { amount: 1000, label: "1 000 F", color: "#22c55e" }, // green
+  { amount: 1500, label: "1 500 F", color: "#14b8a6" }, // teal
+  { amount: 20, label: "20 F", color: "#ef4444" }  // red
 ];
 
 export const GOLDSPEED_SLIDES = [
@@ -346,30 +346,6 @@ export const GOLDSPEED_SLIDES = [
     url: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=1000',
     title: 'Goldspeed Lingot d\'Or Pur 💎',
     desc: 'Bénéficiez de la sécurité absolue d\'un investissement aurifère de premier choix.',
-  },
-  {
-    id: 'slide-2',
-    url: 'https://images.unsplash.com/photo-1563013544-824ae1d704d3?auto=format&fit=crop&q=80&w=1000',
-    title: 'Goldspeed Coffre Sécurisé 🛡️',
-    desc: 'Votre capital est stocké physiquement dans des chambres fortes hautement gardées.',
-  },
-  {
-    id: 'slide-3',
-    url: 'https://images.unsplash.com/photo-1599690925058-90e1a0b41144?auto=format&fit=crop&q=80&w=1000',
-    title: 'Goldspeed Rendement Garanti ✨',
-    desc: 'Un taux d\'intérêt quotidien stable et protégé contre l\'inflation mondiale.',
-  },
-  {
-    id: 'slide-4',
-    url: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=1000',
-    title: 'Goldspeed Réserve Souveraine 🏛️',
-    desc: 'Des obligations d\'or souveraines assurant un revenu passif pérenne.',
-  },
-  {
-    id: 'slide-5',
-    url: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=1000',
-    title: 'Goldspeed Trésor Impérial 👑',
-    desc: 'Accédez à des opportunités d\'investissement exclusives réservées aux membres d\'élite.',
   }
 ];
 
@@ -463,6 +439,7 @@ export default function Dashboard({
   const [slideDirection, setSlideDirection] = useState<'forward' | 'backward'>('forward');
 
   useEffect(() => {
+    if (GOLDSPEED_SLIDES.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentSlide(prev => {
         if (slideDirection === 'forward') {
@@ -1563,7 +1540,11 @@ export default function Dashboard({
     setIsSpinning(true);
     setWonReward(null);
 
-    const randomIndex = Math.floor(Math.random() * WHEEL_REWARDS.length);
+    // Limit wins strictly to 20 F, 25 F, 50 F, or 200 F (amount between 20 and 200 inclusive)
+    const allowedIndices = WHEEL_REWARDS.map((rew, idx) => ({ rew, idx }))
+      .filter(item => item.rew.amount >= 20 && item.rew.amount <= 200)
+      .map(item => item.idx);
+    const randomIndex = allowedIndices[Math.floor(Math.random() * allowedIndices.length)];
     const selected = WHEEL_REWARDS[randomIndex];
 
     const segmentAngle = 360 / WHEEL_REWARDS.length;
@@ -3642,18 +3623,20 @@ export default function Dashboard({
                 </div>
 
                 {/* Slide Indicators / Dots */}
-                <div className="absolute bottom-4 right-5 z-25 flex gap-1.5">
-                  {GOLDSPEED_SLIDES.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentSlide(idx);
-                      }}
-                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === currentSlide ? 'w-5 bg-yellow-400' : 'w-1.5 bg-white/40'}`}
-                    />
-                  ))}
-                </div>
+                {GOLDSPEED_SLIDES.length > 1 && (
+                  <div className="absolute bottom-4 right-5 z-25 flex gap-1.5">
+                    {GOLDSPEED_SLIDES.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentSlide(idx);
+                        }}
+                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === currentSlide ? 'w-5 bg-yellow-400' : 'w-1.5 bg-white/40'}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* 2. QUICK ACCESS BUTTONS ROW (4 BUTTONS) */}
@@ -5173,7 +5156,7 @@ export default function Dashboard({
                           
                           <div className="grid grid-cols-3 gap-2 sm:gap-4 flex-1 text-left">
                             <div>
-                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{mlmRates.level1 || 30}%</span>
+                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{mlmRates.level1 !== undefined ? mlmRates.level1 : 30}%</span>
                               <span className="text-[9px] sm:text-[10px] text-amber-800/80 font-black uppercase tracking-tight block mt-0.5">Remise Niv 1</span>
                             </div>
                             <div>
@@ -5207,7 +5190,7 @@ export default function Dashboard({
                           
                           <div className="grid grid-cols-3 gap-2 sm:gap-4 flex-1 text-left">
                             <div>
-                              <span className="text-lg sm:text-xl font-sans font-black text-emerald-950 block leading-tight">{mlmRates.level2 || 5}%</span>
+                              <span className="text-lg sm:text-xl font-sans font-black text-emerald-950 block leading-tight">{mlmRates.level2 !== undefined ? mlmRates.level2 : 2}%</span>
                               <span className="text-[9px] sm:text-[10px] text-emerald-800/80 font-black uppercase tracking-tight block mt-0.5">Lv 2 Rebate</span>
                             </div>
                             <div>
@@ -5241,7 +5224,7 @@ export default function Dashboard({
                           
                           <div className="grid grid-cols-3 gap-2 sm:gap-4 flex-1 text-left">
                             <div>
-                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{mlmRates.level3 || 1}%</span>
+                              <span className="text-lg sm:text-xl font-sans font-black text-amber-950 block leading-tight">{mlmRates.level3 !== undefined ? mlmRates.level3 : 1}%</span>
                               <span className="text-[9px] sm:text-[10px] text-amber-800/80 font-black uppercase tracking-tight block mt-0.5">Lv 3 Rebate</span>
                             </div>
                             <div>

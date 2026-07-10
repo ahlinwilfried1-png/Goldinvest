@@ -196,6 +196,28 @@ export default function AdminPanel({
     }
   };
 
+  const handleBanner1FileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setOfficialBanner1(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBanner2FileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setOfficialBanner2(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handlePublishAdminAvis = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminMessage.trim()) {
@@ -575,6 +597,9 @@ export default function AdminPanel({
   const [manualDepositNumbers, setManualDepositNumbers] = useState<Record<string, string>>(() => DataStore.getManualDepositNumbers());
   const [canalsSuccess, setCanalsSuccess] = useState<string | null>(null);
 
+  const [officialBanner1, setOfficialBanner1] = useState<string>(() => DataStore.getOfficialBanners().image1);
+  const [officialBanner2, setOfficialBanner2] = useState<string>(() => DataStore.getOfficialBanners().image2);
+
   const handleSaveMlmRates = (e: React.FormEvent) => {
     e.preventDefault();
     DataStore.saveMLMRates({
@@ -587,7 +612,11 @@ export default function AdminPanel({
     DataStore.saveWhatsAppChannel(whatsappChannel);
     DataStore.saveWhatsAppSupportNumber(whatsappSupportNumber);
     DataStore.saveManualDepositNumbers(manualDepositNumbers);
-    alert('Réglages système (MLM, domaine, WhatsApp, Support, Numéros Dépôt Manuel) enregistrés avec succès !');
+    DataStore.saveOfficialBanners({
+      image1: officialBanner1,
+      image2: officialBanner2
+    });
+    alert('Réglages système (MLM, domaine, WhatsApp, Support, Numéros Dépôt Manuel, Images Officielles) enregistrés avec succès !');
   };
 
   const handleSaveManualDepositNumbers = async (e: React.FormEvent) => {
@@ -2993,6 +3022,131 @@ export default function AdminPanel({
                 <span className="text-[10px] text-slate-500 mt-1.5 block leading-relaxed">
                   Le numéro de téléphone WhatsApp direct auquel les clients seront redirigés pour une assistance personnalisée (lien d'ouverture de chat wa.me).
                 </span>
+              </div>
+
+              {/* SECTION: LES DEUX IMAGES OFFICIELLES PUBLIÉES COLLÉES */}
+              <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 space-y-4">
+                <div className="border-b border-slate-800 pb-3">
+                  <span className="text-[11px] font-black text-yellow-500 uppercase tracking-widest block text-left">🛡️ Deux Images Officielles de Confiance (Bannières / Certificats)</span>
+                  <span className="text-[10px] text-slate-400 mt-1 block text-left">
+                    Gérez ici les deux images officielles (certificats de légalité, enregistrements, etc.) publiées côte à côte ("collées") sur l'écran d'inscription pour rassurer les membres.
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Image 1 Settings */}
+                  <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3 text-left">
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Image de Confiance 1</span>
+                    
+                    <div className="space-y-2">
+                      <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Importer un fichier image</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBanner1FileChange}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[9px] file:font-bold file:bg-yellow-500 file:text-slate-950 hover:file:bg-yellow-400 file:cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Ou coller l'URL de l'image 1</label>
+                      <input
+                        type="text"
+                        value={officialBanner1}
+                        onChange={(e) => setOfficialBanner1(e.target.value)}
+                        placeholder="Ex: https://images.unsplash.com/photo-..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-yellow-500/40 font-mono"
+                      />
+                    </div>
+
+                    {officialBanner1 ? (
+                      <div className="relative w-full h-28 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex justify-center items-center">
+                        <img src={officialBanner1} className="max-w-full max-h-full object-contain" alt="Image 1" referrerPolicy="no-referrer" />
+                        <button
+                          type="button"
+                          onClick={() => setOfficialBanner1('')}
+                          className="absolute top-2 right-2 bg-rose-600 hover:bg-rose-500 text-white px-2 py-1 rounded-md text-[9px] font-black transition-all cursor-pointer shadow-md"
+                          title="Supprimer cette image"
+                        >
+                          ❌ Supprimer
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-full h-28 bg-slate-950 rounded-lg border border-dashed border-slate-800 flex flex-col justify-center items-center text-slate-500 text-[10px]">
+                        <span>Aucune image définie</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Image 2 Settings */}
+                  <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3 text-left">
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">Image de Confiance 2</span>
+                    
+                    <div className="space-y-2">
+                      <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Importer un fichier image</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBanner2FileChange}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[9px] file:font-bold file:bg-yellow-500 file:text-slate-950 hover:file:bg-yellow-400 file:cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Ou coller l'URL de l'image 2</label>
+                      <input
+                        type="text"
+                        value={officialBanner2}
+                        onChange={(e) => setOfficialBanner2(e.target.value)}
+                        placeholder="Ex: https://images.unsplash.com/photo-..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-yellow-500/40 font-mono"
+                      />
+                    </div>
+
+                    {officialBanner2 ? (
+                      <div className="relative w-full h-28 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex justify-center items-center">
+                        <img src={officialBanner2} className="max-w-full max-h-full object-contain" alt="Image 2" referrerPolicy="no-referrer" />
+                        <button
+                          type="button"
+                          onClick={() => setOfficialBanner2('')}
+                          className="absolute top-2 right-2 bg-rose-600 hover:bg-rose-500 text-white px-2 py-1 rounded-md text-[9px] font-black transition-all cursor-pointer shadow-md"
+                          title="Supprimer cette image"
+                        >
+                          ❌ Supprimer
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-full h-28 bg-slate-950 rounded-lg border border-dashed border-slate-800 flex flex-col justify-center items-center text-slate-500 text-[10px]">
+                        <span>Aucune image définie</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* VISUAL COLLAGE PREVIEW */}
+                {(officialBanner1 || officialBanner2) && (
+                  <div className="pt-2">
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-2 text-center">Aperçu collé tel que vu par les utilisateurs :</span>
+                    <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex justify-center">
+                      <div className="grid grid-cols-2 gap-2 max-w-xs w-full bg-white p-2 rounded-2xl border border-slate-150 shadow-sm">
+                        {officialBanner1 ? (
+                          <div className="rounded-xl overflow-hidden border border-slate-100 aspect-[4/3] bg-slate-50 flex justify-center items-center">
+                            <img src={officialBanner1} className="w-full h-full object-cover" alt="Banner 1" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-dashed border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center text-[8px] text-slate-400 font-bold text-center p-1">Sans Image 1</div>
+                        )}
+                        {officialBanner2 ? (
+                          <div className="rounded-xl overflow-hidden border border-slate-100 aspect-[4/3] bg-slate-50 flex justify-center items-center">
+                            <img src={officialBanner2} className="w-full h-full object-cover" alt="Banner 2" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-dashed border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center text-[8px] text-slate-400 font-bold text-center p-1">Sans Image 2</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button

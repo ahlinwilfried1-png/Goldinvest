@@ -199,20 +199,20 @@ export default function App() {
   return (
     <div className="min-h-screen bg-transparent font-sans tracking-tight leading-normal overflow-x-hidden select-none relative text-slate-900">
       
-      {/* Immersive White Goldspeed background image for the entire site */}
+      {/* Immersive Gold Goldspeed background image for the entire site */}
       <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden select-none" id="site-global-brand-background">
         <img 
-          src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=85" 
-          alt="Site Goldspeed Background White" 
-          className="w-full h-full object-cover filter brightness-[1.05] contrast-[1.01]"
+          src="https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&w=1600&q=85" 
+          alt="Site Goldspeed Background Gold" 
+          className="w-full h-full object-cover filter brightness-[1.02] contrast-[1.01]"
           referrerPolicy="no-referrer"
         />
-        {/* Soft elegant white overlays to blend it perfectly and guarantee high contrast */}
-        <div className="absolute inset-0 bg-white/75" />
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/80 via-white/40 to-white/80" />
+        {/* Soft elegant warm/white overlays to blend it perfectly and guarantee high contrast */}
+        <div className="absolute inset-0 bg-amber-50/70" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/80 via-amber-50/50 to-white/80" />
         
-        {/* Ambient colored highlights */}
-        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-purple-500/10 blur-[140px]" />
+        {/* Ambient gold highlights */}
+        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-yellow-500/10 blur-[140px]" />
       </div>
 
       {/* 1. AUTHENTICATION & REGISTRATION SCREEN */}
