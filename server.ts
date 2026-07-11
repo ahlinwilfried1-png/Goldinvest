@@ -772,74 +772,44 @@ async function startServer() {
 
       // If more days should have processed than currently tracked
       if (expectedDays > inv.daysPassed) {
-        const isActivity = inv.category === 'activity' || inv.isCyclic;
+        const isCyclicProduct = inv.category === 'activity' || inv.category === 'wellbeing' || inv.isCyclic;
 
-        if (isActivity) {
-          // No daily payout during active cycle for short-cycle activity products
+        if (isCyclicProduct) {
+          // No daily payout during active cycle for short-cycle activity and wellbeing products
           if (expectedDays >= inv.durationDays) {
             // End of complete cycle: payout is capital + profit (i.e. totalReturn)
             const totalPayout = inv.totalReturn || (inv.price + (inv.dailyReturn * inv.durationDays));
             const netProfit = totalPayout - inv.price;
 
             const uIdx = users.findIndex((u: any) => u.id === inv.userId);
-            let autoRenewed = false;
             if (uIdx !== -1) {
               users[uIdx].balance += totalPayout;
               users[uIdx].totalEarnings += netProfit;
 
+              const isWellbeing = inv.category === 'wellbeing';
+              const title = isWellbeing 
+                ? `🌸 Bien-être Terminé (${inv.productName})` 
+                : `⚡ Activité Terminée (${inv.productName})`;
+              const message = isWellbeing
+                ? `Félicitations ! Votre cycle de bien-être "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`
+                : `Félicitations ! Votre cycle d'activité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`;
+
               notifications.unshift({
                 id: `not-cyclecomplete-srv-${Date.now()}-${inv.id}`,
                 userId: inv.userId,
-                title: `⚡ Activité Terminée (${inv.productName})`,
-                message: `Félicitations ! Votre cycle d'activité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`,
+                title,
+                message,
                 type: 'plan',
                 lastModified: Date.now(),
                 createdAt: new Date().toISOString(),
                 read: false
               });
-
-              if (inv.autoRenew) {
-                if (users[uIdx].balance >= inv.price) {
-                  users[uIdx].balance -= inv.price;
-                  autoRenewed = true;
-                  notifications.unshift({
-                    id: `not-autorenew-srv-${Date.now()}-${inv.id}`,
-                    userId: inv.userId,
-                    title: `🔄 Renouvellement Automatique (${inv.productName})`,
-                    message: `Félicitations ! Votre plan d'activité "${inv.productName}" a été automatiquement renouvelé pour un nouveau cycle de ${inv.durationDays} jours. Le montant de ${inv.price.toLocaleString()} XOF a été déduit de votre solde.`,
-                    type: 'plan',
-                    lastModified: Date.now(),
-                    createdAt: new Date().toISOString(),
-                    read: false
-                  });
-                } else {
-                  inv.autoRenew = false;
-                  notifications.unshift({
-                    id: `not-autorenew-srv-fail-${Date.now()}-${inv.id}`,
-                    userId: inv.userId,
-                    title: `⚠️ Renouvellement Auto Échoué (${inv.productName})`,
-                    message: `Le renouvellement automatique pour votre activité "${inv.productName}" a échoué en raison d'un solde insuffisant.`,
-                    type: 'plan',
-                    lastModified: Date.now(),
-                    createdAt: new Date().toISOString(),
-                    read: false
-                  });
-                }
-              }
             }
 
-            if (autoRenewed) {
-              inv.daysPassed = 0;
-              inv.totalReturnClaimed = 0;
-              inv.createdAt = new Date().toISOString();
-              inv.lastClaimDate = new Date().toISOString();
-              inv.status = 'active';
-            } else {
-              inv.daysPassed = expectedDays;
-              inv.totalReturnClaimed = totalPayout;
-              inv.lastClaimDate = new Date().toISOString();
-              inv.status = 'completed';
-            }
+            inv.daysPassed = expectedDays;
+            inv.totalReturnClaimed = totalPayout;
+            inv.lastClaimDate = new Date().toISOString();
+            inv.status = 'completed';
             inv.lastModified = Date.now();
             changed = true;
           } else {
@@ -931,7 +901,7 @@ async function startServer() {
     if (changed) {
       // Recalculate dailyEarnings for all users to match active investments status correctly
       users = users.map((u: any) => {
-        const userActiveInvs = investments.filter((inv: any) => inv.userId === u.id && inv.status === 'active' && inv.category !== 'activity' && !inv.isCyclic);
+        const userActiveInvs = investments.filter((inv: any) => inv.userId === u.id && inv.status === 'active' && inv.category !== 'activity' && inv.category !== 'wellbeing' && !inv.isCyclic);
         const activeDailyEarnings = userActiveInvs.reduce((sum: number, inv: any) => sum + inv.dailyReturn, 0);
         return {
           ...u,
@@ -1880,10 +1850,10 @@ async function startServer() {
       return res.json({ success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} XOF.` });
     }
 
-    const isActivity = targetProduct.category === 'activity' || targetProduct.isCyclic;
+    const isCyclicProduct = targetProduct.category === 'activity' || targetProduct.category === 'wellbeing' || targetProduct.isCyclic;
 
     user.balance -= targetProduct.price;
-    if (!isActivity) {
+    if (!isCyclicProduct) {
       user.dailyEarnings += targetProduct.dailyReturn;
     }
     user.lastModified = Date.now();
@@ -1894,7 +1864,7 @@ async function startServer() {
       productId: targetProduct.id,
       productName: targetProduct.name,
       price: targetProduct.price,
-      dailyReturn: isActivity ? 0 : targetProduct.dailyReturn,
+      dailyReturn: targetProduct.dailyReturn, // Preserve actual dailyReturn so the UI displays the return rate correctly (it won't be credited daily as they are excluded from dailyEarnings)
       daysPassed: 0,
       durationDays: targetProduct.durationDays,
       totalReturnClaimed: 0,
@@ -1988,11 +1958,12 @@ async function startServer() {
       return res.json({ success: false, message: 'Cet investissement est déjà arrivé à terme.', amount: 0 });
     }
 
-    const isActivity = inv.category === 'activity' || inv.isCyclic;
-    if (isActivity) {
+    const isCyclicProduct = inv.category === 'activity' || inv.category === 'wellbeing' || inv.isCyclic;
+    if (isCyclicProduct) {
+      const planName = inv.category === 'wellbeing' ? 'Bien-être' : 'Activité de Cycle Court';
       return res.json({
         success: false,
-        message: `Les revenus de cette Activité de Cycle Court (${inv.productName}) vous seront versés automatiquement et en intégralité à la fin de son cycle de ${inv.durationDays} jours.`,
+        message: `Les revenus de ce plan ${planName} (${inv.productName}) vous seront versés automatiquement et en intégralité à la fin de son cycle de ${inv.durationDays} jours.`,
         amount: 0
       });
     }

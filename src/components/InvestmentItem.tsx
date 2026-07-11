@@ -287,29 +287,20 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
         </div>
       </div>
 
-      {/* Auto-renew switch for Wellbeing and Activity active investments */}
+      {/* Informational badge for Wellbeing and Activity active investments */}
       {!isCompleted && (isWellbeing || isActivityOriginal) && (
-        <div className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl p-2 px-3 mt-1.5 transition-all">
+        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl p-2 px-3 mt-1.5 transition-all">
           <div className="flex flex-col text-left">
-            <span className="text-[10px] font-black text-slate-700 flex items-center gap-1">
-              🔄 Renouvellement auto.
+            <span className="text-[10px] font-black text-emerald-800 flex items-center gap-1">
+              ⏳ Cycle d'investissement en cours
             </span>
-            <span className="text-[8.5px] text-slate-400">
-              Relancer le cycle à la fin
+            <span className="text-[8.5px] text-emerald-600">
+              Le capital et les bénéfices prévus seront versés à la fin du cycle.
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            {message && <span className="text-[9px] text-emerald-600 font-black animate-pulse">{message}</span>}
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={autoRenew} 
-                onChange={handleToggleAutoRenew} 
-                className="sr-only peer" 
-              />
-              <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
-            </label>
-          </div>
+          <span className="text-[9.5px] bg-emerald-600 text-white font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
+            Cyclique
+          </span>
         </div>
       )}
     </div>
