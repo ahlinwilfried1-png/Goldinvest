@@ -659,6 +659,7 @@ async function startServer() {
             const netProfit = totalPayout - inv.price;
 
             const uIdx = users.findIndex((u: any) => u.id === inv.userId);
+            let autoRenewed = false;
             if (uIdx !== -1) {
               users[uIdx].balance += totalPayout;
               users[uIdx].totalEarnings += netProfit;
@@ -673,13 +674,50 @@ async function startServer() {
                 createdAt: new Date().toISOString(),
                 read: false
               });
+
+              if (inv.autoRenew) {
+                if (users[uIdx].balance >= inv.price) {
+                  users[uIdx].balance -= inv.price;
+                  autoRenewed = true;
+                  notifications.unshift({
+                    id: `not-autorenew-srv-${Date.now()}-${inv.id}`,
+                    userId: inv.userId,
+                    title: `🔄 Renouvellement Automatique (${inv.productName})`,
+                    message: `Félicitations ! Votre plan d'activité "${inv.productName}" a été automatiquement renouvelé pour un nouveau cycle de ${inv.durationDays} jours. Le montant de ${inv.price.toLocaleString()} XOF a été déduit de votre solde.`,
+                    type: 'plan',
+                    lastModified: Date.now(),
+                    createdAt: new Date().toISOString(),
+                    read: false
+                  });
+                } else {
+                  inv.autoRenew = false;
+                  notifications.unshift({
+                    id: `not-autorenew-srv-fail-${Date.now()}-${inv.id}`,
+                    userId: inv.userId,
+                    title: `⚠️ Renouvellement Auto Échoué (${inv.productName})`,
+                    message: `Le renouvellement automatique pour votre activité "${inv.productName}" a échoué en raison d'un solde insuffisant.`,
+                    type: 'plan',
+                    lastModified: Date.now(),
+                    createdAt: new Date().toISOString(),
+                    read: false
+                  });
+                }
+              }
             }
 
-            inv.daysPassed = expectedDays;
-            inv.totalReturnClaimed = totalPayout;
-            inv.lastClaimDate = new Date().toISOString();
+            if (autoRenewed) {
+              inv.daysPassed = 0;
+              inv.totalReturnClaimed = 0;
+              inv.createdAt = new Date().toISOString();
+              inv.lastClaimDate = new Date().toISOString();
+              inv.status = 'active';
+            } else {
+              inv.daysPassed = expectedDays;
+              inv.totalReturnClaimed = totalPayout;
+              inv.lastClaimDate = new Date().toISOString();
+              inv.status = 'completed';
+            }
             inv.lastModified = Date.now();
-            inv.status = 'completed';
             changed = true;
           } else {
             // Just advance the counter of days passed
@@ -717,8 +755,49 @@ async function startServer() {
           inv.lastModified = Date.now();
 
           if (inv.daysPassed >= inv.durationDays) {
-            inv.status = 'completed';
-            handleCyclicCompletion(inv, users, products, investments, notifications);
+            let autoRenewed = false;
+            const isWellbeing = inv.category === 'wellbeing';
+            const uIdx2 = users.findIndex((u: any) => u.id === inv.userId);
+
+            if (isWellbeing && inv.autoRenew && uIdx2 !== -1) {
+              if (users[uIdx2].balance >= inv.price) {
+                users[uIdx2].balance -= inv.price;
+                autoRenewed = true;
+                notifications.unshift({
+                  id: `not-autorenew-srv-${Date.now()}-${inv.id}`,
+                  userId: inv.userId,
+                  title: `🔄 Renouvellement Automatique (${inv.productName})`,
+                  message: `Félicitations ! Votre plan de bien-être "${inv.productName}" a été automatiquement renouvelé pour un nouveau cycle de ${inv.durationDays} jours. Le montant de ${inv.price.toLocaleString()} XOF a été déduit de votre solde.`,
+                  type: 'plan',
+                  lastModified: Date.now(),
+                  createdAt: new Date().toISOString(),
+                  read: false
+                });
+              } else {
+                inv.autoRenew = false;
+                notifications.unshift({
+                  id: `not-autorenew-srv-fail-${Date.now()}-${inv.id}`,
+                  userId: inv.userId,
+                  title: `⚠️ Renouvellement Auto Échoué (${inv.productName})`,
+                  message: `Le renouvellement automatique pour votre plan bien-être "${inv.productName}" a échoué en raison d'un solde insuffisant.`,
+                  type: 'plan',
+                  lastModified: Date.now(),
+                  createdAt: new Date().toISOString(),
+                  read: false
+                });
+              }
+            }
+
+            if (autoRenewed) {
+              inv.daysPassed = 0;
+              inv.totalReturnClaimed = 0;
+              inv.createdAt = new Date().toISOString();
+              inv.lastClaimDate = new Date().toISOString();
+              inv.status = 'active';
+            } else {
+              inv.status = 'completed';
+              handleCyclicCompletion(inv, users, products, investments, notifications);
+            }
           }
           changed = true;
         }
@@ -1645,6 +1724,19 @@ async function startServer() {
       return res.json({ success: false, message: 'Ce plan d\'investissement VIP est temporairement bloqué ou suspendu par l\'administration.' });
     }
 
+    const isWellbeingOrActivity = targetProduct.category === 'wellbeing' || targetProduct.category === 'activity';
+    if (isWellbeingOrActivity) {
+      const hasStability = (storeData["gi_investments"] || []).some((inv: any) => {
+        if (inv.userId !== userId) return false;
+        const p = products.find((prod: any) => prod.id === inv.productId || prod.name === inv.productName);
+        const cat = p?.category || inv.category || 'stability';
+        return cat === 'stability';
+      });
+      if (!hasStability) {
+        return res.json({ success: false, message: "L'achat d'un produit de stabilité est obligatoire avant de pouvoir acquérir un produit de Bien-être ou d'Activité." });
+      }
+    }
+
     const uIdx = users.findIndex((u: any) => u.id === userId);
     if (uIdx === -1) {
       return res.json({ success: false, message: 'Utilisateur non trouvé.' });
@@ -1839,6 +1931,81 @@ async function startServer() {
 
     await saveStore();
     res.json({ success: true, message: `Revenu journalier de +${inv.dailyReturn} XOF encaissé avec succès !`, amount: inv.dailyReturn, user: users[uIdx] });
+  });
+
+  // Centralized Investment Renewal API
+  app.post("/api/renew-investment", async (req, res) => {
+    const { userId, investmentId } = req.body;
+    let users = storeData["gi_users"] || [];
+    let investments = storeData["gi_investments"] || [];
+    let notifications = storeData["gi_notifications"] || [];
+    let products = storeData["gi_products"] || [];
+
+    const invIdx = investments.findIndex((inv: any) => inv.id === investmentId && inv.userId === userId);
+    if (invIdx === -1) {
+      return res.json({ success: false, message: 'Investissement introuvable.' });
+    }
+
+    const inv = investments[invIdx];
+    const product = products.find((p: any) => p.id === inv.productId);
+    const renewPrice = product ? product.price : inv.price;
+
+    const uIdx = users.findIndex((u: any) => u.id === userId);
+    if (uIdx === -1) {
+      return res.json({ success: false, message: 'Utilisateur non trouvé.' });
+    }
+
+    const user = users[uIdx];
+    if (user.balance < renewPrice) {
+      return res.json({ success: false, message: `Solde insuffisant pour le renouvellement. Requis: ${renewPrice.toLocaleString()} XOF.` });
+    }
+
+    user.balance -= renewPrice;
+    user.lastModified = Date.now();
+
+    inv.daysPassed = 0;
+    inv.createdAt = new Date().toISOString();
+    inv.status = 'active';
+    inv.totalReturnClaimed = 0;
+    inv.lastClaimDate = new Date().toISOString();
+    inv.lastModified = Date.now();
+
+    notifications.unshift({
+      id: `not-renew-${Date.now()}`,
+      userId,
+      title: 'Plan renouvelé avec succès !',
+      message: `Votre plan "${inv.productName}" a été renouvelé avec succès pour un nouveau cycle de ${inv.durationDays} jours.`,
+      type: 'plan',
+      lastModified: Date.now(),
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+
+    storeData["gi_users"] = users;
+    storeData["gi_investments"] = investments;
+    storeData["gi_notifications"] = notifications;
+
+    await saveStore();
+    res.json({ success: true, message: `Votre plan ${inv.productName} a été renouvelé avec succès pour un nouveau cycle de ${inv.durationDays} jours !`, user, investments });
+  });
+
+  // Centralized Toggle Auto-Renew API
+  app.post("/api/toggle-autorenew", async (req, res) => {
+    const { userId, investmentId, autoRenew } = req.body;
+    let investments = storeData["gi_investments"] || [];
+
+    const invIdx = investments.findIndex((inv: any) => inv.id === investmentId && inv.userId === userId);
+    if (invIdx === -1) {
+      return res.json({ success: false, message: 'Investissement introuvable.' });
+    }
+
+    investments[invIdx].autoRenew = !!autoRenew;
+    investments[invIdx].lastModified = Date.now();
+
+    storeData["gi_investments"] = investments;
+
+    await saveStore();
+    res.json({ success: true, message: `Renouvellement automatique ${autoRenew ? 'activé' : 'désactivé'}.`, investments });
   });
 
   // Centralized Simulation Fast-Forward Time API (Persists 24h shift on server)
@@ -3325,6 +3492,12 @@ async function startServer() {
     }
 
     const user = users[uIdx];
+    
+    // Check if user has an active product
+    const activeInvs = (storeData["gi_investments"] || []).filter((inv: any) => inv.userId === userId && inv.status === 'active');
+    if (activeInvs.length === 0) {
+      return res.json({ success: false, error: "Vous devez posséder au moins un produit d'investissement actif pour pouvoir effectuer un retrait." });
+    }
     
     // Validate withdrawal window (09h00 to 17h00)
     // We can check server time, but client timezone can be passed or we check standard hour

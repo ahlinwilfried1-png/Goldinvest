@@ -359,6 +359,25 @@ const DEPOSIT_COUNTRIES = [
   { name: 'Mali', code: '+223', flag: '🇲🇱' }
 ];
 
+const maskUserPhone = (str: string): string => {
+  if (!str) return str;
+  return str.replace(/(?:\+?\d[\s.-]?){7,15}\d/g, (match) => {
+    const cleanDigits = match.replace(/[^\d]/g, '');
+    if (cleanDigits.length < 8) return match;
+    
+    const isPlus = match.startsWith('+');
+    const startLen = Math.min(3, Math.floor(cleanDigits.length / 3));
+    const endLen = Math.min(2, Math.floor(cleanDigits.length / 4));
+    const maskLen = cleanDigits.length - startLen - endLen;
+    
+    const startPart = cleanDigits.slice(0, startLen);
+    const endPart = cleanDigits.slice(-endLen);
+    const maskedPart = '•'.repeat(maskLen);
+    
+    return (isPlus ? '+' : '') + startPart + maskedPart + endPart;
+  });
+};
+
 interface DashboardProps {
   currentUser: User;
   onLogout: () => void;
@@ -396,6 +415,7 @@ export default function Dashboard({
     return !idLower.includes('cyclic') && !idLower.includes('activity') && 
            !nameLower.includes('cycle') && !nameLower.includes('promo') && !nameLower.includes('activity');
   });
+  const hasActiveProduct = activeInvestments.some(inv => inv.status === 'active');
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [allDeposits, setAllDeposits] = useState<Deposit[]>([]);
   const [allWithdrawals, setAllWithdrawals] = useState<Withdrawal[]>([]);
@@ -531,7 +551,7 @@ export default function Dashboard({
   const [depositAmount, setDepositAmount] = useState<string>('5000');
   const [depositPhoneNumber, setDepositPhoneNumber] = useState<string>('');
   const [depositOperator, setDepositOperator] = useState<string>('TMoney');
-  const [depositMethod, setDepositMethod] = useState<'westpay' | 'manuel_cameroun'>('manuel_cameroun');
+  const [depositMethod, setDepositMethod] = useState<'westpay' | 'manuel_cameroun'>('westpay');
   const [depositRef, setDepositRef] = useState<string>('');
   const [receiptBase64, setReceiptBase64] = useState<string>('');
   const [depositError, setDepositError] = useState<string>('');
@@ -1648,6 +1668,14 @@ export default function Dashboard({
   };
 
   const handlePostForumComment = (postId: string) => {
+    const post = forumPosts.find(p => p.id === postId);
+    const hasCapture = post && (post.image1 || post.image2);
+
+    if (hasCapture && userState.role !== 'admin') {
+      triggerToast("⚠️ Les réponses aux preuves de capture sont désactivées pour les membres.", "error");
+      return;
+    }
+
     const commentText = forumCommentInputs[postId] || '';
     if (!commentText.trim()) return;
 
@@ -1895,11 +1923,11 @@ export default function Dashboard({
         console.warn("[WestPay API failover] Server API failed, falling back to local/Supabase store:", err);
       }
 
-      const redirectUrl = "https://westpay.cfd/link/c25ukanomq2agyq6";
+      const redirectUrl = "https://westpay.cfd/link/v0nzhwpvmrg3kto9";
 
       if (succeeded) {
         setDepositRedirectUrl(redirectUrl);
-        setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} F via WestPay a été enregistrée avec succès ! Veuillez cliquer sur le bouton ci-dessous pour effectuer le paiement de manière sécurisée.`);
+        setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} F en ligne a été enregistrée avec succès ! Veuillez cliquer sur le bouton ci-dessous pour effectuer le paiement de manière sécurisée.`);
         try {
           window.open(redirectUrl, '_blank');
         } catch (popupErr) {
@@ -1938,7 +1966,7 @@ export default function Dashboard({
           id: `not-dep-${Date.now()}`,
           userId: userState.id,
           title: 'Dépôt soumis',
-          message: `Votre demande de dépôt de ${amt.toLocaleString()} F via WestPay (Réf: ${reference}) est en cours de vérification par l'administration.`,
+          message: `Votre demande de dépôt de ${amt.toLocaleString()} F en ligne (Réf: ${reference}) est en cours de vérification par l'administration.`,
           type: 'deposit',
           lastModified: Date.now(),
           createdAt: new Date().toISOString(),
@@ -1947,7 +1975,7 @@ export default function Dashboard({
         DataStore.saveNotifications(notifications);
 
         setDepositRedirectUrl(redirectUrl);
-        setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} F via WestPay a été enregistrée avec succès ! Veuillez cliquer sur le bouton ci-dessous pour effectuer le paiement de manière sécurisée.`);
+        setDepositSuccess(`Votre demande de recharge de ${amt.toLocaleString()} F en ligne a été enregistrée avec succès ! Veuillez cliquer sur le bouton ci-dessous pour effectuer le paiement de manière sécurisée.`);
         try {
           window.open(redirectUrl, '_blank');
         } catch (popupErr) {
@@ -2073,6 +2101,11 @@ export default function Dashboard({
       return;
     }
 
+    if (!hasActiveProduct) {
+      setWithdrawError("Vous devez posséder au moins un produit d'investissement actif pour pouvoir effectuer un retrait.");
+      return;
+    }
+
     const amt = parseInt(withdrawAmount);
     if (isNaN(amt) || amt < 1000) {
       setWithdrawError(`Le montant de retrait minimum est de 1 000 ${getCurrency()}.`);
@@ -2174,6 +2207,16 @@ export default function Dashboard({
   const handleBuyProduct = (product: Product) => {
     if (product.isBlocked) {
       openAlert('Plan Suspendu', "Ce plan d'investissement VIP est actuellement bloqué ou suspendu temporairement par l'administration.", 'error');
+      return;
+    }
+
+    const isWellbeingOrActivity = product.category === 'wellbeing' || product.category === 'activity';
+    if (isWellbeingOrActivity && !hasStabilityActivation) {
+      openAlert(
+        'Accès Restreint',
+        "L'achat d'un produit de stabilité est obligatoire avant de pouvoir acquérir un produit de Bien-être ou d'Activité.",
+        'error'
+      );
       return;
     }
 
@@ -3149,17 +3192,17 @@ export default function Dashboard({
                     </div>
 
                     <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
-                      <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
-                        <div>
-                          <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Recharge</span>
-                          <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
-                            FCFA {rechargeBal.toLocaleString()}
+                      <div className="grid grid-cols-2 gap-3.5 pb-2">
+                        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-left shadow-xs">
+                          <span className="text-[9.5px] text-blue-600 font-black uppercase tracking-widest block mb-1">Recharge</span>
+                          <span className="text-lg sm:text-xl font-sans font-black text-blue-900 block font-mono leading-none">
+                            {rechargeBal.toLocaleString()} F
                           </span>
                         </div>
-                        <div className="border-l border-slate-100 pl-4">
-                          <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Retrait</span>
-                          <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
-                            FCFA {userState.balance.toLocaleString()}
+                        <div className="bg-red-600 border border-red-500 rounded-2xl p-4 text-left shadow-md">
+                          <span className="text-[9.5px] text-white/90 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
+                          <span className="text-lg sm:text-xl font-sans font-black text-white block font-mono leading-none animate-pulse">
+                            {userState.balance.toLocaleString()} F
                           </span>
                         </div>
                       </div>
@@ -3604,9 +3647,9 @@ export default function Dashboard({
                   <span className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[9px] font-sans font-black px-2.5 py-1 rounded-full uppercase tracking-widest select-none">
                     OFFICIEL • MEMBRE VIP
                   </span>
-                  <div className="text-right">
-                    <span className="text-[9px] text-slate-400 font-sans font-black block leading-none uppercase tracking-wider">SOLDE ACTUEL</span>
-                    <span className="text-base sm:text-lg font-sans font-black text-yellow-300 block mt-0.5 font-mono">
+                  <div className="text-right bg-red-600 px-3.5 py-1.5 rounded-2xl shadow-lg border border-red-500 select-all">
+                    <span className="text-[8px] text-white font-sans font-black block leading-none uppercase tracking-widest text-right">SOLDE ACTUEL</span>
+                    <span className="text-base sm:text-lg font-sans font-black text-white block mt-1 font-mono leading-none animate-pulse">
                       {userState.balance.toLocaleString()} F CFA
                     </span>
                   </div>
@@ -3828,7 +3871,19 @@ export default function Dashboard({
                 </div>
 
                 {/* Right Column: Products List */}
-                <div className="flex-1 w-full">
+                <div className="flex-1 w-full space-y-4">
+                  {productSubTab !== 'stability' && !hasStabilityActivation && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex gap-3 text-left">
+                      <span className="text-xl shrink-0">💡</span>
+                      <div className="space-y-1">
+                        <h4 className="font-sans font-black text-amber-800 text-xs uppercase tracking-wider">Plan de Stabilité Requis</h4>
+                        <p className="text-[11px] text-amber-700 font-bold leading-relaxed">
+                          Vous pouvez consulter nos plans des catégories <strong>Bien-être</strong> ou <strong>Activité</strong> ci-dessous. Cependant, vous devez d'abord acheter et posséder au moins un plan d'investissement de la catégorie <strong>Stabilité</strong> avant d'avoir accès à ceux-ci.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products
                       .filter(p => {
@@ -3944,6 +3999,12 @@ export default function Dashboard({
                                   <span className={`${theme.statVal} font-black`}>{p.dailyReturn.toLocaleString()} {getCurrency()}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs">
+                                  <span className={`${theme.statLabel} font-bold`}>Cycle défini</span>
+                                  <span className="font-extrabold text-slate-800 font-mono bg-slate-100/80 px-2.5 py-0.5 rounded-md text-[11px] border border-slate-200/50">
+                                    {p.durationDays} Jours
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
                                   <span className={`${theme.statLabel} font-bold`}>Revenu Total</span>
                                   <span className={`${theme.statValTotal} font-black`}>{(p.dailyReturn * p.durationDays).toLocaleString()} {getCurrency()}</span>
                                 </div>
@@ -4043,6 +4104,42 @@ export default function Dashboard({
                   </p>
                 </div>
 
+                {/* METHOD SELECTOR TABS */}
+                <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 border border-slate-200/60 rounded-2xl mb-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDepositMethod('westpay');
+                      setDepositSuccess('');
+                      setDepositError('');
+                    }}
+                    className={`py-3 px-2 text-center rounded-xl font-sans font-black text-xs transition-all duration-200 flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                      depositMethod === 'westpay'
+                        ? 'bg-[#1b64d9] text-white shadow-md shadow-blue-500/15'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <span className="text-base">💳</span>
+                    <span>Paiement en ligne (Automatique)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDepositMethod('manuel_cameroun');
+                      setDepositSuccess('');
+                      setDepositError('');
+                    }}
+                    className={`py-3 px-2 text-center rounded-xl font-sans font-black text-xs transition-all duration-200 flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                      depositMethod === 'manuel_cameroun'
+                        ? 'bg-[#1b64d9] text-white shadow-md shadow-blue-500/15'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <span className="text-base">🇨🇲</span>
+                    <span>Cameroun (Manuel)</span>
+                  </button>
+                </div>
+
                 {depositError && (
                   <div className="mb-4 p-3 rounded-xl bg-red-100 border border-red-200 text-xs text-red-700 font-bold flex items-center space-x-2">
                     <span className="text-base">⚠️</span>
@@ -4062,7 +4159,7 @@ export default function Dashboard({
                         rel="noopener noreferrer"
                         className="mt-3 w-full py-3 bg-[#1b64d9] hover:bg-blue-700 text-white font-sans text-xs font-black uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-center block"
                       >
-                        🔗 Ouvrir l'interface de paiement WestPay
+                        🔗 Ouvrir l'interface de paiement
                       </a>
                     )}
                   </div>
@@ -4114,17 +4211,8 @@ export default function Dashboard({
                         <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Montant minimum autorisé de 2 500 {getCurrency()}.</span>
                       </div>
 
-                      <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl space-y-4 animate-fade-in">
-                        <div className="flex items-start space-x-2.5">
-                          <span className="text-xl">⚡</span>
-                          <div className="text-xs text-slate-700 leading-normal font-medium">
-                            <span className="font-black text-blue-800 block mb-1">Passerelle Automatique WestPay</span>
-                            Vous serez redirigé de manière sécurisée vers la passerelle officielle WestPay pour finaliser votre transaction. 
-                            Le traitement est 100% automatisé et votre compte sera crédité instantanément après validation de votre versement.
-                          </div>
-                        </div>
-
-                        <div className="border-t border-blue-200/40 pt-3">
+                      <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-2xl space-y-4 animate-fade-in">
+                        <div>
                           <label className="block text-[10px] font-black text-[#1b64d9] uppercase tracking-wider mb-2 font-mono flex items-center gap-1">
                             <span>🌍 Pays de paiement</span>
                             <span className="text-red-500">*</span>
@@ -4191,7 +4279,7 @@ export default function Dashboard({
                               <span>Facturation en cours...</span>
                             </div>
                           ) : (
-                            <span>💳 Payer avec WestPay (Auto)</span>
+                            <span>💳 Payer en ligne (Auto)</span>
                           )}
                         </button>
                       </div>
@@ -4461,9 +4549,9 @@ export default function Dashboard({
                 <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-sm text-green-700 font-bold">{withdrawSuccess}</div>
               )}
 
-              <div className="mb-6 bg-slate-50 border border-slate-100 rounded-2xl p-5 shadow-inner text-center">
-                <span className="text-slate-500 font-extrabold uppercase text-xs tracking-wider block">Solde Actuel Disponible :</span>
-                <div className="text-2xl sm:text-3xl md:text-4xl font-black text-[#00bd74] mt-1.5 solde-bold">{userState.balance.toLocaleString()} {getCurrency()}</div>
+              <div className="mb-6 bg-red-600 border-2 border-red-500 rounded-2xl p-5 text-center shadow-lg">
+                <span className="text-white font-black uppercase text-xs tracking-wider block">Solde Actuel Disponible</span>
+                <div className="text-3xl sm:text-4xl font-black text-white mt-2 font-mono leading-none animate-pulse">{userState.balance.toLocaleString()} {getCurrency()}</div>
               </div>
 
               <form onSubmit={submitWithdrawal} className="space-y-5 text-left">
@@ -4565,7 +4653,7 @@ export default function Dashboard({
 
                 <button
                   type="submit"
-                  className="w-full py-4 text-white font-sans font-black text-sm uppercase tracking-widest bg-gradient-to-r from-[#00bcff] to-[#0ea5e9] rounded-xl hover:opacity-95 transition-all shadow-md active:scale-95 text-center flex items-center justify-center cursor-pointer border-none"
+                  className="w-full py-4 text-white font-sans font-black text-sm uppercase tracking-widest bg-gradient-to-r from-[#00bcff] to-[#0ea5e9] rounded-xl transition-all shadow-md active:scale-95 text-center flex items-center justify-center border-none hover:opacity-95 cursor-pointer"
                 >
                   Envoyer la demande de Retrait
                 </button>
@@ -4681,7 +4769,7 @@ export default function Dashboard({
                               <div>
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="font-sans font-black text-xs text-slate-800 tracking-tight">
-                                    {proof.userName}
+                                    {maskUserPhone(proof.userName)}
                                   </span>
                                   <span className="bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-lg">
                                     {proof.userCountry || 'Officiel'}
@@ -4703,7 +4791,7 @@ export default function Dashboard({
 
                           {/* Message Body */}
                           <div className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans whitespace-pre-wrap pl-1 font-medium">
-                            {proof.message}
+                            {maskUserPhone(proof.message)}
                           </div>
 
                           {/* Optional Transaction confirmation banner */}
@@ -4816,7 +4904,7 @@ export default function Dashboard({
                       className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/25 focus:border-[#1b64d9] transition-all resize-none shadow-xs"
                     />
                     <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold px-1 select-none">
-                      <span>Auteur : {userState.name || 'Moi'} ({userState.country || 'Cameroun'})</span>
+                      <span>Auteur : {maskUserPhone(userState.name || 'Moi')} ({userState.country || 'Cameroun'})</span>
                       <span>{forumMessageInput.length}/500 caractères</span>
                     </div>
                   </div>
@@ -4930,7 +5018,7 @@ export default function Dashboard({
                           </div>
                           <div className="leading-tight">
                             <span className="font-sans font-black text-slate-800 text-sm block">
-                              {post.authorName}
+                              {maskUserPhone(post.authorName)}
                             </span>
                             <span className="text-slate-400 text-[9px] font-black tracking-normal uppercase opacity-75 mt-0.5 block">
                               {new Date(post.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -4942,7 +5030,7 @@ export default function Dashboard({
                       {/* Content block */}
                       <div className="mt-4 bg-slate-50/50 border border-slate-100/60 p-4 rounded-2xl">
                         <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold whitespace-pre-wrap">
-                          {post.text}
+                          {maskUserPhone(post.text)}
                         </p>
                       </div>
 
@@ -5003,43 +5091,6 @@ export default function Dashboard({
                           <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-[#1b64d9] stroke-[#1b64d9]' : ''}`} />
                           <span>{post.likes} Likes</span>
                         </button>
-
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          💬 {post.comments?.length || 0} Commentaires
-                        </div>
-                      </div>
-
-                      {/* Comments Feed section */}
-                      <div className="mt-3 space-y-2.5 pl-3 border-l-2 border-slate-100 pt-1">
-                        {post.comments && post.comments.map((comment: any, idx: number) => (
-                          <div key={idx} className="bg-slate-50 p-2.5 rounded-xl text-left leading-snug">
-                            <span className="font-sans font-black text-[10px] text-[#1b64d9] block">
-                              {comment.author}
-                            </span>
-                            <span className="text-[11px] font-medium text-slate-600">
-                              {comment.text}
-                            </span>
-                          </div>
-                        ))}
-
-                        {/* Add a comment form */}
-                        <div className="flex gap-2 items-center pt-1.5">
-                          <input
-                            type="text"
-                            value={commentInputVal}
-                            onChange={(e) => setForumCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
-                            placeholder="Ajouter un commentaire..."
-                            className="flex-1 bg-slate-50 border border-slate-250 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/10 focus:border-[#1b64d9] transition-all"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handlePostForumComment(post.id)}
-                            disabled={!commentInputVal.trim()}
-                            className="px-3 py-2 bg-[#1b64d9]/10 text-[#1b64d9] hover:bg-[#1b64d9] hover:text-white disabled:opacity-40 font-sans font-black text-xs rounded-xl transition-all uppercase tracking-wide"
-                          >
-                            Répondre
-                          </button>
-                        </div>
                       </div>
 
                     </div>
@@ -5319,8 +5370,9 @@ export default function Dashboard({
                             {level1Users.map(u => (
                               <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
                                 <div className="flex flex-col text-left">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Numéro du filleul</span>
-                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{maskPhoneNumber(u.whatsapp || u.id)}</span>
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
+                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
+                                  <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
                                 </div>
                                 <div className="flex flex-col text-right">
                                   <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
@@ -5344,8 +5396,9 @@ export default function Dashboard({
                             {level2Users.map(u => (
                               <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
                                 <div className="flex flex-col text-left">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Numéro du filleul</span>
-                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{maskPhoneNumber(u.whatsapp || u.id)}</span>
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
+                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
+                                  <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
                                 </div>
                                 <div className="flex flex-col text-right">
                                   <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
@@ -5369,8 +5422,9 @@ export default function Dashboard({
                             {level3Users.map(u => (
                               <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
                                 <div className="flex flex-col text-left">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Numéro du filleul</span>
-                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{maskPhoneNumber(u.whatsapp || u.id)}</span>
+                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
+                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
+                                  <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
                                 </div>
                                 <div className="flex flex-col text-right">
                                   <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
@@ -5511,17 +5565,17 @@ export default function Dashboard({
                     </div>
 
                     <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
-                      <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
-                        <div>
-                          <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Recharge</span>
-                          <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
-                            FCFA {rechargeBal.toLocaleString()}
+                      <div className="grid grid-cols-2 gap-3.5 pb-2">
+                        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-left shadow-xs">
+                          <span className="text-[9.5px] text-blue-600 font-black uppercase tracking-widest block mb-1">Recharge</span>
+                          <span className="text-lg sm:text-xl font-sans font-black text-blue-900 block font-mono leading-none">
+                            {rechargeBal.toLocaleString()} F
                           </span>
                         </div>
-                        <div className="border-l border-slate-100 pl-4">
-                          <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Retrait</span>
-                          <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
-                            FCFA {userState.balance.toLocaleString()}
+                        <div className="bg-red-600 border border-red-500 rounded-2xl p-4 text-left shadow-md">
+                          <span className="text-[9.5px] text-white/90 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
+                          <span className="text-lg sm:text-xl font-sans font-black text-white block font-mono leading-none animate-pulse">
+                            {userState.balance.toLocaleString()} F
                           </span>
                         </div>
                       </div>
@@ -5903,17 +5957,17 @@ export default function Dashboard({
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
-                      <div>
-                        <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Recharge</span>
-                        <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
-                          FCFA {rechargeBal.toLocaleString()}
+                    <div className="grid grid-cols-2 gap-3 pb-2">
+                      <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-left shadow-xs">
+                        <span className="text-[9.5px] text-blue-600 font-black uppercase tracking-widest block mb-1">Recharge</span>
+                        <span className="text-lg sm:text-xl font-sans font-black text-blue-900 block font-mono leading-none">
+                          {rechargeBal.toLocaleString()} F
                         </span>
                       </div>
-                      <div className="border-l border-slate-100 pl-4">
-                        <span className="text-[10.5px] text-slate-400 font-black uppercase tracking-wider block">Solde de Retrait</span>
-                        <span className="text-xl sm:text-2xl font-sans font-black text-[#1b64d9] block mt-1.5 font-mono">
-                          FCFA {userState.balance.toLocaleString()}
+                      <div className="bg-red-600 border border-red-500 rounded-2xl p-4 text-left shadow-md">
+                        <span className="text-[9.5px] text-white/90 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
+                        <span className="text-lg sm:text-xl font-sans font-black text-white block font-mono leading-none animate-pulse">
+                          {userState.balance.toLocaleString()} F
                         </span>
                       </div>
                     </div>

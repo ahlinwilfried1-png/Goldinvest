@@ -79,6 +79,7 @@ export interface Investment {
   category?: 'stability' | 'wellbeing' | 'activity' | string;
   createdAt: string;
   lastModified?: number;
+  autoRenew?: boolean;
 }
 
 export interface Commission {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Investment } from '../types';
 import { Clock, CheckCircle, AlertCircle, Coins, Flame } from 'lucide-react';
+import { DataStore } from '../dataStore';
 
 interface InvestmentItemProps {
   investment: Investment;
@@ -10,6 +11,52 @@ interface InvestmentItemProps {
 export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onClaim }) => {
   const [now, setNow] = useState<number>(Date.now());
   const [claiming, setClaiming] = useState<boolean>(false);
+  const [autoRenew, setAutoRenew] = useState<boolean>(investment.autoRenew || false);
+  const [renewing, setRenewing] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>('');
+
+  useEffect(() => {
+    setAutoRenew(investment.autoRenew || false);
+  }, [investment.autoRenew]);
+
+  const handleToggleAutoRenew = async () => {
+    const nextVal = !autoRenew;
+    setAutoRenew(nextVal);
+    try {
+      const res = await DataStore.toggleAutoRenew(investment.userId, investment.id, nextVal);
+      if (res.success) {
+        setMessage('Auto-renouvellement mis à jour !');
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        setAutoRenew(!nextVal); // Revert
+        alert(res.message);
+      }
+    } catch (err) {
+      console.error(err);
+      setAutoRenew(!nextVal); // Revert
+    }
+  };
+
+  const handleManualRenew = async () => {
+    if (renewing) return;
+    if (!window.confirm(`Voulez-vous renouveler ce plan pour un nouveau cycle de ${investment.durationDays} jours pour ${investment.price.toLocaleString()} XOF ?`)) {
+      return;
+    }
+    setRenewing(true);
+    try {
+      const res = await DataStore.renewInvestment(investment.userId, investment.id);
+      if (res.success) {
+        alert(res.message);
+      } else {
+        alert(res.message);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Erreur lors du renouvellement.');
+    } finally {
+      setRenewing(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -180,10 +227,23 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
 
         <div className="text-right">
           {isCompleted ? (
-            <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-black uppercase text-[8.5px] px-2.5 py-1.5 rounded-lg border border-slate-200">
-              <CheckCircle className="w-3 h-3 text-slate-400" />
-              Terminé
-            </span>
+            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-black uppercase text-[8.5px] px-2.5 py-1.5 rounded-lg border border-slate-200">
+                <CheckCircle className="w-3 h-3 text-slate-400" />
+                Terminé
+              </span>
+              {(isWellbeing || isActivityOriginal) && (
+                <button
+                  type="button"
+                  disabled={renewing}
+                  onClick={handleManualRenew}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded-lg shadow-xs cursor-pointer border-0 outline-none transition-all flex items-center gap-1"
+                >
+                  <Clock className="w-3 h-3" />
+                  {renewing ? 'Renouvellement...' : 'Renouveler'}
+                </button>
+              )}
+            </div>
           ) : isAutomatic ? (
             <span className="inline-flex flex-col items-end">
               <span className={`inline-flex items-center gap-1 font-black uppercase text-[8.5px] px-2 py-1 rounded-lg border ${
@@ -226,6 +286,32 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
           )}
         </div>
       </div>
+
+      {/* Auto-renew switch for Wellbeing and Activity active investments */}
+      {!isCompleted && (isWellbeing || isActivityOriginal) && (
+        <div className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl p-2 px-3 mt-1.5 transition-all">
+          <div className="flex flex-col text-left">
+            <span className="text-[10px] font-black text-slate-700 flex items-center gap-1">
+              🔄 Renouvellement auto.
+            </span>
+            <span className="text-[8.5px] text-slate-400">
+              Relancer le cycle à la fin
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {message && <span className="text-[9px] text-emerald-600 font-black animate-pulse">{message}</span>}
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={autoRenew} 
+                onChange={handleToggleAutoRenew} 
+                className="sr-only peer" 
+              />
+              <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+            </label>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

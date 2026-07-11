@@ -1628,6 +1628,12 @@ export class DataStore {
       return { success: false, error: 'Utilisateur non trouvé.' };
     }
 
+    // Check if user has an active product
+    const activeInvs = this.getInvestments().filter(inv => inv.userId === userId && inv.status === 'active');
+    if (activeInvs.length === 0) {
+      return { success: false, error: "Vous devez posséder au moins un produit d'investissement actif pour pouvoir effectuer un retrait." };
+    }
+
     if (amount < 1000) {
       return { success: false, error: 'Le montant de retrait minimum est de 1 000 F.' };
     }
@@ -1719,6 +1725,22 @@ export class DataStore {
     if (!user || !targetProduct) {
       return { success: false, message: 'VIP plan ou utilisateur introuvable.' };
     }
+
+    // Check if stability product has been purchased for wellbeing or activity
+    const isWellbeingOrActivity = targetProduct.category === 'wellbeing' || targetProduct.category === 'activity';
+    if (isWellbeingOrActivity) {
+      const investments = this.getInvestments();
+      const hasStability = investments.some(inv => {
+        if (inv.userId !== userId) return false;
+        const p = products.find(prod => prod.id === inv.productId || prod.name === inv.productName);
+        const cat = p?.category || inv.category || 'stability';
+        return cat === 'stability';
+      });
+      if (!hasStability) {
+        return { success: false, message: "L'achat d'un produit de stabilité est obligatoire avant d'avoir accès aux produits de Bien-être ou d'Activité." };
+      }
+    }
+
     if (user.balance < targetProduct.price) {
       return { success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} XOF.` };
     }
@@ -2112,6 +2134,121 @@ export class DataStore {
     return { success: true, message: `Revenu journalier de +${inv.dailyReturn} XOF encaissé avec succès !`, amount: inv.dailyReturn };
   }
 
+  static async renewInvestment(userId: string, investmentId: string): Promise<{ success: boolean, message: string }> {
+    try {
+      const response = await apiFetch(getApiUrl('/api/renew-investment'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, investmentId })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success) {
+          if (res.user) {
+            this.saveCurrentUser(res.user);
+          }
+          if (res.investments) {
+            this.saveInvestments(res.investments);
+          }
+          await syncWithBackend();
+          return res;
+        }
+      }
+    } catch (error) {
+      console.error('Renew investment API error, using local fallback:', error);
+    }
+
+    const investments = this.getInvestments();
+    const invIdx = investments.findIndex(inv => inv.id === investmentId && inv.userId === userId);
+    if (invIdx === -1) {
+      return { success: false, message: 'Investissement introuvable.' };
+    }
+
+    const inv = investments[invIdx];
+    const products = this.getProducts();
+    const product = products.find(p => p.id === inv.productId);
+    const renewPrice = product ? product.price : inv.price;
+
+    const users = this.getUsers();
+    const userIdx = users.findIndex(u => u.id === userId);
+    if (userIdx === -1) {
+      return { success: false, message: 'Utilisateur non trouvé.' };
+    }
+
+    const user = users[userIdx];
+    if (user.balance < renewPrice) {
+      return { success: false, message: `Solde insuffisant pour le renouvellement. Requis: ${renewPrice.toLocaleString()} XOF.` };
+    }
+
+    user.balance -= renewPrice;
+    user.lastModified = Date.now();
+    this.saveUsers(users);
+
+    const activeUser = this.getCurrentUser();
+    if (activeUser && activeUser.id === userId) {
+      activeUser.balance = user.balance;
+      this.saveCurrentUser(activeUser);
+    }
+
+    inv.daysPassed = 0;
+    inv.createdAt = new Date().toISOString();
+    inv.status = 'active';
+    inv.totalReturnClaimed = 0;
+    inv.lastClaimDate = new Date().toISOString();
+    inv.lastModified = Date.now();
+    this.saveInvestments(investments);
+
+    const notifs = this.getNotifications();
+    notifs.unshift({
+      id: `not-renew-${Date.now()}`,
+      userId,
+      title: 'Plan renouvelé avec succès !',
+      message: `Votre plan "${inv.productName}" a été renouvelé avec succès pour un nouveau cycle de ${inv.durationDays} jours.`,
+      type: 'plan',
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+    this.saveNotifications(notifs);
+
+    window.dispatchEvent(new Event('gi_store_updated'));
+    return { success: true, message: `Votre plan ${inv.productName} a été renouvelé avec succès pour un nouveau cycle de ${inv.durationDays} jours !` };
+  }
+
+  static async toggleAutoRenew(userId: string, investmentId: string, autoRenew: boolean): Promise<{ success: boolean, message: string }> {
+    try {
+      const response = await apiFetch(getApiUrl('/api/toggle-autorenew'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, investmentId, autoRenew })
+      });
+      if (response.ok) {
+        const res = await response.json();
+        if (res.success) {
+          if (res.investments) {
+            this.saveInvestments(res.investments);
+          }
+          await syncWithBackend();
+          return res;
+        }
+      }
+    } catch (error) {
+      console.error('Toggle autoRenew API error, using local fallback:', error);
+    }
+
+    const investments = this.getInvestments();
+    const invIdx = investments.findIndex(inv => inv.id === investmentId && inv.userId === userId);
+    if (invIdx === -1) {
+      return { success: false, message: 'Investissement introuvable.' };
+    }
+
+    investments[invIdx].autoRenew = autoRenew;
+    investments[invIdx].lastModified = Date.now();
+    this.saveInvestments(investments);
+
+    window.dispatchEvent(new Event('gi_store_updated'));
+    return { success: true, message: `Renouvellement automatique ${autoRenew ? 'activé' : 'désactivé'}.` };
+  }
+
   // Bonus Code validation & applying
   static applyBonusCode(userId: string, codeString: string): { success: boolean, message: string } {
     const cleanCode = codeString.toUpperCase().trim();
@@ -2424,6 +2561,8 @@ export class DataStore {
             const netProfit = isActivity ? (totalPayout - inv.price) : totalPayout;
 
             const uIdx = users.findIndex(u => u.id === inv.userId);
+            let autoRenewed = false;
+
             if (uIdx !== -1) {
               users[uIdx].balance += totalPayout;
               users[uIdx].totalEarnings += netProfit;
@@ -2445,13 +2584,50 @@ export class DataStore {
                 createdAt: new Date().toISOString(),
                 read: false
               });
+
+              // Check if auto-renew is requested for Wellbeing and Activity products
+              if (inv.autoRenew && (isWellbeing || isActivity)) {
+                if (users[uIdx].balance >= inv.price) {
+                  users[uIdx].balance -= inv.price;
+                  autoRenewed = true;
+
+                  notifications.unshift({
+                    id: `not-autorenew-${Date.now()}-${inv.id}`,
+                    userId: inv.userId,
+                    title: `🔄 Renouvellement Automatique (${inv.productName})`,
+                    message: `Félicitations ! Votre plan "${inv.productName}" (cycle de ${inv.durationDays} jours) a été automatiquement renouvelé pour un nouveau cycle de ${inv.durationDays} jours. Le montant de ${inv.price.toLocaleString()} XOF a été déduit de votre solde.`,
+                    type: 'plan',
+                    createdAt: new Date().toISOString(),
+                    read: false
+                  });
+                } else {
+                  inv.autoRenew = false;
+                  notifications.unshift({
+                    id: `not-autorenew-fail-${Date.now()}-${inv.id}`,
+                    userId: inv.userId,
+                    title: `⚠️ Renouvellement Auto Échoué (${inv.productName})`,
+                    message: `Votre plan "${inv.productName}" s'est terminé mais le renouvellement automatique a échoué car votre solde de ${users[uIdx].balance.toLocaleString()} XOF est insuffisant pour couvrir le prix de ${inv.price.toLocaleString()} XOF.`,
+                    type: 'plan',
+                    createdAt: new Date().toISOString(),
+                    read: false
+                  });
+                }
+              }
             }
 
-            inv.daysPassed = expectedDays;
-            inv.totalReturnClaimed = totalPayout;
-            inv.lastClaimDate = new Date().toISOString();
+            if (autoRenewed) {
+              inv.daysPassed = 0;
+              inv.totalReturnClaimed = 0;
+              inv.createdAt = new Date().toISOString();
+              inv.lastClaimDate = new Date().toISOString();
+              inv.status = 'active';
+            } else {
+              inv.daysPassed = expectedDays;
+              inv.totalReturnClaimed = totalPayout;
+              inv.lastClaimDate = new Date().toISOString();
+              inv.status = 'completed';
+            }
             inv.lastModified = Date.now();
-            inv.status = 'completed';
             changed = true;
           } else {
             // Just advance the counter of days passed

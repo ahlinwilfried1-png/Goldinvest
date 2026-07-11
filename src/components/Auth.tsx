@@ -631,45 +631,7 @@ export default function Auth({
 
         </div>
 
-        {/* Display Official Trust Certificates / Banners if set */}
-        {(officialBanners.image1 || officialBanners.image2) && (
-          <div className="mt-6 w-full animate-fade-in max-w-sm mx-auto">
-            <div className="text-center mb-3">
-              <span className="text-[11px] font-sans font-black text-slate-500 uppercase tracking-widest block">
-                🛡️ Documents de Confiance Goldspeed
-              </span>
-              <span className="text-[9px] text-slate-400 font-bold uppercase block mt-0.5">
-                Certificats d'enregistrement officiels & garanties
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 bg-white p-2.5 rounded-3xl border border-slate-100 shadow-sm">
-              {officialBanners.image1 ? (
-                <div className="relative rounded-2xl overflow-hidden border border-slate-100 aspect-[4/3] bg-slate-50 flex justify-center items-center shadow-xs">
-                  <img
-                    src={officialBanners.image1}
-                    alt="Certificat 1"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center text-[8px] text-slate-400 font-bold text-center p-1">Sans Image 1</div>
-              )}
-              {officialBanners.image2 ? (
-                <div className="relative rounded-2xl overflow-hidden border border-slate-100 aspect-[4/3] bg-slate-50 flex justify-center items-center shadow-xs">
-                  <img
-                    src={officialBanners.image2}
-                    alt="Certificat 2"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center text-[8px] text-slate-400 font-bold text-center p-1">Sans Image 2</div>
-              )}
-            </div>
-          </div>
-        )}
+
 
       </div>
 
