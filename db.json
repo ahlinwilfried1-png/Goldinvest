@@ -4,17 +4,17 @@
       "id": "u-admin",
       "name": "Administrateur Principal",
       "role": "admin",
-      "bonus": 0,
-      "balance": 0,
+      "bonus": 750,
+      "balance": 750,
       "country": "Cameroun",
       "password": "agro777",
       "whatsapp": "+237600000000",
       "createdAt": "2026-05-10T10:00:00Z",
       "isBlocked": false,
-      "lastModified": 1783688254375,
+      "lastModified": 1783760759050,
       "referralCode": "AGR72",
       "dailyEarnings": 0,
-      "totalEarnings": 0
+      "totalEarnings": 750
     },
     {
       "id": "u-1783166648674",
@@ -22,14 +22,14 @@
       "role": "admin",
       "bonus": 0,
       "device": "iPhone",
-      "balance": 0,
+      "balance": 2500,
       "country": "Togo",
       "password": "123456",
       "whatsapp": "+22870903319",
       "createdAt": "2026-07-04T12:04:08.674Z",
       "isBlocked": false,
       "referredBy": "u-admin",
-      "lastModified": 1783688254375,
+      "lastModified": 1783760759033,
       "referralCode": "XQF57",
       "dailyEarnings": 0,
       "totalEarnings": 0,
@@ -106,17 +106,72 @@
       "totalEarnings": 0
     }
   ],
-  "gi_deposits": [],
+  "gi_deposits": [
+    {
+      "id": "dep-1783759508851",
+      "amount": 2500,
+      "status": "approved",
+      "userId": "u-1783166648674",
+      "operator": "WestPay (Togo +228 70903319)",
+      "userName": "Membre 70903319",
+      "createdAt": "2026-07-11T08:45:08.851Z",
+      "reference": "WP-507317-921",
+      "lastModified": 1783760759050,
+      "receiptImage": "westpay_link"
+    }
+  ],
   "gi_withdrawals": [],
   "gi_investments": [],
-  "gi_commissions": [],
-  "gi_notifications": [],
+  "gi_commissions": [
+    {
+      "id": "com-1783760759050-1",
+      "type": "recharge",
+      "level": 1,
+      "amount": 750,
+      "userId": "u-admin",
+      "createdAt": "2026-07-11T09:05:59.050Z",
+      "fromUserName": "Membre 70903319",
+      "lastModified": 1783760759050
+    }
+  ],
+  "gi_notifications": [
+    {
+      "id": "not-dep-1783759508851",
+      "read": false,
+      "type": "deposit",
+      "title": "Dépôt soumis",
+      "userId": "u-1783166648674",
+      "message": "Votre demande de dépôt de 2,500 XOF via WestPay (Togo +228 70903319) (Réf: WP-507317-921) est en cours de vérification par l'administration.",
+      "createdAt": "2026-07-11T08:45:08.866Z",
+      "lastModified": 1783759508866
+    },
+    {
+      "id": "not-com1-1783760759050",
+      "read": false,
+      "type": "bonus",
+      "title": "Commission de dépôt reçue !",
+      "userId": "u-admin",
+      "message": "Félicitations, vous avez perçu 750 XOF (Niveau 1 : 30%) car votre affilié Membre 70903319 a effectué un dépôt de 2500 XOF.",
+      "createdAt": "2026-07-11T09:05:59.050Z",
+      "lastModified": 1783760759050
+    },
+    {
+      "id": "not-dep-app-1783760759033",
+      "read": false,
+      "type": "deposit",
+      "title": "💵 Dépôt validé !",
+      "userId": "u-1783166648674",
+      "message": "Votre versement de 2,500 XOF via WestPay (Togo +228 70903319) a été approuvé. Votre solde principal a été rechargé.",
+      "createdAt": "2026-07-11T09:05:59.049Z",
+      "lastModified": 1783760759049
+    }
+  ],
   "gi_support_messages": [],
   "gi_withdrawal_proofs": [],
   "gi_deleted_investments": [],
   "gi_deleted_users": [],
   "gi_mlm_level1_rate": 30,
-  "gi_mlm_level2_rate": 5,
+  "gi_mlm_level2_rate": 2,
   "gi_mlm_level3_rate": 1,
   "gi_withdrawals_blocked_global": false,
   "gi_referral_domain": "",
@@ -165,8 +220,8 @@
   "gi_products": [
     {
       "id": "vip-6",
-      "tag": "Airprods Pro 2",
-      "name": "Airprods Pro 2",
+      "tag": "Or d'Investissement",
+      "name": "Goldspeed Or d'Investissement",
       "price": 100000,
       "category": "stability",
       "isCyclic": false,
@@ -180,8 +235,8 @@
     },
     {
       "id": "vip-7",
-      "tag": "Airprods Max",
-      "name": "Airprods Max",
+      "tag": "Lingot d'Or Pur",
+      "name": "Goldspeed Lingot d'Or Pur",
       "price": 120000,
       "category": "stability",
       "isCyclic": false,
@@ -195,8 +250,8 @@
     },
     {
       "id": "vip-8",
-      "tag": "Airprods Ultra",
-      "name": "Airprods Ultra",
+      "tag": "Réserve Souveraine",
+      "name": "Goldspeed Réserve Souveraine",
       "price": 200000,
       "category": "stability",
       "isCyclic": false,
@@ -210,8 +265,8 @@
     },
     {
       "id": "vip-9",
-      "tag": "Airprods Élite",
-      "name": "Airprods Élite",
+      "tag": "Trésor Impérial",
+      "name": "Goldspeed Trésor Impérial",
       "price": 500000,
       "category": "stability",
       "isCyclic": false,
@@ -235,20 +290,6 @@
       "totalReturn": 2000,
       "durationDays": 2,
       "lastModified": 1783677212771,
-      "generatedProductIds": []
-    },
-    {
-      "id": "vip-1783677319487",
-      "tag": "Special Offer",
-      "name": "VIP GOLDEN ",
-      "price": 5000,
-      "category": "activity",
-      "isCyclic": false,
-      "vipLevel": 1,
-      "dailyReturn": 1000,
-      "totalReturn": 1000,
-      "durationDays": 1,
-      "lastModified": 1783677319487,
       "generatedProductIds": []
     }
   ],

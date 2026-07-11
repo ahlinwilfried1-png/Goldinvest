@@ -49,9 +49,137 @@ async function startServer() {
   const dbPath = path.join(process.cwd(), "db.json");
   let storeData: Record<string, any> = {};
 
+  function sanitizeProductsInPlace(products: any[]): boolean {
+    if (!Array.isArray(products)) return false;
+    let modified = false;
+
+    // Filter out VIP 1 to 5 from 'stability' and any 'activity' products
+    const initialLength = products.length;
+    const filtered = products.filter((p: any) => {
+      if (!p) return false;
+      const isFixed1To5 = p.category === 'stability' && p.vipLevel >= 1 && p.vipLevel <= 5;
+      const isActivity = p.category === 'activity';
+      return !isFixed1To5 && !isActivity;
+    });
+
+    if (filtered.length !== initialLength) {
+      products.length = 0; // Clear the array in-place
+      filtered.forEach(p => products.push(p));
+      modified = true;
+    }
+
+    products.forEach((item: any) => {
+      if (!item) return;
+
+      // 1. Sanitize product name to ensure absolutely no electronics/devices remain
+      const originalName = item.name || '';
+      const originalTag = item.tag || '';
+      const lowerName = originalName.toLowerCase();
+      const lowerTag = originalTag.toLowerCase();
+
+      const needsNameUpdate = lowerName.includes('airprods') || 
+                              lowerName.includes('airpods') || 
+                              lowerName.includes('phone') || 
+                              lowerName.includes('laptop') || 
+                              lowerName.includes('computer');
+
+      const needsTagUpdate = lowerTag.includes('airprods') || 
+                             lowerTag.includes('airpods') || 
+                             lowerTag.includes('phone') || 
+                             lowerTag.includes('laptop') || 
+                             lowerTag.includes('computer');
+
+      if (needsNameUpdate) {
+        modified = true;
+        if (item.vipLevel === 6) {
+          item.name = "Goldspeed Or d'Investissement";
+          item.tag = "Or d'Investissement";
+        } else if (item.vipLevel === 7) {
+          item.name = "Goldspeed Lingot d'Or Pur";
+          item.tag = "Lingot d'Or Pur";
+        } else if (item.vipLevel === 8) {
+          item.name = "Goldspeed Réserve Souveraine";
+          item.tag = "Réserve Souveraine";
+        } else if (item.vipLevel === 9) {
+          item.name = "Goldspeed Trésor Impérial";
+          item.tag = "Trésor Impérial";
+        } else {
+          item.name = `Goldspeed Option Or VIP ${item.vipLevel || ''}`;
+          item.tag = "Or d'Investissement";
+        }
+      }
+
+      if (needsTagUpdate && !needsNameUpdate) {
+        modified = true;
+        if (item.vipLevel === 6) item.tag = "Or d'Investissement";
+        else if (item.vipLevel === 7) item.tag = "Lingot d'Or Pur";
+        else if (item.vipLevel === 8) item.tag = "Réserve Souveraine";
+        else if (item.vipLevel === 9) item.tag = "Trésor Impérial";
+        else item.tag = "Or d'Investissement";
+      }
+
+      // 2. Sanitize product image URLs to remove computers, laptops, headphones, etc.
+      if (item.imageUrl) {
+        const lowerImg = item.imageUrl.toLowerCase();
+        const hasForbidden = (
+          lowerImg.includes('pc') ||
+          lowerImg.includes('computer') ||
+          lowerImg.includes('laptop') ||
+          lowerImg.includes('headphone') ||
+          lowerImg.includes('earbud') ||
+          lowerImg.includes('audio') ||
+          lowerImg.includes('phone') ||
+          lowerImg.includes('smartphone') ||
+          lowerImg.includes('ordinateur') ||
+          lowerImg.includes('casque') ||
+          lowerImg.includes('pod') ||
+          lowerImg.includes('screen') ||
+          lowerImg.includes('monitor') ||
+          lowerImg.includes('machine') ||
+          lowerImg.includes('orange') ||
+          lowerImg.includes('hand') ||
+          lowerImg.includes('chart') ||
+          lowerImg.includes('credit') ||
+          lowerImg.includes('card') ||
+          lowerImg.includes('jewelry') ||
+          lowerImg.includes('cosmetic') ||
+          lowerImg.includes('crown') ||
+          lowerImg.includes('bijou') ||
+          lowerImg.includes('couronne')
+        );
+        const hasGoldKeyword = (
+          lowerImg.includes('gold') || 
+          lowerImg.includes('ingot') || 
+          lowerImg.includes('lingot') || 
+          lowerImg.includes('coin') || 
+          lowerImg.includes('bullion') || 
+          lowerImg.includes('vault') || 
+          lowerImg.includes('barre') || 
+          lowerImg.includes('piece-d-or') ||
+          lowerImg.includes('/or-') ||
+          lowerImg.includes('_or_') ||
+          lowerImg.includes('/or/') ||
+          lowerImg.endsWith('/or')
+        );
+
+        if (hasForbidden || !hasGoldKeyword) {
+          item.imageUrl = ''; // setting to empty forces fallback to gold image
+          modified = true;
+        }
+      }
+    });
+
+    return modified;
+  }
+
   function mergeData(payload: Record<string, any>): boolean {
     if (!payload || typeof payload !== "object") return false;
     let modified = false;
+
+    // Sanitization step for products in payload to ensure we never accept or process stale electronic products
+    if (payload["gi_products"]) {
+      sanitizeProductsInPlace(payload["gi_products"]);
+    }
 
     // Check if the incoming payload has a higher cleanup timestamp than our current database.
     // If so, we must perform a complete wipe of the transactional and user tables to match the purge!
@@ -277,18 +405,13 @@ async function startServer() {
 
     // USER REQUEST: Supprimer fixé 12345 (vip-1, vip-2, vip-3, vip-4, vip-5) et activités (category === 'activity')
     if (storeData["gi_products"]) {
-      const initialLength = storeData["gi_products"].length;
-      storeData["gi_products"] = storeData["gi_products"].filter((p: any) => {
-        const isFixed1To5 = p.category === 'stability' && p.vipLevel >= 1 && p.vipLevel <= 5;
-        const isActivity = p.category === 'activity';
-        return !isFixed1To5 && !isActivity;
-      });
-      if (storeData["gi_products"].length !== initialLength) {
-        console.log(`[STARTUP] Filtered products from ${initialLength} to ${storeData["gi_products"].length}`);
+      const isSanitized = sanitizeProductsInPlace(storeData["gi_products"]);
+      if (isSanitized) {
+        console.log(`[STARTUP] Filtered/Sanitized products. Length: ${storeData["gi_products"].length}`);
         modified = true;
         setTimeout(() => {
           saveStore(["gi_products"]).catch(err => {
-            console.error("[STARTUP] Failed to save pruned products to Supabase:", err);
+            console.error("[STARTUP] Failed to save pruned/sanitized products to Supabase:", err);
           });
         }, 1000);
       }
@@ -1309,6 +1432,10 @@ async function startServer() {
       console.log(`[DEBUG GET-STORE] No user with '70903319' or '70903318' exists in server memory yet.`);
     }
 
+    if (storeData["gi_products"]) {
+      sanitizeProductsInPlace(storeData["gi_products"]);
+    }
+
     res.json(storeData);
   });
 
@@ -1483,10 +1610,16 @@ async function startServer() {
           }
 
           storeData[key] = mergedArray;
+          if (key === "gi_products") {
+            sanitizeProductsInPlace(storeData[key]);
+          }
           modified = true;
         } else {
           // Overwrite primitives directly
           storeData[key] = newVal;
+          if (key === "gi_products" && Array.isArray(storeData[key])) {
+            sanitizeProductsInPlace(storeData[key]);
+          }
           modified = true;
         }
       }
@@ -4096,6 +4229,7 @@ async function startServer() {
       lastModified: Date.now()
     });
     storeData["gi_products"] = list;
+    sanitizeProductsInPlace(storeData["gi_products"]);
     await saveStore();
     res.json({ success: true });
   });
@@ -4130,6 +4264,7 @@ async function startServer() {
          category: updatedP.category || current.category || 'stability',
          lastModified: Date.now()
        };
+       sanitizeProductsInPlace(storeData["gi_products"]);
        await saveStore();
        res.json({ success: true });
     } else {
@@ -4162,26 +4297,26 @@ async function startServer() {
   app.get("/manifest.json", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(JSON.stringify({
-      "name": "Dreampod",
-      "short_name": "Dreampod",
-      "description": "Investissement Audio Connecté - Dreampod",
+      "name": "Goldspeed Mobile App",
+      "short_name": "Goldspeed",
+      "description": "Plateforme d'investissement aurifère de premier choix pour rendements stables et garantis.",
       "start_url": "/",
       "display": "standalone",
-      "background_color": "#020617",
-      "theme_color": "#f97316",
+      "background_color": "#0f172a",
+      "theme_color": "#eab308",
       "orientation": "portrait",
       "icons": [
         {
-          "src": "https://img.icons8.com/color/192/000000/headphones.png",
+          "src": "https://img.icons8.com/fluency/192/gold-bars.png",
           "sizes": "192x192",
           "type": "image/png",
           "purpose": "any maskable"
         },
         {
-          "src": "https://img.icons8.com/color/512/000000/headphones.png",
+          "src": "https://img.icons8.com/fluency/512/gold-bars.png",
           "sizes": "512x512",
           "type": "image/png",
-          "purpose": "any maskable"
+          "purpose": "any"
         }
       ]
     }, null, 2));

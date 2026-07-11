@@ -1597,12 +1597,12 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">URL de l'image du produit (Optionnel)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">URL de l'image de l'or (Optionnel)</label>
                 <input
                   type="text"
                   value={editProductImageUrl}
                   onChange={(e) => setEditProductImageUrl(e.target.value)}
-                  placeholder="Laisser vide pour utiliser l'image d'or par défaut"
+                  placeholder="URL d'une image d'or uniquement (ex: contenant 'gold' ou 'or')"
                   className="w-full bg-slate-950 border border-slate-700/60 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-yellow-500/40"
                 />
               </div>
@@ -2662,10 +2662,10 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">URL de l'image du produit (Optionnel)</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">URL de l'image de l'or (Optionnel)</label>
                 <input
                   type="text"
-                  placeholder="Laisser vide pour utiliser l'image d'or par défaut"
+                  placeholder="URL d'une image d'or uniquement (ex: contenant 'gold' ou 'or')"
                   value={newVipImageUrl}
                   onChange={(e) => setNewVipImageUrl(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none"

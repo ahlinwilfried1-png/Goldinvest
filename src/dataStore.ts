@@ -992,11 +992,105 @@ export class DataStore {
     const now = new Date();
     
     const updated = list.map(p => {
-      if (p.isBlocked && p.reopenDateTime && now >= new Date(p.reopenDateTime)) {
+      let item = { ...p };
+      
+      // Sanitization: Ensure absolutely no electronic or device words remain in names or tags
+      if (item.name && (
+        item.name.toLowerCase().includes('airprods') || 
+        item.name.toLowerCase().includes('airpods') || 
+        item.name.toLowerCase().includes('phone') || 
+        item.name.toLowerCase().includes('laptop') || 
+        item.name.toLowerCase().includes('computer')
+      )) {
         changed = true;
-        return { ...p, isBlocked: false, reopenDateTime: undefined };
+        if (item.vipLevel === 6) {
+          item.name = "Goldspeed Or d'Investissement";
+          item.tag = "Or d'Investissement";
+        } else if (item.vipLevel === 7) {
+          item.name = "Goldspeed Lingot d'Or Pur";
+          item.tag = "Lingot d'Or Pur";
+        } else if (item.vipLevel === 8) {
+          item.name = "Goldspeed Réserve Souveraine";
+          item.tag = "Réserve Souveraine";
+        } else if (item.vipLevel === 9) {
+          item.name = "Goldspeed Trésor Impérial";
+          item.tag = "Trésor Impérial";
+        } else {
+          item.name = `Goldspeed Option Or VIP ${item.vipLevel || ''}`;
+          item.tag = "Or d'Investissement";
+        }
       }
-      return p;
+
+      if (item.tag && (
+        item.tag.toLowerCase().includes('airprods') || 
+        item.tag.toLowerCase().includes('airpods') || 
+        item.tag.toLowerCase().includes('phone') || 
+        item.tag.toLowerCase().includes('laptop') || 
+        item.tag.toLowerCase().includes('computer')
+      )) {
+        changed = true;
+        if (item.vipLevel === 6) item.tag = "Or d'Investissement";
+        else if (item.vipLevel === 7) item.tag = "Lingot d'Or Pur";
+        else if (item.vipLevel === 8) item.tag = "Réserve Souveraine";
+        else if (item.vipLevel === 9) item.tag = "Trésor Impérial";
+        else item.tag = "Or d'Investissement";
+      }
+
+      // Sanitize custom image URLs to force fallback if they are not gold photos
+      if (item.imageUrl) {
+        const lower = item.imageUrl.toLowerCase();
+        const hasForbidden = (
+          lower.includes('pc') ||
+          lower.includes('computer') ||
+          lower.includes('laptop') ||
+          lower.includes('headphone') ||
+          lower.includes('earbud') ||
+          lower.includes('audio') ||
+          lower.includes('phone') ||
+          lower.includes('smartphone') ||
+          lower.includes('ordinateur') ||
+          lower.includes('casque') ||
+          lower.includes('pod') ||
+          lower.includes('screen') ||
+          lower.includes('monitor') ||
+          lower.includes('machine') ||
+          lower.includes('orange') ||
+          lower.includes('hand') ||
+          lower.includes('chart') ||
+          lower.includes('credit') ||
+          lower.includes('card') ||
+          lower.includes('jewelry') ||
+          lower.includes('cosmetic') ||
+          lower.includes('crown') ||
+          lower.includes('bijou') ||
+          lower.includes('couronne')
+        );
+        const hasGoldKeyword = (
+          lower.includes('gold') || 
+          lower.includes('ingot') || 
+          lower.includes('lingot') || 
+          lower.includes('coin') || 
+          lower.includes('bullion') || 
+          lower.includes('vault') || 
+          lower.includes('barre') || 
+          lower.includes('piece-d-or') ||
+          lower.includes('/or-') ||
+          lower.includes('_or_') ||
+          lower.includes('/or/') ||
+          lower.endsWith('/or')
+        );
+        if (hasForbidden || !hasGoldKeyword) {
+          item.imageUrl = ''; // setting to empty forces fallback to gold image
+          changed = true;
+        }
+      }
+
+      if (item.isBlocked && item.reopenDateTime && now >= new Date(item.reopenDateTime)) {
+        changed = true;
+        item.isBlocked = false;
+        item.reopenDateTime = undefined;
+      }
+      return item;
     });
 
     if (changed) {

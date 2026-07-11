@@ -291,10 +291,61 @@ const ProductImage = ({
   category?: string;
   imageUrl?: string;
 }) => {
+  const isGoldImage = (url?: string): boolean => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    
+    const hasForbidden = (
+      lower.includes('pc') ||
+      lower.includes('computer') ||
+      lower.includes('laptop') ||
+      lower.includes('headphone') ||
+      lower.includes('earbud') ||
+      lower.includes('audio') ||
+      lower.includes('phone') ||
+      lower.includes('smartphone') ||
+      lower.includes('ordinateur') ||
+      lower.includes('casque') ||
+      lower.includes('pod') ||
+      lower.includes('screen') ||
+      lower.includes('monitor') ||
+      lower.includes('machine') ||
+      lower.includes('orange') ||
+      lower.includes('hand') ||
+      lower.includes('chart') ||
+      lower.includes('credit') ||
+      lower.includes('card') ||
+      lower.includes('jewelry') ||
+      lower.includes('cosmetic') ||
+      lower.includes('crown') ||
+      lower.includes('bijou') ||
+      lower.includes('couronne')
+    );
+    if (hasForbidden) return false;
+
+    const hasGoldKeyword = (
+      lower.includes('gold') || 
+      lower.includes('ingot') || 
+      lower.includes('lingot') || 
+      lower.includes('coin') || 
+      lower.includes('bullion') || 
+      lower.includes('vault') || 
+      lower.includes('barre') || 
+      lower.includes('piece-d-or') ||
+      lower.includes('/or-') ||
+      lower.includes('_or_') ||
+      lower.includes('/or/') ||
+      lower.endsWith('/or')
+    );
+    return hasGoldKeyword;
+  };
+
+  const finalSrc = imageUrl && isGoldImage(imageUrl) ? imageUrl : getVipImage(vipLevel, category);
+
   return (
     <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-amber-100 flex items-center justify-center overflow-hidden relative rounded-xl border border-amber-200 shadow-xs">
       <img 
-        src={getVipImage(vipLevel, category)}
+        src={finalSrc}
         alt={alt}
         className={`${className} transition-transform duration-500 hover:scale-110`}
         referrerPolicy="no-referrer"
