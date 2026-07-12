@@ -137,7 +137,7 @@ const cardVariants = {
 };
 
 const getVipImage = (vipLevel: number, category?: string) => {
-  // Exclusively return 100% pure gold images (ingots, gold bars, coins) to match the user's request.
+  // Exclusively return 100% pure gold images (ingots, gold bars, coins, nuggets) to match the user's request.
   // ABSOLUTELY NO hands, charts, credit cards, jewelry, cosmetics, or crowns. Only pure gold.
   
   const goldCoins = 'https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=500'; // Pure shiny gold coins pile
@@ -146,13 +146,14 @@ const getVipImage = (vipLevel: number, category?: string) => {
   const goldBarsPile = 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=500'; // Array of multiple gold bars
   const goldVault = 'https://images.unsplash.com/photo-1563013544-824ae1d704d3?auto=format&fit=crop&q=80&w=500'; // Massive gold bricks in bank vault
   const goldBullionCloseUp = 'https://images.unsplash.com/photo-1614028674026-a65e31bfd27c?auto=format&fit=crop&q=80&w=500'; // Heavy reflective golden bullion close-up
+  const goldNugget = 'https://images.unsplash.com/photo-1610375461369-d5108bc471e4?auto=format&fit=crop&q=80&w=500'; // Raw shining gold nugget close-up
 
   if (category === 'activity') {
     switch (vipLevel) {
       case 1:
         return goldCoins;
       case 2:
-        return goldSingleBar;
+        return goldNugget;
       case 3:
         return goldBarsStack;
       default:
@@ -163,7 +164,7 @@ const getVipImage = (vipLevel: number, category?: string) => {
       case 1:
         return goldSingleBar;
       case 2:
-        return goldBarsPile;
+        return goldNugget;
       case 3:
         return goldBullionCloseUp;
       default:
@@ -177,19 +178,19 @@ const getVipImage = (vipLevel: number, category?: string) => {
       case 2:
         return goldSingleBar;
       case 3:
-        return goldBarsStack;
+        return goldNugget;
       case 4:
-        return goldBarsPile;
-      case 5:
-        return goldVault;
-      case 6:
-        return goldBullionCloseUp;
-      case 7:
         return goldBarsStack;
-      case 8:
+      case 5:
+        return goldBarsPile;
+      case 6:
         return goldVault;
-      case 9:
+      case 7:
         return goldBullionCloseUp;
+      case 8:
+        return goldBarsStack;
+      case 9:
+        return goldVault;
       default:
         return goldBarsStack;
     }
@@ -291,56 +292,8 @@ const ProductImage = ({
   category?: string;
   imageUrl?: string;
 }) => {
-  const isGoldImage = (url?: string): boolean => {
-    if (!url) return false;
-    const lower = url.toLowerCase();
-    
-    const hasForbidden = (
-      lower.includes('pc') ||
-      lower.includes('computer') ||
-      lower.includes('laptop') ||
-      lower.includes('headphone') ||
-      lower.includes('earbud') ||
-      lower.includes('audio') ||
-      lower.includes('phone') ||
-      lower.includes('smartphone') ||
-      lower.includes('ordinateur') ||
-      lower.includes('casque') ||
-      lower.includes('pod') ||
-      lower.includes('screen') ||
-      lower.includes('monitor') ||
-      lower.includes('machine') ||
-      lower.includes('orange') ||
-      lower.includes('hand') ||
-      lower.includes('chart') ||
-      lower.includes('credit') ||
-      lower.includes('card') ||
-      lower.includes('jewelry') ||
-      lower.includes('cosmetic') ||
-      lower.includes('crown') ||
-      lower.includes('bijou') ||
-      lower.includes('couronne')
-    );
-    if (hasForbidden) return false;
-
-    const hasGoldKeyword = (
-      lower.includes('gold') || 
-      lower.includes('ingot') || 
-      lower.includes('lingot') || 
-      lower.includes('coin') || 
-      lower.includes('bullion') || 
-      lower.includes('vault') || 
-      lower.includes('barre') || 
-      lower.includes('piece-d-or') ||
-      lower.includes('/or-') ||
-      lower.includes('_or_') ||
-      lower.includes('/or/') ||
-      lower.endsWith('/or')
-    );
-    return hasGoldKeyword;
-  };
-
-  const finalSrc = imageUrl && isGoldImage(imageUrl) ? imageUrl : getVipImage(vipLevel, category);
+  // Exclusively use pre-approved, professional high-quality gold images to enforce visual identity.
+  const finalSrc = getVipImage(vipLevel, category);
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-amber-100 flex items-center justify-center overflow-hidden relative rounded-xl border border-amber-200 shadow-xs">
@@ -3206,13 +3159,13 @@ export default function Dashboard({
                       </p>
                       
                       <div className="space-y-3 pt-2">
-                        {activeInvestments.length === 0 ? (
+                        {activeInvestments.filter(i => i.status === 'active').length === 0 ? (
                           <div className="text-center py-8 text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl border border-slate-100/50">
                             Aucun produit d'investissement actif pour le moment.
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            {activeInvestments.map((p) => (
+                            {activeInvestments.filter(i => i.status === 'active').map((p) => (
                               <InvestmentItem 
                                 key={p.id}
                                 investment={p}
@@ -3871,55 +3824,131 @@ export default function Dashboard({
           )}
 
           {/* CATALOGUE PRODUCTS TAB */}
-          {!profileSubPage && activeTab === 'products' && (
-            <div className="space-y-6 animate-fade-in">
-              {/* TWO-COLUMN PRODUCT CATALOG WITH SIDEBAR TABS */}
-              <div className="max-w-7xl mx-auto pt-4 text-left flex flex-col md:flex-row gap-6 items-start">
-                
-                {/* Left Column: Sidebar Tabs */}
-                <div className="w-full md:w-60 shrink-0 flex md:flex-row md:flex-col overflow-x-auto md:overflow-visible gap-2 border-b md:border-b-0 md:border-r border-slate-200/60 pb-3 md:pb-0 md:pr-4 scrollbar-none select-none">
-                  {/* Stabilité */}
-                  <button
-                    type="button"
-                    onClick={() => setProductSubTab('stability')}
-                    className={`flex items-center space-x-3 px-4 py-3 md:py-3.5 rounded-2xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
-                      productSubTab === 'stability'
-                        ? 'bg-[#0ea5e9]/10 text-[#0ea5e9] border border-[#0ea5e9]/20 shadow-[0_4px_12px_rgba(14,165,233,0.06)]'
-                        : 'bg-white/50 text-slate-500 border border-transparent hover:bg-white hover:text-slate-800'
-                    }`}
-                  >
-                    <TrendingUp className="w-4 h-4 shrink-0" />
-                    <span>Stabilité</span>
-                  </button>
+          {!profileSubPage && activeTab === 'products' && (() => {
+            const stabilityCount = products.filter(p => p.category === 'stability' || !p.category).length;
+            const wellbeingCount = products.filter(p => p.category === 'wellbeing').length;
+            const activityCount = products.filter(p => p.category === 'activity').length;
 
-                  {/* Bien-être */}
-                  <button
-                    type="button"
-                    onClick={() => setProductSubTab('wellbeing')}
-                    className={`flex items-center space-x-3 px-4 py-3 md:py-3.5 rounded-2xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
-                      productSubTab === 'wellbeing'
-                        ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20 shadow-[0_4px_12px_rgba(168,85,247,0.06)]'
-                        : 'bg-white/50 text-slate-500 border border-transparent hover:bg-white hover:text-slate-800'
-                    }`}
-                  >
-                    <Heart className="w-4 h-4 shrink-0 text-purple-500" />
-                    <span>Bien-être</span>
-                  </button>
+            return (
+              <div className="space-y-6 animate-fade-in">
+                {/* TWO-COLUMN PRODUCT CATALOG WITH SIDEBAR TABS */}
+                <div className="max-w-7xl mx-auto pt-4 text-left flex flex-row gap-3 sm:gap-6 items-start">
+                  
+                  {/* Left Column: Sidebar Tabs */}
+                  <div className="w-[74px] min-[375px]:w-[80px] min-[410px]:w-[86px] sm:w-44 md:w-48 shrink-0 flex flex-col gap-2.5 border-r border-slate-200/60 pr-1 sm:pr-2.5 md:pr-3 select-none">
+                    
+                    {/* Header for categories on larger screens */}
+                    <div className="hidden sm:block mb-1 px-1">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest block leading-none">
+                        Catégories
+                      </span>
+                      <span className="text-[11px] text-slate-800 font-black block mt-0.5">
+                        Équipements
+                      </span>
+                    </div>
 
-                  {/* Activité */}
-                  <button
-                    type="button"
-                    onClick={() => setProductSubTab('activity')}
-                    className={`flex items-center space-x-3 px-4 py-3 md:py-3.5 rounded-2xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-200 shrink-0 cursor-pointer ${
-                      productSubTab === 'activity'
-                        ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-[0_4px_12px_rgba(16,185,129,0.06)]'
-                        : 'bg-white/50 text-slate-500 border border-transparent hover:bg-white hover:text-slate-800'
-                    }`}
-                  >
-                    <Zap className="w-4 h-4 shrink-0 text-emerald-500" />
-                    <span>Activité</span>
-                  </button>
-                </div>
+                    {/* Stabilité */}
+                    <button
+                      type="button"
+                      onClick={() => setProductSubTab('stability')}
+                      className={`group w-full flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-2 px-1 sm:px-2 md:px-2.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all duration-300 shrink-0 cursor-pointer text-left ${
+                        productSubTab === 'stability'
+                          ? 'bg-gradient-to-r from-sky-500 to-sky-600 text-white border-sky-400 shadow-[0_6px_14px_rgba(14,165,233,0.12)] scale-[1.01]'
+                          : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200/60 hover:border-slate-300 hover:text-slate-800 shadow-sm'
+                      }`}
+                    >
+                      <div className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        productSubTab === 'stability' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-500'
+                      }`}>
+                        <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.25]" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-center sm:text-left">
+                        <div className="flex items-center justify-between gap-0.5">
+                          <span className="font-sans font-black text-[8px] min-[375px]:text-[8.5px] sm:text-[10px] md:text-[11px] uppercase tracking-wider block truncate">
+                            Stabilité
+                          </span>
+                          <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
+                            productSubTab === 'stability' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'
+                          }`}>
+                            {stabilityCount}
+                          </span>
+                        </div>
+                        <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
+                          productSubTab === 'stability' ? 'text-sky-100' : 'text-slate-400'
+                        }`}>
+                          Plans Standard
+                        </span>
+                      </div>
+                    </button>
+
+                    {/* Bien-être */}
+                    <button
+                      type="button"
+                      onClick={() => setProductSubTab('wellbeing')}
+                      className={`group w-full flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-2 px-1 sm:px-2 md:px-2.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all duration-300 shrink-0 cursor-pointer text-left ${
+                        productSubTab === 'wellbeing'
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white border-purple-400 shadow-[0_6px_14px_rgba(168,85,247,0.12)] scale-[1.01]'
+                          : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200/60 hover:border-slate-300 hover:text-slate-800 shadow-sm'
+                      }`}
+                    >
+                      <div className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        productSubTab === 'wellbeing' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-500'
+                      }`}>
+                        <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.25]" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-center sm:text-left">
+                        <div className="flex items-center justify-between gap-0.5">
+                          <span className="font-sans font-black text-[8px] min-[375px]:text-[8.5px] sm:text-[10px] md:text-[11px] uppercase tracking-wider block truncate">
+                            Bien-être
+                          </span>
+                          <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
+                            productSubTab === 'wellbeing' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-600 border border-purple-100'
+                          }`}>
+                            {wellbeingCount}
+                          </span>
+                        </div>
+                        <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
+                          productSubTab === 'wellbeing' ? 'text-purple-100' : 'text-slate-400'
+                        }`}>
+                          Santé & Gains
+                        </span>
+                      </div>
+                    </button>
+
+                    {/* Activité */}
+                    <button
+                      type="button"
+                      onClick={() => setProductSubTab('activity')}
+                      className={`group w-full flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-2 px-1 sm:px-2 md:px-2.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all duration-300 shrink-0 cursor-pointer text-left ${
+                        productSubTab === 'activity'
+                          ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-emerald-400 shadow-[0_6px_14px_rgba(16,185,129,0.12)] scale-[1.01]'
+                          : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200/60 hover:border-slate-300 hover:text-slate-800 shadow-sm'
+                      }`}
+                    >
+                      <div className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        productSubTab === 'activity' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-500'
+                      }`}>
+                        <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.25]" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-center sm:text-left">
+                        <div className="flex items-center justify-between gap-0.5">
+                          <span className="font-sans font-black text-[8px] min-[375px]:text-[8.5px] sm:text-[10px] md:text-[11px] uppercase tracking-wider block truncate">
+                            Activité
+                          </span>
+                          <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
+                            productSubTab === 'activity' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                          }`}>
+                            {activityCount}
+                          </span>
+                        </div>
+                        <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
+                          productSubTab === 'activity' ? 'text-emerald-100' : 'text-slate-400'
+                        }`}>
+                          Cycles Courts
+                        </span>
+                      </div>
+                    </button>
+                  </div>
 
                 {/* Right Column: Products List */}
                 <div className="flex-1 w-full space-y-4">
@@ -4133,7 +4162,8 @@ export default function Dashboard({
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* DEPOSIT FORM TAB */}
           {!profileSubPage && activeTab === 'deposit' && (() => {
@@ -5579,13 +5609,13 @@ export default function Dashboard({
                       </p>
                       
                       <div className="space-y-3 pt-2">
-                        {activeInvestments.length === 0 ? (
+                        {activeInvestments.filter(i => i.status === 'active').length === 0 ? (
                           <div className="text-center py-8 text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl border border-slate-100/50">
                             Aucun produit d'investissement actif pour le moment.
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            {activeInvestments.map((p) => (
+                            {activeInvestments.filter(i => i.status === 'active').map((p) => (
                               <InvestmentItem 
                                 key={p.id}
                                 investment={p}
@@ -6052,7 +6082,7 @@ export default function Dashboard({
                       className="flex justify-between items-center cursor-pointer select-none group"
                     >
                       <div>
-                        <h3 className="font-sans font-black text-sm text-slate-800 uppercase tracking-wider pl-0.5">Mes produits ({activeInvestments.length})</h3>
+                        <h3 className="font-sans font-black text-sm text-slate-800 uppercase tracking-wider pl-0.5">Mes produits ({activeInvestments.filter(i => i.status === 'active').length})</h3>
                         <p className="text-[10px] text-slate-400 font-extrabold mt-1 group-hover:text-slate-500 transition-colors">
                           Les gains s'accumulent au quotidien et sont versés à la fin de chaque cycle.
                         </p>
@@ -6062,13 +6092,13 @@ export default function Dashboard({
 
                     {showStabilityOrders && (
                       <div className="pt-2 space-y-3.5 border-t border-slate-100">
-                        {activeInvestments.length === 0 ? (
+                        {activeInvestments.filter(i => i.status === 'active').length === 0 ? (
                           <div className="text-center py-4 text-slate-400 text-[11px] font-bold">
                             Aucun produit d'investissement actif pour le moment.
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            {activeInvestments.map((p) => (
+                            {activeInvestments.filter(i => i.status === 'active').map((p) => (
                               <InvestmentItem 
                                 key={p.id}
                                 investment={p}

@@ -772,7 +772,7 @@ async function startServer() {
 
       // If more days should have processed than currently tracked
       if (expectedDays > inv.daysPassed) {
-        const isCyclicProduct = inv.category === 'activity' || inv.category === 'wellbeing' || inv.isCyclic;
+        const isCyclicProduct = true; // All plans (Stabilité, Bien-être, Activité) are now cyclic
 
         if (isCyclicProduct) {
           // No daily payout during active cycle for short-cycle activity and wellbeing products
@@ -787,11 +787,16 @@ async function startServer() {
               users[uIdx].totalEarnings += netProfit;
 
               const isWellbeing = inv.category === 'wellbeing';
+              const isStability = inv.category === 'stability';
               const title = isWellbeing 
                 ? `🌸 Bien-être Terminé (${inv.productName})` 
+                : isStability
+                ? `📈 Stabilité Terminée (${inv.productName})`
                 : `⚡ Activité Terminée (${inv.productName})`;
               const message = isWellbeing
                 ? `Félicitations ! Votre cycle de bien-être "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`
+                : isStability
+                ? `Félicitations ! Votre cycle de stabilité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`
                 : `Félicitations ! Votre cycle d'activité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`;
 
               notifications.unshift({
@@ -819,7 +824,7 @@ async function startServer() {
             changed = true;
           }
         } else {
-          // Standard VIP stability plans (daily dividend credited daily)
+          // Standard VIP stability plans (daily dividend credited daily) - Left as safety fallback but unused
           const missingDays = expectedDays - inv.daysPassed;
           const totalPayout = inv.dailyReturn * missingDays;
 
@@ -901,7 +906,7 @@ async function startServer() {
     if (changed) {
       // Recalculate dailyEarnings for all users to match active investments status correctly
       users = users.map((u: any) => {
-        const userActiveInvs = investments.filter((inv: any) => inv.userId === u.id && inv.status === 'active' && inv.category !== 'activity' && inv.category !== 'wellbeing' && !inv.isCyclic);
+        const userActiveInvs = investments.filter((inv: any) => inv.userId === u.id && inv.status === 'active' && inv.category !== 'activity' && inv.category !== 'wellbeing' && inv.category !== 'stability' && !inv.isCyclic);
         const activeDailyEarnings = userActiveInvs.reduce((sum: number, inv: any) => sum + inv.dailyReturn, 0);
         return {
           ...u,
@@ -1470,7 +1475,7 @@ async function startServer() {
         let oldVal = storeData[key];
 
         // Guard against outdated clients uploading resurrected users/history caches
-        if (serverCleanup > incomingCleanup && tablesToGuard.includes(key)) {
+        if (!isGenuineAdmin && serverCleanup > incomingCleanup && tablesToGuard.includes(key)) {
           console.log(`[API SAVE-STORE] Outdated client cache uploaded for key "${key}" (${incomingCleanup} < ${serverCleanup}). Skipping update to prevent resurrection.`);
           continue;
         }
@@ -1850,7 +1855,7 @@ async function startServer() {
       return res.json({ success: false, message: `Solde insuffisant. Vous devez avoir au moins ${targetProduct.price.toLocaleString()} XOF.` });
     }
 
-    const isCyclicProduct = targetProduct.category === 'activity' || targetProduct.category === 'wellbeing' || targetProduct.isCyclic;
+    const isCyclicProduct = true; // All investments are cyclic now
 
     user.balance -= targetProduct.price;
     if (!isCyclicProduct) {
@@ -1873,7 +1878,7 @@ async function startServer() {
       lastModified: Date.now(),
       createdAt: new Date().toISOString(),
       category: targetProduct.category || 'stability',
-      isCyclic: targetProduct.isCyclic || false,
+      isCyclic: true,
       totalReturn: targetProduct.totalReturn || (targetProduct.price + (targetProduct.dailyReturn * targetProduct.durationDays))
     };
     investments.unshift(newInvestment);
@@ -4117,7 +4122,7 @@ async function startServer() {
     // Recalculate daily earnings for the associated user
     const uIdx = users.findIndex((u: any) => u.id === inv.userId);
     if (uIdx !== -1) {
-      const activeInvs = investments.filter((i: any) => i.userId === inv.userId && i.status === 'active');
+      const activeInvs = investments.filter((i: any) => i.userId === inv.userId && i.status === 'active' && i.category !== 'activity' && i.category !== 'wellbeing' && i.category !== 'stability' && !i.isCyclic);
       users[uIdx].dailyEarnings = activeInvs.reduce((sum: number, i: any) => sum + i.dailyReturn, 0);
       users[uIdx].lastModified = Date.now();
       storeData["gi_users"] = users;

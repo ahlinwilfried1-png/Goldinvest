@@ -232,17 +232,6 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
                 <CheckCircle className="w-3 h-3 text-slate-400" />
                 Terminé
               </span>
-              {(isWellbeing || isActivityOriginal) && (
-                <button
-                  type="button"
-                  disabled={renewing}
-                  onClick={handleManualRenew}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded-lg shadow-xs cursor-pointer border-0 outline-none transition-all flex items-center gap-1"
-                >
-                  <Clock className="w-3 h-3" />
-                  {renewing ? 'Renouvellement...' : 'Renouveler'}
-                </button>
-              )}
             </div>
           ) : isAutomatic ? (
             <span className="inline-flex flex-col items-end">
@@ -288,7 +277,7 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
       </div>
 
       {/* Informational badge for Wellbeing and Activity active investments */}
-      {!isCompleted && (isWellbeing || isActivityOriginal) && (
+      {!isCompleted && (
         <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl p-2 px-3 mt-1.5 transition-all">
           <div className="flex flex-col text-left">
             <span className="text-[10px] font-black text-emerald-800 flex items-center gap-1">

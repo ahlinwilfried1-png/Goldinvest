@@ -457,6 +457,7 @@ export const setToStore = <T>(key: string, value: T): void => {
     // Asynchronously send update to central Express database or KVdb
     let userId = '';
     let userRole = 'user';
+    let cleanupTimestamp = '0';
     try {
       const activeUserStr = localStorage.getItem('gi_current_user') || inMemoryStore['gi_current_user'];
       if (activeUserStr) {
@@ -464,12 +465,18 @@ export const setToStore = <T>(key: string, value: T): void => {
         if (u && u.id) userId = u.id;
         if (u && u.role) userRole = u.role;
       }
+      cleanupTimestamp = localStorage.getItem('gi_cleanup_timestamp') || inMemoryStore['gi_cleanup_timestamp'] || '0';
     } catch (e) {}
 
     apiFetch(getApiUrl('/api/save-store'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [key]: newValue, userId, role: userRole })
+      body: JSON.stringify({ 
+        [key]: newValue, 
+        userId, 
+        role: userRole,
+        gi_cleanup_timestamp: Number(cleanupTimestamp)
+      })
     }).catch(err => console.error('Failed to sync to central DB server:', err));
   } catch (error) {
     console.error(`Error writing to fallback store for key "${key}":`, error);
@@ -1840,7 +1847,7 @@ export class DataStore {
     }
 
     // Deduct balance and update properties
-    const isCyclicProduct = targetProduct.category === 'activity' || targetProduct.category === 'wellbeing' || targetProduct.isCyclic;
+    const isCyclicProduct = true;
 
     user.balance -= targetProduct.price;
     if (!isCyclicProduct) {
@@ -1873,7 +1880,7 @@ export class DataStore {
       createdAt: new Date().toISOString(),
       lastModified: Date.now(),
       category: targetProduct.category || 'stability',
-      isCyclic: targetProduct.isCyclic || false,
+      isCyclic: true,
       totalReturn: targetProduct.totalReturn || (targetProduct.price + (targetProduct.dailyReturn * targetProduct.durationDays))
     };
     investments.unshift(newInvestment);
@@ -2526,11 +2533,29 @@ export class DataStore {
     
     window.dispatchEvent(new Event('gi_store_updated'));
     
+    let sUserId = userId;
+    let userRole = 'user';
+    let cleanupTimestamp = '0';
+    try {
+      const activeUserStr = localStorage.getItem('gi_current_user') || inMemoryStore['gi_current_user'];
+      if (activeUserStr) {
+        const u = JSON.parse(activeUserStr);
+        if (u && u.role) userRole = u.role;
+        if (u && u.id && sUserId === 'admin') sUserId = u.id;
+      }
+      cleanupTimestamp = localStorage.getItem('gi_cleanup_timestamp') || inMemoryStore['gi_cleanup_timestamp'] || '0';
+    } catch (e) {}
+
     try {
       await apiFetch(getApiUrl('/api/save-store'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gi_withdrawal_proofs: proofs })
+        body: JSON.stringify({ 
+          gi_withdrawal_proofs: proofs,
+          userId: sUserId,
+          role: userRole,
+          gi_cleanup_timestamp: Number(cleanupTimestamp)
+        })
       });
     } catch (e) {
       console.warn('Failed to sync withdrawal proofs:', e);
@@ -2558,11 +2583,29 @@ export class DataStore {
       this.saveWithdrawalProofs(updated);
       window.dispatchEvent(new Event('gi_store_updated'));
       
+      let activeUserId = userId;
+      let activeUserRole = 'user';
+      let cleanupTimestamp = '0';
+      try {
+        const activeUserStr = localStorage.getItem('gi_current_user') || inMemoryStore['gi_current_user'];
+        if (activeUserStr) {
+          const u = JSON.parse(activeUserStr);
+          if (u && u.id && !activeUserId) activeUserId = u.id;
+          if (u && u.role) activeUserRole = u.role;
+        }
+        cleanupTimestamp = localStorage.getItem('gi_cleanup_timestamp') || inMemoryStore['gi_cleanup_timestamp'] || '0';
+      } catch (e) {}
+
       try {
         await apiFetch(getApiUrl('/api/save-store'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gi_withdrawal_proofs: updated })
+          body: JSON.stringify({ 
+            gi_withdrawal_proofs: updated,
+            userId: activeUserId,
+            role: activeUserRole,
+            gi_cleanup_timestamp: Number(cleanupTimestamp)
+          })
         });
       } catch (e) {
         console.warn('Failed to sync updated likes:', e);
@@ -2576,11 +2619,29 @@ export class DataStore {
     const proofs = this.getWithdrawalProofs();
     const filtered = proofs.filter(p => p.id !== proofId);
     if (filtered.length !== proofs.length) {
+      let activeUserId = '';
+      let activeUserRole = 'user';
+      let cleanupTimestamp = '0';
+      try {
+        const activeUserStr = localStorage.getItem('gi_current_user') || inMemoryStore['gi_current_user'];
+        if (activeUserStr) {
+          const u = JSON.parse(activeUserStr);
+          if (u && u.id) activeUserId = u.id;
+          if (u && u.role) activeUserRole = u.role;
+        }
+        cleanupTimestamp = localStorage.getItem('gi_cleanup_timestamp') || inMemoryStore['gi_cleanup_timestamp'] || '0';
+      } catch (e) {}
+
       try {
         await apiFetch(getApiUrl('/api/save-store'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gi_withdrawal_proofs: filtered })
+          body: JSON.stringify({ 
+            gi_withdrawal_proofs: filtered,
+            userId: activeUserId,
+            role: activeUserRole,
+            gi_cleanup_timestamp: Number(cleanupTimestamp)
+          })
         });
       } catch (e) {
         console.warn('Failed to sync deleted proof to server:', e);
@@ -2603,11 +2664,29 @@ export class DataStore {
       return p;
     });
     if (updated) {
+      let activeUserId = '';
+      let activeUserRole = 'user';
+      let cleanupTimestamp = '0';
+      try {
+        const activeUserStr = localStorage.getItem('gi_current_user') || inMemoryStore['gi_current_user'];
+        if (activeUserStr) {
+          const u = JSON.parse(activeUserStr);
+          if (u && u.id) activeUserId = u.id;
+          if (u && u.role) activeUserRole = u.role;
+        }
+        cleanupTimestamp = localStorage.getItem('gi_cleanup_timestamp') || inMemoryStore['gi_cleanup_timestamp'] || '0';
+      } catch (e) {}
+
       try {
         await apiFetch(getApiUrl('/api/save-store'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gi_withdrawal_proofs: nextProofs })
+          body: JSON.stringify({ 
+            gi_withdrawal_proofs: nextProofs,
+            userId: activeUserId,
+            role: activeUserRole,
+            gi_cleanup_timestamp: Number(cleanupTimestamp)
+          })
         });
       } catch (e) {
         console.warn('Failed to sync updated proof status to server:', e);
@@ -2642,7 +2721,7 @@ export class DataStore {
 
       // If more days should have processed than currently tracked
       if (expectedDays > inv.daysPassed) {
-        const isCyclicProduct = inv.category === 'activity' || inv.category === 'wellbeing' || (inv as any).isCyclic;
+        const isCyclicProduct = true; // All plans (Stabilité, Bien-être, Activité) are now cyclic
 
         if (isCyclicProduct) {
           if (expectedDays >= inv.durationDays) {
@@ -2656,11 +2735,16 @@ export class DataStore {
               users[uIdx].totalEarnings += netProfit;
 
               const isWellbeing = inv.category === 'wellbeing';
+              const isStability = inv.category === 'stability';
               const title = isWellbeing 
                 ? `🌸 Bien-être Terminé (${inv.productName})` 
+                : isStability
+                ? `📈 Stabilité Terminée (${inv.productName})`
                 : `⚡ Activité Terminée (${inv.productName})`;
               const message = isWellbeing
                 ? `Félicitations ! Votre cycle de bien-être "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`
+                : isStability
+                ? `Félicitations ! Votre cycle de stabilité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`
                 : `Félicitations ! Votre cycle d'activité "${inv.productName}" de ${inv.durationDays} jours est terminé. Votre capital de ${inv.price.toLocaleString()} XOF et vos bénéfices de ${netProfit.toLocaleString()} XOF ont été crédités sur votre compte (total: ${totalPayout.toLocaleString()} XOF).`;
 
               notifications.unshift({
@@ -2687,7 +2771,7 @@ export class DataStore {
             changed = true;
           }
         } else {
-          // Standard VIP stability plans (daily dividend credited daily)
+          // Standard VIP stability plans (daily dividend credited daily) - Left as safety fallback but unused
           const missingDays = expectedDays - inv.daysPassed;
           const totalPayout = inv.dailyReturn * missingDays;
 
@@ -2724,7 +2808,7 @@ export class DataStore {
     if (changed) {
       // Recalculate dailyEarnings for all users to match active investments status correctly
       users = users.map(u => {
-        const userActiveInvs = investments.filter(inv => inv.userId === u.id && inv.status === 'active' && inv.category !== 'activity' && inv.category !== 'wellbeing' && !(inv as any).isCyclic);
+        const userActiveInvs = investments.filter(inv => inv.userId === u.id && inv.status === 'active' && inv.category !== 'activity' && inv.category !== 'wellbeing' && inv.category !== 'stability' && !(inv as any).isCyclic);
         const activeDailyEarnings = userActiveInvs.reduce((sum, inv) => sum + inv.dailyReturn, 0);
         return {
           ...u,
@@ -2809,7 +2893,7 @@ export class DataStore {
     const users = this.getUsers();
     const userIdx = users.findIndex(u => u.id === inv.userId);
     if (userIdx !== -1) {
-      const activeInvs = updatedInvestments.filter(i => i.userId === inv.userId && i.status === 'active');
+      const activeInvs = updatedInvestments.filter(i => i.userId === inv.userId && i.status === 'active' && i.category !== 'activity' && i.category !== 'wellbeing' && i.category !== 'stability' && !(i as any).isCyclic);
       users[userIdx].dailyEarnings = activeInvs.reduce((sum, i) => sum + i.dailyReturn, 0);
       users[userIdx].lastModified = Date.now();
       this.saveUsers(users);
