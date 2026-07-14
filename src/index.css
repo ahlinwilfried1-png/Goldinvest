@@ -9,10 +9,10 @@
   --font-display: "Roboto", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "General Sans", monospace;
   
-  --color-gold-luminous: #c084fc;
-  --color-gold-dark: #6d28d9;
-  --color-night-blue: #5b21b6;
-  --color-night-blue-light: #7c3aed;
+  --color-gold-luminous: #ffe082;
+  --color-gold-dark: #aa7c11;
+  --color-night-blue: #1e3a8a;
+  --color-night-blue-light: #3b82f6;
   --color-dark-black: #0f172a;
   --color-premium-white: #ffffff;
 }
@@ -163,6 +163,38 @@ input, select, textarea {
   border: 1.5px solid rgba(124, 58, 237, 0.16) !important;
 }
 
+/* Custom robust overrides for registration & login screen to remove purple sub-borders/sub-frames (sous cadres violet) */
+.auth-field-wrapper {
+  background-color: #ffffff !important;
+  border: 1.5px solid #e2e8f0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+.auth-field-wrapper:focus-within {
+  background-color: #ffffff !important;
+  border-color: #0b5cd5 !important;
+  box-shadow: 0 0 0 3px rgba(11, 92, 213, 0.12), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+input.auth-clean-input,
+select.auth-clean-select,
+textarea.auth-clean-textarea {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  color: #1e293b !important;
+}
+
+input.auth-clean-input:focus,
+select.auth-clean-select:focus,
+textarea.auth-clean-textarea:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 button {
   border-color: rgba(124, 58, 237, 0.18) !important;
 }
@@ -300,18 +332,18 @@ button {
 }
 
 .gold-gradient-text {
-  background: linear-gradient(135deg, #c084fc 0%, #7c3aed 50%, #4c1d95 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: linear-gradient(135deg, #ffe082 0%, #d4af37 50%, #aa7c11 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }
 
 .gold-bg-gradient {
-  background: linear-gradient(135deg, #f5f3ff 0%, #d8b4fe 50%, #7c3aed 100%);
+  background: linear-gradient(135deg, #ffe5a3 0%, #d4af37 50%, #aa7c11 100%) !important;
 }
 
 .gold-border {
-  border: 1.5px solid #c084fc;
+  border: 1.5px solid #d4af37 !important;
 }
 
 /* Custom scrollbar with purple theme colors */
@@ -386,18 +418,15 @@ div.font-black {
 
 /* --- GLOBAL WHITE & PURPLE THEME TRANSLATIONS --- */
 
-/* Text colors translated to rich purple/violet */
+/* Text colors translated to rich gold/amber or emerald/purple */
 .text-yellow-500,
 .text-yellow-400,
 .text-yellow-300,
 .text-yellow-600,
 .text-amber-500,
 .text-orange-500,
-.text-orange-600,
-.text-emerald-500,
-.text-emerald-600,
-.text-emerald-700 {
-  color: #7c3aed !important;
+.text-orange-600 {
+  color: #d4af37 !important; /* Premium Gold */
 }
 
 .text-yellow-705,
@@ -405,14 +434,13 @@ div.font-black {
 .text-amber-700,
 .text-orange-700,
 .text-amber-800 {
-  color: #5b21b6 !important;
+  color: #b45309 !important; /* Deep Golden Amber */
 }
 
-.bg-emerald-500,
-.bg-emerald-600,
-.bg-emerald-700 {
-  background-color: #7c3aed !important;
-  color: #ffffff !important;
+.text-emerald-500,
+.text-emerald-600,
+.text-emerald-700 {
+  color: #7c3aed !important;
 }
 
 /* Red background opacities replaced with soft purple */
@@ -427,18 +455,18 @@ div.font-black {
   color: #6d28d9 !important;
 }
 
-/* Yellow background values */
+/* Yellow / Gold background values */
 .bg-yellow-500,
 .bg-yellow-400,
 .bg-yellow-300,
 .bg-amber-500,
 .bg-orange-500,
 .bg-orange-600 {
-  background-color: #c084fc !important;
-  color: #ffffff !important;
+  background-color: #d4af37 !important; /* Gold */
+  color: #0f172a !important; /* Elegant dark contrast on gold */
 }
 
-/* Yellow background opacities */
+/* Yellow / Gold background opacities */
 .bg-yellow-500\/10,
 .bg-yellow-500\/15,
 .bg-yellow-500\/20,
@@ -446,8 +474,8 @@ div.font-black {
 .bg-amber-500\/10,
 .bg-orange-500\/10,
 .bg-orange-500\/20 {
-  background-color: rgba(124, 58, 237, 0.08) !important;
-  color: #6d28d9 !important;
+  background-color: rgba(212, 175, 55, 0.12) !important;
+  color: #aa7c11 !important;
 }
 
 /* Borders */
@@ -461,33 +489,32 @@ div.font-black {
 .border-yellow-500\/40,
 .border-orange-500,
 .border-orange-500\/20,
-.border-emerald-500,
-.border-emerald-500\/20,
 .focus\:border-yellow-500\/40:focus,
 .focus\:border-yellow-500:focus {
-  border-color: rgba(124, 58, 237, 0.2) !important;
+  border-color: rgba(212, 175, 55, 0.35) !important;
 }
 
 .border-yellow-500 {
-  border-color: #7c3aed !important;
+  border-color: #d4af37 !important;
 }
 
-.border-emerald-500 {
-  border-color: #6d28d9 !important;
+.border-emerald-500,
+.border-emerald-500\/20 {
+  border-color: rgba(124, 58, 237, 0.15) !important;
 }
 
 /* VIP Badge backgrounds or specific gradients */
 .from-amber-100.to-yellow-105 {
-  background-image: linear-gradient(to bottom right, #f5f3ff, #ede9fe) !important;
-  color: #5b21b6 !important;
+  background-image: linear-gradient(to bottom right, #fef3c7, #fde68a) !important; /* Warm gold/amber */
+  color: #92400e !important;
 }
 
 /* Hover effects */
 .hover\:border-yellow-500\/25:hover,
 .hover\:border-yellow-500\/20:hover,
 .hover\:text-yellow-400:hover {
-  border-color: rgba(124, 58, 237, 0.4) !important;
-  color: #6d28d9 !important;
+  border-color: rgba(212, 175, 55, 0.6) !important;
+  color: #b45309 !important;
 }
 
 /* Infinite Marquee Left to Right with Back and Forth (Va-et-vient) */

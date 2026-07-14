@@ -48,10 +48,9 @@ export default function Auth({
   onBackToHome 
 }: AuthProps) {
   const [isRegister, setIsRegister] = useState(initialIsRegister);
-
-  React.useEffect(() => {
-    setIsRegister(initialIsRegister);
-  }, [initialIsRegister]);
+  const [lang, setLang] = useState<'FR' | 'EN'>(() => {
+    return (localStorage.getItem('gi_lang') as 'FR' | 'EN') || 'FR';
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -71,6 +70,64 @@ export default function Auth({
   const [sentOtpCode, setSentOtpCode] = useState('');
   const [sendingOtp, setSendingOtp] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
+
+  const t = {
+    title: isRegister 
+      ? (lang === 'FR' ? "Créer un compte" : "Create an account") 
+      : (lang === 'FR' ? "Connexion à votre espace" : "Log in to your account"),
+    subtitle: isRegister 
+      ? (lang === 'FR' ? "Inscrivez-vous pour commencer à investir" : "Sign up to start investing")
+      : (lang === 'FR' ? "Entrez vos identifiants pour accéder à vos placements" : "Enter your credentials to access your investments"),
+    pays: lang === 'FR' ? "Pays" : "Country",
+    phone: lang === 'FR' ? "Numéro de téléphone" : "Phone number",
+    nickname: lang === 'FR' ? "Surnom" : "Nickname",
+    password: lang === 'FR' ? "Mot de passe" : "Password",
+    passwordPlaceholder: lang === 'FR' ? "Mot de passe de connexion (min. 6 caract)" : "Login password (min. 6 chars)",
+    loginPasswordPlaceholder: lang === 'FR' ? "Mot de passe de connexion" : "Login password",
+    invitationCode: lang === 'FR' ? "Code d'invitation" : "Invitation code",
+    invitationPlaceholder: lang === 'FR' ? "Veuillez entrer le code d'invitation (requis)" : "Please enter the invitation code (required)",
+    otp: lang === 'FR' ? "Code de vérification (OTP)" : "Verification code (OTP)",
+    otpPlaceholder: lang === 'FR' ? "Veuillez entrer le code de vérific" : "Please enter verification code",
+    envoyer: lang === 'FR' ? "ENVOYER" : "SEND",
+    lostPassword: lang === 'FR' ? "Mot de passe perdu ?" : "Lost password?",
+    lostPasswordTip: lang === 'FR' 
+      ? "💡 Pour récupérer ou réinitialiser votre compte d’investisseur, veuillez contacter notre service client en cliquant sur l'icône de l'assistance en bas à droite de votre écran."
+      : "💡 To recover or reset your investor account, please contact our customer service by clicking on the assistance icon in the bottom right corner of your screen.",
+    submitBtn: loading
+      ? (lang === 'FR' ? "Traitement en cours..." : "Processing...")
+      : (isRegister 
+          ? (lang === 'FR' ? "S'inscrire" : "Register") 
+          : (lang === 'FR' ? "Se connecter" : "Login")),
+    toggleBtn: isRegister
+      ? (lang === 'FR' ? "Se connecter maintenant" : "Log in now")
+      : (lang === 'FR' ? "Créer un compte maintenant" : "Create an account now"),
+    customerService: lang === 'FR' ? "Service client" : "Customer service",
+    footerText: lang === 'FR' ? "Goldspeed • Système de Placement Sécurisé" : "Goldspeed • Secure Investment System",
+    securePlacement: lang === 'FR' ? "Placement Sécurisé" : "Secure Investment",
+    whatsappRequired: lang === 'FR' 
+      ? "Veuillez saisir votre numéro de téléphone avant d'envoyer l'OTP."
+      : "Please enter your phone number before sending the OTP.",
+    otpSentSuccess: (code: string) => lang === 'FR'
+      ? `🔑 CODE OTP ENVOYÉ : Saisissez le code ${code} pour finaliser votre inscription.`
+      : `🔑 OTP CODE SENT: Enter the code ${code} to finalize your registration.`,
+    errorEmptyWhatsapp: lang === 'FR' ? "Le numéro de téléphone est requis." : "Phone number is required.",
+    errorMinPassword: lang === 'FR' 
+      ? "Le mot de passe doit contenir au moins 6 caractères pour garantir la sécurité de votre capital."
+      : "Password must be at least 6 characters long to secure your capital.",
+    errorOtpFirst: lang === 'FR'
+      ? "Veuillez d'abord cliquer sur ENVOYER pour obtenir votre code de vérification (OTP)."
+      : "Please first click SEND to obtain your verification code (OTP).",
+    errorOtpWrong: lang === 'FR'
+      ? "Le code de vérification (OTP) est incorrect."
+      : "The verification code (OTP) is incorrect.",
+    errorPhoneRequired: lang === 'FR' ? "Le numéro de téléphone est requis." : "Phone number is required.",
+    errorPasswordRequired: lang === 'FR' ? "Le mot de passe de connexion est requis." : "Login password is required.",
+    errorNicknameRequired: lang === 'FR' ? "Le surnom est requis." : "Nickname is required."
+  };
+
+  React.useEffect(() => {
+    setIsRegister(initialIsRegister);
+  }, [initialIsRegister]);
 
   // Pre-fill sponsor referral code if captured from a direct web link
   React.useEffect(() => {
@@ -99,8 +156,7 @@ export default function Auth({
         safeLocalStorage.setItem('gi_captured_ref', refCode.toUpperCase());
         setReferralCode(refCode.toUpperCase());
       } else {
-        const captured = safeLocalStorage.getItem('gi_captured_ref') || '72AGR';
-        setReferralCode(captured);
+        setReferralCode('');
       }
     };
 
@@ -152,7 +208,7 @@ export default function Auth({
   // Handle sending interactive verification OTP
   const handleSendOTP = () => {
     if (!whatsapp.trim()) {
-      setErrorMessage("Veuillez saisir votre numéro de téléphone avant d'envoyer l'OTP.");
+      setErrorMessage(t.whatsappRequired);
       return;
     }
     setSendingOtp(true);
@@ -164,7 +220,7 @@ export default function Auth({
       setSentOtpCode(code);
       setSendingOtp(false);
       setOtpCountdown(60);
-      setSuccessMessage(`🔑 CODE OTP ENVOYÉ : Saisissez le code ${code} pour finaliser votre inscription.`);
+      setSuccessMessage(t.otpSentSuccess(code));
     }, 1000);
   };
 
@@ -187,27 +243,27 @@ export default function Auth({
     if (isRegister) {
       // Registration validations
       if (!whatsapp.trim()) {
-        setErrorMessage('Le numéro de téléphone est requis.');
+        setErrorMessage(t.errorEmptyWhatsapp);
         setLoading(false);
         return;
       }
       if (!nickname.trim()) {
-        setErrorMessage('Le surnom est requis.');
+        setErrorMessage(t.errorNicknameRequired);
         setLoading(false);
         return;
       }
       if (password.length < 6) {
-        setErrorMessage('Le mot de passe doit contenir au moins 6 caractères pour garantir la sécurité de votre capital.');
+        setErrorMessage(t.errorMinPassword);
         setLoading(false);
         return;
       }
       if (!sentOtpCode) {
-        setErrorMessage("Veuillez d'abord cliquer sur ENVOYER pour obtenir votre code de vérification (OTP).");
+        setErrorMessage(t.errorOtpFirst);
         setLoading(false);
         return;
       }
       if (otpCode !== sentOtpCode) {
-        setErrorMessage('Le code de vérification (OTP) est incorrect.');
+        setErrorMessage(t.errorOtpWrong);
         setLoading(false);
         return;
       }
@@ -244,19 +300,19 @@ export default function Auth({
           setLoading(false);
         }, 1500);
       } else {
-        setErrorMessage(result.message || "Une erreur s'est produite lors de la création de votre compte d'investissement.");
+        setErrorMessage(result.message || (lang === 'FR' ? "Une erreur s'est produite lors de la création de votre compte d'investissement." : "An error occurred while creating your investment account."));
         setLoading(false);
       }
 
     } else {
       // Login validations
       if (!loginPhone.trim()) {
-        setErrorMessage('Le numéro de téléphone est requis.');
+        setErrorMessage(t.errorPhoneRequired);
         setLoading(false);
         return;
       }
       if (!loginPassword.trim()) {
-        setErrorMessage('Le mot de passe de connexion est requis.');
+        setErrorMessage(t.errorPasswordRequired);
         setLoading(false);
         return;
       }
@@ -283,12 +339,10 @@ export default function Auth({
   return (
     <div className="min-h-screen flex flex-col justify-between py-6 p-4 relative overflow-y-auto overflow-x-hidden font-sans text-slate-900 select-none" id="auth-container">
       
-      {/* Immersive blurred background gradient */}
-      <div className={`absolute inset-0 z-0 overflow-hidden select-none pointer-events-none transition-all duration-700 ${isRegister ? 'bg-gradient-to-tr from-slate-100 via-slate-50 to-blue-50/50' : 'bg-gradient-to-tr from-slate-100 via-slate-50 to-amber-50/40'}`}>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10" />
-      </div>
+      {/* Immersive bright and clean background gradient matching gold brand without any dark/gray overlay */}
+      <div className="absolute inset-0 z-0 overflow-hidden select-none pointer-events-none bg-gradient-to-tr from-amber-50/20 via-white/80 to-amber-50/10" />
 
-      {/* Top Navigation Bar containing Back minimalist chevron and Language Selector text */}
+      {/* Top Navigation Bar containing Back minimalist chevron and Direct Language Switcher */}
       <div className="w-full max-w-md mx-auto flex items-center justify-between relative z-10 mb-6 shrink-0 px-2">
         {onBackToHome ? (
           <button
@@ -303,14 +357,39 @@ export default function Auth({
           <div className="w-8 h-8" />
         )}
 
-        <button
-          type="button"
-          onClick={() => setShowLanguageModal(true)}
-          className="text-[14px] font-sans font-bold text-slate-600 hover:text-slate-800 active:scale-95 transition-colors cursor-pointer uppercase tracking-wider"
-          title="Sélectionner la Langue"
-        >
-          Langue
-        </button>
+        {/* Direct inline language switch without any subpages */}
+        <div className="flex items-center bg-white/85 backdrop-blur-xs rounded-full p-1 border border-slate-200/60 shadow-xs">
+          <button
+            type="button"
+            onClick={() => {
+              setLang('FR');
+              localStorage.setItem('gi_lang', 'FR');
+              window.dispatchEvent(new Event('gi_lang_changed'));
+            }}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-extrabold transition-all duration-200 flex items-center gap-1 ${
+              lang === 'FR' 
+                ? 'bg-[#0b5cd5] text-white shadow-xs' 
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>🇫🇷</span> FR
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setLang('EN');
+              localStorage.setItem('gi_lang', 'EN');
+              window.dispatchEvent(new Event('gi_lang_changed'));
+            }}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-extrabold transition-all duration-200 flex items-center gap-1 ${
+              lang === 'EN' 
+                ? 'bg-[#0b5cd5] text-white shadow-xs' 
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>🇬🇧</span> EN
+          </button>
+        </div>
       </div>
 
       {/* Main Container Wrapper styled for clean centered single-column layout */}
@@ -325,22 +404,20 @@ export default function Auth({
             >
               Goldspeed
             </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Placement Sécurisé</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t.securePlacement}</span>
           </div>
 
-          {/* Floating Auth Card matching modern app styles - styled conditional to be cardless on register as requested */}
-          <div className={`w-full relative z-10 animate-fade-in transition-all ${isRegister ? 'p-1' : 'bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100/90'}`}>
+          {/* Floating Auth Card matching modern app styles - styled with white background card for both login and register */}
+          <div className="w-full relative z-10 animate-fade-in transition-all bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100/90">
           
-          {!isRegister && (
-            <div className="mb-6">
-              <h1 className="text-xl font-sans font-black text-slate-800 tracking-tight">
-                Connexion à votre espace
-              </h1>
-              <p className="text-xs text-slate-400 font-bold mt-1">
-                Entrez vos identifiants pour accéder à vos placements
-              </p>
-            </div>
-          )}
+          <div className="mb-6">
+            <h1 className="text-xl font-sans font-black text-slate-800 tracking-tight">
+              {t.title}
+            </h1>
+            <p className="text-xs text-slate-400 font-bold mt-1">
+              {t.subtitle}
+            </p>
+          </div>
 
           {/* Error and Success alerts */}
           {errorMessage && (
@@ -354,21 +431,21 @@ export default function Auth({
             <div className="mb-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-xs text-emerald-800 font-bold flex items-start space-x-2 animate-fade-in">
               <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                {sentOtpCode && successMessage.includes(sentOtpCode) ? (
+                {sentOtpCode && (successMessage.includes(sentOtpCode) || successMessage.includes("SENT") || successMessage.includes("ENVOYÉ")) ? (
                   <span>
-                    🔑 CODE OTP ENVOYÉ : Saisissez le code{" "}
+                    {lang === 'FR' ? "🔑 CODE OTP ENVOYÉ : Saisissez le code " : "🔑 OTP CODE SENT: Enter the code "}
                     <button
                       type="button"
                       onClick={() => {
                         setOtpCode(sentOtpCode);
-                        setSuccessMessage("🔑 Code OTP rempli automatiquement dans le cadre !");
+                        setSuccessMessage(lang === 'FR' ? "🔑 Code OTP rempli automatiquement !" : "🔑 OTP Code auto-filled !");
                       }}
                       className="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-sans font-black px-2.5 py-1 rounded-md cursor-pointer transition-colors mx-1 inline-block animate-pulse border border-emerald-300 shadow-sm"
-                      title="Cliquez pour insérer automatiquement le code"
+                      title={lang === 'FR' ? "Cliquez pour insérer automatiquement le code" : "Click to auto-insert the code"}
                     >
                       {sentOtpCode}
                     </button>{" "}
-                    (Cliquez sur le code pour le remplir automatiquement)
+                    {lang === 'FR' ? "(Cliquez sur le code pour le remplir automatiquement)" : "(Click on the code to auto-fill)"}
                   </span>
                 ) : (
                   <span>{successMessage}</span>
@@ -384,16 +461,16 @@ export default function Auth({
               /* REGISTRATION FIELDS - STYLED EXACTLY TO MATCH THE UPLOADED SCREENSHOT */
               <>
                 {/* Pays Selector Box */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Pays</label>
-                  <div className="border-b-2 border-slate-200/80 py-3 px-1 flex items-center justify-between relative cursor-pointer hover:border-[#0b5cd5] transition-colors">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.pays}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between relative cursor-pointer hover:border-[#0b5cd5] transition-all h-16">
                     <span className="text-sm font-bold text-slate-800 flex items-center gap-2">
                       <span className="text-lg leading-none">
                         {eligibleCountries.find(c => c.code === selectedCode)?.flag || '🇹🇬'}
                       </span>
                       {eligibleCountries.find(c => c.code === selectedCode)?.name || 'Togo'} ({selectedCode})
                     </span>
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                    <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />
                     <select
                       id="auth-country-select"
                       value={selectedCode}
@@ -403,7 +480,7 @@ export default function Auth({
                         const found = eligibleCountries.find(c => c.code === code);
                         if (found) setCountry(found.name);
                       }}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full auth-clean-select"
                     >
                       {eligibleCountries.map((c, i) => (
                         <option key={i} value={c.code} className="bg-white text-slate-800 font-bold">
@@ -415,46 +492,46 @@ export default function Auth({
                 </div>
 
                 {/* Phone Input Box */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Numéro de téléphone</label>
-                  <div className="border-b-2 border-slate-200/80 px-1 py-0.5 flex items-center focus-within:border-[#0b5cd5] transition-all">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.phone}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center h-16">
                     <input
                       type="tel"
                       required
-                      placeholder="Numéro de téléphone"
+                      placeholder={t.phone}
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
-                      className="w-full bg-transparent text-slate-800 text-sm font-bold py-3 focus:outline-none placeholder:text-slate-400"
+                      className="w-full auth-clean-input text-slate-800 text-sm font-bold py-3 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
                 {/* Nickname (Surnom) Box */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Surnom</label>
-                  <div className="border-b-2 border-slate-200/80 px-1 py-0.5 flex items-center focus-within:border-[#0b5cd5] transition-all">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.nickname}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center h-16">
                     <input
                       type="text"
                       required
-                      placeholder="Surnom"
+                      placeholder={t.nickname}
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
-                      className="w-full bg-transparent text-slate-800 text-sm font-bold py-3 focus:outline-none placeholder:text-slate-400"
+                      className="w-full auth-clean-input text-slate-800 text-sm font-bold py-3 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
                 {/* Password field */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Mot de passe</label>
-                  <div className="border-b-2 border-slate-200/80 px-1 py-0.5 flex items-center justify-between focus-within:border-[#0b5cd5] transition-all">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.password}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between h-16">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="Mot de passe de connexion (min. 6 caract)"
+                      placeholder={t.passwordPlaceholder}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="flex-1 bg-transparent text-slate-800 text-sm font-bold py-3 focus:outline-none placeholder:text-slate-400"
+                      className="flex-1 auth-clean-input text-slate-800 text-sm font-bold py-3 placeholder:text-slate-400"
                     />
                     <button
                       type="button"
@@ -467,45 +544,39 @@ export default function Auth({
                 </div>
 
                 {/* Invitation / Sponsor Code Field */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Code d'invitation</label>
-                  <div className="border-b-2 border-slate-200/80 px-1 py-0.5 flex items-center justify-between focus-within:border-[#0b5cd5] transition-all">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.invitationCode}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between h-16">
                     <input
                       type="text"
-                      placeholder="Veuillez entrer le code d'invitation (requis)"
+                      placeholder={t.invitationPlaceholder}
                       value={referralCode}
                       onChange={(e) => setReferralCode(e.target.value)}
-                      className="flex-1 bg-transparent text-slate-800 text-sm font-bold py-3 focus:outline-none placeholder:text-slate-400 uppercase tracking-widest"
+                      className="flex-1 auth-clean-input text-slate-800 text-sm font-bold py-3 placeholder:text-slate-400 uppercase tracking-widest"
                     />
                     <Link className="w-5 h-5 text-slate-400 shrink-0" />
                   </div>
-                  {referralCode && (
-                    <p className="text-[10px] font-sans font-bold text-amber-600 bg-amber-500/5 border border-amber-500/10 rounded-lg px-2.5 py-1 mt-1 flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-amber-500 animate-ping"></span>
-                      Sponsor actif : <span className="text-[#0b5cd5] font-black">{referralCode}</span> (Rempli automatiquement)
-                    </p>
-                  )}
                 </div>
 
                 {/* Code de vérification (OTP) Field with ENVOYER action */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Code de vérification (OTP)</label>
-                  <div className="border-b-2 border-slate-200/80 px-1 py-0.5 flex items-center justify-between focus-within:border-[#0b5cd5] transition-all">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.otp}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between h-16">
                     <input
                       type="text"
                       required
-                      placeholder="Veuillez entrer le code de vérific"
+                      placeholder={t.otpPlaceholder}
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value)}
-                      className="flex-1 bg-transparent text-slate-800 text-sm font-bold py-3 focus:outline-none placeholder:text-slate-400"
+                      className="flex-1 auth-clean-input text-slate-800 text-sm font-bold py-3 placeholder:text-slate-400"
                     />
                     <button
                       type="button"
                       onClick={handleSendOTP}
                       disabled={sendingOtp || otpCountdown > 0}
-                      className="text-[#0b5cd5] hover:text-[#0a4fb9] active:scale-95 disabled:opacity-50 text-xs md:text-sm font-black uppercase tracking-wider bg-transparent border-none py-1 px-2 cursor-pointer transition-all shrink-0"
+                      className="text-[#0b5cd5] hover:text-[#0a4fb9] active:scale-95 disabled:opacity-50 text-sm font-black uppercase tracking-wider bg-transparent border-none py-1 px-3 cursor-pointer transition-all shrink-0 font-sans"
                     >
-                      {otpCountdown > 0 ? `${otpCountdown}s` : "ENVOYER"}
+                      {otpCountdown > 0 ? `${otpCountdown}s` : t.envoyer}
                     </button>
                   </div>
                 </div>
@@ -514,21 +585,21 @@ export default function Auth({
               /* LOGIN SPECIFIC FIELDS */
               <>
                 {/* Pays Selector Box */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Pays</label>
-                  <div className="border-b-2 border-slate-200/80 py-3 px-1 flex items-center justify-between relative cursor-pointer hover:border-[#0b5cd5] transition-colors">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.pays}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between relative cursor-pointer hover:border-[#0b5cd5] transition-all h-16">
                     <span className="text-sm font-bold text-slate-800 flex items-center gap-2">
                       <span className="text-lg leading-none">
                         {eligibleCountries.find(c => c.code === loginSelectedCode)?.flag || '🇹🇬'}
                       </span>
                       {eligibleCountries.find(c => c.code === loginSelectedCode)?.name || 'Togo'} ({loginSelectedCode})
                     </span>
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                    <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />
                     <select
                       id="auth-login-country-select"
                       value={loginSelectedCode}
                       onChange={(e) => setLoginSelectedCode(e.target.value)}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full auth-clean-select"
                     >
                       {eligibleCountries.map((c, i) => (
                         <option key={i} value={c.code} className="bg-white text-slate-800 font-bold">
@@ -540,38 +611,38 @@ export default function Auth({
                 </div>
 
                 {/* Login Phone Input */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Numéro de téléphone</label>
-                  <div className="border-b-2 border-slate-200/80 px-1 py-0.5 flex items-center focus-within:border-[#0b5cd5] transition-all">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.phone}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center h-16">
                     <input
                       type="text"
                       required
-                      placeholder="Numéro de téléphone"
+                      placeholder={t.phone}
                       value={loginPhone}
                       onChange={(e) => setLoginPhone(e.target.value)}
-                      className="w-full bg-transparent text-slate-800 text-sm font-bold py-3 focus:outline-none placeholder:text-slate-400"
+                      className="w-full auth-clean-input text-slate-800 text-sm font-bold py-3 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
                 {/* Login Password Input */}
-                <div className="space-y-1">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">Mot de passe</label>
-                  <div className="border-b-2 border-slate-200/80 px-1 py-0.5 flex items-center justify-between focus-within:border-[#0b5cd5] transition-all">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.password}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between h-16">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="Mot de passe de connexion"
+                      placeholder={t.loginPasswordPlaceholder}
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      className="flex-1 bg-transparent text-slate-800 text-sm font-bold py-3 focus:outline-none placeholder:text-slate-400"
+                      className="flex-1 auth-clean-input text-slate-800 text-sm font-bold py-3 placeholder:text-slate-400"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="p-1 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
@@ -583,13 +654,13 @@ export default function Auth({
                     onClick={() => setResetTip(!resetTip)}
                     className="text-xs text-[#0b5cd5] hover:text-[#0a4fb9] font-black underline cursor-pointer hover:no-underline transition-colors uppercase tracking-wider font-sans"
                   >
-                    Mot de passe perdu ?
+                    {t.lostPassword}
                   </button>
                 </div>
 
                 {resetTip && (
                   <div className="p-4 bg-slate-50 rounded-2xl text-xs font-semibold text-slate-600 leading-relaxed text-left border border-slate-100 animate-fade-in">
-                    💡 Pour récupérer ou réinitialiser votre compte d’investisseur, veuillez contacter notre service client en cliquant sur l'icône de l'assistance en bas à droite de votre écran.
+                    {t.lostPasswordTip}
                   </div>
                 )}
               </>
@@ -605,10 +676,10 @@ export default function Auth({
               {loading ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Traitement en cours...</span>
+                  <span>{t.submitBtn}</span>
                 </div>
               ) : (
-                <span>{isRegister ? "S'inscrire" : "Se connecter"}</span>
+                <span>{t.submitBtn}</span>
               )}
             </button>
 
@@ -624,7 +695,7 @@ export default function Auth({
                 }}
                 className="w-full border-2 border-[#0b5cd5] hover:bg-blue-50/50 active:scale-[0.98] text-[#0b5cd5] font-sans font-extrabold text-sm uppercase tracking-wider py-4 px-4 rounded-full flex items-center justify-center transition-all select-none cursor-pointer"
               >
-                <span>{isRegister ? "Se connecter maintenant" : "Créer un compte maintenant"}</span>
+                <span>{t.toggleBtn}</span>
               </button>
             </div>
           </form>
@@ -640,7 +711,7 @@ export default function Auth({
       {/* Footer Branding label */}
       <div className="w-full text-center relative z-10 py-2 shrink-0">
         <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest drop-shadow-xs">
-          Goldspeed • Système de Placement Sécurisé
+          {t.footerText}
         </p>
       </div>
 
@@ -660,57 +731,9 @@ export default function Auth({
           <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
         </button>
         <span className="text-[9px] font-sans font-black text-slate-700 bg-white/95 backdrop-blur-xs px-2.5 py-0.5 rounded-full shadow-md border border-slate-100 mt-1 uppercase tracking-wider">
-          Service client
+          {t.customerService}
         </span>
       </div>
-
-      {/* Modern interactive Language Selector Modal */}
-      {showLanguageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative border border-slate-100 animate-scale-up">
-            <button 
-              onClick={() => setShowLanguageModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="text-base font-black text-slate-900 mb-4 pr-6 flex items-center gap-2 uppercase tracking-wide">
-              <Globe className="w-5 h-5 text-[#f07b1b]" />
-              Choisir la Langue
-            </h3>
-            <div className="space-y-3">
-              {[
-                { name: 'Français', flag: '🇫🇷', active: true },
-                { name: 'English', flag: '🇬🇧', active: false },
-                { name: 'Español', flag: '🇪🇸', active: false },
-                { name: 'Português', flag: '🇵🇹', active: false }
-              ].map((lang, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    if (lang.active) {
-                      setShowLanguageModal(false);
-                    } else {
-                      alert("Cette langue sera très bientôt disponible !");
-                    }
-                  }}
-                  className={`w-full p-4 rounded-2xl flex items-center justify-between font-bold text-sm transition-all border ${
-                    lang.active 
-                      ? 'bg-amber-50 border-amber-200 text-[#df4b13]' 
-                      : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-xl leading-none">{lang.flag}</span>
-                    <span>{lang.name}</span>
-                  </span>
-                  {lang.active && <span className="w-2.5 h-2.5 rounded-full bg-[#df4b13]" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modern interactive Customer Support Modal */}
       {showSupportModal && (
@@ -732,16 +755,21 @@ export default function Auth({
                 />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900 leading-none">Support Client Goldspeed</h3>
+                <h3 className="text-base font-black text-slate-900 leading-none">
+                  {lang === 'FR' ? "Support Client Goldspeed" : "Goldspeed Customer Support"}
+                </h3>
                 <span className="text-xs text-emerald-600 font-bold flex items-center gap-1 mt-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  Conseillers disponibles en continu
+                  {lang === 'FR' ? "Conseillers disponibles en continu" : "Advisors available continuously"}
                 </span>
               </div>
             </div>
 
             <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-5">
-              Besoin d'aide pour votre inscription, votre dépôt ou pour obtenir votre code d'invitation ? Veuillez rejoindre notre canal d'entraide ou discuter en direct avec un conseiller de garde.
+              {lang === 'FR' 
+                ? "Besoin d'aide pour votre inscription, votre dépôt ou pour obtenir votre code d'invitation ? Veuillez rejoindre notre canal d'entraide ou discuter en direct avec un conseiller de garde."
+                : "Need help with registration, deposit or invitation code? Please join our help channel or chat live with an advisor on duty."
+              }
             </p>
 
             <div className="space-y-3 mb-5">
@@ -753,9 +781,11 @@ export default function Auth({
               >
                 <span className="flex items-center gap-2.5">
                   <Smartphone className="w-4 h-4 text-emerald-600" />
-                  <span>Discussion WhatsApp Directe</span>
+                  <span>{lang === 'FR' ? "Discussion WhatsApp Directe" : "Direct WhatsApp Chat"}</span>
                 </span>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-200/60 uppercase">En ligne</span>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-200/60 uppercase">
+                  {lang === 'FR' ? "En ligne" : "Online"}
+                </span>
               </a>
 
               <a
@@ -766,9 +796,11 @@ export default function Auth({
               >
                 <span className="flex items-center gap-2.5">
                   <Globe className="w-4 h-4 text-sky-600" />
-                  <span>Canal Officiel Telegram</span>
+                  <span>{lang === 'FR' ? "Canal Officiel Telegram" : "Official Telegram Channel"}</span>
                 </span>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-200/60 uppercase">Rejoindre</span>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-200/60 uppercase">
+                  {lang === 'FR' ? "Rejoindre" : "Join"}
+                </span>
               </a>
             </div>
 
@@ -776,7 +808,7 @@ export default function Auth({
               onClick={() => setShowSupportModal(false)}
               className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-all text-center"
             >
-              Fermer l'Assistance
+              {lang === 'FR' ? "Fermer l'Assistance" : "Close Assistance"}
             </button>
           </div>
         </div>

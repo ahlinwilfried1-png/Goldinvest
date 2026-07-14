@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Timer } from 'lucide-react';
+import { safeLocalStorage } from '../dataStore';
 
 interface CountdownTimerProps {
   createdAt: string;
@@ -8,6 +9,22 @@ interface CountdownTimerProps {
 }
 
 export default function CountdownTimer({ createdAt, daysPassed, durationDays }: CountdownTimerProps) {
+  const [lang, setLang] = useState<'FR' | 'EN'>(() => {
+    return (safeLocalStorage.getItem('gi_lang') as 'FR' | 'EN') || 'FR';
+  });
+
+  useEffect(() => {
+    const handleLangChange = () => {
+      setLang((safeLocalStorage.getItem('gi_lang') as 'FR' | 'EN') || 'FR');
+    };
+    window.addEventListener('gi_lang_changed', handleLangChange);
+    return () => {
+      window.removeEventListener('gi_lang_changed', handleLangChange);
+    };
+  }, []);
+
+  const t = (fr: string, en: string) => (lang === 'EN' ? en : fr);
+
   const [timeLeft, setTimeLeft] = useState<string>('--:--:--');
   const [percent, setPercent] = useState<number>(0);
 
@@ -23,7 +40,7 @@ export default function CountdownTimer({ createdAt, daysPassed, durationDays }: 
       const diff = nextPayoutTime - now;
 
       if (diff <= 0) {
-        setTimeLeft("Prêt ⚡");
+        setTimeLeft(t("Prêt ⚡", "Ready ⚡"));
         setPercent(100);
       } else {
         const hours = Math.floor(diff / (60 * 60 * 1000));
@@ -46,14 +63,14 @@ export default function CountdownTimer({ createdAt, daysPassed, durationDays }: 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [createdAt, daysPassed]);
+  }, [createdAt, daysPassed, lang]);
 
   return (
     <div id={`countdown-${createdAt}-${daysPassed}`} className="bg-orange-50/50 border border-orange-100/50 rounded-2xl p-3 flex flex-col space-y-2 select-none">
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider flex items-center gap-1.5">
           <Timer className="w-3.5 h-3.5 text-orange-500 animate-pulse stroke-[2.5]" />
-          PROCHAIN GAIN DANS
+          {t('PROCHAIN GAIN DANS', 'NEXT GAIN IN')}
         </span>
         <span className="font-mono text-xs font-black text-orange-600 bg-orange-100/60 px-2.5 py-1 rounded-xl">
           {timeLeft}

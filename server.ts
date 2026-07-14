@@ -53,21 +53,6 @@ async function startServer() {
     if (!Array.isArray(products)) return false;
     let modified = false;
 
-    // Filter out VIP 1 to 5 from 'stability' and any 'activity' products
-    const initialLength = products.length;
-    const filtered = products.filter((p: any) => {
-      if (!p) return false;
-      const isFixed1To5 = p.category === 'stability' && p.vipLevel >= 1 && p.vipLevel <= 5;
-      const isActivity = p.category === 'activity';
-      return !isFixed1To5 && !isActivity;
-    });
-
-    if (filtered.length !== initialLength) {
-      products.length = 0; // Clear the array in-place
-      filtered.forEach(p => products.push(p));
-      modified = true;
-    }
-
     products.forEach((item: any) => {
       if (!item) return;
 
@@ -403,19 +388,317 @@ async function startServer() {
       modified = true;
     }
 
-    // USER REQUEST: Supprimer fixé 12345 (vip-1, vip-2, vip-3, vip-4, vip-5) et activités (category === 'activity')
-    if (storeData["gi_products"]) {
-      const isSanitized = sanitizeProductsInPlace(storeData["gi_products"]);
-      if (isSanitized) {
-        console.log(`[STARTUP] Filtered/Sanitized products. Length: ${storeData["gi_products"].length}`);
-        modified = true;
-        setTimeout(() => {
-          saveStore(["gi_products"]).catch(err => {
-            console.error("[STARTUP] Failed to save pruned/sanitized products to Supabase:", err);
-          });
-        }, 1000);
+    // CONFIGURE 21 PRODUCTS (7 STABILITY, 7 WELL-BEING, 7 ACTIVITY) WITH REQUESTED PRICE POINTS
+    const default21Products = [
+      // STABILITÉ (7 products, starting at 2000 XOF minimum)
+      {
+        id: "stab-1",
+        vipLevel: 1,
+        name: "Goldspeed Option Bronze",
+        tag: "Option Bronze",
+        price: 2000,
+        dailyReturn: 100,
+        durationDays: 40,
+        totalReturn: 4000,
+        category: "stability",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "stab-2",
+        vipLevel: 2,
+        name: "Goldspeed Option Argent",
+        tag: "Option Argent",
+        price: 5000,
+        dailyReturn: 300,
+        durationDays: 40,
+        totalReturn: 12000,
+        category: "stability",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "stab-3",
+        vipLevel: 3,
+        name: "Goldspeed Option Or",
+        tag: "Option Or",
+        price: 10000,
+        dailyReturn: 700,
+        durationDays: 40,
+        totalReturn: 28000,
+        category: "stability",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "stab-4",
+        vipLevel: 4,
+        name: "Goldspeed Option Platine",
+        tag: "Option Platine",
+        price: 25000,
+        dailyReturn: 2000,
+        durationDays: 40,
+        totalReturn: 80000,
+        category: "stability",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "stab-5",
+        vipLevel: 5,
+        name: "Goldspeed Option Diamant",
+        tag: "Option Diamant",
+        price: 50000,
+        dailyReturn: 4500,
+        durationDays: 40,
+        totalReturn: 180000,
+        category: "stability",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "stab-6",
+        vipLevel: 6,
+        name: "Goldspeed Option Saphir",
+        tag: "Option Saphir",
+        price: 100000,
+        dailyReturn: 10000,
+        durationDays: 40,
+        totalReturn: 400000,
+        category: "stability",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "stab-7",
+        vipLevel: 7,
+        name: "Goldspeed Option Émeraude",
+        tag: "Option Émeraude",
+        price: 200000,
+        dailyReturn: 24000,
+        durationDays: 40,
+        totalReturn: 960000,
+        category: "stability",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+
+      // BIEN-ÊTRE (7 products, starting at 5000 XOF minimum)
+      {
+        id: "well-1",
+        vipLevel: 1,
+        name: "Goldspeed Bien-être Source",
+        tag: "Bien-être Source",
+        price: 5000,
+        dailyReturn: 1000,
+        durationDays: 10,
+        totalReturn: 10000,
+        category: "wellbeing",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "well-2",
+        vipLevel: 2,
+        name: "Goldspeed Bien-être Harmonie",
+        tag: "Bien-être Harmonie",
+        price: 12000,
+        dailyReturn: 2600,
+        durationDays: 10,
+        totalReturn: 26000,
+        category: "wellbeing",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "well-3",
+        vipLevel: 3,
+        name: "Goldspeed Bien-être Sérénité",
+        tag: "Bien-être Sérénité",
+        price: 30000,
+        dailyReturn: 7000,
+        durationDays: 10,
+        totalReturn: 70000,
+        category: "wellbeing",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "well-4",
+        vipLevel: 4,
+        name: "Goldspeed Bien-être Vitalité",
+        tag: "Bien-être Vitalité",
+        price: 75000,
+        dailyReturn: 19000,
+        durationDays: 10,
+        totalReturn: 190000,
+        category: "wellbeing",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "well-5",
+        vipLevel: 5,
+        name: "Goldspeed Bien-être Énergie",
+        tag: "Bien-être Énergie",
+        price: 150000,
+        dailyReturn: 42500,
+        durationDays: 10,
+        totalReturn: 425000,
+        category: "wellbeing",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "well-6",
+        vipLevel: 6,
+        name: "Goldspeed Bien-être Équilibre",
+        tag: "Bien-être Équilibre",
+        price: 300000,
+        dailyReturn: 90000,
+        durationDays: 10,
+        totalReturn: 900000,
+        category: "wellbeing",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "well-7",
+        vipLevel: 7,
+        name: "Goldspeed Bien-être Plénitude",
+        tag: "Bien-être Plénitude",
+        price: 600000,
+        dailyReturn: 190000,
+        durationDays: 10,
+        totalReturn: 1900000,
+        category: "wellbeing",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+
+      // ACTIVITÉ (7 products, starting at 5000 XOF minimum)
+      {
+        id: "act-1",
+        vipLevel: 1,
+        name: "Goldspeed Activité Éclair",
+        tag: "Activité Éclair",
+        price: 5000,
+        dailyReturn: 2500,
+        durationDays: 3,
+        totalReturn: 7500,
+        category: "activity",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "act-2",
+        vipLevel: 2,
+        name: "Goldspeed Activité Flash",
+        tag: "Activité Flash",
+        price: 15000,
+        dailyReturn: 8000,
+        durationDays: 3,
+        totalReturn: 24000,
+        category: "activity",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "act-3",
+        vipLevel: 3,
+        name: "Goldspeed Activité Boost",
+        tag: "Activité Boost",
+        price: 40000,
+        dailyReturn: 22000,
+        durationDays: 3,
+        totalReturn: 66000,
+        category: "activity",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "act-4",
+        vipLevel: 4,
+        name: "Goldspeed Activité Turbo",
+        tag: "Activité Turbo",
+        price: 100000,
+        dailyReturn: 58000,
+        durationDays: 3,
+        totalReturn: 174000,
+        category: "activity",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "act-5",
+        vipLevel: 5,
+        name: "Goldspeed Activité Hyper",
+        tag: "Activité Hyper",
+        price: 250000,
+        dailyReturn: 150000,
+        durationDays: 3,
+        totalReturn: 450000,
+        category: "activity",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "act-6",
+        vipLevel: 6,
+        name: "Goldspeed Activité Master",
+        tag: "Activité Master",
+        price: 600000,
+        dailyReturn: 380000,
+        durationDays: 3,
+        totalReturn: 1140000,
+        category: "activity",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
+      },
+      {
+        id: "act-7",
+        vipLevel: 7,
+        name: "Goldspeed Activité Elite",
+        tag: "Activité Elite",
+        price: 1500000,
+        dailyReturn: 1000000,
+        durationDays: 3,
+        totalReturn: 3000000,
+        category: "activity",
+        isBlocked: false,
+        isCyclic: true,
+        generatedProductIds: []
       }
-    }
+    ];
+
+    // Force exact set of 21 products on startup
+    storeData["gi_products"] = default21Products;
+    modified = true;
+    setTimeout(() => {
+      saveStore(["gi_products"]).catch(err => {
+        console.error("[STARTUP] Failed to save configured products to Supabase:", err);
+      });
+    }, 1000);
 
     if (modified) {
       saveStoreLocal();

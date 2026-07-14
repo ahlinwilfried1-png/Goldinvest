@@ -19,7 +19,8 @@ import {
   Database,
   Bell,
   Gift,
-  TrendingUp
+  TrendingUp,
+  ChevronLeft
 } from 'lucide-react';
 
 interface HistoriquePageProps {
@@ -35,6 +36,12 @@ const maskPhoneNumber = (num: string) => {
 };
 
 export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps) {
+  const [lang] = useState<'FR' | 'EN'>(() => {
+    return (localStorage.getItem('gi_lang') as 'FR' | 'EN') || 'FR';
+  });
+
+  const t = (fr: string, en: string) => (lang === 'EN' ? en : fr);
+
   const [activeTab, setActiveTab] = useState<'recharge' | 'retrait' | 'achat' | 'commission' | 'revenu'>('recharge');
   
   // Data lists corresponding to the types
@@ -46,6 +53,8 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'active' | 'completed'>('all');
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   // Notifications state
   const [notifs, setNotifs] = useState<SystemNotification[]>([]);
@@ -57,7 +66,9 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
     setDeposits(allDeps);
 
     // 2. Retraits (withdrawals of type: retrait)
-    const allWths = DataStore.getWithdrawals().filter(w => w.userId === user.id);
+    const allWths = DataStore.getWithdrawals()
+      .filter(w => w.userId === user.id)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     setWithdrawals(allWths);
 
     // 3. Achats (investments of type: achat)
@@ -109,10 +120,24 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
 
   useEffect(() => {
     const handleHashChange = () => {
-      setHashActive(window.location.hash);
-      if (window.location.hash) {
+      const hash = window.location.hash;
+      setHashActive(hash);
+      if (hash === '#retrait') {
+        setActiveTab('retrait');
+        setHasAutoSelected(false);
+        setSelectedWithdrawal(null);
+      } else if (hash === '#recharge') {
+        setActiveTab('recharge');
+      } else if (hash === '#achat') {
+        setActiveTab('achat');
+      } else if (hash === '#commission') {
+        setActiveTab('commission');
+      } else if (hash === '#revenu') {
+        setActiveTab('revenu');
+      }
+      if (hash) {
         setTimeout(() => {
-          const el = document.getElementById(window.location.hash.substring(1));
+          const el = document.getElementById(hash.substring(1));
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
@@ -126,6 +151,13 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (hashActive === '#retrait' && !hasAutoSelected && withdrawals.length > 0) {
+      setSelectedWithdrawal(withdrawals[0]);
+      setHasAutoSelected(true);
+    }
+  }, [hashActive, withdrawals, hasAutoSelected]);
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -211,6 +243,172 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
 
   const filteredItems = getFilteredData();
 
+  const formatInitiationTime = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const mm = pad(d.getMonth() + 1);
+      const dd = pad(d.getDate());
+      const hh = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      const ss = pad(d.getSeconds());
+      return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  const isRetraitMode = activeTab === 'retrait' || hashActive === '#retrait';
+
+  if (selectedWithdrawal || (isRetraitMode && withdrawals.length > 0)) {
+    const wth = selectedWithdrawal || withdrawals[0];
+    const feeVal = wth.fee !== undefined ? wth.fee : Math.round(wth.amount * 0.12);
+    const netVal = wth.netAmount !== undefined ? wth.netAmount : (wth.amount - feeVal);
+
+    return (
+      <div className="min-h-screen bg-[#f4f7fc] pb-12 text-slate-800 animate-fadeIn font-sans">
+        {/* Blue Header Section */}
+        <div className="bg-[#3b82f6] text-white pt-6 pb-24 px-4 rounded-b-[2rem] relative shadow-md">
+          <div className="max-w-md mx-auto flex items-center space-x-3">
+            <button 
+              onClick={() => {
+                if (hashActive === '#retrait') {
+                  onNavigate('/');
+                } else {
+                  setSelectedWithdrawal(null);
+                  setActiveTab('recharge');
+                }
+              }}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-all cursor-pointer border-none outline-none"
+            >
+              <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+            </button>
+            <h1 className="font-sans font-extrabold text-base sm:text-lg tracking-wide">
+              {t('Relevé des enregistrements', 'Record statement')}
+            </h1>
+          </div>
+        </div>
+
+        {/* Content overlapping the blue header */}
+        <div className="max-w-md mx-auto px-4 -mt-14 space-y-4 relative z-10">
+          {/* First Card: Account Balance */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
+            <div className="font-sans font-black text-2xl text-slate-900 leading-tight">
+              FCFA{user.balance.toFixed(2)}
+            </div>
+            <div className="text-[12px] font-extrabold text-slate-400 mt-1.5 uppercase tracking-wide">
+              {t('Solde du Compte', 'Account Balance')}
+            </div>
+          </div>
+
+          {/* Second Card: Transaction Details */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 divide-y divide-slate-100 text-left">
+            <div className="flex justify-between items-center py-4 first:pt-0">
+              <span className="text-slate-500 font-extrabold text-[13px]">{t('Statut du Retrait', 'Withdrawal Status')}</span>
+              <span className={`font-sans font-black text-[14px] ${
+                wth.status === 'approved' ? 'text-[#10b981]' : 
+                wth.status === 'pending' ? 'text-amber-500' : 'text-rose-500'
+              }`}>
+                {wth.status === 'approved' ? t('Réussi', 'Successful') : 
+                 wth.status === 'pending' ? t('En attente', 'Pending') : t('Refusé', 'Rejected')}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center py-4">
+              <span className="text-slate-500 font-extrabold text-[13px]">{t('Montant du Retrait', 'Withdrawal Amount')}</span>
+              <span className="font-mono font-black text-slate-900 text-[14px]">
+                FCFA{wth.amount.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center py-4">
+              <span className="text-slate-500 font-extrabold text-[13px]">{t('Montant Reçu', 'Amount Received')}</span>
+              <span className="font-mono font-black text-slate-900 text-[14px]">
+                FCFA{netVal.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center py-4">
+              <span className="text-slate-500 font-extrabold text-[13px]">{t('Montant de Taxe', 'Tax Amount')}</span>
+              <span className="font-mono font-black text-slate-900 text-[14px]">
+                FCFA{feeVal.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center py-4 last:pb-0">
+              <span className="text-slate-500 font-extrabold text-[13px]">{t("Heure d'Initiation", 'Initiation Time')}</span>
+              <span className="font-mono font-black text-slate-700 text-[13px]">
+                {formatInitiationTime(wth.createdAt)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isRetraitMode && withdrawals.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#f4f7fc] pb-12 text-slate-800 animate-fadeIn font-sans">
+        {/* Blue Header Section */}
+        <div className="bg-[#3b82f6] text-white pt-6 pb-24 px-4 rounded-b-[2rem] relative shadow-md">
+          <div className="max-w-md mx-auto flex items-center space-x-3">
+            <button 
+              onClick={() => {
+                if (hashActive === '#retrait') {
+                  onNavigate('/');
+                } else {
+                  setActiveTab('recharge');
+                }
+              }}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-all cursor-pointer border-none outline-none"
+            >
+              <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+            </button>
+            <h1 className="font-sans font-extrabold text-base sm:text-lg tracking-wide">
+              {t('Relevé des enregistrements', 'Record statement')}
+            </h1>
+          </div>
+        </div>
+
+        {/* Content overlapping the blue header */}
+        <div className="max-w-md mx-auto px-4 -mt-14 space-y-4 relative z-10">
+          {/* First Card: Account Balance */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left">
+            <div className="font-sans font-black text-2xl text-slate-900 leading-tight">
+              FCFA{user.balance.toFixed(2)}
+            </div>
+            <div className="text-[12px] font-extrabold text-slate-400 mt-1.5 uppercase tracking-wide">
+              {t('Solde du Compte', 'Account Balance')}
+            </div>
+          </div>
+
+          {/* Second Card: Empty State Details */}
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 text-center py-12 space-y-4">
+            <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto">
+              <Clock className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-sans font-black text-base text-slate-800 uppercase tracking-wide">
+                {t('Aucun Retrait', 'No Withdrawals')}
+              </h3>
+              <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+                {t("Vous n'avez pas encore effectué de demande de retrait pour le moment.", "You have not made any withdrawal requests yet.")}
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigate('/')}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xl shadow-md active:scale-95 transition-all cursor-pointer inline-block"
+            >
+              {t("Faire un Retrait", "Make a Withdrawal")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fff6ed] pb-24 text-slate-900 selection:bg-orange-200">
       {/* HEADER SECTION */}
@@ -221,18 +419,18 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
             className="flex items-center space-x-2 text-slate-600 hover:text-slate-950 transition-colors font-bold text-sm cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-            <span>Tableau de bord</span>
+            <span>{t('Tableau de bord', 'Dashboard')}</span>
           </button>
           
           <h1 className="font-sans font-black text-base sm:text-lg text-slate-800 uppercase tracking-wider">
-            Historique de Compte
+            {hashActive === '#retrait' ? t('Historique des Retraits', 'Withdrawals History') : t('Historique de Compte', 'Account History')}
           </h1>
 
           <button 
             onClick={handleRefresh}
             disabled={loading}
             className={`p-2.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-full transition-all cursor-pointer ${loading ? 'animate-spin' : ''}`}
-            title="Synchroniser"
+            title={t('Synchroniser', 'Synchronize')}
           >
             <RefreshCw className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -242,67 +440,69 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         
         {/* TABS SEPARATOR CATEGORIES */}
-        <div className="bg-white p-1.5 rounded-2xl border border-orange-100/80 shadow-sm flex overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:grid md:grid-cols-4">
-          <button
-            onClick={() => {
-              setActiveTab('recharge');
-              setStatusFilter('all');
-            }}
-            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'recharge' 
-                ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-            }`}
-          >
-            <PlusCircle className={`w-4 h-4 shrink-0 ${activeTab === 'recharge' ? 'text-white' : 'text-emerald-500'}`} />
-            <span>1. Recharges</span>
-          </button>
+        {hashActive !== '#retrait' && (
+          <div className="bg-white p-1.5 rounded-2xl border border-orange-100/80 shadow-sm flex overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:grid md:grid-cols-4">
+            <button
+              onClick={() => {
+                setActiveTab('recharge');
+                setStatusFilter('all');
+              }}
+              className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
+                activeTab === 'recharge' 
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+              }`}
+            >
+              <PlusCircle className={`w-4 h-4 shrink-0 ${activeTab === 'recharge' ? 'text-white' : 'text-emerald-500'}`} />
+              <span>{t('1. Recharges', '1. Deposits')}</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('retrait');
-              setStatusFilter('all');
-            }}
-            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'retrait' 
-                ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-            }`}
-          >
-            <ArrowUpCircle className={`w-4 h-4 shrink-0 ${activeTab === 'retrait' ? 'text-white' : 'text-rose-500'}`} />
-            <span>2. Retraits</span>
-          </button>
+            <button
+              onClick={() => {
+                setActiveTab('retrait');
+                setStatusFilter('all');
+              }}
+              className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
+                activeTab === 'retrait' 
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+              }`}
+            >
+              <ArrowUpCircle className={`w-4 h-4 shrink-0 ${activeTab === 'retrait' ? 'text-white' : 'text-rose-500'}`} />
+              <span>{t('2. Retraits', '2. Withdrawals')}</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('achat');
-              setStatusFilter('all');
-            }}
-            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'achat' 
-                ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-            }`}
-          >
-            <ShoppingBag className={`w-4 h-4 shrink-0 ${activeTab === 'achat' ? 'text-white' : 'text-purple-500'}`} />
-            <span>3. Achats</span>
-          </button>
+            <button
+              onClick={() => {
+                setActiveTab('achat');
+                setStatusFilter('all');
+              }}
+              className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
+                activeTab === 'achat' 
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+              }`}
+            >
+              <ShoppingBag className={`w-4 h-4 shrink-0 ${activeTab === 'achat' ? 'text-white' : 'text-purple-500'}`} />
+              <span>{t('3. Achats', '3. Purchases')}</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('revenu');
-              setStatusFilter('all');
-            }}
-            className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'revenu' 
-                ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-            }`}
-          >
-            <TrendingUp className={`w-4 h-4 shrink-0 ${activeTab === 'revenu' ? 'text-white' : 'text-blue-500'}`} />
-            <span>4. Revenus</span>
-          </button>
-        </div>
+            <button
+              onClick={() => {
+                setActiveTab('revenu');
+                setStatusFilter('all');
+              }}
+              className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
+                activeTab === 'revenu' 
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+              }`}
+            >
+              <TrendingUp className={`w-4 h-4 shrink-0 ${activeTab === 'revenu' ? 'text-white' : 'text-blue-500'}`} />
+              <span>{t('4. Revenus', '4. Earnings')}</span>
+            </button>
+          </div>
+        )}
 
         {/* SEARCH AND FILTER BAR */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -311,11 +511,11 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
             <input
               type="text"
               placeholder={
-                activeTab === 'recharge' ? "Rechercher par opérateur, référence..." :
-                activeTab === 'retrait' ? "Rechercher par numéro, opérateur..." :
-                activeTab === 'achat' ? "Rechercher par formule..." :
-                activeTab === 'commission' ? "Rechercher par parrainage, filleul..." :
-                "Rechercher par formule..."
+                activeTab === 'recharge' ? t("Rechercher par opérateur, référence...", "Search by operator, reference...") :
+                activeTab === 'retrait' ? t("Rechercher par numéro, opérateur...", "Search by number, operator...") :
+                activeTab === 'achat' ? t("Rechercher par formule...", "Search by formula...") :
+                activeTab === 'commission' ? t("Rechercher par parrainage, filleul...", "Search by referral, user...") :
+                t("Rechercher par formule...", "Search by formula...")
               }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -331,20 +531,20 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               className="bg-transparent border-none text-xs font-bold font-sans text-slate-700 focus:outline-none pr-3"
               disabled={activeTab === 'commission' || activeTab === 'revenu'}
             >
-              <option value="all">Statut: Tous</option>
+              <option value="all">{t("Statut: Tous", "Status: All")}</option>
               {activeTab === 'recharge' || activeTab === 'retrait' ? (
                 <>
-                  <option value="pending">En attente ⏳</option>
-                  <option value="approved">Validé ✅</option>
-                  <option value="rejected">Refusé ❌</option>
+                  <option value="pending">{t("En attente ⏳", "Pending ⏳")}</option>
+                  <option value="approved">{t("Validé ✅", "Approved ✅")}</option>
+                  <option value="rejected">{t("Refusé ❌", "Rejected ❌")}</option>
                 </>
               ) : activeTab === 'achat' ? (
                 <>
-                  <option value="approved">Actif 🟢</option>
-                  <option value="completed">Terminé ✔️</option>
+                  <option value="approved">{t("Actif 🟢", "Active 🟢")}</option>
+                  <option value="completed">{t("Terminé ✔️", "Completed ✔️")}</option>
                 </>
               ) : (
-                <option value="all">Non applicable</option>
+                <option value="all">{t("Non applicable", "Not applicable")}</option>
               )}
             </select>
           </div>
@@ -359,9 +559,9 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                 <Clock className="w-7 h-7 stroke-[1.5]" />
               </div>
               <div className="space-y-1">
-                <p className="font-sans font-black text-sm text-slate-800">Aucune opération trouvée</p>
+                <p className="font-sans font-black text-sm text-slate-800">{t("Aucune opération trouvée", "No transactions found")}</p>
                 <p className="text-xs text-slate-400 max-w-sm">
-                  Il n’y a aucun historique correspondant à vos critères ou de type{' '}
+                  {t("Il n’y a aucun historique correspondant à vos critères ou de type", "There is no history matching your criteria or of type")}{' '}
                   <span className="font-bold underline text-orange-500">
                     type = {activeTab}
                   </span>.
@@ -373,10 +573,10 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="bg-slate-50 border-b border-orange-50 font-sans font-black text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest select-none">
-                    <th className="py-4 px-4 sm:px-6">Date & ID</th>
-                    {activeTab !== 'retrait' && activeTab !== 'recharge' && <th className="py-4 px-4">Détails de l’opération</th>}
-                    <th className="py-4 px-4 text-right">Montant ({getCurrency()})</th>
-                    <th className="py-4 px-4 sm:px-6 text-right">Statut / Type</th>
+                    <th className="py-4 px-4 sm:px-6">{t("Date & ID", "Date & ID")}</th>
+                    {activeTab !== 'retrait' && activeTab !== 'recharge' && <th className="py-4 px-4">{t("Détails de l’opération", "Transaction Details")}</th>}
+                    <th className="py-4 px-4 text-right">{t("Montant", "Amount")} ({getCurrency()})</th>
+                    <th className="py-4 px-4 sm:px-6 text-right">{t("Statut / Type", "Status / Type")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-orange-50/50 text-xs">
@@ -421,19 +621,24 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
 
                   {/* RETRAIT TAB ROWS */}
                   {activeTab === 'retrait' && (filteredItems as Withdrawal[]).map((wth) => (
-                    <tr key={wth.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr 
+                      key={wth.id} 
+                      onClick={() => setSelectedWithdrawal(wth)}
+                      className="hover:bg-orange-50/50 transition-colors cursor-pointer group"
+                      title={t("Cliquez pour voir le reçu", "Click to view receipt")}
+                    >
                       <td className="py-4 px-4 sm:px-6 space-y-1">
                         <div className="flex items-center gap-1.5 text-slate-500">
                           <Calendar className="w-3.5 h-3.5" />
                           <span className="font-mono font-medium text-[11px]">{formatDate(wth.createdAt)}</span>
                         </div>
                         <div className="font-mono text-[9px] text-slate-400">ID: {wth.id}</div>
-                        <div className="text-[10px] text-slate-600 font-bold">
+                        <div className="text-[10px] text-slate-600 font-bold group-hover:text-orange-600 transition-colors">
                           Vers: {wth.operator} ({maskPhoneNumber(wth.number)})
                         </div>
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <span className="font-mono font-black text-rose-600 text-[13px]">
+                        <span className="font-mono font-black text-rose-600 text-[13px] group-hover:scale-105 inline-block transition-transform">
                           -{wth.amount.toLocaleString()}
                         </span>
                       </td>
@@ -441,7 +646,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                         {wth.status === 'approved' && (
                           <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-black text-[10px] uppercase border border-emerald-100">
                             <CheckCircle className="w-3 h-3 text-emerald-600" />
-                            Validé
+                            {t('Réussi', 'Successful')}
                           </span>
                         )}
                         {wth.status === 'pending' && (

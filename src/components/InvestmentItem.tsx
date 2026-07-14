@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Investment } from '../types';
 import { Clock, CheckCircle, AlertCircle, Coins, Flame } from 'lucide-react';
-import { DataStore } from '../dataStore';
+import { DataStore, safeLocalStorage } from '../dataStore';
 
 interface InvestmentItemProps {
   investment: Investment;
@@ -9,6 +9,22 @@ interface InvestmentItemProps {
 }
 
 export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onClaim }) => {
+  const [lang, setLang] = useState<'FR' | 'EN'>(() => {
+    return (safeLocalStorage.getItem('gi_lang') as 'FR' | 'EN') || 'FR';
+  });
+
+  useEffect(() => {
+    const handleLangChange = () => {
+      setLang((safeLocalStorage.getItem('gi_lang') as 'FR' | 'EN') || 'FR');
+    };
+    window.addEventListener('gi_lang_changed', handleLangChange);
+    return () => {
+      window.removeEventListener('gi_lang_changed', handleLangChange);
+    };
+  }, []);
+
+  const t = (fr: string, en: string) => (lang === 'EN' ? en : fr);
+
   const [now, setNow] = useState<number>(Date.now());
   const [claiming, setClaiming] = useState<boolean>(false);
   const [autoRenew, setAutoRenew] = useState<boolean>(investment.autoRenew || false);
@@ -25,7 +41,7 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
     try {
       const res = await DataStore.toggleAutoRenew(investment.userId, investment.id, nextVal);
       if (res.success) {
-        setMessage('Auto-renouvellement mis à jour !');
+        setMessage(t('Auto-renouvellement mis à jour !', 'Auto-renewal updated!'));
         setTimeout(() => setMessage(''), 3000);
       } else {
         setAutoRenew(!nextVal); // Revert
@@ -39,7 +55,11 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
 
   const handleManualRenew = async () => {
     if (renewing) return;
-    if (!window.confirm(`Voulez-vous renouveler ce plan pour un nouveau cycle de ${investment.durationDays} jours pour ${investment.price.toLocaleString()} XOF ?`)) {
+    const confirmMsg = t(
+      `Voulez-vous renouveler ce plan pour un nouveau cycle de ${investment.durationDays} jours pour ${investment.price.toLocaleString()} XOF ?`,
+      `Do you want to renew this plan for a new cycle of ${investment.durationDays} days for ${investment.price.toLocaleString()} XOF?`
+    );
+    if (!window.confirm(confirmMsg)) {
       return;
     }
     setRenewing(true);
@@ -52,7 +72,7 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Erreur lors du renouvellement.');
+      alert(err.message || t('Erreur lors du renouvellement.', 'Error during renewal.'));
     } finally {
       setRenewing(false);
     }
@@ -89,11 +109,11 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
   let cyclePercent = 0;
 
   if (isCompleted) {
-    timeLeftStr = 'Complété';
+    timeLeftStr = t('Complété', 'Completed');
     cyclePercent = 100;
   } else if (isAutomatic) {
     if (diff <= 0) {
-      timeLeftStr = 'Cycle terminé - En cours de versement';
+      timeLeftStr = t('Cycle terminé - En cours de versement', 'Cycle completed - Payment in progress');
       cyclePercent = 100;
     } else {
       const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -107,7 +127,7 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
     }
   } else {
     if (diff <= 0) {
-      timeLeftStr = 'Revenu disponible';
+      timeLeftStr = t('Revenu disponible', 'Revenue available');
       cyclePercent = 100;
     } else {
       const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -123,12 +143,13 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
 
   // Format the exact time the revenue will drop in 24h (or target date)
   const nextClaimDateObj = new Date(nextClaimTime);
-  const formattedDate = nextClaimDateObj.toLocaleDateString('fr-FR', {
+  const currentLocale = lang === 'EN' ? 'en-US' : 'fr-FR';
+  const formattedDate = nextClaimDateObj.toLocaleDateString(currentLocale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   });
-  const formattedTime = nextClaimDateObj.toLocaleTimeString('fr-FR', {
+  const formattedTime = nextClaimDateObj.toLocaleTimeString(currentLocale, {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -157,11 +178,11 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
             {investment.productName}
           </h5>
           <span className="text-[10px] text-slate-400 font-bold block">
-            Plan {isActivityOriginal ? 'Cycle Court' : isWellbeing ? 'Bien-être' : 'Stabilité'} • Jour {investment.daysPassed} sur {investment.durationDays}
+            {t('Plan', 'Plan')} {isActivityOriginal ? t('Cycle Court', 'Short Cycle') : isWellbeing ? t('Bien-être', 'Well-being') : t('Stabilité', 'Stability')} • {t('Jour', 'Day')} {investment.daysPassed} {t('sur', 'of')} {investment.durationDays}
           </span>
         </div>
         <div className="text-right">
-          <span className="text-slate-400 text-[8.5px] block uppercase font-black tracking-wider">Investi</span>
+          <span className="text-slate-400 text-[8.5px] block uppercase font-black tracking-wider">{t('Investi', 'Invested')}</span>
           <span className="text-[#0086ff] font-black text-xs sm:text-sm font-mono">
             {investment.price.toLocaleString()} F CFA
           </span>
@@ -171,7 +192,7 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
       {/* Main duration progress bar */}
       <div className="space-y-1">
         <div className="flex justify-between text-[8.5px] text-slate-400 font-black uppercase tracking-wider">
-          <span>Progression globale</span>
+          <span>{t('Progression globale', 'Global Progress')}</span>
           <span className="text-slate-650 font-bold font-mono">{totalInvestmentPercent}%</span>
         </div>
         <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200/40">
@@ -184,10 +205,10 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
         <div className="flex justify-between items-center">
           <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1">
             <Clock className={`w-3.5 h-3.5 ${isReady ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`} />
-            {isAutomatic ? 'Cycle finalisé le' : 'Prochain gain quotidien'}
+            {isAutomatic ? t('Cycle finalisé le', 'Cycle finalized on') : t('Prochain gain quotidien', 'Next daily gain')}
           </span>
           <span className="font-sans font-black text-[9px] uppercase tracking-wider text-slate-400 font-mono">
-            {formattedDate} à {formattedTime}
+            {formattedDate} {t('à', 'at')} {formattedTime}
           </span>
         </div>
 
@@ -207,10 +228,10 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
           </div>
           <div className="flex justify-between text-[8.5px] font-bold text-slate-400 uppercase">
             <span>
-              {isCompleted ? 'Contrat terminé' : isReady ? 'Disponible' : 'Minage en cours'}
+              {isCompleted ? t('Contrat terminé', 'Contract completed') : isReady ? t('Disponible', 'Available') : t('Minage en cours', 'Mining in progress')}
             </span>
             <span className="font-mono text-slate-500">
-              {isCompleted ? '100%' : isReady ? 'Prêt' : timeLeftStr}
+              {isCompleted ? '100%' : isReady ? t('Prêt', 'Ready') : timeLeftStr}
             </span>
           </div>
         </div>
@@ -219,9 +240,9 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
       {/* Earnings Information & Harvest Actions */}
       <div className="flex items-center justify-between border-t border-slate-100 pt-3">
         <div className="text-left">
-          <span className="text-[8.5px] text-slate-400 block uppercase font-bold tracking-wider leading-none">Rendement quotidien</span>
+          <span className="text-[8.5px] text-slate-400 block uppercase font-bold tracking-wider leading-none">{t('Rendement quotidien', 'Daily return')}</span>
           <span className="text-emerald-600 font-black text-xs sm:text-sm font-mono">
-            +{investment.dailyReturn.toLocaleString()} F / jour
+            +{investment.dailyReturn.toLocaleString()} F {t('/ jour', '/ day')}
           </span>
         </div>
 
@@ -230,7 +251,7 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5">
               <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-black uppercase text-[8.5px] px-2.5 py-1.5 rounded-lg border border-slate-200">
                 <CheckCircle className="w-3 h-3 text-slate-400" />
-                Terminé
+                {t('Terminé', 'Completed')}
               </span>
             </div>
           ) : isAutomatic ? (
@@ -249,10 +270,10 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
                 ) : (
                   <Flame className="w-3 h-3 text-orange-500" />
                 )}
-                {isStability || isWellbeing ? 'Fin de cycle' : 'Automatique'}
+                {isStability || isWellbeing ? t('Fin de cycle', 'End of cycle') : t('Automatique', 'Automatic')}
               </span>
               <span className="text-[9.5px] text-slate-500 font-extrabold mt-1 uppercase block leading-none">
-                Cumulé: {((investment.dailyReturn * investment.daysPassed)).toLocaleString()} F
+                {t('Cumulé:', 'Accumulated:')} {((investment.dailyReturn * investment.daysPassed)).toLocaleString()} F
               </span>
             </span>
           ) : isReady ? (
@@ -263,11 +284,11 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
               className="bg-gradient-to-r from-[#ff7c00] to-[#7c3aed] text-white hover:brightness-110 active:scale-95 text-[9.5px] font-black uppercase px-4 py-1.5 rounded-lg shadow-sm cursor-pointer border-0 outline-none transition-all flex items-center gap-1.5"
             >
               <Coins className="w-3.5 h-3.5" />
-              {claiming ? 'Récolte...' : 'Récolter'}
+              {claiming ? t('Récolte...', 'Harvesting...') : t('Récolter', 'Harvest')}
             </button>
           ) : (
             <div className="flex flex-col text-right">
-              <span className="text-[8.5px] text-slate-400 uppercase font-bold tracking-wider">Cumulé</span>
+              <span className="text-[8.5px] text-slate-400 uppercase font-bold tracking-wider">{t('Cumulé', 'Accumulated')}</span>
               <span className="font-extrabold text-slate-700 text-[11px] font-mono">
                 {(investment.dailyReturn * investment.daysPassed).toLocaleString()} F CFA
               </span>
@@ -281,14 +302,14 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({ investment, onCl
         <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl p-2 px-3 mt-1.5 transition-all">
           <div className="flex flex-col text-left">
             <span className="text-[10px] font-black text-emerald-800 flex items-center gap-1">
-              ⏳ Cycle d'investissement en cours
+              {t('⏳ Cycle d\'investissement en cours', '⏳ Investment cycle in progress')}
             </span>
             <span className="text-[8.5px] text-emerald-600">
-              Le capital et les bénéfices prévus seront versés à la fin du cycle.
+              {t('Le capital et les bénéfices prévus seront versés à la fin du cycle.', 'The capital and expected profits will be paid at the end of the cycle.')}
             </span>
           </div>
           <span className="text-[9.5px] bg-emerald-600 text-white font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
-            Cyclique
+            {t('Cyclique', 'Cyclic')}
           </span>
         </div>
       )}

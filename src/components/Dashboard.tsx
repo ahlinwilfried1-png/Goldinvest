@@ -395,6 +395,22 @@ export default function Dashboard({
   onRefreshUser,
   onNavigate
 }: DashboardProps) {
+  const [lang, setLang] = useState<'FR' | 'EN'>(() => {
+    return (localStorage.getItem('gi_lang') as 'FR' | 'EN') || 'FR';
+  });
+
+  useEffect(() => {
+    const handleLangChange = () => {
+      setLang((localStorage.getItem('gi_lang') as 'FR' | 'EN') || 'FR');
+    };
+    window.addEventListener('gi_lang_changed', handleLangChange);
+    return () => {
+      window.removeEventListener('gi_lang_changed', handleLangChange);
+    };
+  }, []);
+
+  const t = (fr: string, en: string) => (lang === 'EN' ? en : fr);
+
   // Navigation tabs: 'dashboard', 'products', 'team', 'profile', 'deposit', 'withdraw', 'proofs', 'forum'
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'team' | 'profile' | 'deposit' | 'withdraw' | 'proofs' | 'forum'>('dashboard');
   const [referralListTab, setReferralListTab] = useState<'level1' | 'level2' | 'level3'>('level1');
@@ -2384,7 +2400,7 @@ export default function Dashboard({
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-white flex flex-col font-sans w-full max-w-full relative overflow-x-hidden">
+    <div className="min-h-[106vh] pb-16 bg-transparent text-white flex flex-col font-sans w-full max-w-full relative overflow-x-hidden">
       
 
       {showAnnouncementDismissible && (
@@ -2980,7 +2996,7 @@ export default function Dashboard({
         </main>
       ) : (
         /* RENDER SYSTEM USER CHANNELS */
-        <main className="flex-grow w-full max-w-full px-2 sm:px-6 md:px-12 xl:px-20 py-3.5 pb-24 overflow-x-hidden">
+        <main className="flex-grow w-full max-w-full px-2 sm:px-6 md:px-12 xl:px-20 py-3.5 pb-36 overflow-x-hidden">
           
           {profileSubPage && (() => {
             const rechargeSum = allDeposits.filter(d => d.status === 'approved').reduce((acc, d) => acc + d.amount, 0);
@@ -3203,9 +3219,9 @@ export default function Dashboard({
                             {rechargeBal.toLocaleString()} F
                           </span>
                         </div>
-                        <div className="bg-red-600 border border-red-500 rounded-2xl p-4 text-left shadow-md">
-                          <span className="text-[9.5px] text-white/90 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
-                          <span className="text-lg sm:text-xl font-sans font-black text-white block font-mono leading-none animate-pulse">
+                        <div className="bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] border border-[#c5a133] rounded-2xl p-4 text-left shadow-md">
+                          <span className="text-[9.5px] text-slate-900 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
+                          <span className="text-lg sm:text-xl font-sans font-black text-slate-950 block font-mono leading-none animate-pulse">
                             {userState.balance.toLocaleString()} F
                           </span>
                         </div>
@@ -3233,18 +3249,18 @@ export default function Dashboard({
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3">
-                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Opérations Rapides</h3>
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider pl-0.5">Opérations Rapides</h3>
                       
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-3.5">
                         <button 
                           onClick={() => {
                             setProfileSubPage(null);
                             setActiveTab('deposit');
                           }}
-                          className="flex items-center justify-center gap-2 p-3 bg-amber-50 text-[#f07b1b] rounded-2xl font-bold text-xs hover:bg-amber-100/70 transition-all border-none outline-none cursor-pointer"
+                          className="flex items-center justify-center gap-3 p-4 bg-amber-50 text-[#f07b1b] rounded-2xl font-black text-sm hover:bg-amber-100/70 transition-all border-none outline-none cursor-pointer shadow-xs"
                         >
-                          <Coins className="w-4 h-4" />
+                          <Coins className="w-5.5 h-5.5 stroke-[2.25]" />
                           <span>Recharger</span>
                         </button>
                         <button 
@@ -3252,9 +3268,9 @@ export default function Dashboard({
                             setProfileSubPage(null);
                             setActiveTab('withdraw');
                           }}
-                          className="flex items-center justify-center gap-2 p-3 bg-blue-50 text-[#1b64d9] rounded-2xl font-bold text-xs hover:bg-blue-100/70 transition-all border-none outline-none cursor-pointer"
+                          className="flex items-center justify-center gap-3 p-4 bg-blue-50 text-[#1b64d9] rounded-2xl font-black text-sm hover:bg-blue-100/70 transition-all border-none outline-none cursor-pointer shadow-xs"
                         >
-                          <ArrowUpCircle className="w-4 h-4" />
+                          <ArrowUpCircle className="w-5.5 h-5.5 stroke-[2.25]" />
                           <span>Retirer</span>
                         </button>
                       </div>
@@ -3265,10 +3281,10 @@ export default function Dashboard({
                             onNavigate('/historique');
                           }
                         }}
-                        className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/70 text-slate-700 rounded-2xl text-xs font-bold transition-all border-none outline-none cursor-pointer mt-2"
+                        className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100/70 text-slate-700 rounded-2xl text-[13px] font-black transition-all border-none outline-none cursor-pointer mt-2"
                       >
                         <span>📋 Voir l'historique complet des revenus</span>
-                        <span>&gt;</span>
+                        <span className="font-bold">&gt;</span>
                       </button>
                     </div>
                   </div>
@@ -3278,70 +3294,94 @@ export default function Dashboard({
 
             if (profileSubPage === 'help') {
               return (
-                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
-                    <div className="flex items-center space-x-3 mb-2 pt-2">
-                      <button 
-                        onClick={() => setProfileSubPage(null)}
-                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                <div className="bg-[#3172c7] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 min-h-[98vh] text-left animate-fadeIn flex flex-col">
+                  {/* Blue Header Section */}
+                  <div className="px-4 sm:px-6 md:px-12 xl:px-20 pt-5 pb-6">
+                    <div className="max-w-md mx-auto w-full">
+                      {/* Back button and title bar */}
+                      <div className="flex items-center justify-between mb-6">
+                        <button 
+                          onClick={() => setProfileSubPage(null)}
+                          className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all cursor-pointer border-none outline-none"
+                        >
+                          <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                        </button>
+                        <h2 className="font-sans font-black text-white text-base tracking-tight">Centre d'aide</h2>
+                        <div className="w-10 h-10" /> {/* spacer for center alignment */}
+                      </div>
+
+                      {/* Header Welcome text */}
+                      <div className="text-white">
+                        <h1 className="font-sans font-black text-xl sm:text-2xl tracking-tight">Centre de service</h1>
+                        <p className="text-[12.5px] text-white/90 font-bold mt-1.5 leading-relaxed">
+                          Nous vous accompagnons à chaque étape dont vous avez besoin
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* White / Off-white Rounded Container */}
+                  <div className="bg-[#f4f7fc] flex-grow rounded-t-[32px] px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 text-slate-800">
+                    <div className="max-w-md mx-auto w-full space-y-4">
+                      
+                      {/* Card 1: Votre dépôt n'a pas encore été reçu ? */}
+                      <div 
+                        onClick={() => setIsLiveChatOpen(true)}
+                        className="bg-white rounded-[24px] p-5 shadow-xs border border-slate-100 flex items-start gap-4 hover:shadow-md hover:border-blue-100/60 transition-all cursor-pointer active:scale-[0.99]"
                       >
-                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-                      </button>
-                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Centre d'Aide</h2>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
-                      <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block pl-0.5">
-                        💬 ASSISTANCE EN DIRECT
-                      </span>
-                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                        Notre équipe d'assistance est à votre écoute pour vous aider à résoudre tout problème lié à vos dépôts, retraits ou investissements.
-                      </p>
-                      
-                      <div className="space-y-2.5 pt-1">
-                        <button
-                          onClick={() => setIsLiveChatOpen(true)}
-                          className="w-full bg-[#1b64d9] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-blue-600 transition-all cursor-pointer border-none outline-none"
-                        >
-                          <Headphones className="w-4.5 h-4.5" />
-                          <span>DISCUTER PAR CHAT EN DIRECT</span>
-                        </button>
-
-                        <button
-                          onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
-                          className="w-full bg-[#25D366] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-[#20ba59] transition-all cursor-pointer border-none outline-none"
-                        >
-                          <Send className="w-4.5 h-4.5" />
-                          <span>REJOINDRE LE CANAL TELEGRAM</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
-                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Questions Fréquentes (FAQ)</h3>
-                      
-                      <div className="space-y-3 pt-1">
-                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
-                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Comment effectuer un dépôt ?</h4>
-                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
-                            Rendez-vous dans la rubrique "Recharge", indiquez le montant puis suivez les instructions de paiement mobile. Envoyez ensuite la preuve pour validation rapide.
-                          </p>
+                        {/* Custom Illustration or circular Badge */}
+                        <div className="w-12 h-12 rounded-full bg-[#eef3fc] shrink-0 flex items-center justify-center">
+                          <div className="relative">
+                            <Headphones className="w-6 h-6 text-[#1b64d9] stroke-[2.25]" />
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-orange-500 border-2 border-white flex items-center justify-center text-[8px] font-black text-white">?</div>
+                          </div>
                         </div>
-
-                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
-                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Quel est le délai de traitement des retraits ?</h4>
-                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
-                            Les retraits sont généralement traités sous un délai de 5 minutes à 24 heures maximum, crédités directement sur votre compte mobile configuré.
-                          </p>
-                        </div>
-
-                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100/50">
-                          <h4 className="text-[11px] font-black text-slate-800 uppercase">Comment fonctionne le parrainage ?</h4>
-                          <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-normal">
-                            Invitez vos amis avec votre lien unique. Vous gagnez des commissions sur 3 niveaux (Niveau 1, Niveau 2 et Niveau 3) dès qu'un de vos filleuls investit.
+                        <div className="space-y-1">
+                          <h3 className="font-sans font-black text-slate-800 text-[13.5px] sm:text-sm leading-snug">
+                            Votre dépôt n'a pas encore été reçu ?
+                          </h3>
+                          <p className="text-[11.5px] text-slate-500 font-semibold leading-relaxed">
+                            Après avoir réussi à créditer votre compte, si le solde n'est pas apparu, veuillez le signaler ici et notre service client vous assistera pour le résoudre !
                           </p>
                         </div>
                       </div>
+
+                      {/* Card 2: Service en ligne */}
+                      <div 
+                        onClick={() => setIsLiveChatOpen(true)}
+                        className="bg-white rounded-[24px] p-5 shadow-xs border border-slate-100 flex items-start gap-4 hover:shadow-md hover:border-blue-100/60 transition-all cursor-pointer active:scale-[0.99]"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-[#eef3fc] shrink-0 flex items-center justify-center">
+                          <MessageSquare className="w-6 h-6 text-[#1b64d9] stroke-[2.25]" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-sans font-black text-slate-800 text-[13.5px] sm:text-sm leading-snug">
+                            Service en ligne
+                          </h3>
+                          <p className="text-[11.5px] text-slate-500 font-black leading-relaxed">
+                            Heures d'ouverture : 08:00 - 18:00
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Card 3: Telegram */}
+                      <div 
+                        onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
+                        className="bg-white rounded-[24px] p-5 shadow-xs border border-slate-100 flex items-start gap-4 hover:shadow-md hover:border-blue-100/60 transition-all cursor-pointer active:scale-[0.99]"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-[#eef3fc] shrink-0 flex items-center justify-center">
+                          <Send className="w-5.5 h-5.5 text-[#1b64d9] stroke-[2.25] rotate-[350deg] -translate-y-0.5" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-sans font-black text-slate-800 text-[13.5px] sm:text-sm leading-snug">
+                            Telegram
+                          </h3>
+                          <p className="text-[11.5px] text-slate-500 font-semibold leading-relaxed">
+                            Suivez notre canal officiel Telegram pour obtenir les dernières nouvelles d'événements et recevoir des avantages de la boîte à trésors
+                          </p>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>
@@ -3408,6 +3448,44 @@ export default function Dashboard({
                         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
                       </button>
                       <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Paramètres</h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Langue / Language</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            localStorage.setItem('gi_lang', 'FR');
+                            window.dispatchEvent(new Event('gi_lang_changed'));
+                            setTimeout(() => {
+                              window.location.reload();
+                            }, 50);
+                          }}
+                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-black text-xs border transition-all ${
+                            (localStorage.getItem('gi_lang') || 'FR') === 'FR'
+                              ? 'bg-amber-50 border-amber-200 text-[#df4b13]'
+                              : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span>🇫🇷</span> Français
+                        </button>
+                        <button
+                          onClick={() => {
+                            localStorage.setItem('gi_lang', 'EN');
+                            window.dispatchEvent(new Event('gi_lang_changed'));
+                            setTimeout(() => {
+                              window.location.reload();
+                            }, 50);
+                          }}
+                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-black text-xs border transition-all ${
+                            localStorage.getItem('gi_lang') === 'EN'
+                              ? 'bg-amber-50 border-amber-200 text-[#df4b13]'
+                              : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span>🇬🇧</span> English
+                        </button>
+                      </div>
                     </div>
 
                     <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
@@ -3649,11 +3727,11 @@ export default function Dashboard({
                 {/* Top content */}
                 <div className="relative z-20 flex justify-between items-start">
                   <span className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[9px] font-sans font-black px-2.5 py-1 rounded-full uppercase tracking-widest select-none">
-                    OFFICIEL • MEMBRE VIP
+                    {t('OFFICIEL • MEMBRE VIP', 'OFFICIAL • VIP MEMBER')}
                   </span>
-                  <div className="text-right bg-red-600 px-3.5 py-1.5 rounded-2xl shadow-lg border border-red-500 select-all">
-                    <span className="text-[8px] text-white font-sans font-black block leading-none uppercase tracking-widest text-right">SOLDE ACTUEL</span>
-                    <span className="text-base sm:text-lg font-sans font-black text-white block mt-1 font-mono leading-none animate-pulse">
+                  <div className="text-right bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] px-3.5 py-1.5 rounded-2xl shadow-lg border border-[#c5a133] select-all">
+                    <span className="text-[8px] text-slate-950 font-sans font-black block leading-none uppercase tracking-widest text-right">{t('SOLDE ACTUEL', 'CURRENT BALANCE')}</span>
+                    <span className="text-base sm:text-lg font-sans font-black text-slate-950 block mt-1 font-mono leading-none animate-pulse">
                       {userState.balance.toLocaleString()} F CFA
                     </span>
                   </div>
@@ -3662,10 +3740,10 @@ export default function Dashboard({
                 {/* Bottom Title & Dynamic Slide Info */}
                 <div className="relative z-20 pr-12">
                   <h1 className="text-xl sm:text-2xl font-sans font-extrabold tracking-[0.05em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-200 to-yellow-400 uppercase leading-tight drop-shadow-[0_2px_12px_rgba(245,158,11,0.25)]">
-                    {GOLDSPEED_SLIDES[currentSlide].title}
+                    {t(GOLDSPEED_SLIDES[currentSlide].title, 'Goldspeed Pure Gold Bullion 💎')}
                   </h1>
                   <p className="text-[10px] sm:text-[11px] font-sans font-bold text-slate-200 uppercase mt-1 pl-0.5 select-none leading-tight">
-                    {GOLDSPEED_SLIDES[currentSlide].desc}
+                    {t(GOLDSPEED_SLIDES[currentSlide].desc, 'Benefit from the absolute safety of a premium gold investment.')}
                   </p>
                 </div>
 
@@ -3687,17 +3765,17 @@ export default function Dashboard({
               </div>
 
               {/* 2. QUICK ACCESS BUTTONS ROW (4 BUTTONS) */}
-              <div className="grid grid-cols-4 gap-2 pt-2 pb-1.5">
+              <div className="grid grid-cols-4 gap-2 pt-2.5 pb-2">
                 {/* Recharger */}
                 <button
                   onClick={() => setActiveTab('deposit')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-12 h-12 bg-indigo-50/80 text-blue-600 flex items-center justify-center rounded-[18px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-xs">
-                    <Wallet className="w-5 h-5 stroke-[2.25]" />
+                  <div className="w-16 h-16 bg-indigo-50/95 text-blue-600 flex items-center justify-center rounded-[22px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-md">
+                    <Wallet className="w-8 h-8 stroke-[2.5]" />
                   </div>
-                  <span className="font-sans font-bold text-[10.5px] text-slate-700 mt-2 block tracking-wide truncate max-w-full">
-                    Recharger
+                  <span className="font-sans font-black text-[12.5px] sm:text-[13.5px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
+                    {t('Recharger', 'Deposit')}
                   </span>
                 </button>
 
@@ -3706,11 +3784,11 @@ export default function Dashboard({
                   onClick={() => setActiveTab('withdraw')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-12 h-12 bg-indigo-50/80 text-blue-600 flex items-center justify-center rounded-[18px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-xs">
-                    <ArrowUpCircle className="w-5 h-5 stroke-[2.25]" />
+                  <div className="w-16 h-16 bg-indigo-50/95 text-blue-600 flex items-center justify-center rounded-[22px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-md">
+                    <ArrowUpCircle className="w-8 h-8 stroke-[2.5]" />
                   </div>
-                  <span className="font-sans font-bold text-[10.5px] text-slate-700 mt-2 block tracking-wide truncate max-w-full">
-                    Retirer
+                  <span className="font-sans font-black text-[12.5px] sm:text-[13.5px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
+                    {t('Retirer', 'Withdraw')}
                   </span>
                 </button>
 
@@ -3719,11 +3797,11 @@ export default function Dashboard({
                   onClick={() => setActiveTab('team')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-12 h-12 bg-indigo-50/80 text-blue-600 flex items-center justify-center rounded-[18px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-xs">
-                    <Users className="w-5 h-5 stroke-[2.25]" />
+                  <div className="w-16 h-16 bg-indigo-50/95 text-blue-600 flex items-center justify-center rounded-[22px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-md">
+                    <Users className="w-8 h-8 stroke-[2.5]" />
                   </div>
-                  <span className="font-sans font-bold text-[10.5px] text-slate-700 mt-2 block tracking-wide truncate max-w-full">
-                    Mon Équipe
+                  <span className="font-sans font-black text-[12.5px] sm:text-[13.5px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
+                    {t('Mon Équipe', 'My Team')}
                   </span>
                 </button>
 
@@ -3732,10 +3810,10 @@ export default function Dashboard({
                   onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-12 h-12 bg-indigo-50/80 text-blue-600 flex items-center justify-center rounded-[18px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-xs">
-                    <Send className="w-5 h-5 stroke-[2.25] -rotate-12 translate-x-[1px]" />
+                  <div className="w-16 h-16 bg-indigo-50/95 text-blue-600 flex items-center justify-center rounded-[22px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-md">
+                    <Send className="w-8 h-8 stroke-[2.5] -rotate-12 translate-x-[1px]" />
                   </div>
-                  <span className="font-sans font-bold text-[10.5px] text-slate-700 mt-2 block tracking-wide truncate max-w-full">
+                  <span className="font-sans font-black text-[12.5px] sm:text-[13.5px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
                     Telegram
                   </span>
                 </button>
@@ -3746,10 +3824,10 @@ export default function Dashboard({
                 <div className="flex justify-between items-center">
                   <div className="space-y-0.5">
                     <h3 className="font-sans font-black text-slate-800 text-[14px] uppercase tracking-tight">
-                      Récompenses d'invitation
+                      {t("Récompenses d'invitation", "Invitation Rewards")}
                     </h3>
                     <p className="text-[10.5px] text-slate-400 font-bold leading-none">
-                      Investissez ensemble, enrichissez-vous ensemble
+                      {t("Investissez ensemble, enrichissez-vous ensemble", "Invest together, grow rich together")}
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-amber-100/70 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
@@ -3764,7 +3842,7 @@ export default function Dashboard({
                     </div>
                     <div className="min-w-0">
                       <span className="text-[9.5px] text-slate-400 font-black block leading-none uppercase tracking-wider">
-                        Lien d'invitation
+                        {t("Lien d'invitation", "Invitation Link")}
                       </span>
                       <span className="text-xs text-indigo-600 font-black truncate block mt-1 font-mono">
                         {`${window.location.origin}/register?ref=${userState.referralCode || ''}`}
@@ -3776,11 +3854,11 @@ export default function Dashboard({
                     onClick={() => {
                       const shareLink = `${window.location.origin}/register?ref=${userState.referralCode || ''}`;
                       navigator.clipboard.writeText(shareLink);
-                      triggerToast("Lien d'invitation copié ! 📋", "success");
+                      triggerToast(t("Lien d'invitation copié ! 📋", "Invitation link copied! 📋"), "success");
                     }}
                     className="bg-[#e05638] text-white hover:bg-[#c94125] py-1.5 px-4 rounded-full text-xs font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0"
                   >
-                    Copier
+                    {t('Copier', 'Copy')}
                   </button>
                 </div>
               </div>
@@ -3789,7 +3867,7 @@ export default function Dashboard({
               <div className="bg-white rounded-[28px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-4">
                 <div className="space-y-0.5">
                   <h3 className="font-sans font-black text-slate-800 text-[14px] uppercase tracking-tight">
-                    Centre d'activités de bien-être
+                    {t("Centre d'activités de bien-être", "Wellness Activity Center")}
                   </h3>
                 </div>
 
@@ -3802,10 +3880,10 @@ export default function Dashboard({
                       </div>
                       <div>
                         <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
-                          Roue de la chance
+                          {t("Roue de la chance", "Wheel of Fortune")}
                         </h4>
                         <span className="text-[10.5px] text-slate-400 font-bold block mt-0.5">
-                          Taux de gain du tirage au sort de 100%
+                          {t("Taux de gain du tirage au sort de 100%", "100% winning rate draw")}
                         </span>
                       </div>
                     </div>
@@ -3814,7 +3892,7 @@ export default function Dashboard({
                       onClick={() => setProfileSubPage('wheel')}
                       className="bg-[#e05638] text-white hover:bg-[#c94125] py-1.5 px-3 rounded-full text-[11px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 shrink-0"
                     >
-                      Tirage au sort
+                      {t("Tirage au sort", "Draw")}
                     </button>
                   </div>
                 </div>
@@ -3840,10 +3918,10 @@ export default function Dashboard({
                     {/* Header for categories on larger screens */}
                     <div className="hidden sm:block mb-1 px-1">
                       <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest block leading-none">
-                        Catégories
+                        {t('Catégories', 'Categories')}
                       </span>
                       <span className="text-[11px] text-slate-800 font-black block mt-0.5">
-                        Équipements
+                        {t('Équipements', 'Equipment')}
                       </span>
                     </div>
 
@@ -3865,7 +3943,7 @@ export default function Dashboard({
                       <div className="flex-1 min-w-0 text-center sm:text-left">
                         <div className="flex items-center justify-between gap-0.5">
                           <span className="font-sans font-black text-[8px] min-[375px]:text-[8.5px] sm:text-[10px] md:text-[11px] uppercase tracking-wider block truncate">
-                            Stabilité
+                            {t('Stabilité', 'Stability')}
                           </span>
                           <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
                             productSubTab === 'stability' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'
@@ -3876,7 +3954,7 @@ export default function Dashboard({
                         <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
                           productSubTab === 'stability' ? 'text-sky-100' : 'text-slate-400'
                         }`}>
-                          Plans Standard
+                          {t('Plans Standard', 'Standard Plans')}
                         </span>
                       </div>
                     </button>
@@ -3899,7 +3977,7 @@ export default function Dashboard({
                       <div className="flex-1 min-w-0 text-center sm:text-left">
                         <div className="flex items-center justify-between gap-0.5">
                           <span className="font-sans font-black text-[8px] min-[375px]:text-[8.5px] sm:text-[10px] md:text-[11px] uppercase tracking-wider block truncate">
-                            Bien-être
+                            {t('Bien-être', 'Well-being')}
                           </span>
                           <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
                             productSubTab === 'wellbeing' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-600 border border-purple-100'
@@ -3910,7 +3988,7 @@ export default function Dashboard({
                         <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
                           productSubTab === 'wellbeing' ? 'text-purple-100' : 'text-slate-400'
                         }`}>
-                          Santé & Gains
+                          {t('Santé & Gains', 'Health & Gains')}
                         </span>
                       </div>
                     </button>
@@ -3933,7 +4011,7 @@ export default function Dashboard({
                       <div className="flex-1 min-w-0 text-center sm:text-left">
                         <div className="flex items-center justify-between gap-0.5">
                           <span className="font-sans font-black text-[8px] min-[375px]:text-[8.5px] sm:text-[10px] md:text-[11px] uppercase tracking-wider block truncate">
-                            Activité
+                            {t('Activité', 'Activity')}
                           </span>
                           <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
                             productSubTab === 'activity' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
@@ -3944,7 +4022,7 @@ export default function Dashboard({
                         <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
                           productSubTab === 'activity' ? 'text-emerald-100' : 'text-slate-400'
                         }`}>
-                          Cycles Courts
+                          {t('Cycles Courts', 'Short Cycles')}
                         </span>
                       </div>
                     </button>
@@ -4603,10 +4681,24 @@ export default function Dashboard({
           {/* WITHDRAW FORM TAB */}
           {!profileSubPage && activeTab === 'withdraw' && (
             <div className="max-w-xl mx-auto bg-white border border-slate-200 p-6 md:p-8 rounded-3xl shadow-xl text-slate-800">
-              <div className="text-center mb-6">
-                <span className="text-xs md:text-sm font-black text-[#1b64d9] tracking-widest uppercase block mb-1">CASH OUT DETECTÉ</span>
-                <h3 className="text-xl md:text-2xl font-display font-black text-slate-800 uppercase tracking-tight">Demande de Retrait</h3>
-                <p className="text-sm text-slate-500 font-bold mt-1">Saisissez vos paramètres de transfert de solde.</p>
+              <div className="flex flex-row gap-3 justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                <div className="text-left flex-1 min-w-0">
+                  <span className="text-xs md:text-sm font-black text-[#1b64d9] tracking-widest uppercase block mb-1">CASH OUT DETECTÉ</span>
+                  <h3 className="text-xl md:text-2xl font-display font-black text-slate-800 uppercase tracking-tight leading-none truncate">Demande de Retrait</h3>
+                  <p className="text-xs md:text-sm text-slate-500 font-bold mt-1 hidden xs:block">Saisissez vos paramètres de transfert de solde.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onNavigate) {
+                      onNavigate('/historique#retrait');
+                    }
+                  }}
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200/60 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+                >
+                  <History className="w-4 h-4 text-blue-600" />
+                  <span>Relevé des renseignements</span>
+                </button>
               </div>
 
               {(new Date().getHours() < 9 || new Date().getHours() >= 17) && (
@@ -4630,9 +4722,9 @@ export default function Dashboard({
                 <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-200 text-sm text-green-700 font-bold">{withdrawSuccess}</div>
               )}
 
-              <div className="mb-6 bg-red-600 border-2 border-red-500 rounded-2xl p-5 text-center shadow-lg">
-                <span className="text-white font-black uppercase text-xs tracking-wider block">Solde Actuel Disponible</span>
-                <div className="text-3xl sm:text-4xl font-black text-white mt-2 font-mono leading-none animate-pulse">{userState.balance.toLocaleString()} {getCurrency()}</div>
+              <div className="mb-6 bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] border-2 border-[#c5a133] rounded-2xl p-5 text-center shadow-lg">
+                <span className="text-slate-950 font-black uppercase text-xs tracking-wider block">Solde Actuel Disponible</span>
+                <div className="text-3xl sm:text-4xl font-black text-slate-950 mt-2 font-mono leading-none animate-pulse">{userState.balance.toLocaleString()} {getCurrency()}</div>
               </div>
 
               <form onSubmit={submitWithdrawal} className="space-y-5 text-left">
@@ -5653,9 +5745,9 @@ export default function Dashboard({
                             {rechargeBal.toLocaleString()} F
                           </span>
                         </div>
-                        <div className="bg-red-600 border border-red-500 rounded-2xl p-4 text-left shadow-md">
-                          <span className="text-[9.5px] text-white/90 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
-                          <span className="text-lg sm:text-xl font-sans font-black text-white block font-mono leading-none animate-pulse">
+                        <div className="bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] border border-[#c5a133] rounded-2xl p-4 text-left shadow-md">
+                          <span className="text-[9.5px] text-slate-900 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
+                          <span className="text-lg sm:text-xl font-sans font-black text-slate-950 block font-mono leading-none animate-pulse">
                             {userState.balance.toLocaleString()} F
                           </span>
                         </div>
@@ -5683,22 +5775,22 @@ export default function Dashboard({
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3">
-                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Opérations Rapides</h3>
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                      <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider pl-0.5">Opérations Rapides</h3>
                       
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-3.5">
                         <button 
                           onClick={() => setActiveTab('deposit')}
-                          className="flex items-center justify-center gap-2 p-3 bg-amber-50 text-[#f07b1b] rounded-2xl font-bold text-xs hover:bg-amber-100/70 transition-all border-none outline-none cursor-pointer"
+                          className="flex items-center justify-center gap-3 p-4 bg-amber-50 text-[#f07b1b] rounded-2xl font-black text-sm hover:bg-amber-100/70 transition-all border-none outline-none cursor-pointer shadow-xs"
                         >
-                          <Coins className="w-4 h-4" />
+                          <Coins className="w-5.5 h-5.5 stroke-[2.25]" />
                           <span>Recharger</span>
                         </button>
                         <button 
                           onClick={() => setActiveTab('withdraw')}
-                          className="flex items-center justify-center gap-2 p-3 bg-blue-50 text-[#1b64d9] rounded-2xl font-bold text-xs hover:bg-blue-100/70 transition-all border-none outline-none cursor-pointer"
+                          className="flex items-center justify-center gap-3 p-4 bg-blue-50 text-[#1b64d9] rounded-2xl font-black text-sm hover:bg-blue-100/70 transition-all border-none outline-none cursor-pointer shadow-xs"
                         >
-                          <ArrowUpCircle className="w-4 h-4" />
+                          <ArrowUpCircle className="w-5.5 h-5.5 stroke-[2.25]" />
                           <span>Retirer</span>
                         </button>
                       </div>
@@ -5709,10 +5801,10 @@ export default function Dashboard({
                             onNavigate('/historique');
                           }
                         }}
-                        className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/70 text-slate-700 rounded-2xl text-xs font-bold transition-all border-none outline-none cursor-pointer mt-2"
+                        className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100/70 text-slate-700 rounded-2xl text-[13px] font-black transition-all border-none outline-none cursor-pointer mt-2"
                       >
                         <span>📋 Voir l'historique complet des revenus</span>
-                        <span>&gt;</span>
+                        <span className="font-bold">&gt;</span>
                       </button>
                     </div>
                   </div>
@@ -5855,6 +5947,44 @@ export default function Dashboard({
                     </div>
 
                     <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
+                      <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Langue / Language</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            localStorage.setItem('gi_lang', 'FR');
+                            window.dispatchEvent(new Event('gi_lang_changed'));
+                            setTimeout(() => {
+                              window.location.reload();
+                            }, 50);
+                          }}
+                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-black text-xs border transition-all ${
+                            (localStorage.getItem('gi_lang') || 'FR') === 'FR'
+                              ? 'bg-amber-50 border-amber-200 text-[#df4b13]'
+                              : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span>🇫🇷</span> Français
+                        </button>
+                        <button
+                          onClick={() => {
+                            localStorage.setItem('gi_lang', 'EN');
+                            window.dispatchEvent(new Event('gi_lang_changed'));
+                            setTimeout(() => {
+                              window.location.reload();
+                            }, 50);
+                          }}
+                          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-black text-xs border transition-all ${
+                            localStorage.getItem('gi_lang') === 'EN'
+                              ? 'bg-amber-50 border-amber-200 text-[#df4b13]'
+                              : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span>🇬🇧</span> English
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3.5">
                       <h3 className="font-sans font-black text-slate-800 text-xs uppercase tracking-wider pl-0.5">Informations du Compte</h3>
                       
                       <div className="space-y-2.5">
@@ -5902,13 +6032,13 @@ export default function Dashboard({
                 <div className="max-w-md mx-auto w-full space-y-4">
                   
                   {/* USER GREETING BANNER */}
-                  <div className="flex items-center space-x-3 pb-2 pt-1 pl-1">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-[#f07b1b] flex items-center justify-center text-white text-lg font-black shadow-sm shrink-0">
+                  <div className="flex items-center space-x-3.5 pb-2 pt-1 pl-1">
+                    <div className="w-15 h-15 rounded-full bg-gradient-to-tr from-amber-400 to-[#f07b1b] flex items-center justify-center text-white text-xl font-black shadow-md shrink-0">
                       {userState.name ? userState.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h3 className="font-sans font-black text-slate-900 text-base leading-none">
+                        <h3 className="font-sans font-black text-slate-900 text-lg leading-tight">
                           {userState.name || "Cher Investisseur"}
                         </h3>
                         {userState.role === 'admin' && (
@@ -5917,7 +6047,7 @@ export default function Dashboard({
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-400 font-bold block mt-1 uppercase tracking-wider">
+                      <span className="text-[11.5px] text-slate-400 font-bold block mt-1 uppercase tracking-wider">
                         {userState.whatsapp || "Aucun numéro"}
                       </span>
                     </div>
@@ -5958,81 +6088,81 @@ export default function Dashboard({
                   </div>
 
                   {/* RECHARGE & RETRAIT CARD BUTTONS */}
-                  <div className="bg-white rounded-3xl p-4 shadow-xs border border-slate-100 flex items-center justify-between">
+                  <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 flex items-center justify-between">
                     <button 
                       onClick={() => setActiveTab('deposit')}
-                      className="flex-1 flex items-center justify-center gap-2 font-sans font-bold text-slate-800 hover:text-[#f07b1b] transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
+                      className="flex-1 flex items-center justify-center gap-3 font-sans font-black text-slate-800 hover:text-[#f07b1b] transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
                     >
-                      <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#f07b1b]">
-                        <Coins className="w-4 h-4" />
+                      <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center text-[#f07b1b] shrink-0 shadow-sm">
+                        <Coins className="w-6 h-6 stroke-[2.25]" />
                       </div>
-                      <span className="text-xs sm:text-sm">Recharge &gt;</span>
+                      <span className="text-[13.5px] sm:text-base font-black">Recharge &gt;</span>
                     </button>
                     <button 
                       onClick={() => setActiveTab('withdraw')}
-                      className="flex-1 flex items-center justify-center gap-2 font-sans font-bold text-slate-800 hover:text-blue-600 transition-all cursor-pointer border-0 bg-transparent py-2 outline-none"
+                      className="flex-1 flex items-center justify-center gap-3 font-sans font-black text-slate-800 hover:text-blue-600 transition-all cursor-pointer border-0 bg-transparent py-2 outline-none"
                     >
-                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#1b64d9]">
-                        <ArrowUpCircle className="w-4 h-4" />
+                      <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center text-[#1b64d9] shrink-0 shadow-sm">
+                        <ArrowUpCircle className="w-6 h-6 stroke-[2.25]" />
                       </div>
-                      <span className="text-xs sm:text-sm">Retrait &gt;</span>
+                      <span className="text-[13.5px] sm:text-base font-black">Retrait &gt;</span>
                     </button>
                   </div>
 
                    {/* 4 ACTION SHORTCUTS GRID */}
-                  <div className="bg-white rounded-3xl p-4 shadow-xs border border-slate-100 grid grid-cols-4 gap-1">
+                  <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 grid grid-cols-4 gap-2">
                     <button 
                       onClick={() => setProfileSubPage('orders')}
                       className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                     >
-                      <div className="w-11 h-11 rounded-2xl bg-blue-50 text-[#1b64d9] flex items-center justify-center transition-transform group-hover:scale-105">
-                        <Briefcase className="w-5.5 h-5.5" />
+                      <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#1b64d9] flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
+                        <Briefcase className="w-7 h-7 stroke-[2.25]" />
                       </div>
-                      <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Commandes</span>
+                      <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Commandes</span>
                     </button>
 
                     <button 
                       onClick={() => setProfileSubPage('balance')}
                       className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                     >
-                      <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center transition-transform group-hover:scale-105">
-                        <Coins className="w-5.5 h-5.5" />
+                      <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
+                        <Coins className="w-7 h-7 stroke-[2.25]" />
                       </div>
-                      <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Mon Solde</span>
+                      <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Mon Solde</span>
                     </button>
 
                     <button 
                       onClick={() => setActiveTab('team')}
                       className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                     >
-                      <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center transition-transform group-hover:scale-105">
-                        <Users className="w-5.5 h-5.5" />
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
+                        <Users className="w-7 h-7 stroke-[2.25]" />
                       </div>
-                      <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Mon Équipe</span>
+                      <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Mon Équipe</span>
                     </button>
 
                     <button 
                       onClick={() => setIsBankCardModalOpen(true)}
                       className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                     >
-                      <div className="w-11 h-11 rounded-2xl bg-amber-50 text-[#f07b1b] flex items-center justify-center transition-transform group-hover:scale-105">
-                        <UserIcon className="w-5.5 h-5.5" />
+                      <div className="w-14 h-14 rounded-2xl bg-amber-50 text-[#f07b1b] flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
+                        <UserIcon className="w-7 h-7 stroke-[2.25]" />
                       </div>
-                      <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight text-center">Carte Bancaire</span>
+                      <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight text-center">Carte Bancaire</span>
                     </button>
                   </div>
 
                   {/* MES REVENUS CARD */}
                   <div id="mes-revenus-card" className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 space-y-4 text-left">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider pl-0.5">Mes Revenus</h3>
+                      <h3 className="font-sans font-black text-slate-800 text-base uppercase tracking-wider pl-0.5">Mes Revenus</h3>
                       <button 
                         onClick={() => {
                           if (onNavigate) {
                             onNavigate('/historique');
                           }
                         }}
-                        className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none bg-transparent outline-none"
+                        className="text-[11.5px] font-black text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none bg-transparent outline-none"
                       >
                         Détails des Revenus &gt;
                       </button>
@@ -6040,14 +6170,14 @@ export default function Dashboard({
 
                     <div className="grid grid-cols-2 gap-3 pb-2">
                       <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-left shadow-xs">
-                        <span className="text-[9.5px] text-blue-600 font-black uppercase tracking-widest block mb-1">Recharge</span>
-                        <span className="text-lg sm:text-xl font-sans font-black text-blue-900 block font-mono leading-none">
+                        <span className="text-[11px] text-blue-600 font-black uppercase tracking-widest block mb-1">Recharge</span>
+                        <span className="text-xl sm:text-2xl font-sans font-black text-blue-900 block font-mono leading-none">
                           {rechargeBal.toLocaleString()} F
                         </span>
                       </div>
-                      <div className="bg-red-600 border border-red-500 rounded-2xl p-4 text-left shadow-md">
-                        <span className="text-[9.5px] text-white/90 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
-                        <span className="text-lg sm:text-xl font-sans font-black text-white block font-mono leading-none animate-pulse">
+                      <div className="bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] border border-[#c5a133] rounded-2xl p-4 text-left shadow-md">
+                        <span className="text-[11px] text-slate-900 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
+                        <span className="text-xl sm:text-2xl font-sans font-black text-slate-950 block font-mono leading-none animate-pulse">
                           {userState.balance.toLocaleString()} F
                         </span>
                       </div>
@@ -6055,20 +6185,20 @@ export default function Dashboard({
 
                     <div className="grid grid-cols-3 gap-1 text-center pt-1.5">
                       <div>
-                        <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Revenu Produit</span>
-                        <span className="text-xs font-black text-slate-800 block mt-1">
+                        <span className="text-[10.5px] text-slate-500 font-black uppercase tracking-tight leading-tight">Revenu Produit</span>
+                        <span className="text-sm font-black text-slate-800 block mt-1">
                           FCFA {totalProductRevenue.toLocaleString()}
                         </span>
                       </div>
                       <div className="border-l border-slate-100">
-                        <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Commission</span>
-                        <span className="text-xs font-black text-slate-800 block mt-1">
+                        <span className="text-[10.5px] text-slate-500 font-black uppercase tracking-tight leading-tight">Commission</span>
+                        <span className="text-sm font-black text-slate-800 block mt-1">
                           FCFA {totalCommissions.toLocaleString()}
                         </span>
                       </div>
                       <div className="border-l border-slate-100">
-                        <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Nbre de Commandes</span>
-                        <span className="text-xs font-black text-slate-800 block mt-1">
+                        <span className="text-[10.5px] text-slate-500 font-black uppercase tracking-tight leading-tight">Nbre de Commandes</span>
+                        <span className="text-sm font-black text-slate-800 block mt-1">
                           {activeInvsCount}
                         </span>
                       </div>
@@ -6082,12 +6212,12 @@ export default function Dashboard({
                       className="flex justify-between items-center cursor-pointer select-none group"
                     >
                       <div>
-                        <h3 className="font-sans font-black text-sm text-slate-800 uppercase tracking-wider pl-0.5">Mes produits ({activeInvestments.filter(i => i.status === 'active').length})</h3>
-                        <p className="text-[10px] text-slate-400 font-extrabold mt-1 group-hover:text-slate-500 transition-colors">
+                        <h3 className="font-sans font-black text-base text-slate-800 uppercase tracking-wider pl-0.5">Mes produits ({activeInvestments.filter(i => i.status === 'active').length})</h3>
+                        <p className="text-[11.5px] text-slate-400 font-black mt-1 group-hover:text-slate-500 transition-colors">
                           Les gains s'accumulent au quotidien et sont versés à la fin de chaque cycle.
                         </p>
                       </div>
-                      <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${showStabilityOrders ? 'rotate-90' : ''}`} />
+                      <ChevronRight className={`w-6 h-6 text-slate-400 transition-transform ${showStabilityOrders ? 'rotate-90' : ''}`} />
                     </div>
 
                     {showStabilityOrders && (
@@ -6115,7 +6245,7 @@ export default function Dashboard({
 
                   {/* PLUS DE SERVICES SECTION */}
                   <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 text-left space-y-4">
-                    <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider pl-0.5">Plus de services</h3>
+                    <h3 className="font-sans font-black text-slate-800 text-base uppercase tracking-wider pl-0.5">Plus de services</h3>
 
                     <div className="grid grid-cols-4 gap-y-5 gap-x-2 pt-1">
                       {/* VIP */}
@@ -6130,10 +6260,10 @@ export default function Dashboard({
                         }}
                         className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                       >
-                        <div className="w-11 h-11 bg-indigo-50 text-indigo-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
-                          <ShieldCheck className="w-5.5 h-5.5" />
+                        <div className="w-14 h-14 bg-indigo-50 text-indigo-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
+                          <ShieldCheck className="w-7 h-7 stroke-[2.25]" />
                         </div>
-                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">VIP</span>
+                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">VIP</span>
                       </button>
 
                       {/* Centre d'Aide */}
@@ -6141,10 +6271,10 @@ export default function Dashboard({
                         onClick={() => setProfileSubPage('help')}
                         className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                       >
-                        <div className="w-11 h-11 bg-teal-50 text-teal-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
-                          <Headphones className="w-5.5 h-5.5" />
+                        <div className="w-14 h-14 bg-teal-50 text-teal-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
+                          <Headphones className="w-7 h-7 stroke-[2.25]" />
                         </div>
-                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Centre d'Aide</span>
+                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Centre d'Aide</span>
                       </button>
 
                       {/* À Propos de Nous */}
@@ -6152,10 +6282,10 @@ export default function Dashboard({
                         onClick={() => setProfileSubPage('about')}
                         className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                       >
-                        <div className="w-11 h-11 bg-rose-50 text-rose-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
-                          <BookOpen className="w-5.5 h-5.5" />
+                        <div className="w-14 h-14 bg-rose-50 text-rose-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
+                          <BookOpen className="w-7 h-7 stroke-[2.25]" />
                         </div>
-                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">À Propos</span>
+                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">À Propos</span>
                       </button>
 
                       {/* Telegram */}
@@ -6163,10 +6293,10 @@ export default function Dashboard({
                         onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
                         className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                       >
-                        <div className="w-11 h-11 bg-sky-50 text-sky-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
-                          <Send className="w-5.5 h-5.5" />
+                        <div className="w-14 h-14 bg-sky-50 text-sky-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
+                          <Send className="w-7 h-7 stroke-[2.25]" />
                         </div>
-                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Telegram</span>
+                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Telegram</span>
                       </button>
 
                       {/* Paramètres / Changer MDP */}
@@ -6174,10 +6304,10 @@ export default function Dashboard({
                         onClick={() => setProfileSubPage('settings')}
                         className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                       >
-                        <div className="w-11 h-11 bg-slate-100 text-slate-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
-                          <Settings className="w-5.5 h-5.5" />
+                        <div className="w-14 h-14 bg-slate-100 text-slate-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
+                          <Settings className="w-7 h-7 stroke-[2.25]" />
                         </div>
-                        <span className="text-[10px] font-sans font-bold text-slate-600 mt-2 leading-tight">Paramètres</span>
+                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Paramètres</span>
                       </button>
 
                       {/* Admin Access (only for admins) */}
@@ -6189,10 +6319,10 @@ export default function Dashboard({
                           }}
                           className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none animate-pulse"
                         >
-                          <div className="w-11 h-11 bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105">
-                            <Lock className="w-5.5 h-5.5" />
+                          <div className="w-14 h-14 bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
+                            <Lock className="w-7 h-7 stroke-[2.25]" />
                           </div>
-                          <span className="text-[10px] font-sans font-black text-red-600 mt-2 leading-tight uppercase tracking-wider">Admin</span>
+                          <span className="text-[11px] sm:text-xs font-sans font-black text-red-600 mt-2 leading-tight uppercase tracking-wider">Admin</span>
                         </button>
                       )}
                     </div>
@@ -6202,9 +6332,9 @@ export default function Dashboard({
                   <div className="w-full flex justify-center pt-2">
                     <button 
                       onClick={onLogout}
-                      className="w-full bg-white rounded-3xl py-4 border border-slate-100 shadow-xs text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-all font-sans font-black text-sm flex items-center justify-center gap-2 cursor-pointer outline-none"
+                      className="w-full bg-white rounded-3xl py-4.5 border border-slate-100 shadow-xs text-red-500 hover:text-[#dc2626] hover:bg-red-50/50 transition-all font-sans font-black text-base flex items-center justify-center gap-2 cursor-pointer outline-none"
                     >
-                      <LogOut className="w-5 h-5" />
+                      <LogOut className="w-6 h-6 stroke-[2.5]" />
                       <span>Déconnexion</span>
                     </button>
                   </div>
@@ -6215,10 +6345,10 @@ export default function Dashboard({
           })()}
         </main>
       )}
-
+ 
       {/* DASHBOARD MOBILE FIXED BOTTOM NAVIGATION */}
-      <footer className="fixed bottom-0 left-0 right-0 py-2.5 px-4 bg-white border-t border-blue-100/60 backdrop-blur-md z-40 lg:py-3 shadow-[0_-10px_30px_rgba(249,115,22,0.06)]">
-        <div className="max-w-2xl mx-auto flex items-center justify-between font-bold text-[10px] md:text-xs">
+      <footer className="fixed bottom-0 left-0 right-0 py-3.5 px-4 bg-white border-t border-blue-100/60 backdrop-blur-md z-40 shadow-[0_-10px_30px_rgba(249,115,22,0.06)]">
+        <div className="max-w-2xl mx-auto flex items-center justify-between font-bold text-[12px] md:text-sm">
           
           <button
             onClick={() => {
@@ -6229,10 +6359,10 @@ export default function Dashboard({
             }}
             className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'dashboard' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <Home className="w-5 h-5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Accueil</span>
+            <Home className="w-8 h-8 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px]">{t('Accueil', 'Home')}</span>
           </button>
-
+ 
           <button
             onClick={() => {
               setIsAdminMode(false);
@@ -6241,30 +6371,30 @@ export default function Dashboard({
             }}
             className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'products' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <Briefcase className="w-5 h-5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Produits</span>
+            <Briefcase className="w-8 h-8 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px]">{t('Produits', 'Products')}</span>
           </button>
-
+ 
           <button
             onClick={() => {
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('proofs');
             }}
-            className="flex flex-col items-center flex-1 transition-all relative -top-3.5 z-50 cursor-pointer"
+            className="flex flex-col items-center flex-1 transition-all relative -top-5 z-50 cursor-pointer"
           >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(27,100,217,0.18)] transition-all duration-200 border-2 ${
+            <div className={`w-17 h-17 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(27,100,217,0.25)] transition-all duration-200 border-2 ${
               activeTab === 'proofs' && !isAdminMode 
                 ? 'bg-[#1b64d9] text-white border-white scale-110 shadow-blue-500/25' 
                 : 'bg-white text-slate-500 border-slate-100/60 hover:text-slate-700 hover:border-slate-200'
             }`}>
-              <Megaphone className="w-5 h-5 stroke-[2.5]" />
+              <Megaphone className="w-8 h-8 stroke-[2.5]" />
             </div>
-            <span className={`font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px] mt-1 transition-colors ${
+            <span className={`font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px] mt-1 transition-colors ${
               activeTab === 'proofs' && !isAdminMode ? 'text-[#1b64d9]' : 'text-slate-500'
-            }`}>Avis</span>
+            }`}>{t('Avis', 'Reviews')}</span>
           </button>
-
+ 
           <button
             onClick={() => {
               setIsAdminMode(false);
@@ -6273,10 +6403,10 @@ export default function Dashboard({
             }}
             className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'forum' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <MessageSquare className="w-5 h-5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Forum</span>
+            <MessageSquare className="w-8 h-8 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px]">{t('Forum', 'Forum')}</span>
           </button>
-
+ 
           <button
             onClick={() => {
               setIsAdminMode(false);
@@ -6285,8 +6415,8 @@ export default function Dashboard({
             }}
             className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'profile' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <UserIcon className="w-5 h-5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[8px] md:text-[9px]">Moi</span>
+            <UserIcon className="w-8 h-8 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px]">{t('Moi', 'Me')}</span>
           </button>
 
         </div>
