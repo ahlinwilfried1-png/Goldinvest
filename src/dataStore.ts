@@ -1365,53 +1365,10 @@ export class DataStore {
         else item.tag = "Or d'Investissement";
       }
 
-      // Sanitize custom image URLs to force fallback if they are not gold photos
-      if (item.imageUrl) {
-        const lower = item.imageUrl.toLowerCase();
-        const hasForbidden = (
-          lower.includes('pc') ||
-          lower.includes('computer') ||
-          lower.includes('laptop') ||
-          lower.includes('headphone') ||
-          lower.includes('earbud') ||
-          lower.includes('audio') ||
-          lower.includes('phone') ||
-          lower.includes('smartphone') ||
-          lower.includes('ordinateur') ||
-          lower.includes('casque') ||
-          lower.includes('pod') ||
-          lower.includes('screen') ||
-          lower.includes('monitor') ||
-          lower.includes('machine') ||
-          lower.includes('orange') ||
-          lower.includes('hand') ||
-          lower.includes('chart') ||
-          lower.includes('credit') ||
-          lower.includes('card') ||
-          lower.includes('jewelry') ||
-          lower.includes('cosmetic') ||
-          lower.includes('crown') ||
-          lower.includes('bijou') ||
-          lower.includes('couronne')
-        );
-        const hasGoldKeyword = (
-          lower.includes('gold') || 
-          lower.includes('ingot') || 
-          lower.includes('lingot') || 
-          lower.includes('coin') || 
-          lower.includes('bullion') || 
-          lower.includes('vault') || 
-          lower.includes('barre') || 
-          lower.includes('piece-d-or') ||
-          lower.includes('/or-') ||
-          lower.includes('_or_') ||
-          lower.includes('/or/') ||
-          lower.endsWith('/or')
-        );
-        if (hasForbidden || !hasGoldKeyword) {
-          item.imageUrl = ''; // setting to empty forces fallback to gold image
-          changed = true;
-        }
+      // Force empty imageUrl for all products to ensure they exclusively use the curated high-quality gold images
+      if (item.imageUrl !== undefined && item.imageUrl !== '') {
+        item.imageUrl = '';
+        changed = true;
       }
 
       if (item.isBlocked && item.reopenDateTime && now >= new Date(item.reopenDateTime)) {
