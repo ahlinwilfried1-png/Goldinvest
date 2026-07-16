@@ -2152,9 +2152,17 @@ export default function AdminPanel({
                     withdrawals.map((wth) => {
                       const fee = wth.fee ?? Math.round(wth.amount * 0.12);
                       const net = wth.netAmount ?? (wth.amount - fee);
+                      const userForWth = users.find(u => u.id === wth.userId);
                       return (
                         <tr key={wth.id} className="hover:bg-slate-900/30">
-                          <td className="p-3 font-semibold text-white">{wth.userName}</td>
+                          <td className="p-3">
+                            <div className="font-semibold text-white">{wth.userName}</div>
+                            {userForWth?.bankCardNumber && (
+                              <div className="text-[9px] text-blue-400 font-extrabold uppercase mt-0.5 tracking-wider leading-none" title={`Titulaire: ${userForWth.bankCardName}`}>
+                                💳 {userForWth.bankCardOperator} lié
+                              </div>
+                            )}
+                          </td>
                           <td className="p-3 font-mono font-bold text-emerald-450">{wth.number}</td>
                           <td className="p-3 text-slate-400 font-mono">-{wth.amount.toLocaleString()} F</td>
                           <td className="p-3 text-red-400 font-mono">-{fee.toLocaleString()} F</td>
@@ -2390,6 +2398,11 @@ export default function AdminPanel({
                                   <span>{user.whatsapp}</span>
                                 </a>
                                 <span className="text-[10px] text-slate-400 font-sans block">🚩 {user.country || 'N/A'}</span>
+                                {user.bankCardNumber && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/25 rounded text-[8.5px] font-black text-blue-400 uppercase mt-1.5 tracking-wider leading-none" title={`Compte lié: ${user.bankCardOperator} - ${user.bankCardNumber} (${user.bankCardName})`}>
+                                    💳 Compte lié
+                                  </span>
+                                )}
                               </div>
                             ) : (
                               <span className="text-slate-500 italic">N/A</span>

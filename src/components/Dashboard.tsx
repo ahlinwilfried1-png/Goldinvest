@@ -52,7 +52,8 @@ import {
   Tv,
   Speaker,
   Volume2,
-  Music
+  Music,
+  CreditCard
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage, WithdrawalProof } from '../types';
 import { DataStore, syncWithBackend, getApiUrl, apiFetch } from '../dataStore';
@@ -638,16 +639,16 @@ export default function Dashboard({
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
   const [withdrawOperator, setWithdrawOperator] = useState<string>(() => {
     try {
-      return localStorage.getItem('mdb_saved_operator') || "MTN (CM)";
+      return currentUser.bankCardOperator || localStorage.getItem('mdb_saved_operator') || "MTN (CM)";
     } catch (e) {
-      return "MTN (CM)";
+      return currentUser.bankCardOperator || "MTN (CM)";
     }
   });
   const [withdrawNumber, setWithdrawNumber] = useState<string>(() => {
     try {
-      return localStorage.getItem('mdb_saved_number') || '';
+      return currentUser.bankCardNumber || localStorage.getItem('mdb_saved_number') || '';
     } catch (e) {
-      return '';
+      return currentUser.bankCardNumber || '';
     }
   });
   const [withdrawError, setWithdrawError] = useState<string>('');
@@ -804,6 +805,7 @@ export default function Dashboard({
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState<boolean>(false);
   const [isBankCardModalOpen, setIsBankCardModalOpen] = useState<boolean>(false);
   const [profileSubPage, setProfileSubPage] = useState<string | null>(null);
+  const [isMissionsRulesOpen, setIsMissionsRulesOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setProfileSubPage(null);
@@ -812,23 +814,23 @@ export default function Dashboard({
   // Bank Card Binding States
   const [bankCardName, setBankCardName] = useState<string>(() => {
     try {
-      return localStorage.getItem('mdb_saved_name') || '';
+      return currentUser.bankCardName || localStorage.getItem('mdb_saved_name') || '';
     } catch (e) {
-      return '';
+      return currentUser.bankCardName || '';
     }
   });
   const [bankCardOperator, setBankCardOperator] = useState<string>(() => {
     try {
-      return localStorage.getItem('mdb_saved_operator') || "MTN (CM)";
+      return currentUser.bankCardOperator || localStorage.getItem('mdb_saved_operator') || "MTN (CM)";
     } catch (e) {
-      return "MTN (CM)";
+      return currentUser.bankCardOperator || "MTN (CM)";
     }
   });
   const [bankCardNumber, setBankCardNumber] = useState<string>(() => {
     try {
-      return localStorage.getItem('mdb_saved_number') || '';
+      return currentUser.bankCardNumber || localStorage.getItem('mdb_saved_number') || '';
     } catch (e) {
-      return '';
+      return currentUser.bankCardNumber || '';
     }
   });
   const [bankCardError, setBankCardError] = useState<string>('');
@@ -841,6 +843,29 @@ export default function Dashboard({
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
   const [deviceOS, setDeviceOS] = useState<'ios' | 'android' | 'other'>('other');
   const [activeInstallTab, setActiveInstallTab] = useState<'android' | 'ios'>('android');
+
+  // Sync withdrawal form when user State bank card changes
+  useEffect(() => {
+    if (userState?.bankCardNumber) {
+      setWithdrawNumber(userState.bankCardNumber);
+    }
+    if (userState?.bankCardOperator) {
+      setWithdrawOperator(userState.bankCardOperator);
+    }
+  }, [userState?.bankCardNumber, userState?.bankCardOperator]);
+
+  // Sync bank card binding form inputs when userState changes
+  useEffect(() => {
+    if (userState?.bankCardName) {
+      setBankCardName(userState.bankCardName);
+    }
+    if (userState?.bankCardOperator) {
+      setBankCardOperator(userState.bankCardOperator);
+    }
+    if (userState?.bankCardNumber) {
+      setBankCardNumber(userState.bankCardNumber);
+    }
+  }, [userState?.bankCardName, userState?.bankCardOperator, userState?.bankCardNumber]);
 
   useEffect(() => {
     // Detect standalone mode
@@ -2469,17 +2494,17 @@ export default function Dashboard({
                 </a>
               </div>
 
-              {/* Telegram Segment */}
-              <div className="bg-blue-50/50 border border-blue-150 rounded-2xl p-4 flex flex-col gap-3 transition-all shadow-xs">
+              {/* WhatsApp Channel Segment */}
+              <div className="bg-emerald-50/30 border border-emerald-100 rounded-2xl p-4 flex flex-col gap-3 transition-all shadow-xs">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-xl shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl shrink-0">
                     📢
                   </div>
                   <div className="space-y-1 text-left">
-                    <h4 className="font-sans font-black text-blue-800 text-[12px] uppercase tracking-wide">
-                      Canal Telegram Officiel
+                    <h4 className="font-sans font-black text-emerald-800 text-[12px] uppercase tracking-wide">
+                      Canal WhatsApp Officiel
                     </h4>
-                    <p className="text-[10.5px] text-blue-600/80 font-bold leading-tight">
+                    <p className="text-[10.5px] text-emerald-600/80 font-bold leading-tight">
                       Recevez les communiqués urgents, les guides exclusifs et les annonces de maintenance.
                     </p>
                   </div>
@@ -2488,9 +2513,9 @@ export default function Dashboard({
                   href={DataStore.getWhatsAppChannel()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-sans font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer text-center"
+                  className="w-full py-3 bg-[#128C7E] hover:bg-[#075E54] text-white font-sans font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer text-center"
                 >
-                  <span>Rejoindre le Canal Telegram</span>
+                  <span>Rejoindre le Canal WhatsApp</span>
                 </a>
               </div>
             </div>
@@ -2902,6 +2927,21 @@ export default function Dashboard({
                     setWithdrawOperator(bankCardOperator);
                     setWithdrawNumber(bankCardNumber.trim());
 
+                    // Create the updated user object with bank details
+                    const updatedUser = {
+                      ...userState,
+                      bankCardName: bankCardName.trim(),
+                      bankCardOperator: bankCardOperator,
+                      bankCardNumber: bankCardNumber.trim(),
+                      lastModified: Date.now()
+                    };
+                    setUserState(updatedUser);
+                    DataStore.saveCurrentUser(updatedUser);
+                    
+                    if (typeof syncWithBackend === 'function') {
+                      syncWithBackend().catch((e) => console.error("Sync error:", e));
+                    }
+
                     setBankCardSuccess('Vos informations de paiement ont été enregistrées avec succès !');
                     triggerToast('💳 Compte de paiement lié !', 'success');
                     setTimeout(() => {
@@ -3013,9 +3053,10 @@ export default function Dashboard({
               const claimed = (userState as any).claimedMissions || [];
 
               const MISSIONS = [
-                { id: 'invite_3', target: 3, reward: 1000, label: 'Inviter 3 investisseurs actifs' },
-                { id: 'invite_10', target: 10, reward: 2500, label: 'Inviter 10 investisseurs actifs' },
-                { id: 'invite_30', target: 30, reward: 5000, label: 'Inviter 30 investisseurs actifs' }
+                { id: 'invite_10', target: 10, reward: 500, label: "Inviter à activer 10 personnes" },
+                { id: 'invite_20', target: 20, reward: 1000, label: "Inviter à activer 20 personnes" },
+                { id: 'invite_50', target: 50, reward: 3000, label: "Inviter à activer 50 personnes" },
+                { id: 'invite_100', target: 100, reward: 7000, label: "Inviter à activer 100 personnes" }
               ];
 
               const handleClaimMission = (missionId: string, reward: number, target: number) => {
@@ -3047,103 +3088,178 @@ export default function Dashboard({
                 triggerToast(`Félicitations ! Votre bonus de +${reward.toLocaleString()} FCFA a été ajouté à votre solde ! 🎯`, "success");
               };
 
+              const shareLink = `${window.location.origin}/register?ref=${userState.referralCode || ''}`;
+
               return (
-                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
-                    <div className="flex items-center space-x-3 mb-2 pt-2">
+                <div className="bg-[#f4f7fc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 pb-24 min-h-screen text-slate-800 text-left animate-fadeIn">
+                  {/* Vibrant Blue Header */}
+                  <div className="bg-gradient-to-b from-[#1b64d9] to-[#2575fc] text-white pt-6 pb-28 px-4 rounded-b-[2.5rem] relative shadow-md overflow-hidden">
+                    
+                    {/* Top navigation row */}
+                    <div className="max-w-md mx-auto flex items-center justify-between relative z-10 mb-6">
                       <button 
                         onClick={() => setProfileSubPage(null)}
-                        className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs border-none outline-none"
+                        className="w-10 h-10 rounded-full bg-white/15 border border-white/10 flex items-center justify-center text-white hover:bg-white/25 transition-all cursor-pointer outline-none shrink-0"
                       >
                         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
                       </button>
-                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Missions d'Invitation</h2>
+                      
+                      <h2 className="font-sans font-black text-white text-base tracking-tight uppercase">
+                        {t("Récompense de mission", "Mission Reward")}
+                      </h2>
+
+                      <button 
+                        onClick={() => setIsMissionsRulesOpen(true)}
+                        className="w-10 h-10 rounded-full bg-white/15 border border-white/10 flex items-center justify-center text-white hover:bg-white/25 transition-all cursor-pointer outline-none shrink-0"
+                      >
+                        <HelpCircle className="w-5 h-5 stroke-[2.5]" />
+                      </button>
                     </div>
 
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-5 animate-fade-in">
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] text-[#1b64d9] font-sans font-black uppercase tracking-wider block">🎯 BONUS DE PARRAINAGE</span>
-                        <h3 className="text-xl font-sans font-black text-slate-900 tracking-tight">Gagnez jusqu'à 8 500 FCFA</h3>
+                    {/* Commissions information */}
+                    <div className="max-w-md mx-auto flex items-center justify-between relative z-10 pb-4">
+                      <div>
+                        <span className="text-white/85 text-[11.5px] font-bold tracking-wide uppercase block">
+                          {t("Total des commissions obtenues", "Total Commissions Earned")}
+                        </span>
+                        <span className="text-3xl font-sans font-black tracking-tight block mt-1.5">
+                          FCFA {totalCommissions.toLocaleString()}
+                        </span>
                       </div>
-                      
-                      <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                        Complétez des missions d'invitation simples pour débloquer des bonus de parrainage crédités instantanément sur votre compte ! Vos filleuls doivent être des investisseurs actifs (ayant acheté au moins un pack de produit d'or Goldspeed).
-                      </p>
 
-                      <div className="bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">Progression de l'Équipe</span>
-                          <span className="text-base font-sans font-black text-slate-800 block mt-0.5">
-                            {investedReferralCount} filleul(s) actif(s) direct(s)
-                          </span>
+                      {/* Celebration Visual illustration */}
+                      <div className="w-28 h-20 relative select-none pointer-events-none shrink-0 hidden sm:block">
+                        <div className="absolute right-0 bottom-0 w-12 h-12 bg-amber-400 rounded-2xl rotate-12 flex items-center justify-center shadow-lg border border-amber-300">
+                          <Megaphone className="w-6 h-6 text-white -rotate-12 animate-pulse" />
                         </div>
-                        <div className="w-10 h-10 bg-indigo-50 text-indigo-650 rounded-xl flex items-center justify-center">
-                          <Users className="w-5 h-5 stroke-[2.5]" />
+                        <div className="absolute right-8 bottom-1 w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center shadow-md border border-amber-400">
+                          <Gift className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="absolute right-4 bottom-7 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center shadow">
+                          <span className="text-[8px] font-black text-yellow-900">$</span>
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Overlapping Invitation Link Card */}
+                  <div className="max-w-md mx-auto -mt-10 px-4 relative z-10">
+                    <div className="bg-white rounded-[24px] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center justify-between gap-3">
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <div className="w-11 h-11 bg-blue-50 text-[#1b64d9] rounded-[18px] flex items-center justify-center shrink-0 border border-blue-100/40">
+                          <Gift className="w-5.5 h-5.5 stroke-[2.25]" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-[10px] font-sans font-black text-slate-400 leading-none uppercase tracking-wider mb-1">
+                            Lien d'invitation
+                          </h4>
+                          <p className="text-[11px] font-mono text-slate-600 font-bold truncate leading-none">
+                            {shareLink}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(shareLink);
+                          triggerToast(t("Lien d'invitation copié ! 📋", "Invitation link copied! 📋"), "success");
+                        }}
+                        className="bg-[#1b64d9] text-white hover:bg-blue-700 py-1.5 px-4 rounded-full text-xs font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 shrink-0"
+                      >
+                        Copier
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mission Center container */}
+                  <div className="max-w-md mx-auto mt-6 px-4">
+                    <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-6">
                       
-                      <div className="space-y-4 pt-1">
-                        {MISSIONS.map((m, index) => {
+                      <div className="space-y-1">
+                        <h3 className="text-[15px] font-sans font-black text-slate-800 uppercase tracking-tight">
+                          Centre de missions
+                        </h3>
+                        <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
+                          Après avoir complété chaque mission, vous recevrez une récompense
+                        </p>
+                      </div>
+
+                      {/* Missions Timeline */}
+                      <div className="relative pl-7 space-y-6 pt-1">
+                        {/* Connecting Line */}
+                        <div className="absolute left-3 top-4 bottom-8 w-[2px] bg-slate-100" />
+
+                        {MISSIONS.map((m) => {
                           const isCompleted = investedReferralCount >= m.target;
                           const isClaimed = claimed.includes(m.id);
-                          const progressNum = Math.min(investedReferralCount, m.target);
 
                           return (
-                            <div key={m.id} className="space-y-3 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-11 h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
-                                    <Users className="w-5 h-5 stroke-[2.5]" />
+                            <div key={m.id} className="relative">
+                              {/* Timeline dot */}
+                              <div className={`absolute left-[-28px] top-1.5 w-6 h-6 rounded-full border flex items-center justify-center transition-all shadow-xs z-10 ${
+                                isClaimed || isCompleted 
+                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-500' 
+                                  : 'bg-white border-slate-200 text-slate-400'
+                              }`}>
+                                {isClaimed ? (
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                ) : (
+                                  <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
+                                )}
+                              </div>
+
+                              {/* Mission details card */}
+                              <div className="bg-slate-50/70 border border-slate-100/80 p-4 rounded-2xl space-y-3 relative overflow-hidden transition-all">
+                                <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
+                                  {m.label}
+                                </h4>
+
+                                {/* Grid metrics */}
+                                <div className="grid grid-cols-3 gap-2 text-center py-2 bg-white rounded-xl border border-slate-100/60 shadow-xs">
+                                  <div className="flex flex-col items-center justify-center border-r border-slate-100">
+                                    <span className="text-[11.5px] font-sans font-black text-slate-800 leading-none">
+                                      FCFA {m.reward.toLocaleString()}.00
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wide">
+                                      Récompense
+                                    </span>
                                   </div>
-                                  <div>
-                                    <h4 className="font-sans font-black text-xs text-slate-900 leading-tight">
-                                      {m.label}
-                                    </h4>
-                                    <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
-                                      Bonus de {m.reward.toLocaleString()} FCFA
+                                  <div className="flex flex-col items-center justify-center border-r border-slate-100">
+                                    <span className="text-[12px] font-sans font-black text-blue-600 leading-none">
+                                      {m.target}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wide">
+                                      Exigé
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col items-center justify-center">
+                                    <span className={`text-[12px] font-sans font-black leading-none ${isCompleted ? 'text-emerald-600' : 'text-slate-500'}`}>
+                                      {Math.min(investedReferralCount, m.target)}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wide">
+                                      Complété
                                     </span>
                                   </div>
                                 </div>
 
-                                <div className="text-right flex flex-col items-end shrink-0">
-                                  <span className="text-xs font-sans font-black text-[#1b64d9] tracking-tight leading-none mb-1">
-                                    +{m.reward.toLocaleString()} F
-                                  </span>
-                                  <span className="text-[10px] font-sans font-black text-slate-400 leading-none">
-                                    {progressNum}/{m.target}
-                                  </span>
+                                {/* Claims button / status */}
+                                <div className="flex justify-end pt-1">
+                                  {isClaimed ? (
+                                    <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 py-1 px-3.5 rounded-full text-[10px] font-sans font-black flex items-center gap-1 select-none">
+                                      ✓ Récupéré
+                                    </span>
+                                  ) : isCompleted ? (
+                                    <button
+                                      onClick={() => handleClaimMission(m.id, m.reward, m.target)}
+                                      className="bg-[#1b64d9] hover:bg-blue-700 text-white py-1.5 px-4 rounded-full text-[10px] font-sans font-black transition-all active:scale-95 cursor-pointer shadow-md border-0 animate-pulse"
+                                    >
+                                      Récupérer le bonus
+                                    </button>
+                                  ) : (
+                                    <span className="bg-[#e9ecef] text-slate-400 py-1 px-3.5 rounded-full text-[10px] font-sans font-black select-none">
+                                      En cours
+                                    </span>
+                                  )}
                                 </div>
-                              </div>
-
-                              {/* Progress bar */}
-                              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                <div 
-                                  className="bg-[#1b64d9] h-1.5 rounded-full transition-all duration-500" 
-                                  style={{ width: `${(progressNum / m.target) * 100}%` }}
-                                />
-                              </div>
-
-                              <div className="flex justify-between items-center pt-2 border-t border-slate-100/50">
-                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Statut</span>
-                                {isClaimed ? (
-                                  <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 py-1.5 px-3.5 rounded-full text-[10.5px] font-sans font-black flex items-center gap-1 select-none">
-                                    ✓ Récupéré
-                                  </span>
-                                ) : isCompleted ? (
-                                  <button
-                                    onClick={() => handleClaimMission(m.id, m.reward, m.target)}
-                                    className="bg-[#1b64d9] text-white hover:bg-blue-700 py-1.5 px-3.5 rounded-full text-[10.5px] font-sans font-black transition-all active:scale-95 cursor-pointer shadow-md border-0"
-                                  >
-                                    Récupérer le bonus
-                                  </button>
-                                ) : (
-                                  <button
-                                    disabled
-                                    className="bg-[#e9ecef] text-slate-400 py-1.5 px-3.5 rounded-full text-[10.5px] font-sans font-black cursor-not-allowed border-0"
-                                  >
-                                    En cours
-                                  </button>
-                                )}
                               </div>
                             </div>
                           );
@@ -3151,6 +3267,45 @@ export default function Dashboard({
                       </div>
                     </div>
                   </div>
+
+                  {/* Rules Modal Overlay */}
+                  {isMissionsRulesOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+                      <div className="bg-white rounded-[2rem] max-w-md w-full p-6 space-y-4 animate-scaleUp shadow-2xl relative text-left">
+                        <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                          <h3 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">
+                            Règles de Mission 📋
+                          </h3>
+                          <button
+                            onClick={() => setIsMissionsRulesOpen(false)}
+                            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all border-none outline-none cursor-pointer"
+                          >
+                            <X className="w-4 h-4 stroke-[2.5]" />
+                          </button>
+                        </div>
+                        <div className="text-[11.5px] text-slate-500 font-bold leading-relaxed space-y-3">
+                          <p>
+                            1. <span className="text-slate-800">Validation des Filleuls actifs</span> : Pour qu'un filleul soit comptabilisé comme "actif", il doit s'inscrire via votre lien d'invitation et procéder à l'activation d'au moins un pack d'investissement (produit d'or).
+                          </p>
+                          <p>
+                            2. <span className="text-slate-800">Récompenses cumulatives</span> : Vous pouvez débloquer et réclamer les bonus de mission à chaque étape franchie (10, 20, 50, 100 filleuls actifs).
+                          </p>
+                          <p>
+                            3. <span className="text-slate-800">Crédit instantané</span> : Les bonus réclamés sont instantanément ajoutés à votre solde principal, utilisables pour des investissements ou des retraits.
+                          </p>
+                          <p>
+                            4. <span className="text-slate-800">Transparence</span> : Toute tentative de création de faux comptes d'auto-parrainage ou de fraude entraînera la suspension définitive du compte.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setIsMissionsRulesOpen(false)}
+                          className="w-full bg-[#1b64d9] text-white py-3 rounded-2xl text-xs font-sans font-black uppercase tracking-wider hover:bg-blue-700 transition-all border-none outline-none cursor-pointer shadow-md"
+                        >
+                          J'ai compris
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             }
@@ -3364,20 +3519,20 @@ export default function Dashboard({
                         </div>
                       </div>
 
-                      {/* Card 3: Telegram */}
+                      {/* Card 3: WhatsApp Channel */}
                       <div 
                         onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
-                        className="bg-white rounded-[24px] p-5 shadow-xs border border-slate-100 flex items-start gap-4 hover:shadow-md hover:border-blue-100/60 transition-all cursor-pointer active:scale-[0.99]"
+                        className="bg-white rounded-[24px] p-5 shadow-xs border border-slate-100 flex items-start gap-4 hover:shadow-md hover:border-emerald-100/60 transition-all cursor-pointer active:scale-[0.99]"
                       >
-                        <div className="w-12 h-12 rounded-full bg-[#eef3fc] shrink-0 flex items-center justify-center">
-                          <Send className="w-5.5 h-5.5 text-[#1b64d9] stroke-[2.25] rotate-[350deg] -translate-y-0.5" />
+                        <div className="w-12 h-12 rounded-full bg-emerald-50 shrink-0 flex items-center justify-center">
+                          <MessageCircle className="w-5.5 h-5.5 text-emerald-600 stroke-[2.25]" />
                         </div>
                         <div className="space-y-1">
                           <h3 className="font-sans font-black text-slate-800 text-[13.5px] sm:text-sm leading-snug">
-                            Telegram
+                            Canal WhatsApp
                           </h3>
                           <p className="text-[11.5px] text-slate-500 font-semibold leading-relaxed">
-                            Suivez notre canal officiel Telegram pour obtenir les dernières nouvelles d'événements et recevoir des avantages de la boîte à trésors
+                            Suivez notre canal officiel WhatsApp pour obtenir les dernières nouvelles d'événements et recevoir des avantages de la boîte à trésors
                           </p>
                         </div>
                       </div>
@@ -3698,7 +3853,7 @@ export default function Dashboard({
             <div className="space-y-4 text-left animate-fadeIn">
 
               {/* 1. AUTO-PLAYING GOLD SLIDER CAROUSEL */}
-              <div className="relative rounded-[32px] overflow-hidden aspect-[16/9] w-full shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-amber-500/25 bg-slate-950 flex flex-col justify-between p-5 text-left group">
+              <div className="relative rounded-2xl overflow-hidden aspect-[19/9] sm:aspect-[21/9] w-full shadow-[0_10px_30px_rgba(0,0,0,0.12)] border border-amber-500/20 bg-slate-950 flex flex-col justify-between p-4 sm:p-5 text-left group">
                 {/* Visual Gold Asset Slide with AnimatePresence */}
                 <div className="absolute inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none">
                   <AnimatePresence mode="popLayout">
@@ -3717,21 +3872,21 @@ export default function Dashboard({
                 </div>
 
                 {/* Immersive gold gradient vein overlay */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/20 via-slate-950/70 to-slate-950 pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/15 via-slate-950/60 to-slate-950 pointer-events-none z-10" />
                 <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-yellow-500/15 rounded-full blur-3xl pointer-events-none z-10" />
                 <div className="absolute -top-12 -left-12 w-48 h-48 bg-amber-600/15 rounded-full blur-3xl pointer-events-none z-10" />
                 
                 {/* Gold sparkle highlights */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/35 to-transparent z-15 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent z-15 pointer-events-none" />
                 
                 {/* Top content */}
                 <div className="relative z-20 flex justify-between items-start">
-                  <span className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[9px] font-sans font-black px-2.5 py-1 rounded-full uppercase tracking-widest select-none">
+                  <span className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[8px] font-sans font-black px-2 py-0.5 rounded-full uppercase tracking-widest select-none">
                     {t('OFFICIEL • MEMBRE VIP', 'OFFICIAL • VIP MEMBER')}
                   </span>
-                  <div className="text-right bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] px-3.5 py-1.5 rounded-2xl shadow-lg border border-[#c5a133] select-all">
-                    <span className="text-[8px] text-slate-950 font-sans font-black block leading-none uppercase tracking-widest text-right">{t('SOLDE ACTUEL', 'CURRENT BALANCE')}</span>
-                    <span className="text-base sm:text-lg font-sans font-black text-slate-950 block mt-1 font-mono leading-none animate-pulse">
+                  <div className="text-right bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] px-2.5 py-1 rounded-xl shadow-md border border-[#c5a133] select-all">
+                    <span className="text-[7.5px] text-slate-950 font-sans font-black block leading-none uppercase tracking-widest text-right">{t('SOLDE ACTUEL', 'CURRENT BALANCE')}</span>
+                    <span className="text-xs sm:text-sm font-sans font-black text-slate-950 block mt-0.5 font-mono leading-none animate-pulse">
                       {userState.balance.toLocaleString()} F CFA
                     </span>
                   </div>
@@ -3739,17 +3894,17 @@ export default function Dashboard({
 
                 {/* Bottom Title & Dynamic Slide Info */}
                 <div className="relative z-20 pr-12">
-                  <h1 className="text-xl sm:text-2xl font-sans font-extrabold tracking-[0.05em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-200 to-yellow-400 uppercase leading-tight drop-shadow-[0_2px_12px_rgba(245,158,11,0.25)]">
+                  <h1 className="text-sm sm:text-base font-sans font-extrabold tracking-[0.05em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-200 to-yellow-400 uppercase leading-tight drop-shadow-[0_2px_12px_rgba(245,158,11,0.25)]">
                     {t(GOLDSPEED_SLIDES[currentSlide].title, 'Goldspeed Pure Gold Bullion 💎')}
                   </h1>
-                  <p className="text-[10px] sm:text-[11px] font-sans font-bold text-slate-200 uppercase mt-1 pl-0.5 select-none leading-tight">
+                  <p className="text-[8.5px] sm:text-[9.5px] font-sans font-bold text-slate-200 uppercase mt-0.5 pl-0.5 select-none leading-tight">
                     {t(GOLDSPEED_SLIDES[currentSlide].desc, 'Benefit from the absolute safety of a premium gold investment.')}
                   </p>
                 </div>
 
                 {/* Slide Indicators / Dots */}
                 {GOLDSPEED_SLIDES.length > 1 && (
-                  <div className="absolute bottom-4 right-5 z-25 flex gap-1.5">
+                  <div className="absolute bottom-3 right-4 z-25 flex gap-1">
                     {GOLDSPEED_SLIDES.map((_, idx) => (
                       <button
                         key={idx}
@@ -3757,7 +3912,7 @@ export default function Dashboard({
                           e.stopPropagation();
                           setCurrentSlide(idx);
                         }}
-                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === currentSlide ? 'w-5 bg-yellow-400' : 'w-1.5 bg-white/40'}`}
+                        className={`h-1 rounded-full transition-all duration-300 cursor-pointer ${idx === currentSlide ? 'w-4 bg-yellow-400' : 'w-1 bg-white/40'}`}
                       />
                     ))}
                   </div>
@@ -3765,16 +3920,16 @@ export default function Dashboard({
               </div>
 
               {/* 2. QUICK ACCESS BUTTONS ROW (4 BUTTONS) */}
-              <div className="grid grid-cols-4 gap-2 pt-2.5 pb-2">
+              <div className="grid grid-cols-4 gap-2 pt-1.5 pb-1.5">
                 {/* Recharger */}
                 <button
                   onClick={() => setActiveTab('deposit')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-16 h-16 bg-indigo-50/95 text-blue-600 flex items-center justify-center rounded-[22px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-md">
-                    <Wallet className="w-8 h-8 stroke-[2.5]" />
+                  <div className="w-13 h-13 bg-amber-50 border border-amber-200/50 text-amber-600 flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 group-hover:bg-amber-100/80 group-hover:text-amber-700 shadow-sm">
+                    <Wallet className="w-6 h-6 stroke-[2.25]" />
                   </div>
-                  <span className="font-sans font-black text-[12.5px] sm:text-[13.5px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
+                  <span className="font-sans font-black text-[10.5px] sm:text-[11.5px] text-slate-800 mt-1.5 block tracking-wide truncate max-w-full">
                     {t('Recharger', 'Deposit')}
                   </span>
                 </button>
@@ -3784,10 +3939,10 @@ export default function Dashboard({
                   onClick={() => setActiveTab('withdraw')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-16 h-16 bg-indigo-50/95 text-blue-600 flex items-center justify-center rounded-[22px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-md">
-                    <ArrowUpCircle className="w-8 h-8 stroke-[2.5]" />
+                  <div className="w-13 h-13 bg-amber-50 border border-amber-200/50 text-amber-600 flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 group-hover:bg-amber-100/80 group-hover:text-amber-700 shadow-sm">
+                    <ArrowUpCircle className="w-6 h-6 stroke-[2.25]" />
                   </div>
-                  <span className="font-sans font-black text-[12.5px] sm:text-[13.5px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
+                  <span className="font-sans font-black text-[10.5px] sm:text-[11.5px] text-slate-800 mt-1.5 block tracking-wide truncate max-w-full">
                     {t('Retirer', 'Withdraw')}
                   </span>
                 </button>
@@ -3797,54 +3952,54 @@ export default function Dashboard({
                   onClick={() => setActiveTab('team')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-16 h-16 bg-indigo-50/95 text-blue-600 flex items-center justify-center rounded-[22px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-md">
-                    <Users className="w-8 h-8 stroke-[2.5]" />
+                  <div className="w-13 h-13 bg-amber-50 border border-amber-200/50 text-amber-600 flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 group-hover:bg-amber-100/80 group-hover:text-amber-700 shadow-sm">
+                    <Users className="w-6 h-6 stroke-[2.25]" />
                   </div>
-                  <span className="font-sans font-black text-[12.5px] sm:text-[13.5px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
+                  <span className="font-sans font-black text-[10.5px] sm:text-[11.5px] text-slate-800 mt-1.5 block tracking-wide truncate max-w-full">
                     {t('Mon Équipe', 'My Team')}
                   </span>
                 </button>
 
-                {/* Telegram */}
+                {/* WhatsApp Channel */}
                 <button
                   onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-16 h-16 bg-indigo-50/95 text-blue-600 flex items-center justify-center rounded-[22px] transition-all group-hover:scale-105 group-hover:bg-indigo-100 shadow-md">
-                    <Send className="w-8 h-8 stroke-[2.5] -rotate-12 translate-x-[1px]" />
+                  <div className="w-13 h-13 bg-amber-50 border border-amber-200/50 text-amber-600 flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 group-hover:bg-amber-100/80 group-hover:text-amber-700 shadow-sm">
+                    <MessageCircle className="w-6 h-6 stroke-[2.25]" />
                   </div>
-                  <span className="font-sans font-black text-[12.5px] sm:text-[13.5px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
-                    Telegram
+                  <span className="font-sans font-black text-[10.5px] sm:text-[11.5px] text-slate-800 mt-1.5 block tracking-wide truncate max-w-full">
+                    Canal WA
                   </span>
                 </button>
               </div>
 
               {/* 3. CARD: RÉCOMPENSES D'INVITATION */}
-              <div className="bg-white rounded-[28px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-4">
+              <div className="bg-white rounded-2xl p-4 shadow-[0_4px_16px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-3">
                 <div className="flex justify-between items-center">
                   <div className="space-y-0.5">
-                    <h3 className="font-sans font-black text-slate-800 text-[14px] uppercase tracking-tight">
+                    <h3 className="font-sans font-black text-slate-800 text-[12.5px] uppercase tracking-tight">
                       {t("Récompenses d'invitation", "Invitation Rewards")}
                     </h3>
-                    <p className="text-[10.5px] text-slate-400 font-bold leading-none">
+                    <p className="text-[9.5px] text-slate-400 font-bold leading-none">
                       {t("Investissez ensemble, enrichissez-vous ensemble", "Invest together, grow rich together")}
                     </p>
                   </div>
-                  <div className="w-10 h-10 bg-amber-100/70 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
-                    <Gift className="w-5 h-5 stroke-[2.25]" />
+                  <div className="w-8 h-8 bg-amber-100/70 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
+                    <Gift className="w-4 h-4 stroke-[2.25]" />
                   </div>
                 </div>
 
-                <div className="bg-slate-50/70 rounded-2xl p-3 border border-slate-100/60 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-9 h-9 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
-                      <Share className="w-4.5 h-4.5 stroke-[2.25]" />
+                <div className="bg-slate-50/70 rounded-xl p-2.5 border border-slate-100/60 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
+                      <Share className="w-3.5 h-3.5 stroke-[2.25]" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[9.5px] text-slate-400 font-black block leading-none uppercase tracking-wider">
+                      <span className="text-[8.5px] text-slate-400 font-black block leading-none uppercase tracking-wider">
                         {t("Lien d'invitation", "Invitation Link")}
                       </span>
-                      <span className="text-xs text-indigo-600 font-black truncate block mt-1 font-mono">
+                      <span className="text-[10px] text-indigo-600 font-black truncate block mt-0.5 font-mono">
                         {`${window.location.origin}/register?ref=${userState.referralCode || ''}`}
                       </span>
                     </div>
@@ -3856,7 +4011,7 @@ export default function Dashboard({
                       navigator.clipboard.writeText(shareLink);
                       triggerToast(t("Lien d'invitation copié ! 📋", "Invitation link copied! 📋"), "success");
                     }}
-                    className="bg-[#e05638] text-white hover:bg-[#c94125] py-1.5 px-4 rounded-full text-xs font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0"
+                    className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 text-slate-950 py-1.5 px-3.5 rounded-full text-[10px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0"
                   >
                     {t('Copier', 'Copy')}
                   </button>
@@ -3864,25 +4019,25 @@ export default function Dashboard({
               </div>
 
               {/* 4. CARD: CENTRE D'ACTIVITÉS DE BIEN-ÊTRE */}
-              <div className="bg-white rounded-[28px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-4">
+              <div className="bg-white rounded-2xl p-4 shadow-[0_4px_16px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-3">
                 <div className="space-y-0.5">
-                  <h3 className="font-sans font-black text-slate-800 text-[14px] uppercase tracking-tight">
+                  <h3 className="font-sans font-black text-slate-800 text-[12.5px] uppercase tracking-tight">
                     {t("Centre d'activités de bien-être", "Wellness Activity Center")}
                   </h3>
                 </div>
 
-                <div className="space-y-3.5 pt-1">
+                <div className="space-y-2.5 pt-0.5">
                   {/* Roue de la chance row */}
-                  <div className="flex items-center justify-between gap-3 p-1">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 bg-amber-50 text-amber-500 rounded-[18px] flex items-center justify-center shrink-0 border border-amber-100/40">
-                        <Trophy className="w-5.5 h-5.5 stroke-[2.25]" />
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8.5 h-8.5 bg-amber-50 text-amber-500 rounded-[12px] flex items-center justify-center shrink-0 border border-amber-100/40">
+                        <Trophy className="w-4.5 h-4.5 stroke-[2.25]" />
                       </div>
                       <div>
-                        <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
+                        <h4 className="font-sans font-black text-[11.5px] text-slate-800 leading-tight">
                           {t("Roue de la chance", "Wheel of Fortune")}
                         </h4>
-                        <span className="text-[10.5px] text-slate-400 font-bold block mt-0.5">
+                        <span className="text-[9px] text-slate-400 font-bold block mt-0.5">
                           {t("Taux de gain du tirage au sort de 100%", "100% winning rate draw")}
                         </span>
                       </div>
@@ -3890,9 +4045,36 @@ export default function Dashboard({
 
                     <button
                       onClick={() => setProfileSubPage('wheel')}
-                      className="bg-[#e05638] text-white hover:bg-[#c94125] py-1.5 px-3 rounded-full text-[11px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 shrink-0"
+                      className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-1.5 px-3 rounded-full text-[10px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0"
                     >
                       {t("Tirage au sort", "Draw")}
+                    </button>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-100 my-0.5" />
+
+                  {/* Centre des missions row */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8.5 h-8.5 bg-amber-50 text-amber-500 rounded-[12px] flex items-center justify-center shrink-0 border border-amber-100/40">
+                        <Gift className="w-4.5 h-4.5 stroke-[2.25]" />
+                      </div>
+                      <div>
+                        <h4 className="font-sans font-black text-[11.5px] text-slate-800 leading-tight">
+                          {t("Centre des missions", "Mission Center")}
+                        </h4>
+                        <span className="text-[9px] text-slate-400 font-bold block mt-0.5">
+                          {t("Après avoir complété chaque mission, vous recevrez une récompense", "Complete missions for rewards")}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setProfileSubPage('missions')}
+                      className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-1.5 px-3 rounded-full text-[10px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0"
+                    >
+                      {t("Visiter", "Visit")}
                     </button>
                   </div>
                 </div>
@@ -3931,12 +4113,12 @@ export default function Dashboard({
                       onClick={() => setProductSubTab('stability')}
                       className={`group w-full flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-2 px-1 sm:px-2 md:px-2.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all duration-300 shrink-0 cursor-pointer text-left ${
                         productSubTab === 'stability'
-                          ? 'bg-gradient-to-r from-sky-500 to-sky-600 text-white border-sky-400 shadow-[0_6px_14px_rgba(14,165,233,0.12)] scale-[1.01]'
+                          ? 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 border-amber-400 shadow-[0_6px_14px_rgba(245,158,11,0.25)] scale-[1.01]'
                           : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200/60 hover:border-slate-300 hover:text-slate-800 shadow-sm'
                       }`}
                     >
                       <div className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
-                        productSubTab === 'stability' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-500'
+                        productSubTab === 'stability' ? 'bg-slate-950/15 text-slate-950' : 'bg-amber-50 text-amber-500'
                       }`}>
                         <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.25]" />
                       </div>
@@ -3946,13 +4128,13 @@ export default function Dashboard({
                             {t('Stabilité', 'Stability')}
                           </span>
                           <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
-                            productSubTab === 'stability' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'
+                            productSubTab === 'stability' ? 'bg-slate-950/15 text-slate-950' : 'bg-amber-50 text-amber-600 border border-amber-100'
                           }`}>
                             {stabilityCount}
                           </span>
                         </div>
                         <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
-                          productSubTab === 'stability' ? 'text-sky-100' : 'text-slate-400'
+                          productSubTab === 'stability' ? 'text-slate-900/80 font-black' : 'text-slate-400'
                         }`}>
                           {t('Plans Standard', 'Standard Plans')}
                         </span>
@@ -4094,17 +4276,17 @@ export default function Dashboard({
                               buttonBorder: 'border-purple-200'
                             };
                           }
-                          // Default stability (sky blue)
+                          // Default stability (gold)
                           return {
-                            container: 'bg-sky-50/40 border border-sky-100 rounded-3xl p-5 shadow-[0_4px_15px_rgba(14,165,233,0.04)] hover:shadow-md hover:border-sky-200 transition-all duration-300 relative flex flex-col justify-between',
-                            imgBg: 'bg-[#0ea5e9] border border-sky-100',
-                            badge: 'text-[#0369a1] bg-[#e0f2fe]',
-                            statLabel: 'text-sky-600/80',
-                            statVal: 'text-[#0ea5e9]',
-                            statValTotal: 'text-[#0284c7]',
-                            buttonLeft: 'bg-[#f0f9ff] text-[#0369a1]',
-                            buttonRight: 'bg-[#0ea5e9] hover:bg-[#0284c7]',
-                            buttonBorder: 'border-sky-200'
+                            container: 'bg-amber-50/30 border border-amber-200 rounded-3xl p-5 shadow-[0_4px_15px_rgba(245,158,11,0.06)] hover:shadow-md hover:border-amber-300/80 transition-all duration-300 relative flex flex-col justify-between',
+                            imgBg: 'bg-gradient-to-r from-amber-400 to-yellow-500 border border-amber-200',
+                            badge: 'text-amber-800 bg-amber-100/80',
+                            statLabel: 'text-amber-700/80',
+                            statVal: 'text-amber-600 font-extrabold',
+                            statValTotal: 'text-amber-900 font-black',
+                            buttonLeft: 'bg-amber-50 text-amber-800',
+                            buttonRight: 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-black',
+                            buttonBorder: 'border-amber-200'
                           };
                         };
 
@@ -4728,69 +4910,123 @@ export default function Dashboard({
               </div>
 
               <form onSubmit={submitWithdrawal} className="space-y-5 text-left">
-                {/* Operator select */}
-                <div>
-                  <label className="block text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider mb-2">Opérateur de réception</label>
-                  <select 
-                    value={withdrawOperator}
-                    onChange={(e) => setWithdrawOperator(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#1b64d9] rounded-xl py-3 px-4 text-sm text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm transition-colors"
-                  >
-                    <optgroup label="Togo 🇹🇬">
-                      <option value="T-Money (TG)">T-Money (TG)</option>
-                      <option value="Moov (TG)">Moov (TG)</option>
-                    </optgroup>
-                    <optgroup label="Cameroun 🇨🇲">
-                      <option value="MTN (CM)">MTN (CM)</option>
-                      <option value="Orange (CM)">Orange (CM)</option>
-                    </optgroup>
-                    <optgroup label="Côte d'Ivoire 🇨🇮">
-                      <option value="Wave (CI)">Wave (CI)</option>
-                      <option value="MTN (CI)">MTN (CI)</option>
-                      <option value="Orange (CI)">Orange (CI)</option>
-                      <option value="Moov (CI)">Moov (CI)</option>
-                    </optgroup>
-                    <optgroup label="Sénégal 🇸🇳">
-                      <option value="Wave (SN)">Wave (SN)</option>
-                      <option value="Orange (SN)">Orange (SN)</option>
-                      <option value="Free Money / Mixx (SN)">Free Money / Mixx (SN)</option>
-                    </optgroup>
-                    <optgroup label="Bénin 🇧🇯">
-                      <option value="MTN (BJ)">MTN (BJ)</option>
-                      <option value="Moov (BJ)">Moov (BJ)</option>
-                    </optgroup>
-                    <optgroup label="Burkina Faso 🇧🇫">
-                      <option value="Orange (BF)">Orange (BF)</option>
-                      <option value="Moov (BF)">Moov (BF)</option>
-                    </optgroup>
-                    <optgroup label="Mali 🇲🇱">
-                      <option value="Orange (ML)">Orange (ML)</option>
-                    </optgroup>
-                    <optgroup label="Congo RDC 🇨🇩">
-                      <option value="Vodacom (COD)">Vodacom (COD)</option>
-                      <option value="Airtel (COD)">Airtel (COD)</option>
-                      <option value="Orange (COD)">Orange (COD)</option>
-                    </optgroup>
-                    <optgroup label="Congo Brazzaville 🇨🇬">
-                      <option value="Airtel (COG)">Airtel (COG)</option>
-                      <option value="MTN (COG)">MTN (COG)</option>
-                    </optgroup>
-                  </select>
-                </div>
+                {/* Operator select and Number inputs, or Linked Card display */}
+                {(() => {
+                  const hasLinkedCard = !!(userState.bankCardNumber || localStorage.getItem('mdb_saved_number'));
+                  const cardNum = userState.bankCardNumber || localStorage.getItem('mdb_saved_number') || '';
+                  const cardOp = userState.bankCardOperator || localStorage.getItem('mdb_saved_operator') || '';
+                  const cardHolder = userState.bankCardName || localStorage.getItem('mdb_saved_name') || '';
 
-                {/* Target phone number with WhatsApp placeholder */}
-                <div>
-                  <label className="block text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider mb-2">Numéro de téléphone de réception</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="Ex: +228 90123456"
-                    value={withdrawNumber}
-                    onChange={(e) => setWithdrawNumber(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#1b64d9] rounded-xl py-3 px-4 text-sm text-slate-800 font-mono font-bold tracking-wider shadow-sm transition-colors"
-                  />
-                  <span className="text-xs text-slate-400 block mt-1.5 font-bold">Assurez-vous que le numéro est actif et lié à un compte Mobile Money.</span>
-                </div>
+                  if (hasLinkedCard) {
+                    return (
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50/50 border-2 border-blue-200/60 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-sm">
+                        <div className="absolute -top-3 -right-3 p-3 text-blue-600/5">
+                          <CreditCard className="w-24 h-24 transform rotate-12" />
+                        </div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[11px] font-black text-blue-600 uppercase tracking-wider block">
+                            Ref : 💳 COMPTE DE RÉCEPTION LIÉ
+                          </span>
+                        </div>
+                        <div className="space-y-2 relative z-10 text-slate-800">
+                          <div className="flex justify-between text-xs sm:text-sm">
+                            <span className="text-slate-400 font-extrabold uppercase text-[9px] tracking-wider">Titulaire :</span>
+                            <span className="font-extrabold uppercase text-slate-900">{cardHolder || 'Non spécifié'}</span>
+                          </div>
+                          <div className="flex justify-between text-xs sm:text-sm">
+                            <span className="text-slate-400 font-extrabold uppercase text-[9px] tracking-wider">Réseau / Opérateur :</span>
+                            <span className="font-black text-[#1b64d9]">{cardOp}</span>
+                          </div>
+                          <div className="flex justify-between text-xs sm:text-sm">
+                            <span className="text-slate-400 font-extrabold uppercase text-[9px] tracking-wider">Numéro de Réception :</span>
+                            <span className="font-mono font-black text-slate-950 tracking-wider bg-slate-100 px-2 py-0.5 rounded border border-slate-200/50">{cardNum}</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between">
+                          <span className="text-[10px] text-slate-400 font-extrabold">
+                            Les fonds seront versés automatiquement sur ce compte.
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setIsBankCardModalOpen(true)}
+                            className="text-xs font-black text-[#1b64d9] hover:text-blue-700 underline focus:outline-none cursor-pointer"
+                          >
+                            Modifier le compte
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      {/* Operator select */}
+                      <div>
+                        <label className="block text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider mb-2">Opérateur de réception</label>
+                        <select 
+                          value={withdrawOperator}
+                          onChange={(e) => setWithdrawOperator(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#1b64d9] rounded-xl py-3 px-4 text-sm text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm transition-colors"
+                        >
+                          <optgroup label="Togo 🇹🇬">
+                            <option value="T-Money (TG)">T-Money (TG)</option>
+                            <option value="Moov (TG)">Moov (TG)</option>
+                          </optgroup>
+                          <optgroup label="Cameroun 🇨🇲">
+                            <option value="MTN (CM)">MTN (CM)</option>
+                            <option value="Orange (CM)">Orange (CM)</option>
+                          </optgroup>
+                          <optgroup label="Côte d'Ivoire 🇨🇮">
+                            <option value="Wave (CI)">Wave (CI)</option>
+                            <option value="MTN (CI)">MTN (CI)</option>
+                            <option value="Orange (CI)">Orange (CI)</option>
+                            <option value="Moov (CI)">Moov (CI)</option>
+                          </optgroup>
+                          <optgroup label="Sénégal 🇸🇳">
+                            <option value="Wave (SN)">Wave (SN)</option>
+                            <option value="Orange (SN)">Orange (SN)</option>
+                            <option value="Free Money / Mixx (SN)">Free Money / Mixx (SN)</option>
+                          </optgroup>
+                          <optgroup label="Bénin 🇧🇯">
+                            <option value="MTN (BJ)">MTN (BJ)</option>
+                            <option value="Moov (BJ)">Moov (BJ)</option>
+                          </optgroup>
+                          <optgroup label="Burkina Faso 🇧🇫">
+                            <option value="Orange (BF)">Orange (BF)</option>
+                            <option value="Moov (BF)">Moov (BF)</option>
+                          </optgroup>
+                          <optgroup label="Mali 🇲🇱">
+                            <option value="Orange (ML)">Orange (ML)</option>
+                          </optgroup>
+                          <optgroup label="Congo RDC 🇨🇩">
+                            <option value="Vodacom (COD)">Vodacom (COD)</option>
+                            <option value="Airtel (COD)">Airtel (COD)</option>
+                            <option value="Orange (COD)">Orange (COD)</option>
+                          </optgroup>
+                          <optgroup label="Congo Brazzaville 🇨🇬">
+                            <option value="Airtel (COG)">Airtel (COG)</option>
+                            <option value="MTN (COG)">MTN (COG)</option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      {/* Target phone number with WhatsApp placeholder */}
+                      <div>
+                        <label className="block text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider mb-2">Numéro de téléphone de réception</label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="Ex: +228 90123456"
+                          value={withdrawNumber}
+                          onChange={(e) => setWithdrawNumber(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#1b64d9] rounded-xl py-3 px-4 text-sm text-slate-800 font-mono font-bold tracking-wider shadow-sm transition-colors"
+                        />
+                        <span className="text-xs text-slate-400 block mt-1.5 font-bold">Assurez-vous que le numéro est actif et lié à un compte Mobile Money.</span>
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {/* Withdraw value */}
                 <div>
@@ -5847,8 +6083,8 @@ export default function Dashboard({
                           onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
                           className="w-full bg-[#25D366] text-white font-black text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:bg-[#20ba59] transition-all cursor-pointer border-none outline-none"
                         >
-                          <Send className="w-4.5 h-4.5" />
-                          <span>REJOINDRE LE CANAL TELEGRAM</span>
+                          <MessageCircle className="w-4.5 h-4.5" />
+                          <span>REJOINDRE LE CANAL WHATSAPP</span>
                         </button>
                       </div>
                     </div>
@@ -6033,7 +6269,7 @@ export default function Dashboard({
                   
                   {/* USER GREETING BANNER */}
                   <div className="flex items-center space-x-3.5 pb-2 pt-1 pl-1">
-                    <div className="w-15 h-15 rounded-full bg-gradient-to-tr from-amber-400 to-[#f07b1b] flex items-center justify-center text-white text-xl font-black shadow-md shrink-0">
+                    <div className="w-15 h-15 rounded-full bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] text-slate-950 text-xl font-sans font-black shadow-md shrink-0 border border-[#c5a133]/60 flex items-center justify-center">
                       {userState.name ? userState.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div>
@@ -6091,18 +6327,18 @@ export default function Dashboard({
                   <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 flex items-center justify-between">
                     <button 
                       onClick={() => setActiveTab('deposit')}
-                      className="flex-1 flex items-center justify-center gap-3 font-sans font-black text-slate-800 hover:text-[#f07b1b] transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
+                      className="flex-1 flex items-center justify-center gap-3 font-sans font-black text-slate-800 hover:text-amber-600 transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
                     >
-                      <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center text-[#f07b1b] shrink-0 shadow-sm">
+                      <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/30 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
                         <Coins className="w-6 h-6 stroke-[2.25]" />
                       </div>
                       <span className="text-[13.5px] sm:text-base font-black">Recharge &gt;</span>
                     </button>
                     <button 
                       onClick={() => setActiveTab('withdraw')}
-                      className="flex-1 flex items-center justify-center gap-3 font-sans font-black text-slate-800 hover:text-blue-600 transition-all cursor-pointer border-0 bg-transparent py-2 outline-none"
+                      className="flex-1 flex items-center justify-center gap-3 font-sans font-black text-slate-800 hover:text-amber-600 transition-all cursor-pointer border-0 bg-transparent py-2 outline-none"
                     >
-                      <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center text-[#1b64d9] shrink-0 shadow-sm">
+                      <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/30 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
                         <ArrowUpCircle className="w-6 h-6 stroke-[2.25]" />
                       </div>
                       <span className="text-[13.5px] sm:text-base font-black">Retrait &gt;</span>
@@ -6288,15 +6524,15 @@ export default function Dashboard({
                         <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">À Propos</span>
                       </button>
 
-                      {/* Telegram */}
+                      {/* Canal WA */}
                       <button 
                         onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
                         className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                       >
-                        <div className="w-14 h-14 bg-sky-50 text-sky-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
-                          <Send className="w-7 h-7 stroke-[2.25]" />
+                        <div className="w-14 h-14 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
+                          <MessageCircle className="w-7 h-7 stroke-[2.25]" />
                         </div>
-                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Telegram</span>
+                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Canal WA</span>
                       </button>
 
                       {/* Paramètres / Changer MDP */}
@@ -6328,6 +6564,28 @@ export default function Dashboard({
                     </div>
                   </div>
 
+                  {/* SYSTEM SECURITY ASSURANCE CARD */}
+                  <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white rounded-3xl p-5 shadow-lg border border-slate-800 space-y-3 text-left">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                        <ShieldCheck className="w-5 h-5 stroke-[2.25]" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-100">Protection et Sécurité Garanties</h4>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Certificat SSL SHA-256 Actif</p>
+                      </div>
+                    </div>
+                    <div className="text-[11.5px] text-slate-300 leading-relaxed font-medium space-y-2 bg-slate-900/40 p-3.5 rounded-2xl border border-slate-800/40">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="font-sans font-black text-emerald-400 text-[10px] uppercase tracking-wider">Connexion Chiffrée de Bout en Bout</span>
+                      </div>
+                      <p className="text-slate-300 text-[11px] leading-normal font-semibold">
+                        Toutes vos recharges, retraits et informations d'investissement sont sécurisés par des protocoles anti-fraude d'infrastructure de niveau bancaire.
+                      </p>
+                    </div>
+                  </div>
+
                   {/* DÉCONNEXION BUTTON */}
                   <div className="w-full flex justify-center pt-2">
                     <button 
@@ -6347,8 +6605,8 @@ export default function Dashboard({
       )}
  
       {/* DASHBOARD MOBILE FIXED BOTTOM NAVIGATION */}
-      <footer className="fixed bottom-0 left-0 right-0 py-3.5 px-4 bg-white border-t border-blue-100/60 backdrop-blur-md z-40 shadow-[0_-10px_30px_rgba(249,115,22,0.06)]">
-        <div className="max-w-2xl mx-auto flex items-center justify-between font-bold text-[12px] md:text-sm">
+      <footer className="fixed bottom-0 left-0 right-0 py-2 px-2 bg-white border-t border-blue-100/60 backdrop-blur-md z-40 shadow-[0_-10px_30px_rgba(249,115,22,0.06)]">
+        <div className="max-w-2xl mx-auto flex items-center justify-between font-bold text-[11px] md:text-xs">
           
           <button
             onClick={() => {
@@ -6357,10 +6615,10 @@ export default function Dashboard({
               setActiveTab('dashboard');
               setShowAnnouncementDismissible(true);
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'dashboard' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-0.5 flex-1 transition-all ${activeTab === 'dashboard' && !isAdminMode ? 'text-[#1b64d9] scale-102 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <Home className="w-8 h-8 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px]">{t('Accueil', 'Home')}</span>
+            <Home className="w-5.5 h-5.5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px]">{t('Accueil', 'Home')}</span>
           </button>
  
           <button
@@ -6369,10 +6627,10 @@ export default function Dashboard({
               setProfileSubPage(null);
               setActiveTab('products');
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'products' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-0.5 flex-1 transition-all ${activeTab === 'products' && !isAdminMode ? 'text-[#1b64d9] scale-102 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <Briefcase className="w-8 h-8 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px]">{t('Produits', 'Products')}</span>
+            <Briefcase className="w-5.5 h-5.5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px]">{t('Produit', 'Product')}</span>
           </button>
  
           <button
@@ -6381,16 +6639,16 @@ export default function Dashboard({
               setProfileSubPage(null);
               setActiveTab('proofs');
             }}
-            className="flex flex-col items-center flex-1 transition-all relative -top-5 z-50 cursor-pointer"
+            className="flex flex-col items-center flex-1 transition-all relative -top-3.5 z-50 cursor-pointer"
           >
-            <div className={`w-17 h-17 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(27,100,217,0.25)] transition-all duration-200 border-2 ${
+            <div className={`w-13 h-13 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(27,100,217,0.25)] transition-all duration-200 border-2 ${
               activeTab === 'proofs' && !isAdminMode 
-                ? 'bg-[#1b64d9] text-white border-white scale-110 shadow-blue-500/25' 
+                ? 'bg-[#1b64d9] text-white border-white scale-105 shadow-blue-500/25' 
                 : 'bg-white text-slate-500 border-slate-100/60 hover:text-slate-700 hover:border-slate-200'
             }`}>
-              <Megaphone className="w-8 h-8 stroke-[2.5]" />
+              <Megaphone className="w-5.5 h-5.5 stroke-[2.5]" />
             </div>
-            <span className={`font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px] mt-1 transition-colors ${
+            <span className={`font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px] mt-0.5 transition-colors ${
               activeTab === 'proofs' && !isAdminMode ? 'text-[#1b64d9]' : 'text-slate-500'
             }`}>{t('Avis', 'Reviews')}</span>
           </button>
@@ -6401,10 +6659,10 @@ export default function Dashboard({
               setProfileSubPage(null);
               setActiveTab('forum');
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'forum' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-0.5 flex-1 transition-all ${activeTab === 'forum' && !isAdminMode ? 'text-[#1b64d9] scale-102 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <MessageSquare className="w-8 h-8 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px]">{t('Forum', 'Forum')}</span>
+            <MessageSquare className="w-5.5 h-5.5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px]">{t('Forum', 'Forum')}</span>
           </button>
  
           <button
@@ -6413,10 +6671,10 @@ export default function Dashboard({
               setProfileSubPage(null);
               setActiveTab('profile');
             }}
-            className={`flex flex-col items-center space-y-1 flex-1 transition-all ${activeTab === 'profile' && !isAdminMode ? 'text-[#1b64d9] scale-105 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-0.5 flex-1 transition-all ${activeTab === 'profile' && !isAdminMode ? 'text-[#1b64d9] scale-102 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
           >
-            <UserIcon className="w-8 h-8 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[10.5px] sm:text-[11.5px] md:text-[12.5px]">{t('Moi', 'Me')}</span>
+            <UserIcon className="w-5.5 h-5.5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px]">{t('Profil', 'Profile')}</span>
           </button>
 
         </div>

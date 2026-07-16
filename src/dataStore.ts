@@ -413,18 +413,38 @@ export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e
 
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   let activeUrl = url;
+  if (url.startsWith('/') && typeof window !== 'undefined' && window.location) {
+    activeUrl = `${window.location.origin}${url}`;
+  }
   let isRetried = false;
 
-  const hasPre = url.includes('-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
-  const hasDev = url.includes('-dev-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
-  const isSyncEndpoint = url.includes('/api/get-store') || url.includes('/api/save-store');
-  const isSendavaPay = url.includes('/sendavapay');
+  const hasPre = activeUrl.includes('-pre-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
+  const hasDev = activeUrl.includes('-dev-gymdtdpbwifj6pqjbdravq-473372860465.europe-west1.run.app');
+  const isSyncEndpoint = activeUrl.includes('/api/get-store') || activeUrl.includes('/api/save-store');
+  const isSendavaPay = activeUrl.includes('/sendavapay');
 
   // Try to use the standard backend first (getApiUrl)
   try {
+    const userItem = (typeof window !== 'undefined' ? (sessionStorage.getItem('gi_current_user') || inMemorySessionStore['gi_current_user']) : null) || inMemorySessionStore['gi_current_user'];
+    const userHeaders: Record<string, string> = {};
+    if (userItem) {
+      try {
+        const u = JSON.parse(userItem);
+        if (u && u.id) {
+          userHeaders['x-user-id'] = u.id;
+          if (u.role) userHeaders['x-user-role'] = u.role;
+          if (u.password) userHeaders['x-user-password'] = u.password;
+        }
+      } catch (e) {}
+    }
+
     const fetchOptions: RequestInit = {
       credentials: 'same-origin',
-      ...init
+      ...init,
+      headers: {
+        ...userHeaders,
+        ...(init?.headers || {})
+      }
     };
     let response = await fetch(activeUrl, fetchOptions);
     let contentType = response.headers.get('content-type') || "";
@@ -1019,7 +1039,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ [key]: mergedVal })
-              }).catch(err => console.error(`Failed to push key "${key}" merge updates:`, err));
+              }).catch(err => console.warn(`Failed to push key "${key}" merge updates (transient):`, err));
             }
           }
           
@@ -1047,7 +1067,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
       return changed;
     }
   } catch (error) {
-    console.error('Failed background sync:', error);
+    console.warn('Failed background sync (transient network or polling update):', error);
   }
   return false;
 };
@@ -1184,9 +1204,10 @@ export class DataStore {
   }
 
   static getWhatsAppGroup(): string {
-    const val = getFromStore<string>('gi_whatsapp_group', 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t').trim();
-    if (!val) {
-      return 'https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t';
+    const defaultGroup = 'https://chat.whatsapp.com/JHzYdMkIxeTLuEPNquBAAj?s=cl&p=a&ilr=1&amv=1';
+    const val = getFromStore<string>('gi_whatsapp_group', defaultGroup).trim();
+    if (!val || val.includes('DlLEImu1s9y2hnWKWFRqAv')) {
+      return defaultGroup;
     }
     return val;
   }
@@ -1203,9 +1224,10 @@ export class DataStore {
   }
 
   static getWhatsAppChannel(): string {
-    const val = getFromStore<string>('gi_whatsapp_channel', 'https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k').trim();
-    if (!val) {
-      return 'https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k';
+    const defaultChannel = 'https://whatsapp.com/channel/0029VbCs5L0J3jurEKVu8x2n';
+    const val = getFromStore<string>('gi_whatsapp_channel', defaultChannel).trim();
+    if (!val || val.includes('0029Vb80vQ2LdQecfze5qY0k')) {
+      return defaultChannel;
     }
     return val;
   }

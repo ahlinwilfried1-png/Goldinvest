@@ -16,6 +16,9 @@ export interface User {
   createdAt: string;
   device?: string;
   lastModified?: number;
+  bankCardName?: string;
+  bankCardOperator?: string;
+  bankCardNumber?: string;
 }
 
 export interface Deposit {

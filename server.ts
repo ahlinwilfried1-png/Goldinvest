@@ -15,6 +15,33 @@ async function startServer() {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTk2MDIxMSwiZXhwIjoyMDk1NTM2MjExfQ.9_yn5Vn_bi45VGDFFQOU3RZTD3NsIUz_IvDDkQFYjCM";
   
   let supabase: any = null;
+  let supabaseEnabled = true;
+  let supabaseLastRetry = 0;
+  const SUPABASE_RETRY_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+  const isSupabaseReady = (): boolean => {
+    if (!supabase) return false;
+    if (!supabaseEnabled) {
+      if (Date.now() - supabaseLastRetry > SUPABASE_RETRY_INTERVAL) {
+        console.log("[SUPABASE] Retry interval elapsed. Re-enabling Supabase for a connection check.");
+        supabaseEnabled = true;
+        return true;
+      }
+      return false;
+    }
+    return true;
+  };
+
+  const handleSupabaseError = (err: any, context: string) => {
+    const errMsg = err && typeof err === 'object' && err.message ? err.message : JSON.stringify(err);
+    if (!errMsg || !errMsg.includes('relation "store" does not exist')) {
+      console.warn(`[SUPABASE ERROR] Failed in ${context}:`, errMsg);
+    }
+    supabaseEnabled = false;
+    supabaseLastRetry = Date.now();
+    console.warn(`[SUPABASE] Temporarily disabled Supabase synchronization for 5 minutes to prevent logs flooding and API latency.`);
+  };
+
   if (supabaseUrl && supabaseKey) {
     try {
       supabase = createClient(supabaseUrl, supabaseKey);
@@ -48,6 +75,41 @@ async function startServer() {
   // Central Database file inside the container
   const dbPath = path.join(process.cwd(), "db.json");
   let storeData: Record<string, any> = {};
+
+  function getAuthenticatedUser(req: any) {
+    const userId = req.headers['x-user-id'];
+    const userRole = req.headers['x-user-role'];
+    const userPassword = req.headers['x-user-password'];
+
+    if (!userId) return null;
+
+    const userList = storeData["gi_users"] || [];
+    const dbUser = userList.find((u: any) => u.id === userId);
+    
+    if (!dbUser) return null;
+    
+    // Check if the role matches
+    if (userRole && dbUser.role !== userRole) return null;
+
+    // Check if the password matches the hashed/saved password
+    const expectedPassword = dbUser.password || (dbUser.role === 'admin' ? 'admin' : 'user123');
+    if (userPassword && expectedPassword !== userPassword) return null;
+
+    return dbUser;
+  }
+
+  // Middleware to authenticate admin requests
+  const requireAdmin = (req: any, res: any, next: any) => {
+    const user = getAuthenticatedUser(req);
+    if (!user || user.role !== 'admin') {
+      console.warn(`[SECURITY WARNING] Unauthorized admin access attempt on ${req.originalUrl} from IP ${req.ip}`);
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Accès interdit. Autorisation d\'administrateur requise et sécurisée.' 
+      });
+    }
+    next();
+  };
 
   function sanitizeProductsInPlace(products: any[]): boolean {
     if (!Array.isArray(products)) return false;
@@ -778,8 +840,8 @@ async function startServer() {
 
     // Run active cloud sync relay in background using Supabase
     Promise.resolve().then(async () => {
-      if (!supabase) {
-        console.log("[SERVER STARTUP] Supabase client is not available. Running on local db.json. (Automatic cleanup disabled to preserve user accounts)");
+      if (!isSupabaseReady()) {
+        console.log("[SERVER STARTUP] Supabase client is not available or disabled. Running on local db.json. (Automatic cleanup disabled to preserve user accounts)");
         return;
       }
       try {
@@ -794,7 +856,7 @@ async function startServer() {
             console.warn("L'application utilise actuellement la copie de sauvegarde locale db.json tant que la table n'est pas configurée.");
             console.warn("======================================================================\n");
           } else {
-            console.error("[SUPABASE ERROR] Failed to fetch startup state:", error);
+            handleSupabaseError(error, "[SERVER STARTUP] initial pull");
           }
         } else if (data && Array.isArray(data)) {
           console.log(`[SERVER STARTUP] Successfully fetched ${data.length} keys from Supabase.`);
@@ -809,8 +871,8 @@ async function startServer() {
         }
 
         // Force correct WhatsApp links even after merging Supabase keys
-        const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t";
-        const targetChannel = "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k";
+        const targetGroup = "https://chat.whatsapp.com/JHzYdMkIxeTLuEPNquBAAj?s=cl&p=a&ilr=1&amv=1";
+        const targetChannel = "https://whatsapp.com/channel/0029VbCs5L0J3jurEKVu8x2n";
         let linksModified = false;
 
         if (storeData["gi_whatsapp_group"] !== targetGroup) {
@@ -846,7 +908,7 @@ async function startServer() {
 
   async function saveStore(specificKeys?: string[]): Promise<void> {
     saveStoreLocal();
-    if (!supabase) return;
+    if (!isSupabaseReady()) return;
     
     try {
       const keys = specificKeys || Object.keys(storeData);
@@ -976,13 +1038,14 @@ async function startServer() {
           if (error.message && error.message.includes('relation "store" does not exist')) {
             break;
           }
-          console.error(`[SUPABASE ERROR] Failed to upsert key "${key}":`, error);
+          handleSupabaseError(error, `saveStore upsert key "${key}"`);
+          break;
         }
       }
       console.log("[SUPABASE] Cloud database synced with local modifications.");
       saveStoreLocal(); // Reflux changes back to disk
     } catch (e) {
-      console.error("[SUPABASE ERROR] Failed to upsert store changes to database table:", e);
+      handleSupabaseError(e, "saveStore main");
     }
   }
 
@@ -1428,6 +1491,9 @@ async function startServer() {
   }
 
   // API endpoints to synchronize state
+  app.use("/api/admin", requireAdmin);
+  app.use("/api/admin-diagnostics", requireAdmin);
+
   app.get("/api/admin/force-cleanup-non-admins", async (req, res) => {
     try {
       console.log("[API CLEANUP] Wiping all non-administrative accounts and ALL transactions/deposits/withdrawals...");
@@ -1651,13 +1717,11 @@ async function startServer() {
     }
 
     // Intercept and merge the latest records from Supabase to stay continuously synchronized real-time across devices
-    if (supabase) {
+    if (isSupabaseReady()) {
       try {
         const { data, error } = await supabase.from('store').select('*');
         if (error) {
-          if (!error.message || !error.message.includes('relation "store" does not exist')) {
-            console.error("[SERVER GET-STORE] Supabase error:", error);
-          }
+          handleSupabaseError(error, "[SERVER GET-STORE]");
         } else if (data && Array.isArray(data)) {
           const kvData: Record<string, any> = {};
           for (const item of data) {
@@ -1669,7 +1733,7 @@ async function startServer() {
           }
         }
       } catch (e) {
-        console.error("[SERVER GET-STORE] Failed to pull latest state from Supabase:", e);
+        handleSupabaseError(e, "[SERVER GET-STORE] Exception");
       }
     }
 
@@ -1715,10 +1779,19 @@ async function startServer() {
         "gi_withdrawal_proofs"
       ];
 
+      const headerUser = getAuthenticatedUser(req);
       const clientUserId = body.userId || '';
       let isGenuineAdmin = false;
       let isPrincipalAdmin = false;
-      if (clientUserId) {
+
+      if (headerUser && headerUser.role === 'admin') {
+        isGenuineAdmin = true;
+        const uDigits = headerUser.whatsapp ? headerUser.whatsapp.replace(/\D/g, '') : '';
+        if (headerUser.id === 'u-admin' || uDigits === '237600000000' || headerUser.whatsapp === '+237600000000') {
+          isPrincipalAdmin = true;
+        }
+      } else if (!headerUser && clientUserId) {
+        // Fallback checks for backward compatibility during initial login phase
         const userList = storeData["gi_users"] || [];
         const dbUser = userList.find((u: any) => u.id === clientUserId);
         if (dbUser && dbUser.role === 'admin') {
@@ -1824,6 +1897,43 @@ async function startServer() {
                   if (newUser && newUser.role === 'admin' && !isPrincipalAdmin) {
                     newUser = { ...newUser, role: 'user' };
                   }
+                  
+                  // SECURITY GUARD FOR NEW USERS ADDED DIRECTLY VIA SAVE-STORE:
+                  if (!isGenuineAdmin && key === "gi_users" && newUser) {
+                    newUser = {
+                      ...newUser,
+                      balance: 200, // force signup welcome bonus
+                      dailyEarnings: 0,
+                      totalEarnings: 0,
+                      bonus: 200,
+                      role: 'user',
+                      isBlocked: false,
+                    };
+                  }
+                  // SECURITY GUARD FOR NEW DEPOSITS/WITHDRAWALS/INVESTMENTS ADDED BY NON-ADMINS:
+                  if (!isGenuineAdmin && key === "gi_deposits" && newUser) {
+                    if (newUser.userId !== (headerUser?.id || clientUserId)) {
+                      continue; // reject!
+                    }
+                    newUser.status = 'pending'; // force pending status
+                  }
+                  if (!isGenuineAdmin && key === "gi_withdrawals" && newUser) {
+                    if (newUser.userId !== (headerUser?.id || clientUserId)) {
+                      continue; // reject!
+                    }
+                    newUser.status = 'pending'; // force pending status
+                  }
+                  if (!isGenuineAdmin && key === "gi_investments" && newUser) {
+                    if (newUser.userId !== (headerUser?.id || clientUserId)) {
+                      continue; // reject!
+                    }
+                  }
+                  if (!isGenuineAdmin && key === "gi_support_messages" && newUser) {
+                    if (newUser.userId !== (headerUser?.id || clientUserId) && newUser.senderId !== (headerUser?.id || clientUserId)) {
+                      continue; // reject!
+                    }
+                  }
+
                   mergedMap.set(idStr, newUser);
                 } else {
                   const existingItem = mergedMap.get(idStr);
@@ -1836,14 +1946,57 @@ async function startServer() {
                     if (isPrincipalAdmin) {
                       finalRole = useIncoming ? (item.role || 'user') : (existingItem.role || 'user');
                     }
-                    const mergedUser = {
-                      ...(useIncoming ? item : existingItem),
-                      role: finalRole,
-                      isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
-                      lastModified: Math.max(existingTime, incomingTime)
-                    };
+                    
+                    let mergedUser;
+                    if (!isGenuineAdmin) {
+                      if (idStr !== (headerUser?.id || clientUserId)) {
+                        // Reject modification of other users
+                        mergedUser = existingItem;
+                      } else {
+                        // User is modifying themselves. Keep sensitive financial & access fields from server!
+                        mergedUser = {
+                          ...(useIncoming ? item : existingItem),
+                          balance: existingItem.balance,
+                          dailyEarnings: existingItem.dailyEarnings,
+                          totalEarnings: existingItem.totalEarnings,
+                          bonus: existingItem.bonus,
+                          role: existingItem.role || 'user',
+                          isBlocked: existingItem.isBlocked || false,
+                          referralCode: existingItem.referralCode,
+                          referredBy: existingItem.referredBy,
+                          createdAt: existingItem.createdAt,
+                          lastModified: Math.max(existingTime, incomingTime)
+                        };
+                      }
+                    } else {
+                      mergedUser = {
+                        ...(useIncoming ? item : existingItem),
+                        role: finalRole,
+                        isBlocked: useIncoming ? (item.isBlocked !== undefined ? item.isBlocked : existingItem.isBlocked) : (existingItem.isBlocked !== undefined ? existingItem.isBlocked : item.isBlocked),
+                        lastModified: Math.max(existingTime, incomingTime)
+                      };
+                    }
                     mergedMap.set(idStr, mergedUser);
                   } else {
+                    // Non-admin guards for modifying existing records:
+                    if (!isGenuineAdmin) {
+                      if (key === "gi_deposits" || key === "gi_withdrawals" || key === "gi_investments" || key === "gi_support_messages") {
+                        if (existingItem.userId !== (headerUser?.id || clientUserId)) {
+                          // Prevent updating someone else's record
+                          continue;
+                        }
+                        // For deposits and withdrawals, don't let them change the status to approved!
+                        if (key === "gi_deposits" || key === "gi_withdrawals") {
+                          if (item.status !== existingItem.status && existingItem.status !== 'pending') {
+                            // If it's already approved/rejected, don't let them change it back
+                            item.status = existingItem.status;
+                          } else if (item.status === 'approved' || item.status === 'rejected') {
+                            // If trying to change from pending to approved/rejected, ignore
+                            item.status = 'pending';
+                          }
+                        }
+                      }
+                    }
                     if (incomingTime > existingTime) {
                       mergedMap.set(idStr, item);
                     }
@@ -4125,132 +4278,20 @@ async function startServer() {
     const withdrawal = withdrawals[idx];
 
     if (action === 'approve') {
-      let countryIso = "TG";
-      let operatorSlug = "tmoney";
-      let currency = "XOF";
+      withdrawals[idx].status = 'approved';
+      withdrawals[idx].reference = `man-${Date.now()}`;
+      withdrawals[idx].lastModified = Date.now();
 
-      const operatorLower = String(withdrawal.operator).toLowerCase();
-      
-      // Smart country matching
-      if (operatorLower.includes('ci') || operatorLower.includes("côte d'ivoire") || operatorLower.includes("cote d'ivoire")) {
-        countryIso = 'CI';
-        currency = 'XOF';
-      } else if (operatorLower.includes('tg') || operatorLower.includes('togo')) {
-        countryIso = 'TG';
-        currency = 'XOF';
-      } else if (operatorLower.includes('bj') || operatorLower.includes('bénin') || operatorLower.includes('benin')) {
-        countryIso = 'BJ';
-        currency = 'XOF';
-      } else if (operatorLower.includes('sn') || operatorLower.includes('sénégal') || operatorLower.includes('senegal')) {
-        countryIso = 'SN';
-        currency = 'XOF';
-      } else if (operatorLower.includes('ml') || operatorLower.includes('mali')) {
-        countryIso = 'ML';
-        currency = 'XOF';
-      } else if (operatorLower.includes('bf') || operatorLower.includes('burkina')) {
-        countryIso = 'BF';
-        currency = 'XOF';
-      } else if (operatorLower.includes('cm') || operatorLower.includes('cameroun')) {
-        countryIso = 'CM';
-        currency = 'XAF';
-      } else if (operatorLower.includes('gn') || operatorLower.includes('guinée') || operatorLower.includes('guinee')) {
-        countryIso = 'GN';
-        currency = 'GNF';
-      } else if (operatorLower.includes('cod') || operatorLower.includes('congo d')) {
-        countryIso = 'COD';
-        currency = 'CDF';
-      } else if (operatorLower.includes('cog') || operatorLower.includes('congo b')) {
-        countryIso = 'COG';
-        currency = 'XAF';
-      }
-
-      // Smart operator slug matching with live SendavaPay operators
-      const payoutSlugMap: Record<string, Record<string, string>> = {
-        TG: { tmoney: 't-money-togo', moov: 'moov-togo' },
-        CI: { orange: 'orange-money-ci', mtn: 'mtn-ci', moov: 'moov-ci', wave: 'wave-ci' },
-        BJ: { mtn: 'mtn-benin', moov: 'moov-benin' },
-        SN: { orange: 'new-orange-money-senegal', wave: 'wave-senegal', mixx: 'mixx-sn' },
-        ML: { orange: 'orange-money-mali' },
-        BF: { orange: 'orange-money-burkina', moov: 'moov-burkina-faso' },
-        COD: { vodacom: 'vodacom-cod', airtel: 'airtel-cod', orange: 'orange-cod' },
-        COG: { airtel: 'airtel-cog', mtn: 'mtn-cog' }
-      };
-
-      let genericKey = 'orange';
-      if (operatorLower.includes('tmoney') || operatorLower.includes('t-money')) {
-        genericKey = 'tmoney';
-      } else if (operatorLower.includes('flooz') || operatorLower.includes('moov')) {
-        genericKey = 'moov';
-      } else if (operatorLower.includes('mtn') || operatorLower.includes('momo')) {
-        genericKey = 'mtn';
-      } else if (operatorLower.includes('orange') || operatorLower.includes('om')) {
-        genericKey = 'orange';
-      } else if (operatorLower.includes('wave')) {
-        genericKey = 'wave';
-      } else if (operatorLower.includes('vodacom') || operatorLower.includes('mpesa')) {
-        genericKey = 'vodacom';
-      } else if (operatorLower.includes('airtel')) {
-        genericKey = 'airtel';
-      } else if (operatorLower.includes('mixx')) {
-        genericKey = 'mixx';
-      }
-
-      const matchedSlugs = payoutSlugMap[countryIso] || {};
-      operatorSlug = matchedSlugs[genericKey] || genericKey;
-
-      const formattedPhone = formatToE164(withdrawal.number, countryIso);
-      console.log(`[ADMIN WITHDRAWAL APPROVAL PAYOUT] Executing automatic SendavaPay withdraw payout. ID: ${withdrawalId}, Amount: ${withdrawal.amount} ${currency}, Country: ${countryIso}, Operator: ${operatorSlug}, Target: ${formattedPhone}`);
-
-      try {
-        const payoutRes = await fetch("https://sendavapay.com/api/sdk/v1/withdraw", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + (process.env.SENDAVAPAY_TOKEN || "sdk_dt7N8ZAaw0zVc9WwjJWaDtdAJm5OCGNt")
-          },
-          body: JSON.stringify({
-            amount: Number(withdrawal.amount),
-            phoneNumber: formattedPhone,
-            operator: operatorSlug,
-            country: countryIso,
-            currency,
-            description: `Retrait AgroProfit automatique`,
-            externalReference: withdrawal.id
-          })
-        });
-
-        if (!payoutRes.ok) {
-          const errText = await payoutRes.text();
-          const cleanErr = (errText.includes("<") || errText.includes("html") || errText.includes("<!DOCTYPE")) ? "HTML Error Page Received" : errText.slice(0, 200);
-          console.error("[ADMIN WITHDRAWAL APPROVAL PAYOUT] API error:", payoutRes.status, cleanErr);
-          return res.json({ success: false, message: `L'API de payout SendavaPay a renvoyé une erreur : ${cleanErr}` });
-        }
-
-        const payoutData = await payoutRes.json();
-        console.log("[ADMIN WITHDRAWAL APPROVAL PAYOUT] API response:", payoutData);
-
-        if (payoutData && payoutData.success) {
-          withdrawals[idx].status = 'approved';
-          withdrawals[idx].reference = payoutData.data?.reference || `sp-${Date.now()}`;
-          withdrawals[idx].lastModified = Date.now();
-
-          notifications.unshift({
-            id: `not-wth-sp-payout-${Date.now()}`,
-            userId: withdrawal.userId,
-            title: '💸 Retrait SendavaPay Initié',
-            message: `Votre demande de retrait de ${withdrawal.amount.toLocaleString()} XOF a été transmise automatiquement au réseau SendavaPay pour versement direct sur votre mobile money (${withdrawal.operator}).`,
-            type: 'withdraw',
-            lastModified: Date.now(),
-            createdAt: new Date().toISOString(),
-            read: false
-          });
-        } else {
-          return res.json({ success: false, message: payoutData?.error || "La transaction de payout automatique a échoué via SendavaPay." });
-        }
-      } catch (payoutErr: any) {
-        console.error("[ADMIN WITHDRAWAL APPROVAL PAYOUT] Exception calling SendavaPay:", payoutErr);
-        return res.json({ success: false, message: `Exception lors du payout SendavaPay : ${payoutErr.message}` });
-      }
+      notifications.unshift({
+        id: `not-wth-manual-app-${Date.now()}`,
+        userId: withdrawal.userId,
+        title: '💸 Retrait Approuvé',
+        message: `Votre demande de retrait de ${withdrawal.amount.toLocaleString()} XOF a été approuvée manuellement par l'administration.`,
+        type: 'withdraw',
+        lastModified: Date.now(),
+        createdAt: new Date().toISOString(),
+        read: false
+      });
     } else {
       withdrawals[idx].status = 'rejected';
       const uIdx = users.findIndex((u: any) => u.id === withdrawals[idx].userId);

@@ -218,6 +218,7 @@ export default function Auth({
     setTimeout(() => {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       setSentOtpCode(code);
+      setOtpCode(code);
       setSendingOtp(false);
       setOtpCountdown(60);
       setSuccessMessage(t.otpSentSuccess(code));
