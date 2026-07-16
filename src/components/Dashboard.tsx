@@ -293,8 +293,8 @@ const ProductImage = ({
   category?: string;
   imageUrl?: string;
 }) => {
-  // Exclusively use pre-approved, professional high-quality gold images to enforce visual identity.
-  const finalSrc = getVipImage(vipLevel, category);
+  // Use custom image if set on the product, otherwise fall back to curated high-quality gold images to enforce visual identity.
+  const finalSrc = (imageUrl && imageUrl.trim() !== '') ? imageUrl : getVipImage(vipLevel, category);
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-amber-100 flex items-center justify-center overflow-hidden relative rounded-xl border border-amber-200 shadow-xs">
@@ -4457,7 +4457,7 @@ export default function Dashboard({
                       <span className="text-base">✅</span>
                       <span>{depositSuccess}</span>
                     </div>
-                    {depositMethod === 'westpay' && depositRedirectUrl && (
+                    {depositRedirectUrl && (
                       <a
                         href={depositRedirectUrl}
                         target="_blank"
@@ -4470,7 +4470,6 @@ export default function Dashboard({
                   </div>
                 )}
 
-                {depositMethod === 'westpay' ? (
                   /* ----------------- WESTPAY FORM ----------------- */
                   <form onSubmit={submitDeposit} className="space-y-5 text-left animate-fade-in font-sans">
                     <div className="space-y-5">
@@ -4590,236 +4589,6 @@ export default function Dashboard({
                       </div>
                     </div>
                   </form>
-                ) : (
-                  /* ----------------- MANUAL CAMEROON FORM ----------------- */
-                  <form onSubmit={submitManualDeposit} className="space-y-5 text-left animate-fade-in font-sans">
-                    <div className="space-y-5">
-                      {/* AMOUNT INPUT */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Saisissez le montant de la recharge (FCFA) 💵
-                        </label>
-                        <input
-                          type="number"
-                          required
-                          placeholder="Ex: 10000"
-                          value={depositAmount}
-                          onChange={(e) => setDepositAmount(e.target.value)}
-                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-[#1b64d9] font-black focus:outline-none shadow-sm placeholder:text-slate-400"
-                        />
-                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Note : Minimum de 2 500 FCFA requis pour les recharges manuelles.</span>
-                      </div>
-
-                      {/* CAMEROON OPERATOR SELECT */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Sélectionnez votre opérateur de dépôt 🇨🇲
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setManualOperator('MTN Mobile Money (Cameroun 🇨🇲)')}
-                            className={`p-3 text-center rounded-2xl border-2 transition-all duration-200 cursor-pointer font-sans font-black text-xs flex flex-col items-center justify-center space-y-1 ${
-                              manualOperator === 'MTN Mobile Money (Cameroun 🇨🇲)'
-                                ? 'bg-amber-50 text-amber-900 border-amber-400 shadow-sm'
-                                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                            }`}
-                          >
-                            <span className="text-lg">💛</span>
-                            <span>MTN MoMo</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setManualOperator('Orange Money (Cameroun 🇨🇲)')}
-                            className={`p-3 text-center rounded-2xl border-2 transition-all duration-200 cursor-pointer font-sans font-black text-xs flex flex-col items-center justify-center space-y-1 ${
-                              manualOperator === 'Orange Money (Cameroun 🇨🇲)'
-                                ? 'bg-[#f0f4ff] text-blue-950 border-blue-200 shadow-sm'
-                                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                            }`}
-                          >
-                            <span className="text-lg">🧡</span>
-                            <span>Orange Money</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* TRANSFER INSTRUCTIONS */}
-                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3.5 animate-fade-in">
-                        <div className="text-xs text-slate-700 font-bold leading-normal">
-                          <span className="text-[#1b64d9] uppercase tracking-wide text-[10px] font-black block mb-1">INSTRUCTIONS DE SÉCURITÉ</span>
-                          Veuillez effectuer le transfert de <span className="text-blue-700 font-black">{(parseInt(depositAmount) || 0).toLocaleString()} FCFA</span> sur le numéro de paiement officiel ci-dessous :
-                        </div>
-
-                        {/* USSD / TRANSFER CONTAINER */}
-                        <div className="bg-white border border-slate-200/80 rounded-xl p-3 flex items-center justify-between shadow-sm">
-                          <div className="flex-1 mr-2 overflow-hidden">
-                            <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-black">Code USSD à composer :</span>
-                            <span className="font-mono text-xs text-slate-800 font-black tracking-wide block truncate select-all">{formattedUssdCode}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyManualUssd(formattedUssdCode)}
-                            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 rounded-lg transition-colors cursor-pointer flex items-center justify-center min-w-[40px] h-[40px] shrink-0"
-                          >
-                            {manualCopied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                          </button>
-                        </div>
-
-                        <p className="text-[10.5px] text-slate-500 font-medium italic">
-                          💡 Vous pouvez également composer directement ce code sur votre téléphone pour initier le transfert.
-                        </p>
-                      </div>
-
-                      {/* COUNTRY & PHONE SELECTION (REQUIRED) */}
-                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 animate-fade-in">
-                        <span className="font-black text-xs text-slate-800 uppercase tracking-wider block font-mono">
-                          🌍 Informations de Paiement (Requis)
-                        </span>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {/* COUNTRY SELECT */}
-                          <div>
-                            <label className="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1.5 font-mono flex items-center gap-1">
-                              <span>Identification du Pays</span>
-                              <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <select
-                                value={depositCountry}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setDepositCountry(val);
-                                  const matched = DEPOSIT_COUNTRIES.find(c => c.name === val);
-                                  if (matched) {
-                                    setDepositCountryCode(matched.code);
-                                  }
-                                }}
-                                className="w-full bg-white border border-slate-200 focus:border-[#1b64d9] rounded-xl py-2.5 px-3 text-xs font-bold text-slate-700 focus:outline-none shadow-sm appearance-none cursor-pointer"
-                              >
-                                {DEPOSIT_COUNTRIES.map((c) => (
-                                  <option key={c.name} value={c.name}>
-                                    {c.flag} {c.name} ({c.code})
-                                  </option>
-                                ))}
-                              </select>
-                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* PHONE INPUT */}
-                          <div>
-                            <label className="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1.5 font-mono flex items-center gap-1">
-                              <span>Numéro de Téléphone</span>
-                              <span className="text-red-500">*</span>
-                            </label>
-                            <div className="flex items-center">
-                              <div className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl py-2.5 px-3 text-xs font-mono font-black text-slate-500 shrink-0 select-none">
-                                {depositCountryCode}
-                              </div>
-                              <input
-                                type="tel"
-                                required
-                                placeholder="Ex: 699999999"
-                                value={depositPhone}
-                                onChange={(e) => {
-                                  const val = e.target.value.replace(/[^0-9]/g, '');
-                                  setDepositPhone(val);
-                                }}
-                                className="w-full bg-white border border-l-0 border-slate-200 focus:border-[#1b64d9] rounded-r-xl py-2.5 px-3 text-xs text-slate-700 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* TRANSACTION REFERENCE */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          ID de transaction ou référence SMS de confirmation 🔑
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Ex: CO260704.0924.D00010"
-                          value={manualReference}
-                          onChange={(e) => setManualReference(e.target.value)}
-                          className="w-full bg-white border-2 border-slate-200/45 focus:border-[#1b64d9] rounded-2xl py-3.5 px-4 text-sm text-slate-800 font-bold focus:outline-none shadow-sm placeholder:text-slate-400 font-mono"
-                        />
-                        <span className="text-[10px] text-slate-400 font-semibold block mt-1">Indiquez l'ID unique du transfert reçu dans le SMS de confirmation.</span>
-                      </div>
-
-                      {/* CAPTURE D'ÉCRAN UPLOADER */}
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 font-mono">
-                          Capture d'écran du reçu de paiement 📸
-                        </label>
-                        <div
-                          onDragOver={(e) => { e.preventDefault(); setIsDraggingManualReceipt(true); }}
-                          onDragLeave={() => setIsDraggingManualReceipt(false)}
-                          onDrop={handleManualReceiptDrop}
-                          className={`border-2 border-dashed rounded-2xl p-5 text-center transition-all cursor-pointer flex flex-col items-center justify-center space-y-2.5 relative ${
-                            isDraggingManualReceipt 
-                              ? 'border-[#1b64d9] bg-blue-50/50' 
-                              : manualReceiptBase64 
-                                ? 'border-green-300 bg-green-50/20' 
-                                : 'border-slate-300 hover:border-slate-400 bg-white'
-                          }`}
-                          onClick={() => {
-                            const fileInput = document.getElementById('manual-receipt-input');
-                            if (fileInput) fileInput.click();
-                          }}
-                        >
-                          <input
-                            id="manual-receipt-input"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleManualReceiptSelect}
-                            className="hidden"
-                          />
-
-                          {manualReceiptBase64 ? (
-                            <div className="flex flex-col items-center space-y-2">
-                              <img
-                                src={manualReceiptBase64}
-                                alt="Reçu de paiement"
-                                className="w-20 h-20 object-cover rounded-lg border border-slate-200 shadow-sm"
-                                referrerPolicy="no-referrer"
-                              />
-                              <span className="text-[11px] font-bold text-green-700">✓ Reçu sélectionné : {manualReceiptFileName.slice(0, 20)}...</span>
-                              <span className="text-[10px] text-slate-400">Cliquez pour modifier le fichier</span>
-                            </div>
-                          ) : (
-                            <>
-                              <Camera className="w-7 h-7 text-slate-450" />
-                              <div className="text-xs text-slate-600 font-bold">Glissez-déposez le reçu ou cliquez ici</div>
-                              <div className="text-[10px] text-slate-450 font-semibold">Formats acceptés : JPG, PNG, WEBP</div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* SUBMIT BUTTON */}
-                      <div className="space-y-3 pt-2">
-                        <button
-                          type="submit"
-                          disabled={isSubmittingDeposit}
-                          className="w-full py-4 text-white font-sans font-black text-xs uppercase tracking-widest rounded-xl hover:opacity-95 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-emerald-600 to-teal-500"
-                        >
-                          {isSubmittingDeposit ? (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              <span>Envoi du reçu en cours...</span>
-                            </div>
-                          ) : (
-                            <span>📤 Soumettre mon reçu de paiement</span>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                )}
               </div>
             );
           })()}

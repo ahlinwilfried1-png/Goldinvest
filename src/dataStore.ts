@@ -1365,11 +1365,7 @@ export class DataStore {
         else item.tag = "Or d'Investissement";
       }
 
-      // Force empty imageUrl for all products to ensure they exclusively use the curated high-quality gold images
-      if (item.imageUrl !== undefined && item.imageUrl !== '') {
-        item.imageUrl = '';
-        changed = true;
-      }
+      // Allow custom imageUrl to be saved and displayed if set, otherwise the frontend will fall back to curated gold images.
 
       if (item.isBlocked && item.reopenDateTime && now >= new Date(item.reopenDateTime)) {
         changed = true;

@@ -680,7 +680,7 @@ export default function AdminPanel({
     e.preventDefault();
     try {
       await DataStore.saveManualDepositNumbers(manualDepositNumbers);
-      setCanalsSuccess('✅ Tous les canaux de dépôt (Cameroun, Togo, etc.) ont été enregistrés et synchronisés avec succès !');
+      setCanalsSuccess('✅ Tous les canaux de dépôt (Togo, Côte d’Ivoire, etc.) ont été enregistrés et synchronisés avec succès !');
       setTimeout(() => setCanalsSuccess(null), 6000);
       
       // Force direct synchronization with central Express server
@@ -3344,8 +3344,7 @@ export default function AdminPanel({
                   'BJ': { name: 'Bénin 🇧🇯', ops: [{ id: '35', name: 'MTN Mobile Money' }, { id: '36', name: 'Moov Money' }] },
                   'BF': { name: 'Burkina Faso 🇧🇫', ops: [{ id: '33', name: 'Moov Money' }, { id: '34', name: 'Orange Money' }] },
                   'SN': { name: 'Sénégal 🇸🇳', ops: [{ id: '57', name: 'Orange Money' }, { id: '58', name: 'Wave' }] },
-                  'ML': { name: 'Mali 🇲🇱', ops: [{ id: '60', name: 'Orange Money' }] },
-                  'CM': { name: 'Cameroun 🇨🇲', ops: [{ id: '41', name: 'MTN Mobile Money' }, { id: '42', name: 'Orange Money' }] }
+                  'ML': { name: 'Mali 🇲🇱', ops: [{ id: '60', name: 'Orange Money' }] }
                 }) as [string, { name: string, ops: { id: string, name: string }[] }][]).map(([countryCode, countryInfo]) => (
                   <div key={countryCode} className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-5">
                     <span className="text-xs font-black text-yellow-500 block mb-4 uppercase tracking-wider font-sans border-b border-slate-800 pb-2">{countryInfo.name}</span>
