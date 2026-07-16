@@ -4441,44 +4441,8 @@ export default function Dashboard({
                     💸 CRÉDITER MON COMPTE
                   </span>
                   <p className="text-xs text-slate-500 font-bold mt-1">
-                    Saisissez les détails du transfert et soumettez votre reçu pour recharger votre solde.
+                    Saisissez les détails de paiement pour effectuer votre recharge en ligne de manière sécurisée.
                   </p>
-                </div>
-
-                {/* METHOD SELECTOR TABS */}
-                <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 border border-slate-200/60 rounded-2xl mb-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDepositMethod('westpay');
-                      setDepositSuccess('');
-                      setDepositError('');
-                    }}
-                    className={`py-3 px-2 text-center rounded-xl font-sans font-black text-xs transition-all duration-200 flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                      depositMethod === 'westpay'
-                        ? 'bg-[#1b64d9] text-white shadow-md shadow-blue-500/15'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                    }`}
-                  >
-                    <span className="text-base">💳</span>
-                    <span>Paiement en ligne (Automatique)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDepositMethod('manuel_cameroun');
-                      setDepositSuccess('');
-                      setDepositError('');
-                    }}
-                    className={`py-3 px-2 text-center rounded-xl font-sans font-black text-xs transition-all duration-200 flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                      depositMethod === 'manuel_cameroun'
-                        ? 'bg-[#1b64d9] text-white shadow-md shadow-blue-500/15'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                    }`}
-                  >
-                    <span className="text-base">🇨🇲</span>
-                    <span>Cameroun (Manuel)</span>
-                  </button>
                 </div>
 
                 {depositError && (
