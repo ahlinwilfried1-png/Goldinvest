@@ -2469,31 +2469,6 @@ export default function Dashboard({
             </div>
 
             <div className="space-y-4 text-[11px]">
-              {/* WhatsApp Segment */}
-              <div className="bg-emerald-50/50 border border-emerald-150 rounded-2xl p-4 flex flex-col gap-3 transition-all shadow-xs">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center text-xl shrink-0">
-                    💬
-                  </div>
-                  <div className="space-y-1 text-left">
-                    <h4 className="font-sans font-black text-emerald-800 text-[12px] uppercase tracking-wide">
-                      Groupe WhatsApp Officiel
-                    </h4>
-                    <p className="text-[10.5px] text-emerald-600/80 font-bold leading-tight">
-                      Discutez directement avec d'autres membres et notre équipe d'assistance de Goldspeed.
-                    </p>
-                  </div>
-                </div>
-                <a 
-                  href={DataStore.getWhatsAppGroup()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 bg-[#25D366] hover:bg-emerald-600 text-white font-sans font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer text-center"
-                >
-                  <span>Rejoindre le Groupe WhatsApp</span>
-                </a>
-              </div>
-
               {/* WhatsApp Channel Segment */}
               <div className="bg-emerald-50/30 border border-emerald-100 rounded-2xl p-4 flex flex-col gap-3 transition-all shadow-xs">
                 <div className="flex items-start gap-3">
@@ -2676,7 +2651,7 @@ export default function Dashboard({
               exit={{ scale: 0.95, y: 20, opacity: 0 }}
               transition={{ type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white border-2 border-slate-200 rounded-[32px] w-full max-w-md p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col"
+              className="bg-white border-2 border-slate-200 rounded-[32px] w-full max-w-lg p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
@@ -2836,7 +2811,7 @@ export default function Dashboard({
               exit={{ scale: 0.95, y: 20, opacity: 0 }}
               transition={{ type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white border-2 border-slate-200 rounded-[32px] w-full max-w-md p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col"
+              className="bg-white border-2 border-slate-200 rounded-[32px] w-full max-w-lg p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
@@ -3096,7 +3071,7 @@ export default function Dashboard({
                   <div className="bg-gradient-to-b from-[#1b64d9] to-[#2575fc] text-white pt-6 pb-28 px-4 rounded-b-[2.5rem] relative shadow-md overflow-hidden">
                     
                     {/* Top navigation row */}
-                    <div className="max-w-md mx-auto flex items-center justify-between relative z-10 mb-6">
+                    <div className="max-w-xl mx-auto flex items-center justify-between relative z-10 mb-6">
                       <button 
                         onClick={() => setProfileSubPage(null)}
                         className="w-10 h-10 rounded-full bg-white/15 border border-white/10 flex items-center justify-center text-white hover:bg-white/25 transition-all cursor-pointer outline-none shrink-0"
@@ -3117,7 +3092,7 @@ export default function Dashboard({
                     </div>
 
                     {/* Commissions information */}
-                    <div className="max-w-md mx-auto flex items-center justify-between relative z-10 pb-4">
+                    <div className="max-w-xl mx-auto flex items-center justify-between relative z-10 pb-4">
                       <div>
                         <span className="text-white/85 text-[11.5px] font-bold tracking-wide uppercase block">
                           {t("Total des commissions obtenues", "Total Commissions Earned")}
@@ -3143,7 +3118,7 @@ export default function Dashboard({
                   </div>
 
                   {/* Overlapping Invitation Link Card */}
-                  <div className="max-w-md mx-auto -mt-10 px-4 relative z-10">
+                  <div className="max-w-xl mx-auto -mt-10 px-4 relative z-10">
                     <div className="bg-white rounded-[24px] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center justify-between gap-3">
                       <div className="flex items-center space-x-3 min-w-0">
                         <div className="w-11 h-11 bg-blue-50 text-[#1b64d9] rounded-[18px] flex items-center justify-center shrink-0 border border-blue-100/40">
@@ -3171,7 +3146,7 @@ export default function Dashboard({
                   </div>
 
                   {/* Mission Center container */}
-                  <div className="max-w-md mx-auto mt-6 px-4">
+                  <div className="max-w-xl mx-auto mt-6 px-4">
                     <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-6">
                       
                       <div className="space-y-1">
@@ -3271,7 +3246,7 @@ export default function Dashboard({
                   {/* Rules Modal Overlay */}
                   {isMissionsRulesOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-                      <div className="bg-white rounded-[2rem] max-w-md w-full p-6 space-y-4 animate-scaleUp shadow-2xl relative text-left">
+                      <div className="bg-white rounded-[2rem] max-w-lg w-full p-6 space-y-4 animate-scaleUp shadow-2xl relative text-left">
                         <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                           <h3 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">
                             Règles de Mission 📋
@@ -3313,7 +3288,7 @@ export default function Dashboard({
             if (profileSubPage === 'orders') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -3355,7 +3330,7 @@ export default function Dashboard({
             if (profileSubPage === 'balance') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -3452,7 +3427,7 @@ export default function Dashboard({
                 <div className="bg-[#3172c7] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 min-h-[98vh] text-left animate-fadeIn flex flex-col">
                   {/* Blue Header Section */}
                   <div className="px-4 sm:px-6 md:px-12 xl:px-20 pt-5 pb-6">
-                    <div className="max-w-md mx-auto w-full">
+                    <div className="max-w-xl mx-auto w-full">
                       {/* Back button and title bar */}
                       <div className="flex items-center justify-between mb-6">
                         <button 
@@ -3477,7 +3452,7 @@ export default function Dashboard({
 
                   {/* White / Off-white Rounded Container */}
                   <div className="bg-[#f4f7fc] flex-grow rounded-t-[32px] px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 text-slate-800">
-                    <div className="max-w-md mx-auto w-full space-y-4">
+                    <div className="max-w-xl mx-auto w-full space-y-4">
                       
                       {/* Card 1: Votre dépôt n'a pas encore été reçu ? */}
                       <div 
@@ -3546,7 +3521,7 @@ export default function Dashboard({
             if (profileSubPage === 'about') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -3594,7 +3569,7 @@ export default function Dashboard({
             if (profileSubPage === 'settings') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -3689,7 +3664,7 @@ export default function Dashboard({
             if (profileSubPage === 'wheel') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn relative">
-                  <div className="max-w-md mx-auto w-full space-y-6">
+                  <div className="max-w-xl mx-auto w-full space-y-6">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         disabled={isSpinning}
@@ -3975,31 +3950,31 @@ export default function Dashboard({
               </div>
 
               {/* 3. CARD: RÉCOMPENSES D'INVITATION */}
-              <div className="bg-white rounded-2xl p-4 shadow-[0_4px_16px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-3">
+              <div className="bg-white rounded-[28px] p-5 shadow-[0_6px_20px_rgba(0,0,0,0.03)] border-2 border-slate-100/90 space-y-3.5">
                 <div className="flex justify-between items-center">
                   <div className="space-y-0.5">
-                    <h3 className="font-sans font-black text-slate-800 text-[12.5px] uppercase tracking-tight">
+                    <h3 className="font-sans font-black text-slate-800 text-[13px] uppercase tracking-tight">
                       {t("Récompenses d'invitation", "Invitation Rewards")}
                     </h3>
-                    <p className="text-[9.5px] text-slate-400 font-bold leading-none">
+                    <p className="text-[10px] text-slate-400 font-bold leading-none">
                       {t("Investissez ensemble, enrichissez-vous ensemble", "Invest together, grow rich together")}
                     </p>
                   </div>
-                  <div className="w-8 h-8 bg-amber-100/70 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
-                    <Gift className="w-4 h-4 stroke-[2.25]" />
+                  <div className="w-9 h-9 bg-amber-100/70 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
+                    <Gift className="w-4.5 h-4.5 stroke-[2.25]" />
                   </div>
                 </div>
 
-                <div className="bg-slate-50/70 rounded-xl p-2.5 border border-slate-100/60 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
-                      <Share className="w-3.5 h-3.5 stroke-[2.25]" />
+                <div className="bg-slate-50/70 rounded-2xl p-3 border-2 border-slate-100/60 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
+                      <Share className="w-4 h-4 stroke-[2.25]" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[8.5px] text-slate-400 font-black block leading-none uppercase tracking-wider">
+                      <span className="text-[9px] text-slate-400 font-black block leading-none uppercase tracking-wider">
                         {t("Lien d'invitation", "Invitation Link")}
                       </span>
-                      <span className="text-[10px] text-indigo-600 font-black truncate block mt-0.5 font-mono">
+                      <span className="text-[10.5px] text-indigo-600 font-black truncate block mt-0.5 font-mono">
                         {`${window.location.origin}/register?ref=${userState.referralCode || ''}`}
                       </span>
                     </div>
@@ -4011,7 +3986,7 @@ export default function Dashboard({
                       navigator.clipboard.writeText(shareLink);
                       triggerToast(t("Lien d'invitation copié ! 📋", "Invitation link copied! 📋"), "success");
                     }}
-                    className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 text-slate-950 py-1.5 px-3.5 rounded-full text-[10px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0"
+                    className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 text-slate-950 py-2 px-4 rounded-full text-[10.5px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0"
                   >
                     {t('Copier', 'Copy')}
                   </button>
@@ -4019,25 +3994,25 @@ export default function Dashboard({
               </div>
 
               {/* 4. CARD: CENTRE D'ACTIVITÉS DE BIEN-ÊTRE */}
-              <div className="bg-white rounded-2xl p-4 shadow-[0_4px_16px_rgba(0,0,0,0.02)] border border-slate-100/80 space-y-3">
+              <div className="bg-white rounded-[28px] p-5 shadow-[0_6px_20px_rgba(0,0,0,0.03)] border-2 border-slate-100/90 space-y-4">
                 <div className="space-y-0.5">
-                  <h3 className="font-sans font-black text-slate-800 text-[12.5px] uppercase tracking-tight">
+                  <h3 className="font-sans font-black text-slate-800 text-[13px] uppercase tracking-tight">
                     {t("Centre d'activités de bien-être", "Wellness Activity Center")}
                   </h3>
                 </div>
 
-                <div className="space-y-2.5 pt-0.5">
+                <div className="space-y-3 pt-0.5">
                   {/* Roue de la chance row */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8.5 h-8.5 bg-amber-50 text-amber-500 rounded-[12px] flex items-center justify-center shrink-0 border border-amber-100/40">
-                        <Trophy className="w-4.5 h-4.5 stroke-[2.25]" />
+                      <div className="w-9 h-9 bg-amber-50 text-amber-500 rounded-[14px] flex items-center justify-center shrink-0 border-2 border-amber-100/40">
+                        <Trophy className="w-5 h-5 stroke-[2.25]" />
                       </div>
                       <div>
-                        <h4 className="font-sans font-black text-[11.5px] text-slate-800 leading-tight">
+                        <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
                           {t("Roue de la chance", "Wheel of Fortune")}
                         </h4>
-                        <span className="text-[9px] text-slate-400 font-bold block mt-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
                           {t("Taux de gain du tirage au sort de 100%", "100% winning rate draw")}
                         </span>
                       </div>
@@ -4045,26 +4020,26 @@ export default function Dashboard({
 
                     <button
                       onClick={() => setProfileSubPage('wheel')}
-                      className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-1.5 px-3 rounded-full text-[10px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0"
+                      className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-2 px-3.5 rounded-full text-[10.5px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0"
                     >
                       {t("Tirage au sort", "Draw")}
                     </button>
                   </div>
 
                   {/* Divider */}
-                  <div className="border-t border-slate-100 my-0.5" />
+                  <div className="border-t-2 border-slate-100 my-0.5" />
 
                   {/* Centre des missions row */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8.5 h-8.5 bg-amber-50 text-amber-500 rounded-[12px] flex items-center justify-center shrink-0 border border-amber-100/40">
-                        <Gift className="w-4.5 h-4.5 stroke-[2.25]" />
+                      <div className="w-9 h-9 bg-amber-50 text-amber-500 rounded-[14px] flex items-center justify-center shrink-0 border-2 border-amber-100/40">
+                        <Gift className="w-5 h-5 stroke-[2.25]" />
                       </div>
                       <div>
-                        <h4 className="font-sans font-black text-[11.5px] text-slate-800 leading-tight">
+                        <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
                           {t("Centre des missions", "Mission Center")}
                         </h4>
-                        <span className="text-[9px] text-slate-400 font-bold block mt-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
                           {t("Après avoir complété chaque mission, vous recevrez une récompense", "Complete missions for rewards")}
                         </span>
                       </div>
@@ -4072,7 +4047,7 @@ export default function Dashboard({
 
                     <button
                       onClick={() => setProfileSubPage('missions')}
-                      className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-1.5 px-3 rounded-full text-[10px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0"
+                      className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-2 px-3.5 rounded-full text-[10.5px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0"
                     >
                       {t("Visiter", "Visit")}
                     </button>
@@ -4252,7 +4227,7 @@ export default function Dashboard({
                         const getCardStyle = (cat?: string) => {
                           if (cat === 'activity') {
                             return {
-                              container: 'bg-emerald-50/40 border border-emerald-100 rounded-3xl p-5 shadow-[0_4px_15px_rgba(16,185,129,0.04)] hover:shadow-md hover:border-emerald-200 transition-all duration-300 relative flex flex-col justify-between',
+                              container: 'bg-emerald-50/40 border-2 border-emerald-100 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(16,185,129,0.06)] hover:shadow-lg hover:border-emerald-200 transition-all duration-300 relative flex flex-col justify-between',
                               imgBg: 'bg-[#10b981] border border-emerald-100',
                               badge: 'text-[#047857] bg-[#d1fae5]',
                               statLabel: 'text-emerald-600/80',
@@ -4265,7 +4240,7 @@ export default function Dashboard({
                           }
                           if (cat === 'wellbeing') {
                             return {
-                              container: 'bg-purple-50/40 border border-purple-100 rounded-3xl p-5 shadow-[0_4px_15px_rgba(168,85,247,0.04)] hover:shadow-md hover:border-purple-200 transition-all duration-300 relative flex flex-col justify-between',
+                              container: 'bg-purple-50/40 border-2 border-purple-100 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(168,85,247,0.06)] hover:shadow-lg hover:border-purple-200 transition-all duration-300 relative flex flex-col justify-between',
                               imgBg: 'bg-[#a855f7] border border-purple-100',
                               badge: 'text-[#7e22ce] bg-[#f3e8ff]',
                               statLabel: 'text-purple-600/80',
@@ -4278,7 +4253,7 @@ export default function Dashboard({
                           }
                           // Default stability (gold)
                           return {
-                            container: 'bg-amber-50/30 border border-amber-200 rounded-3xl p-5 shadow-[0_4px_15px_rgba(245,158,11,0.06)] hover:shadow-md hover:border-amber-300/80 transition-all duration-300 relative flex flex-col justify-between',
+                            container: 'bg-amber-50/30 border-2 border-amber-200 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(245,158,11,0.08)] hover:shadow-lg hover:border-amber-300/80 transition-all duration-300 relative flex flex-col justify-between',
                             imgBg: 'bg-gradient-to-r from-amber-400 to-yellow-500 border border-amber-200',
                             badge: 'text-amber-800 bg-amber-100/80',
                             statLabel: 'text-amber-700/80',
@@ -4302,7 +4277,7 @@ export default function Dashboard({
                             {/* Card Content Top Row */}
                             <div>
                               {/* Enlarged Gold Image with VIP level text written directly on it */}
-                              <div className="relative w-full h-40 rounded-2xl overflow-hidden mb-4 shadow-sm border border-amber-500/10 bg-slate-950 group">
+                              <div className="relative w-full h-48 rounded-[24px] overflow-hidden mb-4.5 shadow-sm border border-amber-500/10 bg-slate-950 group">
                                 <ProductImage 
                                   vipLevel={p.vipLevel || (index + 1)}
                                   alt={displayName}
@@ -5653,7 +5628,7 @@ export default function Dashboard({
             if (profileSubPage === 'orders') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -5695,7 +5670,7 @@ export default function Dashboard({
             if (profileSubPage === 'balance') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -5784,7 +5759,7 @@ export default function Dashboard({
             if (profileSubPage === 'help') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -5856,7 +5831,7 @@ export default function Dashboard({
             if (profileSubPage === 'about') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -5904,7 +5879,7 @@ export default function Dashboard({
             if (profileSubPage === 'settings') {
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
-                  <div className="max-w-md mx-auto w-full space-y-4">
+                  <div className="max-w-xl mx-auto w-full space-y-4">
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -6457,23 +6432,6 @@ export default function Dashboard({
                 </button>
               </div>
               
-              {/* WhatsApp option */}
-              <a 
-                href={DataStore.getWhatsAppGroup()}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsSupportMenuOpen(false)}
-                className="w-full py-3.5 px-4 bg-[#25D366] hover:bg-[#1ebd53] text-white rounded-2xl flex items-center space-x-3 transition-transform duration-100 hover:scale-[1.02] shadow-md shadow-emerald-500/10 cursor-pointer select-none text-left"
-              >
-                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-xl">
-                  💬
-                </div>
-                <div className="leading-tight flex-1">
-                  <span className="text-white font-sans font-black text-xs block uppercase tracking-wide">Groupe WhatsApp</span>
-                  <span className="text-[10px] text-white/90 font-bold block mt-0.5 animate-pulse">Communauté active 👉</span>
-                </div>
-              </a>
-
               {/* Canal WhatsApp option */}
               <a 
                 href={DataStore.getWhatsAppChannel()}

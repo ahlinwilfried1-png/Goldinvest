@@ -165,55 +165,7 @@ async function startServer() {
         else item.tag = "Or d'Investissement";
       }
 
-      // 2. Sanitize product image URLs to remove computers, laptops, headphones, etc.
-      if (item.imageUrl) {
-        const lowerImg = item.imageUrl.toLowerCase();
-        const hasForbidden = (
-          lowerImg.includes('pc') ||
-          lowerImg.includes('computer') ||
-          lowerImg.includes('laptop') ||
-          lowerImg.includes('headphone') ||
-          lowerImg.includes('earbud') ||
-          lowerImg.includes('audio') ||
-          lowerImg.includes('phone') ||
-          lowerImg.includes('smartphone') ||
-          lowerImg.includes('ordinateur') ||
-          lowerImg.includes('casque') ||
-          lowerImg.includes('pod') ||
-          lowerImg.includes('screen') ||
-          lowerImg.includes('monitor') ||
-          lowerImg.includes('machine') ||
-          lowerImg.includes('orange') ||
-          lowerImg.includes('hand') ||
-          lowerImg.includes('chart') ||
-          lowerImg.includes('credit') ||
-          lowerImg.includes('card') ||
-          lowerImg.includes('jewelry') ||
-          lowerImg.includes('cosmetic') ||
-          lowerImg.includes('crown') ||
-          lowerImg.includes('bijou') ||
-          lowerImg.includes('couronne')
-        );
-        const hasGoldKeyword = (
-          lowerImg.includes('gold') || 
-          lowerImg.includes('ingot') || 
-          lowerImg.includes('lingot') || 
-          lowerImg.includes('coin') || 
-          lowerImg.includes('bullion') || 
-          lowerImg.includes('vault') || 
-          lowerImg.includes('barre') || 
-          lowerImg.includes('piece-d-or') ||
-          lowerImg.includes('/or-') ||
-          lowerImg.includes('_or_') ||
-          lowerImg.includes('/or/') ||
-          lowerImg.endsWith('/or')
-        );
-
-        if (hasForbidden || !hasGoldKeyword) {
-          item.imageUrl = ''; // setting to empty forces fallback to gold image
-          modified = true;
-        }
-      }
+      // Allow admin-configured custom product image URLs without any automated sanitization
     });
 
     return modified;
@@ -401,8 +353,8 @@ async function startServer() {
       "gi_mlm_level3_rate": 1,
       "gi_withdrawals_blocked_global": false,
       "gi_referral_domain": "",
-      "gi_whatsapp_group": "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t",
-      "gi_whatsapp_channel": "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k",
+      "gi_whatsapp_group": "https://chat.whatsapp.com/BvMCUCh3iqE7Z9hl7motA1?s=cl&p=i&ilr=0&amv=0",
+      "gi_whatsapp_channel": "https://whatsapp.com/channel/0029VbCs5L0J3jurEKVu8x2n",
       "gi_withdrawal_proofs": [],
       "gi_manual_deposit_numbers": {
         "TG_37": "*145*1*montant*70903319*code#",
@@ -427,8 +379,8 @@ async function startServer() {
 
 
     // Force correct WhatsApp links to prevent any resetting or loss of these connections
-    const targetGroup = "https://chat.whatsapp.com/DlLEImu1s9y2hnWKWFRqAv?mode=gi_t";
-    const targetChannel = "https://whatsapp.com/channel/0029Vb80vQ2LdQecfze5qY0k";
+    const targetGroup = "https://chat.whatsapp.com/BvMCUCh3iqE7Z9hl7motA1?s=cl&p=i&ilr=0&amv=0";
+    const targetChannel = "https://whatsapp.com/channel/0029VbCs5L0J3jurEKVu8x2n";
 
     if (storeData["gi_whatsapp_group"] !== targetGroup) {
       console.log(`[STARTUP] Setting WhatsApp group link to: ${targetGroup}`);
@@ -871,7 +823,7 @@ async function startServer() {
         }
 
         // Force correct WhatsApp links even after merging Supabase keys
-        const targetGroup = "https://chat.whatsapp.com/JHzYdMkIxeTLuEPNquBAAj?s=cl&p=a&ilr=1&amv=1";
+        const targetGroup = "https://chat.whatsapp.com/BvMCUCh3iqE7Z9hl7motA1?s=cl&p=i&ilr=0&amv=0";
         const targetChannel = "https://whatsapp.com/channel/0029VbCs5L0J3jurEKVu8x2n";
         let linksModified = false;
 
@@ -4526,6 +4478,7 @@ async function startServer() {
       isCyclic: p.isCyclic || false,
       generatedProductIds: p.generatedProductIds || [],
       category: p.category || 'stability',
+      imageUrl: p.imageUrl || undefined,
       lastModified: Date.now()
     });
     storeData["gi_products"] = list;

@@ -1204,7 +1204,7 @@ export class DataStore {
   }
 
   static getWhatsAppGroup(): string {
-    const defaultGroup = 'https://chat.whatsapp.com/JHzYdMkIxeTLuEPNquBAAj?s=cl&p=a&ilr=1&amv=1';
+    const defaultGroup = 'https://chat.whatsapp.com/BvMCUCh3iqE7Z9hl7motA1?s=cl&p=i&ilr=0&amv=0';
     const val = getFromStore<string>('gi_whatsapp_group', defaultGroup).trim();
     if (!val || val.includes('DlLEImu1s9y2hnWKWFRqAv')) {
       return defaultGroup;
@@ -3494,7 +3494,8 @@ export class DataStore {
       tag: (p as any).tag || 'Special Offer',
       isCyclic: (p as any).isCyclic || false,
       generatedProductIds: (p as any).generatedProductIds || [],
-      category: (p as any).category || 'stability'
+      category: (p as any).category || 'stability',
+      imageUrl: (p as any).imageUrl || undefined
     };
 
     list.push(newP);
@@ -3523,6 +3524,7 @@ export class DataStore {
       const isCyclic = updatedP.isCyclic !== undefined ? updatedP.isCyclic : current.isCyclic;
       const generatedProductIds = updatedP.generatedProductIds !== undefined ? updatedP.generatedProductIds : current.generatedProductIds;
       const category = updatedP.category !== undefined ? updatedP.category : current.category;
+      const imageUrl = updatedP.imageUrl !== undefined ? updatedP.imageUrl : current.imageUrl;
 
       const totalReturn = updatedP.totalReturn !== undefined 
         ? updatedP.totalReturn 
@@ -3541,7 +3543,8 @@ export class DataStore {
         reopenDateTime,
         isCyclic,
         generatedProductIds,
-        category
+        category,
+        imageUrl
       };
       this.saveProducts(list);
     }
