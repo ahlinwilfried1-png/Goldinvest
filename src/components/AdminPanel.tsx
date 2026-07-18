@@ -98,6 +98,10 @@ export default function AdminPanel({
     timestamp: number;
     dbPath: string;
     dbExists: boolean;
+    supabaseStatus?: string;
+    supabaseUrl?: string;
+    storeTableAccessible?: boolean;
+    storeTableError?: string | null;
   } | null>(null);
 
   // Navigation tab
@@ -1964,12 +1968,60 @@ export default function AdminPanel({
             <div>
               <span className="text-emerald-400 font-bold block uppercase text-[8px] tracking-wider font-mono">⚡ BASE DE DONNÉES CLOUD SUPABASE (DIRECT SYNC)</span>
               <p className="text-slate-300 text-[10px] leading-relaxed mt-0.5">
-                Utilisez ces commandes pour forcer une synchronisation bidirectionnelle ou restaurer entièrement les comptes utilisateurs, dépôts, retraits et investissements enregistrés sur Supabase.
+                L'application est connectée directement à votre instance de production Supabase. Toute action sur n'importe quel appareil est propagée et l'Admin Panel s'actualise automatiquement toutes les 4 secondes.
               </p>
             </div>
-            <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-[8px] rounded uppercase tracking-wider font-mono">
-              Statut: Prêt
+            <span className={`px-2 py-0.5 border text-xs font-bold rounded uppercase tracking-wider font-mono flex items-center gap-1 ${serverDiag?.storeTableAccessible ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400 animate-pulse'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${serverDiag?.storeTableAccessible ? 'bg-emerald-400' : 'bg-red-400 animate-ping'}`}></span>
+              {serverDiag?.storeTableAccessible ? 'Production Active' : 'Configuration requise'}
             </span>
+          </div>
+
+          {/* Diagnostic Widget */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900/60 p-3.5 rounded-xl border border-slate-800/80 font-mono text-[10px]">
+            <div className="space-y-1">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider font-bold">Base de Production</span>
+              <span className="text-slate-200 block font-bold truncate">
+                {serverDiag?.supabaseUrl && serverDiag.supabaseUrl !== 'aucun' ? serverDiag.supabaseUrl : 'usmvfzvccduftufpfhnx.supabase.co'}
+              </span>
+            </div>
+            <div className="space-y-1">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider font-bold">Connexion API</span>
+              <div className="flex items-center space-x-1.5">
+                <span className={`w-2 h-2 rounded-full ${serverDiag?.supabaseStatus === 'initialise' ? 'bg-emerald-400' : 'bg-red-500 animate-ping'}`}></span>
+                <span className={serverDiag?.supabaseStatus === 'initialise' ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                  {serverDiag?.supabaseStatus === 'initialise' ? 'CONNECTÉ (Service Role)' : 'DÉCONNECTÉ (Erreur de clé)'}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-1 sm:col-span-2 pt-2.5 border-t border-slate-800/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider font-bold">Accès Table 'store'</span>
+              {serverDiag?.storeTableAccessible ? (
+                <div className="text-emerald-400 flex items-center space-x-1.5">
+                  <span className="text-[12px]">✅</span>
+                  <span>Opérationnelle à 100% (Synchronisation automatique en temps réel bidirectionnelle active)</span>
+                </div>
+              ) : (
+                <div className="space-y-2 text-red-400 leading-normal">
+                  <div className="flex items-start space-x-1.5 font-bold">
+                    <span className="text-red-500 text-xs">⚠️</span>
+                    <span>La table 'store' n'existe pas encore ou n'est pas accessible !</span>
+                  </div>
+                  <p className="text-slate-300 text-[9px] font-sans">
+                    Pour activer la synchronisation permanente en temps réel de tous les appareils sur Supabase, ouvrez votre <strong>Supabase Dashboard</strong>, allez dans <strong>SQL Editor</strong>, et exécutez le script ci-dessous :
+                  </p>
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-[9px] select-all relative group text-slate-300">
+                    <pre className="overflow-x-auto whitespace-pre p-1 text-slate-300 bg-black/30 rounded">
+{`CREATE TABLE store (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);`}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

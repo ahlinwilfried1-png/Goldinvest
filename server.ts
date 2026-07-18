@@ -1746,7 +1746,7 @@ async function startServer() {
     }
   });
 
-  app.get("/api/admin-diagnostics", (req, res) => {
+  app.get("/api/admin-diagnostics", async (req, res) => {
     try {
       const usersInMem = storeData["gi_users"] || [];
       let usersInFile: any[] = [];
@@ -1756,13 +1756,36 @@ async function startServer() {
         const parsed = JSON.parse(fileContent);
         usersInFile = parsed["gi_users"] || [];
       }
+
+      let storeTableAccessible = false;
+      let storeTableError: string | null = null;
+      let supabaseStatus = "non_initialise";
+
+      if (supabase) {
+        supabaseStatus = supabaseEnabled ? "initialise" : "desactive_temporairement";
+        try {
+          const { error } = await withTimeout(supabase.from('store').select('key').limit(1), 2000);
+          if (!error) {
+            storeTableAccessible = true;
+          } else {
+            storeTableError = error.message;
+          }
+        } catch (err: any) {
+          storeTableError = err.message;
+        }
+      }
+
       res.json({
         success: true,
         totalUsersInMem: usersInMem.length,
         totalUsersInFile: usersInFile.length,
         timestamp: Date.now(),
         dbPath,
-        dbExists: exists
+        dbExists: exists,
+        supabaseStatus,
+        supabaseUrl: supabaseUrl ? supabaseUrl.replace(/([^/]*\/\/)[^.]*(.*)/, '$1***$2') : "aucun",
+        storeTableAccessible,
+        storeTableError
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
