@@ -392,7 +392,7 @@ export function getApiUrl(endpoint: string): string {
     }
   } catch (e) {}
 
-  // If the host is an external domain (like goldinvest-lac.vercel.app)
+  // If the host is an external domain (like goldspeed-lac.vercel.app)
   // we must automatically route requests to the live Cloud Run production instance
   if (typeof window !== "undefined" && window.location) {
     const host = window.location.hostname;

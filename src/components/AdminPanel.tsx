@@ -3049,7 +3049,7 @@ export default function AdminPanel({
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: goldinvest-dreampod.vercel.app ou https://mes-investissements.com"
+                  placeholder="Ex: goldspeed-dreampod.vercel.app ou https://mes-investissements.com"
                   value={referralDomain}
                   onChange={(e) => setReferralDomain(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-yellow-400 font-mono focus:outline-none"
