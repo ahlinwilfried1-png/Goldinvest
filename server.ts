@@ -64,7 +64,7 @@ async function startServer() {
       res.setHeader("Access-Control-Allow-Origin", "*");
     }
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Cookie, Accept, x-user-id, x-user-role, x-user-password");
     res.setHeader("Access-Control-Allow-Credentials", "true");
     if (req.method === "OPTIONS") {
       return res.sendStatus(200);
