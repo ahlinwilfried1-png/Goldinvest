@@ -12,7 +12,7 @@ async function startServer() {
   const PORT = 3000;
 
   const supabaseUrl = process.env.SUPABASE_URL || "https://gepdalprxhdjiuxwxidv.supabase.co";
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTk2MDIxMSwiZXhwIjoyMDk1NTM2MjExfQ.9_yn5Vn_bi45VGDFFQOU3RZTD3NsIUz_IvDDkQFYjCM";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NjAyMTEsImV4cCI6MjA5NTUzNjIxMX0.x40prkEtl_8a1PUhdNdsgg53c6U6MWlS-hkDr-cz4Lg";
   
   let supabase: any = null;
   let supabaseEnabled = true;
