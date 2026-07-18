@@ -13,8 +13,8 @@ async function startServer() {
 
   const rawUrl = (process.env.SUPABASE_URL || "").trim();
   const rawKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
-  const supabaseUrl = rawUrl && rawUrl !== "" ? rawUrl : "https://usmvfzvccduftufpfhnx.supabase.co";
-  const supabaseKey = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzbXZmenZjY2R1ZnR1ZnBmaG54Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDM1MTUxMSwiZXhwIjoyMDk5OTI3NTExfQ.jK8g4FqjWlJJBtAPHwHg4w-gFre5onQyhvWHuBcqc3E";
+  const supabaseUrl = rawUrl && rawUrl !== "" ? rawUrl : "https://ebculgppsrefzuwyaoip.supabase.co";
+  const supabaseKey = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViY3VsZ3Bwc3JlZnp1d3lhb2lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDM2NjMxNSwiZXhwIjoyMDk5OTQyMzE1fQ.P8NpwfA0tE7Qtph-QTHa0Is3Ifr5Gswe9FpqgP3fSak";
   
   let supabase: any = null;
   let supabaseEnabled = true;
@@ -847,6 +847,9 @@ async function startServer() {
           if (Object.keys(kvData).length > 0) {
             console.log("[SERVER STARTUP] Merging Supabase cloud database keys into local runtime...");
             mergeData(kvData);
+          } else {
+            console.log("[SERVER STARTUP] Supabase 'store' table is empty. Initializing Supabase with local db.json backup data...");
+            await saveStore();
           }
         }
 

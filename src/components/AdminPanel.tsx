@@ -1982,7 +1982,7 @@ export default function AdminPanel({
             <div className="space-y-1">
               <span className="text-slate-500 block uppercase text-[8px] tracking-wider font-bold">Base de Production</span>
               <span className="text-slate-200 block font-bold truncate">
-                {serverDiag?.supabaseUrl && serverDiag.supabaseUrl !== 'aucun' ? serverDiag.supabaseUrl : 'usmvfzvccduftufpfhnx.supabase.co'}
+                {serverDiag?.supabaseUrl && serverDiag.supabaseUrl !== 'aucun' ? serverDiag.supabaseUrl : 'ebculgppsrefzuwyaoip.supabase.co'}
               </span>
             </div>
             <div className="space-y-1">
