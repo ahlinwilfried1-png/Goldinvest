@@ -577,8 +577,8 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
     } catch (e) {
       console.warn('[apiFetch Fallback] Supabase direct get-store failed gracefully (using local storage fallback instead):', e);
     }
-    // Return empty state or what's in local memory
-    return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    // Return 503 Service Unavailable so that callers do not interpret a failure as an empty server database!
+    return new Response(JSON.stringify({ success: false, error: "Cloud database is restricted or offline" }), { status: 503, headers: { 'Content-Type': 'application/json' } });
   }
 
   if (url.includes('/api/save-store')) {
