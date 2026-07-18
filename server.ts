@@ -17,7 +17,8 @@ async function startServer() {
   let supabase: any = null;
   let supabaseEnabled = true;
   let supabaseLastRetry = 0;
-  const SUPABASE_RETRY_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  let lastSupabaseErrorLog = 0;
+  const SUPABASE_RETRY_INTERVAL = 5000; // 5 seconds retry for high availability
 
   const withTimeout = (promise: any, timeoutMs: number = 2500): Promise<any> => {
     return Promise.race([
@@ -43,20 +44,28 @@ async function startServer() {
 
   const handleSupabaseError = (err: any, context: string) => {
     const errMsg = err && typeof err === 'object' && err.message ? err.message : JSON.stringify(err);
-    if (!errMsg || !errMsg.includes('relation "store" does not exist')) {
+    const now = Date.now();
+    const shouldLog = (now - lastSupabaseErrorLog) > 10000; // Log at most once every 10 seconds
+
+    if (shouldLog && (!errMsg || !errMsg.includes('relation "store" does not exist'))) {
       console.warn(`[SUPABASE ERROR] Failed in ${context}:`, errMsg);
+      lastSupabaseErrorLog = now;
     }
 
     if (errMsg && (errMsg.includes('egress') || errMsg.includes('quota') || errMsg.includes('restricted') || errMsg.includes('exceed_egress_quota') || errMsg.includes('violation'))) {
-      console.warn(`[SUPABASE CRITICAL] Supabase project has exceeded egress quota or is restricted. Disabling cloud sync for 24 hours to protect local performance.`);
+      if (shouldLog) {
+        console.warn(`[SUPABASE CRITICAL] Supabase project has exceeded egress quota or is restricted. Disabling cloud sync for 1 hour to protect performance.`);
+      }
       supabaseEnabled = false;
-      supabaseLastRetry = Date.now() + 23 * 60 * 60 * 1000; // Disable for 23 hours to prevent retries
+      supabaseLastRetry = now + 60 * 60 * 1000; // Disable for 1 hour instead of 23 hours to allow quicker recovery
       return;
     }
 
     supabaseEnabled = false;
-    supabaseLastRetry = Date.now();
-    console.warn(`[SUPABASE] Temporarily disabled Supabase synchronization for 5 minutes to prevent logs flooding and API latency.`);
+    supabaseLastRetry = now;
+    if (shouldLog) {
+      console.warn(`[SUPABASE] Temporarily paused Supabase synchronization for 5 seconds to throttle requests.`);
+    }
   };
 
   if (supabaseUrl && supabaseKey) {
@@ -873,6 +882,31 @@ async function startServer() {
     } catch (e) {
       console.error("Failed to write to db.json file:", e);
     }
+  }
+
+  async function syncWithSupabase(): Promise<boolean> {
+    if (!isSupabaseReady()) return false;
+    try {
+      const { data, error } = await withTimeout(supabase.from('store').select('*'), 3000);
+      if (error) {
+        handleSupabaseError(error, "syncWithSupabase");
+        return false;
+      }
+      if (data && Array.isArray(data)) {
+        const kvData: Record<string, any> = {};
+        for (const item of data) {
+          kvData[item.key] = item.value;
+        }
+        if (Object.keys(kvData).length > 0) {
+          mergeData(kvData);
+          saveStoreLocal();
+          return true;
+        }
+      }
+    } catch (e) {
+      handleSupabaseError(e, "syncWithSupabase Exception");
+    }
+    return false;
   }
 
   async function saveStore(specificKeys?: string[]): Promise<void> {
@@ -1801,25 +1835,7 @@ async function startServer() {
     }
 
     // Intercept and merge the latest records from Supabase to stay continuously synchronized real-time across devices
-    if (isSupabaseReady()) {
-      try {
-        const { data, error } = await withTimeout(supabase.from('store').select('*'), 2500);
-        if (error) {
-          handleSupabaseError(error, "[SERVER GET-STORE]");
-        } else if (data && Array.isArray(data)) {
-          const kvData: Record<string, any> = {};
-          for (const item of data) {
-            kvData[item.key] = item.value;
-          }
-          if (Object.keys(kvData).length > 0) {
-            mergeData(kvData);
-            saveStoreLocal();
-          }
-        }
-      } catch (e) {
-        handleSupabaseError(e, "[SERVER GET-STORE] Exception");
-      }
-    }
+    await syncWithSupabase();
 
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -2137,6 +2153,9 @@ async function startServer() {
 
       console.log(`[DEBUG REGISTER] Incoming signup request. Name: "${data.name}", Phone: "${data.whatsapp}", Country: "${data.country || 'Cameroun'}", Sponsor: "${data.referredByCode || 'Aucun'}", Device: "${data.device || 'Inconnu'}"`);
 
+      // Always sync with Supabase first to ensure we check duplication against the latest dataset
+      await syncWithSupabase();
+
       let users = storeData["gi_users"] || [];
       
       // Check duplication with normalized phone number matching
@@ -2301,8 +2320,10 @@ async function startServer() {
   });
 
   // Centralized Login API
-  app.post("/api/login", (req, res) => {
+  app.post("/api/login", async (req, res) => {
     const { whatsapp, password } = req.body;
+    // Always sync with Supabase first to ensure credentials are fully up to date
+    await syncWithSupabase();
     let users = storeData["gi_users"] || [];
     
     const user = users.find((u: any) => {
@@ -4294,6 +4315,7 @@ async function startServer() {
   // Admin Account controls
   app.post("/api/admin/deposit-action", async (req, res) => {
     const { depositId, action } = req.body; // 'approve' or 'reject'
+    await syncWithSupabase();
     let deposits = storeData["gi_deposits"] || [];
     let users = storeData["gi_users"] || [];
     let notifications = storeData["gi_notifications"] || [];
@@ -4350,6 +4372,7 @@ async function startServer() {
 
   app.post("/api/admin/withdrawal-action", async (req, res) => {
     const { withdrawalId, action } = req.body; // 'approve' or 'reject'
+    await syncWithSupabase();
     let withdrawals = storeData["gi_withdrawals"] || [];
     let users = storeData["gi_users"] || [];
     let notifications = storeData["gi_notifications"] || [];
@@ -4406,6 +4429,7 @@ async function startServer() {
 
   app.post("/api/admin/update-user", async (req, res) => {
     const { userId, balance, bonus, role, password, referredBy, withdrawBlocked } = req.body;
+    await syncWithSupabase();
     let users = storeData["gi_users"] || [];
     const idx = users.findIndex((u: any) => u.id === userId);
     if (idx !== -1) {
