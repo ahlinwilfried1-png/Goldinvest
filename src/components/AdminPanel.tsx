@@ -2261,6 +2261,10 @@ export default function AdminPanel({
             (u.country || '').toLowerCase().includes(query) ||
             isPhoneMatch
           );
+        }).sort((a, b) => {
+          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.id.startsWith('u-') ? parseInt(a.id.substring(2)) || 0 : 0);
+          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.id.startsWith('u-') ? parseInt(b.id.substring(2)) || 0 : 0);
+          return timeB - timeA;
         });
 
         return (
