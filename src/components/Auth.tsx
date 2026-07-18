@@ -581,6 +581,8 @@ export default function Auth({
                     </button>
                   </div>
                 </div>
+
+
               </>
             ) : (
               /* LOGIN SPECIFIC FIELDS */
@@ -717,24 +719,26 @@ export default function Auth({
       </div>
 
       {/* Floating Support Representative Badge in the bottom right corner exactly like screenshot */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-center select-none animate-bounce" style={{ animationDuration: '3s' }}>
-        <button 
-          type="button"
-          onClick={() => setShowSupportModal(true)}
-          className="w-16 h-16 rounded-full bg-white shadow-2xl border-2 border-white flex items-center justify-center p-0.5 cursor-pointer hover:scale-105 active:scale-95 transition-all relative group"
-        >
-          <img 
-            src="https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=150" 
-            alt="Service Client"
-            className="w-full h-full rounded-full object-cover"
-          />
-          {/* Small pulsing green online indicator dot */}
-          <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
-        </button>
-        <span className="text-[9px] font-sans font-black text-slate-700 bg-white/95 backdrop-blur-xs px-2.5 py-0.5 rounded-full shadow-md border border-slate-100 mt-1 uppercase tracking-wider">
-          {t.customerService}
-        </span>
-      </div>
+      {!isRegister && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-center select-none animate-bounce" style={{ animationDuration: '3s' }}>
+          <button 
+            type="button"
+            onClick={() => setShowSupportModal(true)}
+            className="w-16 h-16 rounded-full bg-white shadow-2xl border-2 border-white flex items-center justify-center p-0.5 cursor-pointer hover:scale-105 active:scale-95 transition-all relative group"
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1618042164219-62c820f10723?auto=format&fit=crop&q=80&w=150" 
+              alt="Service Client"
+              className="w-full h-full rounded-full object-cover"
+            />
+            {/* Small pulsing green online indicator dot */}
+            <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
+          </button>
+          <span className="text-[9px] font-sans font-black text-slate-700 bg-white/95 backdrop-blur-xs px-2.5 py-0.5 rounded-full shadow-md border border-slate-100 mt-1 uppercase tracking-wider">
+            {t.customerService}
+          </span>
+        </div>
+      )}
 
       {/* Modern interactive Customer Support Modal */}
       {showSupportModal && (
