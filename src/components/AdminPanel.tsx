@@ -90,6 +90,8 @@ export default function AdminPanel({
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'checking'>('idle');
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [supabaseSyncLoading, setSupabaseSyncLoading] = useState(false);
+  const [supabaseSyncResult, setSupabaseSyncResult] = useState<string | null>(null);
   const [serverDiag, setServerDiag] = useState<{
     totalUsersInMem: number;
     totalUsersInFile: number;
@@ -401,6 +403,31 @@ export default function AdminPanel({
     } catch (err) {
       console.error("[ADMIN SYNC] Failed direct central DB refresh:", err);
       setSyncError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleSupabaseForceSync = async (overwrite: boolean) => {
+    try {
+      setSupabaseSyncLoading(true);
+      setSupabaseSyncResult(null);
+      const resp = await apiFetch(getApiUrl('/api/admin/force-sync-supabase'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ overwrite })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        setSupabaseSyncResult(`✅ ${data.message} (${data.synchronizedKeys} clés synchronisées, ${data.usersCount} utilisateurs, ${data.depositsCount} dépôts, ${data.withdrawalsCount} retraits, ${data.investmentsCount} plans)`);
+        await executeDirectCentralSync();
+      } else {
+        setSupabaseSyncResult(`❌ Échec : ${data.message || 'Erreur inconnue'}`);
+      }
+    } catch (err: any) {
+      setSupabaseSyncResult(`❌ Erreur de requête : ${err.message}`);
+    } finally {
+      setSupabaseSyncLoading(false);
     }
   };
 
@@ -1931,7 +1958,58 @@ export default function AdminPanel({
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-between items-center text-[9px] text-slate-500 gap-2 pt-1 border-t border-slate-800/40">
+        {/* SYNCHRONISATION SUPABASE EN DIRECT */}
+        <div className="bg-slate-950/50 p-4 border border-emerald-500/20 rounded-xl space-y-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <span className="text-emerald-400 font-bold block uppercase text-[8px] tracking-wider font-mono">⚡ BASE DE DONNÉES CLOUD SUPABASE (DIRECT SYNC)</span>
+              <p className="text-slate-300 text-[10px] leading-relaxed mt-0.5">
+                Utilisez ces commandes pour forcer une synchronisation bidirectionnelle ou restaurer entièrement les comptes utilisateurs, dépôts, retraits et investissements enregistrés sur Supabase.
+              </p>
+            </div>
+            <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-[8px] rounded uppercase tracking-wider font-mono">
+              Statut: Prêt
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={() => handleSupabaseForceSync(false)}
+              disabled={supabaseSyncLoading}
+              className="px-4 py-2 bg-slate-900 border border-slate-700/60 hover:border-emerald-500 hover:bg-emerald-500/5 text-slate-200 transition-all font-bold rounded-lg text-xs flex flex-col items-center justify-center text-center cursor-pointer disabled:opacity-50"
+            >
+              <span className="font-semibold text-[11px] text-slate-100">🤝 Fusionner les données</span>
+              <span className="text-[9px] text-slate-500 mt-0.5 font-normal">Récupère et fusionne sans écraser</span>
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("⚠️ AVERTISSEMENT : Cela va remplacer TOUTES les données locales (utilisateurs, dépôts, etc.) par celles enregistrées sur Supabase. Souhaitez-vous continuer ?")) {
+                  handleSupabaseForceSync(true);
+                }
+              }}
+              disabled={supabaseSyncLoading}
+              className="px-4 py-2 bg-slate-900 border border-red-950 hover:border-red-500 hover:bg-red-500/5 text-slate-200 transition-all font-bold rounded-lg text-xs flex flex-col items-center justify-center text-center cursor-pointer disabled:opacity-50"
+            >
+              <span className="font-semibold text-[11px] text-red-400">⚠️ Restaurer / Écraser</span>
+              <span className="text-[9px] text-slate-500 mt-0.5 font-normal">Remplace tout par la copie Supabase</span>
+            </button>
+          </div>
+
+          {supabaseSyncLoading && (
+            <div className="flex items-center justify-center space-x-2 py-1 font-mono text-[10px] text-emerald-400 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>Synchronisation forcée avec Supabase en cours d'exécution...</span>
+            </div>
+          )}
+
+          {supabaseSyncResult && (
+            <div className="bg-slate-900 border border-emerald-500/20 text-emerald-400 p-2.5 rounded-lg font-mono text-[10px] whitespace-pre-wrap">
+              {supabaseSyncResult}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-wrap justify-between items-center text-[9px] text-slate-500 gap-2 pt-1 border-t border-t-slate-800/40">
           <span>Mode d'accès : Requêtes Directes Autorité Serveur à 100% (Aucun stockage local prioritaire)</span>
           <span>Dernière synchro : {serverDiag ? new Date(serverDiag.timestamp).toLocaleTimeString() : 'En attente...'}</span>
         </div>

@@ -11,8 +11,8 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  const supabaseUrl = process.env.SUPABASE_URL || "https://gepdalprxhdjiuxwxidv.supabase.co";
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlcGRhbHByeGhkaml1eHd4aWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NjAyMTEsImV4cCI6MjA5NTUzNjIxMX0.x40prkEtl_8a1PUhdNdsgg53c6U6MWlS-hkDr-cz4Lg";
+  const supabaseUrl = process.env.SUPABASE_URL || "https://usmvfzvccduftufpfhnx.supabase.co";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzbXZmenZjY2R1ZnR1ZnBmaG54Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDM1MTUxMSwiZXhwIjoyMDk5OTI3NTExfQ.jK8g4FqjWlJJBtAPHwHg4w-gFre5onQyhvWHuBcqc3E";
   
   let supabase: any = null;
   let supabaseEnabled = true;
@@ -1475,6 +1475,85 @@ async function startServer() {
   // API endpoints to synchronize state
   app.use("/api/admin", requireAdmin);
   app.use("/api/admin-diagnostics", requireAdmin);
+
+  app.post("/api/admin/force-sync-supabase", async (req, res) => {
+    try {
+      console.log("[FORCE SYNC] Manual trigger starting...");
+      supabaseEnabled = true; // Clear any temporary disabled state
+      
+      if (!supabase) {
+        return res.status(400).json({
+          success: false,
+          message: "Le client Supabase n'est pas initialisé. Vérifiez vos clés dans la configuration."
+        });
+      }
+
+      const overwrite = req.body && req.body.overwrite === true;
+      console.log(`[FORCE SYNC] Fetching all keys from Supabase 'store' table. Overwrite mode: ${overwrite}`);
+      
+      const { data, error } = await withTimeout(supabase.from('store').select('*'), 10000);
+      
+      if (error) {
+        console.error("[FORCE SYNC] Error querying Supabase:", error.message);
+        return res.status(500).json({
+          success: false,
+          message: `Erreur Supabase: ${error.message}`
+        });
+      }
+
+      if (!data || !Array.isArray(data)) {
+        return res.json({
+          success: true,
+          message: "Aucune donnée trouvée dans la table 'store' de Supabase.",
+          synchronizedKeys: 0
+        });
+      }
+
+      const kvData: Record<string, any> = {};
+      for (const item of data) {
+        kvData[item.key] = item.value;
+      }
+
+      const keyCount = Object.keys(kvData).length;
+      console.log(`[FORCE SYNC] Retrieved ${keyCount} keys from Supabase.`);
+
+      if (keyCount > 0) {
+        if (overwrite) {
+          console.log("[FORCE SYNC] Overwriting local state with Supabase keys...");
+          for (const key of Object.keys(kvData)) {
+            storeData[key] = kvData[key];
+          }
+        } else {
+          console.log("[FORCE SYNC] Merging Supabase keys into local state...");
+          mergeData(kvData);
+        }
+        
+        saveStoreLocal();
+        console.log("[FORCE SYNC] Synchronization complete and written to db.json.");
+      }
+
+      return res.json({
+        success: true,
+        message: overwrite 
+          ? "Écrasement réussi ! Les données locales ont été remplacées par la base de données Supabase." 
+          : "Fusion réussie ! Les données de Supabase ont été intégrées avec succès.",
+        synchronizedKeys: keyCount,
+        usersCount: (storeData["gi_users"] || []).length,
+        depositsCount: (storeData["gi_deposits"] || []).length,
+        withdrawalsCount: (storeData["gi_withdrawals"] || []).length,
+        investmentsCount: (storeData["gi_investments"] || []).length,
+        commissionsCount: (storeData["gi_commissions"] || []).length,
+        timestamp: Date.now()
+      });
+
+    } catch (e: any) {
+      console.error("[FORCE SYNC] Exception:", e);
+      return res.status(500).json({
+        success: false,
+        message: `Erreur interne de synchronisation: ${e.message}`
+      });
+    }
+  });
 
   app.get("/api/admin/force-cleanup-non-admins", async (req, res) => {
     try {
