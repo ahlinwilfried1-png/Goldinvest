@@ -1020,7 +1020,7 @@ async function startServer() {
               break;
             }
             handleSupabaseError(error, `saveStore upsert key "${key}"`);
-            break;
+            continue;
           }
         }
         console.log("[SUPABASE] Cloud database synced with local modifications.");
@@ -2018,7 +2018,7 @@ async function startServer() {
       }
 
       if (modified) {
-        await saveStore();
+        await saveStore(Object.keys(body));
       }
     }
     res.json({ success: true });
@@ -2190,7 +2190,7 @@ async function startServer() {
       }
       storeData["gi_notifications"] = notifications;
 
-      await saveStore();
+      await saveStore(["gi_users", "gi_notifications"]);
       res.json({ success: true, user: newUser, message: 'Inscription réussie.' });
     } catch (error: any) {
       console.error('Registration server error:', error);
@@ -2324,7 +2324,7 @@ async function startServer() {
     storeData["gi_commissions"] = commissions;
     storeData["gi_notifications"] = notifications;
 
-    await saveStore();
+    await saveStore(["gi_users", "gi_investments", "gi_commissions", "gi_notifications"]);
     res.json({ success: true, message: `Vous avez investi avec succès dans le plan ${targetProduct.name} !`, user });
   });
 
@@ -2360,7 +2360,7 @@ async function startServer() {
     storeData["gi_users"] = users;
     storeData["gi_notifications"] = notifications;
 
-    await saveStore();
+    await saveStore(["gi_users", "gi_notifications"]);
     res.json({ success: true, message: `Félicitations ! Vous avez reçu un bonus journalier de ${rewardAmt} XOF !`, amount: rewardAmt, user });
   });
 
@@ -2420,7 +2420,7 @@ async function startServer() {
       inv.status = 'completed';
       inv.lastModified = Date.now();
       handleCyclicCompletion(inv, users, products, investments, notifications);
-      await saveStore();
+      await saveStore(["gi_users", "gi_investments", "gi_notifications", "gi_products"]);
       return res.json({ success: false, message: 'Ce plan est complété ! Tous les revenus ont été distribués.', amount: 0 });
     }
 
@@ -2456,7 +2456,7 @@ async function startServer() {
     storeData["gi_investments"] = investments;
     storeData["gi_notifications"] = notifications;
 
-    await saveStore();
+    await saveStore(["gi_users", "gi_investments", "gi_notifications", "gi_products"]);
     res.json({ success: true, message: `Revenu journalier de +${inv.dailyReturn} XOF encaissé avec succès !`, amount: inv.dailyReturn, user: users[uIdx] });
   });
 
@@ -2512,7 +2512,7 @@ async function startServer() {
     storeData["gi_investments"] = investments;
     storeData["gi_notifications"] = notifications;
 
-    await saveStore();
+    await saveStore(["gi_users", "gi_investments", "gi_notifications"]);
     res.json({ success: true, message: `Votre plan ${inv.productName} a été renouvelé avec succès pour un nouveau cycle de ${inv.durationDays} jours !`, user, investments });
   });
 
@@ -2531,7 +2531,7 @@ async function startServer() {
 
     storeData["gi_investments"] = investments;
 
-    await saveStore();
+    await saveStore(["gi_investments"]);
     res.json({ success: true, message: `Renouvellement automatique ${autoRenew ? 'activé' : 'désactivé'}.`, investments });
   });
 
