@@ -2376,19 +2376,6 @@ async function startServer() {
       return res.json({ success: false, message: 'Ce plan d\'investissement VIP est temporairement bloqué ou suspendu par l\'administration.' });
     }
 
-    const isWellbeingOrActivity = targetProduct.category === 'wellbeing' || targetProduct.category === 'activity';
-    if (isWellbeingOrActivity) {
-      const hasStability = (storeData["gi_investments"] || []).some((inv: any) => {
-        if (inv.userId !== userId) return false;
-        const p = products.find((prod: any) => prod.id === inv.productId || prod.name === inv.productName);
-        const cat = p?.category || inv.category || 'stability';
-        return cat === 'stability';
-      });
-      if (!hasStability) {
-        return res.json({ success: false, message: "L'achat d'un produit de stabilité est obligatoire avant de pouvoir acquérir un produit de Bien-être ou d'Activité." });
-      }
-    }
-
     const uIdx = users.findIndex((u: any) => u.id === userId);
     if (uIdx === -1) {
       return res.json({ success: false, message: 'Utilisateur non trouvé.' });

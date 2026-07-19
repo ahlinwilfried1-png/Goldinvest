@@ -293,17 +293,61 @@ const ProductImage = ({
   category?: string;
   imageUrl?: string;
 }) => {
-  // Use custom image if set on the product, otherwise fall back to curated high-quality gold images to enforce visual identity.
-  const finalSrc = (imageUrl && imageUrl.trim() !== '') ? imageUrl : getVipImage(vipLevel, category);
+  // Premium default gold image representing Togo luxury gold bullion & coins
+  const defaultGoldImage = "https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=800";
+  const finalSrc = (imageUrl && imageUrl.trim() !== '') ? imageUrl : defaultGoldImage;
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-amber-100 flex items-center justify-center overflow-hidden relative rounded-xl border border-amber-200 shadow-xs">
+    <div className="w-full h-full bg-slate-900 overflow-hidden relative rounded-xl border border-yellow-500/30 group shadow-md aspect-video sm:aspect-auto">
+      {/* Background Image */}
       <img 
-        src={finalSrc}
+        src={finalSrc} 
         alt={alt}
-        className={`${className} transition-transform duration-500 hover:scale-110`}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         referrerPolicy="no-referrer"
       />
+
+      {/* Glossy diagonal shine overlay */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+
+      {/* Dark overlay gradient for contrast and premium look */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-slate-950/20 pointer-events-none" />
+
+      {/* Luxury Brand Seal / Togolese Gold Coin Badge */}
+      <div className="absolute bottom-2 right-2 flex items-center justify-center transform group-hover:scale-105 transition-transform duration-500 select-none z-10">
+        {/* Shiny Gold Coin */}
+        <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[#ffe875] via-[#d4af37] via-[#aa820a] to-[#d4af37] p-[1px] shadow-[0_4px_10px_rgba(0,0,0,0.35)] border border-[#ffec94]/40 flex items-center justify-center">
+          {/* Inner Coin Ring */}
+          <div className="w-full h-full rounded-full border border-dashed border-amber-950/20 bg-gradient-to-br from-[#f9e264] via-[#cfa928] to-[#9c7504] flex flex-col items-center justify-center relative overflow-hidden">
+            
+            {/* Tiny stars & shine reflections inside */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:4px_4px]" />
+            <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/10" />
+
+            {/* Togo Gold Engravings */}
+            <span className="text-[5.5px] font-black text-amber-950/85 tracking-[0.02em] font-sans scale-85 uppercase mt-0.5">
+              REP. TOGOLAISE
+            </span>
+            
+            {/* Center Symbol (Coins) */}
+            <div className="w-4 h-4 my-0.5 rounded-full bg-amber-950/10 flex items-center justify-center border border-amber-950/15">
+              <Coins className="w-2.5 h-2.5 text-amber-950/90" />
+            </div>
+
+            <span className="text-[5px] font-extrabold text-amber-950/70 tracking-widest font-mono scale-90 mb-0.5">
+              999.9 FINE GOLD
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Product Category & VIP Level Tag */}
+      <div className="absolute top-2.5 left-2.5 bg-slate-950/65 backdrop-blur-md border border-yellow-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 z-10 pointer-events-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+        <span className="font-sans font-extrabold text-[9px] uppercase tracking-wider text-yellow-400">
+          VIP {vipLevel} • {category === 'wellbeing' ? 'BIEN-ÊTRE' : category === 'activity' ? 'ACTIVITÉ' : 'STABILITÉ'}
+        </span>
+      </div>
     </div>
   );
 };
@@ -361,7 +405,8 @@ const DEPOSIT_COUNTRIES = [
   { name: 'Côte d’Ivoire', code: '+225', flag: '🇨🇮' },
   { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
   { name: 'Sénégal', code: '+221', flag: '🇸🇳' },
-  { name: 'Mali', code: '+223', flag: '🇲🇱' }
+  { name: 'Mali', code: '+223', flag: '🇲🇱' },
+  { name: 'Niger', code: '+227', flag: '🇳🇪' }
 ];
 
 const maskUserPhone = (str: string): string => {
@@ -508,7 +553,8 @@ export default function Dashboard({
     { code: 'BJ', name: 'Bénin 🇧🇯', currency: 'XOF' },
     { code: 'BF', name: 'Burkina Faso 🇧🇫', currency: 'XOF' },
     { code: 'SN', name: 'Sénégal 🇸🇳', currency: 'XOF' },
-    { code: 'ML', name: 'Mali 🇲🇱', currency: 'XOF' }
+    { code: 'ML', name: 'Mali 🇲🇱', currency: 'XOF' },
+    { code: 'NE', name: 'Niger 🇳🇪', currency: 'XOF' }
   ];
 
   const SENDAVAPAY_OPERATORS: Record<string, { id: string; name: string; slug: string; requiresOtp?: boolean }[]> = {
@@ -537,6 +583,11 @@ export default function Dashboard({
     ML: [
       { id: '60', name: 'Orange Money', slug: 'orange-money-mali' }
     ],
+    NE: [
+      { id: '70', name: 'Airtel Money', slug: 'airtel-niger' },
+      { id: '71', name: 'Moov Money', slug: 'moov-niger' },
+      { id: '72', name: 'Orange Money', slug: 'orange-niger' }
+    ],
     COG: [
       { id: '55', name: 'Airtel Money', slug: 'airtel-cog' },
       { id: '56', name: 'MTN Mobile Money', slug: 'mtn-cog' }
@@ -552,6 +603,7 @@ export default function Dashboard({
       if (c.includes('senegal') || c.includes('sénégal')) return 'SN';
       if (c.includes('mali')) return 'ML';
       if (c.includes('congo')) return 'COG';
+      if (c.includes('niger')) return 'NE';
     }
     return 'TG';
   };
@@ -598,6 +650,7 @@ export default function Dashboard({
     if (c.includes('burkina') || c.includes('226')) return '+226';
     if (c.includes('senegal') || c.includes('sénégal') || c.includes('221')) return '+221';
     if (c.includes('mali') || c.includes('223')) return '+223';
+    if (c.includes('niger') || c.includes('227')) return '+227';
     return '+237';
   };
 
@@ -610,6 +663,7 @@ export default function Dashboard({
     if (userCountry.includes('burkina')) return 'Burkina Faso';
     if (userCountry.includes('senegal') || userCountry.includes('sénégal')) return 'Sénégal';
     if (userCountry.includes('mali')) return 'Mali';
+    if (userCountry.includes('niger')) return 'Niger';
     return 'Cameroun';
   });
 
@@ -806,6 +860,7 @@ export default function Dashboard({
   const [isBankCardModalOpen, setIsBankCardModalOpen] = useState<boolean>(false);
   const [profileSubPage, setProfileSubPage] = useState<string | null>(null);
   const [isMissionsRulesOpen, setIsMissionsRulesOpen] = useState<boolean>(false);
+  const [historyTab, setHistoryTab] = useState<'recharges' | 'products'>('recharges');
 
   useEffect(() => {
     setProfileSubPage(null);
@@ -1673,7 +1728,7 @@ export default function Dashboard({
 
     const newPost = {
       id: 'f-user-' + Date.now(),
-      authorName: (userState.name || 'Membre') + ' ' + (userState.country === 'Cameroun' ? '🇨🇲' : userState.country === 'Togo' ? '🇹🇬' : userState.country === 'Bénin' ? '🇧🇯' : userState.country === 'Côte d’Ivoire' ? '🇨🇮' : userState.country === 'Burkina Faso' ? '🇧🇫' : userState.country === 'Sénégal' ? '🇸🇳' : userState.country === 'Mali' ? '🇲🇱' : '🌍'),
+      authorName: (userState.name || 'Membre') + ' ' + (userState.country === 'Cameroun' ? '🇨🇲' : userState.country === 'Togo' ? '🇹🇬' : userState.country === 'Bénin' ? '🇧🇯' : userState.country === 'Côte d’Ivoire' ? '🇨🇮' : userState.country === 'Burkina Faso' ? '🇧🇫' : userState.country === 'Sénégal' ? '🇸🇳' : userState.country === 'Mali' ? '🇲🇱' : userState.country === 'Niger' ? '🇳🇪' : '🌍'),
       avatarLetter: (userState.name || 'M').charAt(0).toUpperCase(),
       text: forumMessageInput,
       image1: forumImage1 || undefined,
@@ -2252,16 +2307,6 @@ export default function Dashboard({
   const handleBuyProduct = (product: Product) => {
     if (product.isBlocked) {
       openAlert('Plan Suspendu', "Ce plan d'investissement VIP est actuellement bloqué ou suspendu temporairement par l'administration.", 'error');
-      return;
-    }
-
-    const isWellbeingOrActivity = product.category === 'wellbeing' || product.category === 'activity';
-    if (isWellbeingOrActivity && !hasStabilityActivation) {
-      openAlert(
-        'Accès Restreint',
-        "L'achat d'un produit de stabilité est obligatoire avant de pouvoir acquérir un produit de Bien-être ou d'Activité.",
-        'error'
-      );
       return;
     }
 
@@ -2970,6 +3015,9 @@ export default function Dashboard({
                     <option value="Moov (BJ)">Moov Flooz (Bénin 🇧🇯)</option>
                     <option value="Wave (CI)">Wave Money (Côte d'Ivoire 🇨🇮)</option>
                     <option value="Orange (CI)">Orange Money (Côte d'Ivoire 🇨🇮)</option>
+                    <option value="Airtel (NE)">Airtel Money (Niger 🇳🇪)</option>
+                    <option value="Moov (NE)">Moov Money (Niger 🇳🇪)</option>
+                    <option value="Orange (NE)">Orange Money (Niger 🇳🇪)</option>
                   </select>
                 </div>
 
@@ -3328,9 +3376,31 @@ export default function Dashboard({
             }
 
             if (profileSubPage === 'balance') {
+              const completedInvestments = activeInvestments.filter(i => i.status === 'completed');
+              const totalRechargesApproved = allDeposits.filter(d => d.status === 'approved').reduce((acc, d) => acc + d.amount, 0);
+              const totalInvestedCompleted = completedInvestments.reduce((acc, i) => acc + i.price, 0);
+
+              const formatDate = (dateStr: string) => {
+                try {
+                  const d = new Date(dateStr);
+                  if (isNaN(d.getTime())) return dateStr;
+                  return d.toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+                } catch (e) {
+                  return dateStr;
+                }
+              };
+
               return (
                 <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
                   <div className="max-w-xl mx-auto w-full space-y-4">
+                    
+                    {/* Header */}
                     <div className="flex items-center space-x-3 mb-2 pt-2">
                       <button 
                         onClick={() => setProfileSubPage(null)}
@@ -3338,85 +3408,175 @@ export default function Dashboard({
                       >
                         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
                       </button>
-                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Mon Solde</h2>
+                      <h2 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">Historique de compte</h2>
                     </div>
 
-                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
-                      <div className="grid grid-cols-2 gap-3.5 pb-2">
-                        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-left shadow-xs">
-                          <span className="text-[9.5px] text-blue-600 font-black uppercase tracking-widest block mb-1">Recharge</span>
-                          <span className="text-lg sm:text-xl font-sans font-black text-blue-900 block font-mono leading-none">
-                            {rechargeBal.toLocaleString()} F
-                          </span>
-                        </div>
-                        <div className="bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] border border-[#c5a133] rounded-2xl p-4 text-left shadow-md">
-                          <span className="text-[9.5px] text-slate-900 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
-                          <span className="text-lg sm:text-xl font-sans font-black text-slate-950 block font-mono leading-none animate-pulse">
-                            {userState.balance.toLocaleString()} F
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-1 text-center pt-1.5">
-                        <div>
-                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Revenu Produit</span>
-                          <span className="text-xs font-black text-slate-800 block mt-1">
-                            FCFA {totalProductRevenue.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="border-l border-slate-100">
-                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Commission</span>
-                          <span className="text-xs font-black text-slate-800 block mt-1">
-                            FCFA {totalCommissions.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="border-l border-slate-100">
-                          <span className="text-[9px] text-slate-400 font-extrabold block uppercase tracking-tight leading-tight">Nbre de Commandes</span>
-                          <span className="text-xs font-black text-slate-800 block mt-1">
-                            {activeInvsCount}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
-                      <h3 className="font-sans font-black text-slate-800 text-sm uppercase tracking-wider pl-0.5">Opérations Rapides</h3>
-                      
-                      <div className="grid grid-cols-2 gap-3.5">
-                        <button 
-                          onClick={() => {
-                            setProfileSubPage(null);
-                            setActiveTab('deposit');
-                          }}
-                          className="flex items-center justify-center gap-3 p-4 bg-amber-50 text-[#f07b1b] rounded-2xl font-black text-sm hover:bg-amber-100/70 transition-all border-none outline-none cursor-pointer shadow-xs"
-                        >
-                          <Coins className="w-5.5 h-5.5 stroke-[2.25]" />
-                          <span>Recharger</span>
-                        </button>
-                        <button 
-                          onClick={() => {
-                            setProfileSubPage(null);
-                            setActiveTab('withdraw');
-                          }}
-                          className="flex items-center justify-center gap-3 p-4 bg-blue-50 text-[#1b64d9] rounded-2xl font-black text-sm hover:bg-blue-100/70 transition-all border-none outline-none cursor-pointer shadow-xs"
-                        >
-                          <ArrowUpCircle className="w-5.5 h-5.5 stroke-[2.25]" />
-                          <span>Retirer</span>
-                        </button>
-                      </div>
-
-                      <button 
-                        onClick={() => {
-                          if (onNavigate) {
-                            onNavigate('/historique');
-                          }
-                        }}
-                        className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100/70 text-slate-700 rounded-2xl text-[13px] font-black transition-all border-none outline-none cursor-pointer mt-2"
+                    {/* Dual Tab Switcher */}
+                    <div className="bg-slate-100 p-1 rounded-2xl flex w-full border border-slate-200/40">
+                      <button
+                        onClick={() => setHistoryTab('recharges')}
+                        className={`flex-grow py-3 rounded-xl text-xs font-sans font-black transition-all border-none outline-none cursor-pointer flex items-center justify-center gap-2 ${
+                          historyTab === 'recharges'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                        }`}
                       >
-                        <span>📋 Voir l'historique complet des revenus</span>
-                        <span className="font-bold">&gt;</span>
+                        <Coins className="w-4 h-4" />
+                        <span>Recharges ({allDeposits.length})</span>
+                      </button>
+                      <button
+                        onClick={() => setHistoryTab('products')}
+                        className={`flex-grow py-3 rounded-xl text-xs font-sans font-black transition-all border-none outline-none cursor-pointer flex items-center justify-center gap-2 ${
+                          historyTab === 'products'
+                            ? 'bg-white text-emerald-600 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                        }`}
+                      >
+                        <Briefcase className="w-4 h-4" />
+                        <span>Produits Terminés ({completedInvestments.length})</span>
                       </button>
                     </div>
+
+                    {/* Content Section */}
+                    {historyTab === 'recharges' ? (
+                      <div className="space-y-4">
+                        {/* Summary Card */}
+                        <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 flex justify-between items-center">
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Total Rechargé</span>
+                            <span className="text-xl font-sans font-black text-blue-600 block mt-0.5">
+                              {totalRechargesApproved.toLocaleString()} FCFA
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Total Demandes</span>
+                            <span className="text-xl font-sans font-black text-slate-800 block mt-0.5">
+                              {allDeposits.length}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* List */}
+                        <div className="space-y-3">
+                          {allDeposits.length === 0 ? (
+                            <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 p-5">
+                              <Coins className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                              <p className="text-xs font-bold text-slate-400">Aucune recharge enregistrée pour le moment.</p>
+                            </div>
+                          ) : (
+                            [...allDeposits].reverse().map((deposit) => {
+                              const isApproved = deposit.status === 'approved';
+                              const isPending = deposit.status === 'pending';
+                              const isRejected = deposit.status === 'rejected';
+
+                              return (
+                                <div 
+                                  key={deposit.id}
+                                  className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex justify-between items-center hover:border-slate-200 transition-all"
+                                >
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-sans font-black text-slate-800">
+                                        Recharge {deposit.operator}
+                                      </span>
+                                      <span className={`text-[8.5px] font-black uppercase px-2 py-0.5 rounded-md ${
+                                        isApproved ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' :
+                                        isPending ? 'bg-amber-50 text-amber-700 border border-amber-200/50' :
+                                        'bg-red-50 text-red-700 border border-red-200/50'
+                                      }`}>
+                                        {isApproved ? 'Validé' : isPending ? 'En attente' : 'Rejeté'}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-bold">
+                                      Réf: <span className="font-mono text-slate-600">{deposit.reference}</span>
+                                    </p>
+                                    <p className="text-[9.5px] text-slate-400 font-medium">
+                                      {formatDate(deposit.createdAt)}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-sm font-sans font-black text-slate-900 block">
+                                      +{deposit.amount.toLocaleString()} F
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Summary Card */}
+                        <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 flex justify-between items-center">
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Total Capital Libéré</span>
+                            <span className="text-xl font-sans font-black text-emerald-600 block mt-0.5">
+                              {totalInvestedCompleted.toLocaleString()} FCFA
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Produits Terminés</span>
+                            <span className="text-xl font-sans font-black text-slate-800 block mt-0.5">
+                              {completedInvestments.length}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* List */}
+                        <div className="space-y-3">
+                          {completedInvestments.length === 0 ? (
+                            <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 p-5">
+                              <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                              <p className="text-xs font-bold text-slate-400">Aucun produit d'investissement n'est encore terminé.</p>
+                            </div>
+                          ) : (
+                            [...completedInvestments].reverse().map((inv) => {
+                              return (
+                                <div 
+                                  key={inv.id}
+                                  className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 space-y-3 hover:border-slate-200 transition-all text-left"
+                                >
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <h4 className="text-xs font-sans font-black text-slate-800">
+                                        {inv.productName}
+                                      </h4>
+                                      <span className="text-[8.5px] font-sans font-bold text-slate-400 block mt-0.5">
+                                        Plan de {inv.durationDays} jours • {inv.dailyReturn.toLocaleString()} F/jour
+                                      </span>
+                                    </div>
+                                    <span className="text-[8.5px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2 py-0.5 rounded-md">
+                                      Terminé ✓
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-left">
+                                    <div>
+                                      <span className="text-[9px] text-slate-400 font-extrabold uppercase block">Investi</span>
+                                      <span className="text-xs font-sans font-black text-slate-700">
+                                        {inv.price.toLocaleString()} F
+                                      </span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[9px] text-slate-400 font-extrabold uppercase block">Gains Récupérés</span>
+                                      <span className="text-xs font-sans font-black text-emerald-600">
+                                        {inv.totalReturnClaimed.toLocaleString()} F
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="pt-1 text-[9.5px] text-slate-400 font-medium text-left">
+                                    Acheté le : {formatDate(inv.createdAt)}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               );
@@ -3894,17 +4054,17 @@ export default function Dashboard({
                 )}
               </div>
 
-              {/* 2. QUICK ACCESS BUTTONS ROW (4 BUTTONS) */}
-              <div className="grid grid-cols-4 gap-2 pt-1.5 pb-1.5">
+              {/* 2. QUICK ACCESS BUTTONS ROW (4 BUTTONS - ENLARGED ORIGINAL PLAN) */}
+              <div className="bg-white rounded-[28px] p-5 shadow-[0_6px_20px_rgba(0,0,0,0.02)] border border-slate-100/90 grid grid-cols-4 gap-2 pt-4.5 pb-4.5">
                 {/* Recharger */}
                 <button
                   onClick={() => setActiveTab('deposit')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-13 h-13 bg-amber-50 border border-amber-200/50 text-amber-600 flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 group-hover:bg-amber-100/80 group-hover:text-amber-700 shadow-sm">
-                    <Wallet className="w-6 h-6 stroke-[2.25]" />
+                  <div className="w-15 h-15 bg-amber-500 text-white flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 shadow-md shadow-amber-500/20 shrink-0">
+                    <Wallet className="w-7.5 h-7.5 stroke-[2.25]" />
                   </div>
-                  <span className="font-sans font-black text-[10.5px] sm:text-[11.5px] text-slate-800 mt-1.5 block tracking-wide truncate max-w-full">
+                  <span className="font-sans font-black text-xs sm:text-[13px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
                     {t('Recharger', 'Deposit')}
                   </span>
                 </button>
@@ -3914,10 +4074,10 @@ export default function Dashboard({
                   onClick={() => setActiveTab('withdraw')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-13 h-13 bg-amber-50 border border-amber-200/50 text-amber-600 flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 group-hover:bg-amber-100/80 group-hover:text-amber-700 shadow-sm">
-                    <ArrowUpCircle className="w-6 h-6 stroke-[2.25]" />
+                  <div className="w-15 h-15 bg-blue-600 text-white flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 shadow-md shadow-blue-500/20 shrink-0">
+                    <ArrowUpCircle className="w-7.5 h-7.5 stroke-[2.25]" />
                   </div>
-                  <span className="font-sans font-black text-[10.5px] sm:text-[11.5px] text-slate-800 mt-1.5 block tracking-wide truncate max-w-full">
+                  <span className="font-sans font-black text-xs sm:text-[13px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
                     {t('Retirer', 'Withdraw')}
                   </span>
                 </button>
@@ -3927,10 +4087,10 @@ export default function Dashboard({
                   onClick={() => setActiveTab('team')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-13 h-13 bg-amber-50 border border-amber-200/50 text-amber-600 flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 group-hover:bg-amber-100/80 group-hover:text-amber-700 shadow-sm">
-                    <Users className="w-6 h-6 stroke-[2.25]" />
+                  <div className="w-15 h-15 bg-slate-800 text-white flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 shadow-md shadow-slate-700/20 shrink-0">
+                    <Users className="w-7.5 h-7.5 stroke-[2.25]" />
                   </div>
-                  <span className="font-sans font-black text-[10.5px] sm:text-[11.5px] text-slate-800 mt-1.5 block tracking-wide truncate max-w-full">
+                  <span className="font-sans font-black text-xs sm:text-[13px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
                     {t('Mon Équipe', 'My Team')}
                   </span>
                 </button>
@@ -3940,10 +4100,10 @@ export default function Dashboard({
                   onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
-                  <div className="w-13 h-13 bg-amber-50 border border-amber-200/50 text-amber-600 flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 group-hover:bg-amber-100/80 group-hover:text-amber-700 shadow-sm">
-                    <MessageCircle className="w-6 h-6 stroke-[2.25]" />
+                  <div className="w-15 h-15 bg-emerald-600 text-white flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 shadow-md shadow-emerald-500/20 shrink-0">
+                    <MessageCircle className="w-7.5 h-7.5 stroke-[2.25]" />
                   </div>
-                  <span className="font-sans font-black text-[10.5px] sm:text-[11.5px] text-slate-800 mt-1.5 block tracking-wide truncate max-w-full">
+                  <span className="font-sans font-black text-xs sm:text-[13px] text-slate-800 mt-2 block tracking-wide truncate max-w-full">
                     Canal WA
                   </span>
                 </button>
@@ -3994,25 +4154,28 @@ export default function Dashboard({
               </div>
 
               {/* 4. CARD: CENTRE D'ACTIVITÉS DE BIEN-ÊTRE */}
-              <div className="bg-white rounded-[28px] p-5 shadow-[0_6px_20px_rgba(0,0,0,0.03)] border-2 border-slate-100/90 space-y-4">
-                <div className="space-y-0.5">
-                  <h3 className="font-sans font-black text-slate-800 text-[13px] uppercase tracking-tight">
+              <div className="bg-white rounded-[32px] p-6.5 sm:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.04)] border-2 border-slate-100/90 space-y-6">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-amber-600 font-extrabold uppercase tracking-widest block leading-none">
+                    {t("Activités & Récompenses", "Activities & Rewards")}
+                  </span>
+                  <h3 className="font-sans font-black text-slate-800 text-[16px] sm:text-lg uppercase tracking-tight">
                     {t("Centre d'activités de bien-être", "Wellness Activity Center")}
                   </h3>
                 </div>
 
-                <div className="space-y-3 pt-0.5">
+                <div className="space-y-5 pt-1">
                   {/* Roue de la chance row */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 bg-amber-50 text-amber-500 rounded-[14px] flex items-center justify-center shrink-0 border-2 border-amber-100/40">
-                        <Trophy className="w-5 h-5 stroke-[2.25]" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50/10 transition-all duration-300">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-13 h-13 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shrink-0 border-2 border-amber-100/40 shadow-xs">
+                        <Trophy className="w-7 h-7 stroke-[2.25]" />
                       </div>
                       <div>
-                        <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
+                        <h4 className="font-sans font-black text-[14.5px] sm:text-[15.5px] text-slate-800 leading-snug">
                           {t("Roue de la chance", "Wheel of Fortune")}
                         </h4>
-                        <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
+                        <span className="text-[11px] sm:text-xs text-slate-500 font-bold block mt-1 leading-normal">
                           {t("Taux de gain du tirage au sort de 100%", "100% winning rate draw")}
                         </span>
                       </div>
@@ -4020,26 +4183,23 @@ export default function Dashboard({
 
                     <button
                       onClick={() => setProfileSubPage('wheel')}
-                      className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-2 px-3.5 rounded-full text-[10.5px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0"
+                      className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-3 px-6 rounded-2xl text-[12px] sm:text-[13px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-md shadow-amber-500/10 border-0 shrink-0 text-center uppercase"
                     >
                       {t("Tirage au sort", "Draw")}
                     </button>
                   </div>
 
-                  {/* Divider */}
-                  <div className="border-t-2 border-slate-100 my-0.5" />
-
                   {/* Centre des missions row */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 bg-amber-50 text-amber-500 rounded-[14px] flex items-center justify-center shrink-0 border-2 border-amber-100/40">
-                        <Gift className="w-5 h-5 stroke-[2.25]" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50/10 transition-all duration-300">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-13 h-13 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shrink-0 border-2 border-amber-100/40 shadow-xs">
+                        <Gift className="w-7 h-7 stroke-[2.25]" />
                       </div>
                       <div>
-                        <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
+                        <h4 className="font-sans font-black text-[14.5px] sm:text-[15.5px] text-slate-800 leading-snug">
                           {t("Centre des missions", "Mission Center")}
                         </h4>
-                        <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
+                        <span className="text-[11px] sm:text-xs text-slate-500 font-bold block mt-1 leading-normal max-w-sm">
                           {t("Après avoir complété chaque mission, vous recevrez une récompense", "Complete missions for rewards")}
                         </span>
                       </div>
@@ -4047,7 +4207,7 @@ export default function Dashboard({
 
                     <button
                       onClick={() => setProfileSubPage('missions')}
-                      className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-2 px-3.5 rounded-full text-[10.5px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0"
+                      className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-3 px-6 rounded-2xl text-[12px] sm:text-[13px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-md shadow-amber-500/10 border-0 shrink-0 text-center uppercase"
                     >
                       {t("Visiter", "Visit")}
                     </button>
@@ -4187,17 +4347,6 @@ export default function Dashboard({
 
                 {/* Right Column: Products List */}
                 <div className="flex-1 w-full space-y-4">
-                  {productSubTab !== 'stability' && !hasStabilityActivation && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex gap-3 text-left">
-                      <span className="text-xl shrink-0">💡</span>
-                      <div className="space-y-1">
-                        <h4 className="font-sans font-black text-amber-800 text-xs uppercase tracking-wider">Plan de Stabilité Requis</h4>
-                        <p className="text-[11px] text-amber-700 font-bold leading-relaxed">
-                          Vous pouvez consulter nos plans des catégories <strong>Bien-être</strong> ou <strong>Activité</strong> ci-dessous. Cependant, vous devez d'abord acheter et posséder au moins un plan d'investissement de la catégorie <strong>Stabilité</strong> avant d'avoir accès à ceux-ci.
-                        </p>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products
@@ -4706,6 +4855,11 @@ export default function Dashboard({
                           </optgroup>
                           <optgroup label="Mali 🇲🇱">
                             <option value="Orange (ML)">Orange (ML)</option>
+                          </optgroup>
+                          <optgroup label="Niger 🇳🇪">
+                            <option value="Airtel (NE)">Airtel (NE)</option>
+                            <option value="Moov (NE)">Moov (NE)</option>
+                            <option value="Orange (NE)">Orange (NE)</option>
                           </optgroup>
                           <optgroup label="Congo RDC 🇨🇩">
                             <option value="Vodacom (COD)">Vodacom (COD)</option>
@@ -6031,25 +6185,25 @@ export default function Dashboard({
                     </div>
                   </div>
 
-                  {/* RECHARGE & RETRAIT CARD BUTTONS */}
-                  <div className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 flex items-center justify-between">
+                  {/* RECHARGE & RETRAIT CARD BUTTONS (ENLARGED ORIGINAL PLAN) */}
+                  <div className="bg-white rounded-[28px] p-6 shadow-xs border border-slate-100 flex items-center justify-between">
                     <button 
                       onClick={() => setActiveTab('deposit')}
-                      className="flex-1 flex items-center justify-center gap-3 font-sans font-black text-slate-800 hover:text-amber-600 transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
+                      className="flex-1 flex items-center justify-center gap-3.5 font-sans font-black text-slate-800 hover:text-amber-600 transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
                     >
-                      <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/30 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
-                        <Coins className="w-6 h-6 stroke-[2.25]" />
+                      <div className="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
+                        <Coins className="w-7.5 h-7.5 stroke-[2.25]" />
                       </div>
-                      <span className="text-[13.5px] sm:text-base font-black">Recharge &gt;</span>
+                      <span className="text-sm sm:text-base font-sans font-black text-slate-800">Recharge &gt;</span>
                     </button>
                     <button 
                       onClick={() => setActiveTab('withdraw')}
-                      className="flex-1 flex items-center justify-center gap-3 font-sans font-black text-slate-800 hover:text-amber-600 transition-all cursor-pointer border-0 bg-transparent py-2 outline-none"
+                      className="flex-1 flex items-center justify-center gap-3.5 font-sans font-black text-slate-800 hover:text-blue-600 transition-all cursor-pointer border-0 bg-transparent py-2 outline-none"
                     >
-                      <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/30 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
-                        <ArrowUpCircle className="w-6 h-6 stroke-[2.25]" />
+                      <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+                        <ArrowUpCircle className="w-7.5 h-7.5 stroke-[2.25]" />
                       </div>
-                      <span className="text-[13.5px] sm:text-base font-black">Retrait &gt;</span>
+                      <span className="text-sm sm:text-base font-sans font-black text-slate-800">Retrait &gt;</span>
                     </button>
                   </div>
 
@@ -6070,9 +6224,9 @@ export default function Dashboard({
                       className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                     >
                       <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
-                        <Coins className="w-7 h-7 stroke-[2.25]" />
+                        <History className="w-7 h-7 stroke-[2.25]" />
                       </div>
-                      <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Mon Solde</span>
+                      <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Historique</span>
                     </button>
 
                     <button 
@@ -6232,29 +6386,7 @@ export default function Dashboard({
                         <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">À Propos</span>
                       </button>
 
-                      {/* Canal WA */}
-                      <button 
-                        onClick={() => window.open(DataStore.getWhatsAppChannel(), '_blank')}
-                        className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
-                      >
-                        <div className="w-14 h-14 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
-                          <MessageCircle className="w-7 h-7 stroke-[2.25]" />
-                        </div>
-                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Canal WA</span>
-                      </button>
-
-                      {/* Paramètres / Changer MDP */}
-                      <button 
-                        onClick={() => setProfileSubPage('settings')}
-                        className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
-                      >
-                        <div className="w-14 h-14 bg-slate-100 text-slate-500 flex items-center justify-center rounded-2xl transition-transform group-hover:scale-105 shadow-sm">
-                          <Settings className="w-7 h-7 stroke-[2.25]" />
-                        </div>
-                        <span className="text-[11px] sm:text-xs font-sans font-black text-slate-700 mt-2 leading-tight">Paramètres</span>
-                      </button>
-
-                      {/* Admin Access (only for admins) */}
+                             {/* Admin Access (only for admins) */}
                       {userState.role === 'admin' && (
                         <button 
                           onClick={() => {
@@ -6311,10 +6443,10 @@ export default function Dashboard({
           })()}
         </main>
       )}
- 
+
       {/* DASHBOARD MOBILE FIXED BOTTOM NAVIGATION */}
-      <footer className="fixed bottom-0 left-0 right-0 py-2 px-2 bg-white border-t border-blue-100/60 backdrop-blur-md z-40 shadow-[0_-10px_30px_rgba(249,115,22,0.06)]">
-        <div className="max-w-2xl mx-auto flex items-center justify-between font-bold text-[11px] md:text-xs">
+      <footer className="fixed bottom-0 left-0 right-0 py-4.5 px-4 bg-white border-t-2 border-slate-150/90 backdrop-blur-md z-40 shadow-[0_-14px_45px_rgba(0,0,0,0.08)]">
+        <div className="max-w-2xl mx-auto flex items-center justify-between font-bold text-xs sm:text-sm">
           
           <button
             onClick={() => {
@@ -6323,70 +6455,87 @@ export default function Dashboard({
               setActiveTab('dashboard');
               setShowAnnouncementDismissible(true);
             }}
-            className={`flex flex-col items-center space-y-0.5 flex-1 transition-all ${activeTab === 'dashboard' && !isAdminMode ? 'text-[#1b64d9] scale-102 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
+              activeTab === 'dashboard' && !isAdminMode 
+                ? 'text-[#1b64d9] scale-112 font-black' 
+                : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
+            }`}
           >
-            <Home className="w-5.5 h-5.5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px]">{t('Accueil', 'Home')}</span>
+            <Home className="w-7.5 h-7.5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px]">{t('Accueil', 'Home')}</span>
           </button>
- 
+  
           <button
             onClick={() => {
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('products');
             }}
-            className={`flex flex-col items-center space-y-0.5 flex-1 transition-all ${activeTab === 'products' && !isAdminMode ? 'text-[#1b64d9] scale-102 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
+              activeTab === 'products' && !isAdminMode 
+                ? 'text-[#1b64d9] scale-112 font-black' 
+                : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
+            }`}
           >
-            <Briefcase className="w-5.5 h-5.5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px]">{t('Produit', 'Product')}</span>
+            <Briefcase className="w-7.5 h-7.5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px]">{t('Produit', 'Product')}</span>
           </button>
- 
+  
           <button
             onClick={() => {
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('proofs');
             }}
-            className="flex flex-col items-center flex-1 transition-all relative -top-3.5 z-50 cursor-pointer"
+            className="flex flex-col items-center flex-1 transition-all relative -top-6 z-50 cursor-pointer duration-200"
           >
-            <div className={`w-13 h-13 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(27,100,217,0.25)] transition-all duration-200 border-2 ${
+            <div className={`w-17 h-17 rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(27,100,217,0.35)] transition-all duration-200 border-2 ${
               activeTab === 'proofs' && !isAdminMode 
-                ? 'bg-[#1b64d9] text-white border-white scale-105 shadow-blue-500/25' 
-                : 'bg-white text-slate-500 border-slate-100/60 hover:text-slate-700 hover:border-slate-200'
+                ? 'bg-[#1b64d9] text-white border-white scale-115 shadow-blue-500/40' 
+                : 'bg-white text-slate-500 border-slate-150 hover:text-slate-700 hover:border-slate-250'
             }`}>
-              <Megaphone className="w-5.5 h-5.5 stroke-[2.5]" />
+              <Megaphone className="w-7.5 h-7.5 stroke-[2.5]" />
             </div>
-            <span className={`font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px] mt-0.5 transition-colors ${
-              activeTab === 'proofs' && !isAdminMode ? 'text-[#1b64d9]' : 'text-slate-500'
+            <span className={`font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px] mt-1 transition-colors duration-250 ${
+              activeTab === 'proofs' && !isAdminMode ? 'text-[#1b64d9] scale-105' : 'text-slate-500'
             }`}>{t('Avis', 'Reviews')}</span>
           </button>
- 
+  
           <button
             onClick={() => {
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('forum');
             }}
-            className={`flex flex-col items-center space-y-0.5 flex-1 transition-all ${activeTab === 'forum' && !isAdminMode ? 'text-[#1b64d9] scale-102 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
+              activeTab === 'forum' && !isAdminMode 
+                ? 'text-[#1b64d9] scale-112 font-black' 
+                : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
+            }`}
           >
-            <MessageSquare className="w-5.5 h-5.5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px]">{t('Forum', 'Forum')}</span>
+            <MessageSquare className="w-7.5 h-7.5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px]">{t('Forum', 'Forum')}</span>
           </button>
- 
+  
           <button
             onClick={() => {
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('profile');
             }}
-            className={`flex flex-col items-center space-y-0.5 flex-1 transition-all ${activeTab === 'profile' && !isAdminMode ? 'text-[#1b64d9] scale-102 font-black' : 'text-slate-500 opacity-80 hover:opacity-100'}`}
+            className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
+              activeTab === 'profile' && !isAdminMode 
+                ? 'text-[#1b64d9] scale-112 font-black' 
+                : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
+            }`}
           >
-            <UserIcon className="w-5.5 h-5.5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wider text-[9px] sm:text-[10px] md:text-[11px]">{t('Profil', 'Profile')}</span>
+            <UserIcon className="w-7.5 h-7.5 stroke-[2.5]" />
+            <span className="font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px]">{t('Profil', 'Profile')}</span>
           </button>
-
+ 
         </div>
       </footer>
+
 
       {/* FOOTER NAVIGATION */}
 

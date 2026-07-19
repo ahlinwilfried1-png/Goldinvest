@@ -3478,7 +3478,8 @@ export default function AdminPanel({
                   'BJ': { name: 'Bénin 🇧🇯', ops: [{ id: '35', name: 'MTN Mobile Money' }, { id: '36', name: 'Moov Money' }] },
                   'BF': { name: 'Burkina Faso 🇧🇫', ops: [{ id: '33', name: 'Moov Money' }, { id: '34', name: 'Orange Money' }] },
                   'SN': { name: 'Sénégal 🇸🇳', ops: [{ id: '57', name: 'Orange Money' }, { id: '58', name: 'Wave' }] },
-                  'ML': { name: 'Mali 🇲🇱', ops: [{ id: '60', name: 'Orange Money' }] }
+                  'ML': { name: 'Mali 🇲🇱', ops: [{ id: '60', name: 'Orange Money' }] },
+                  'NE': { name: 'Niger 🇳🇪', ops: [{ id: '70', name: 'Airtel Money' }, { id: '71', name: 'Moov Money' }, { id: '72', name: 'Orange Money' }] }
                 }) as [string, { name: string, ops: { id: string, name: string }[] }][]).map(([countryCode, countryInfo]) => (
                   <div key={countryCode} className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-5">
                     <span className="text-xs font-black text-yellow-500 block mb-4 uppercase tracking-wider font-sans border-b border-slate-800 pb-2">{countryInfo.name}</span>

@@ -494,7 +494,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
           return fallbackResp;
         }
       } catch (retryErr) {
-        console.error(`[apiFetch Failover] Alternate backend failed too:`, retryErr);
+        console.warn(`[apiFetch Failover] Alternate backend failed too:`, retryErr);
       }
     }
 
@@ -548,7 +548,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
           return response;
         }
       } catch (retryErr) {
-        console.error(`[apiFetch Network Failover] Retry failed too:`, retryErr);
+        console.warn(`[apiFetch Network Failover] Retry failed too:`, retryErr);
       }
     }
 
@@ -619,7 +619,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
       console.log(`[apiFetch Offline Fallback] Gracefully compiled offline store containing ${offlineStore['gi_users']?.length || 0} user(s).`);
       return new Response(JSON.stringify(offlineStore), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } catch (err) {
-      console.error('[apiFetch Offline Fallback] Fatal exception compiled local cache:', err);
+      console.warn('[apiFetch Offline Fallback] Fatal exception compiled local cache:', err);
     }
     return new Response(JSON.stringify({ success: false, error: "Cloud database is restricted or offline" }), { status: 503, headers: { 'Content-Type': 'application/json' } });
   }
@@ -2143,21 +2143,6 @@ export class DataStore {
     
     if (!user || !targetProduct) {
       return { success: false, message: 'VIP plan ou utilisateur introuvable.' };
-    }
-
-    // Check if stability product has been purchased for wellbeing or activity
-    const isWellbeingOrActivity = targetProduct.category === 'wellbeing' || targetProduct.category === 'activity';
-    if (isWellbeingOrActivity) {
-      const investments = this.getInvestments();
-      const hasStability = investments.some(inv => {
-        if (inv.userId !== userId) return false;
-        const p = products.find(prod => prod.id === inv.productId || prod.name === inv.productName);
-        const cat = p?.category || inv.category || 'stability';
-        return cat === 'stability';
-      });
-      if (!hasStability) {
-        return { success: false, message: "L'achat d'un produit de stabilité est obligatoire avant d'avoir accès aux produits de Bien-être ou d'Activité." };
-      }
     }
 
     if (user.balance < targetProduct.price) {

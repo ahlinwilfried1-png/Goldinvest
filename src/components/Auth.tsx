@@ -33,7 +33,8 @@ export const eligibleCountries = [
   { name: 'Côte d’Ivoire', code: '+225', flag: '🇨🇮' },
   { name: 'Burkina Faso', code: '+226', flag: '🇧🇫' },
   { name: 'Sénégal', code: '+221', flag: '🇸🇳' },
-  { name: 'Mali', code: '+223', flag: '🇲🇱' }
+  { name: 'Mali', code: '+223', flag: '🇲🇱' },
+  { name: 'Niger', code: '+227', flag: '🇳🇪' }
 ];
 
 interface AuthProps {
@@ -108,8 +109,8 @@ export default function Auth({
       ? "Veuillez saisir votre numéro de téléphone avant d'envoyer l'OTP."
       : "Please enter your phone number before sending the OTP.",
     otpSentSuccess: (code: string) => lang === 'FR'
-      ? `🔑 CODE OTP ENVOYÉ : Saisissez le code ${code} pour finaliser votre inscription.`
-      : `🔑 OTP CODE SENT: Enter the code ${code} to finalize your registration.`,
+      ? `🔑 CODE OTP ENVOYÉ : Saisissez le code reçu pour finaliser votre inscription.`
+      : `🔑 OTP CODE SENT: Enter the code received to finalize your registration.`,
     errorEmptyWhatsapp: lang === 'FR' ? "Le numéro de téléphone est requis." : "Phone number is required.",
     errorMinPassword: lang === 'FR' 
       ? "Le mot de passe doit contenir au moins 6 caractères pour garantir la sécurité de votre capital."
@@ -221,7 +222,6 @@ export default function Auth({
       setOtpCode(code);
       setSendingOtp(false);
       setOtpCountdown(60);
-      setSuccessMessage(t.otpSentSuccess(code));
     }, 1000);
   };
 
@@ -432,25 +432,7 @@ export default function Auth({
             <div className="mb-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-xs text-emerald-800 font-bold flex items-start space-x-2 animate-fade-in">
               <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                {sentOtpCode && (successMessage.includes(sentOtpCode) || successMessage.includes("SENT") || successMessage.includes("ENVOYÉ")) ? (
-                  <span>
-                    {lang === 'FR' ? "🔑 CODE OTP ENVOYÉ : Saisissez le code " : "🔑 OTP CODE SENT: Enter the code "}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOtpCode(sentOtpCode);
-                        setSuccessMessage(lang === 'FR' ? "🔑 Code OTP rempli automatiquement !" : "🔑 OTP Code auto-filled !");
-                      }}
-                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-sans font-black px-2.5 py-1 rounded-md cursor-pointer transition-colors mx-1 inline-block animate-pulse border border-emerald-300 shadow-sm"
-                      title={lang === 'FR' ? "Cliquez pour insérer automatiquement le code" : "Click to auto-insert the code"}
-                    >
-                      {sentOtpCode}
-                    </button>{" "}
-                    {lang === 'FR' ? "(Cliquez sur le code pour le remplir automatiquement)" : "(Click on the code to auto-fill)"}
-                  </span>
-                ) : (
-                  <span>{successMessage}</span>
-                )}
+                <span>{successMessage}</span>
               </div>
             </div>
           )}
