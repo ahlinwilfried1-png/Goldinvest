@@ -460,6 +460,7 @@ export default function Dashboard({
   // Navigation tabs: 'dashboard', 'products', 'team', 'profile', 'deposit', 'withdraw', 'proofs', 'forum'
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'team' | 'profile' | 'deposit' | 'withdraw' | 'proofs' | 'forum'>('dashboard');
   const [referralListTab, setReferralListTab] = useState<'level1' | 'level2' | 'level3'>('level1');
+  const [showTeamDetailsPage, setShowTeamDetailsPage] = useState<boolean>(false);
   const [productSubTab, setProductSubTab] = useState<'stability' | 'wellbeing' | 'activity'>('stability');
 
   // Local lists
@@ -4084,7 +4085,10 @@ export default function Dashboard({
 
                 {/* Mon Équipe */}
                 <button
-                  onClick={() => setActiveTab('team')}
+                  onClick={() => {
+                    setActiveTab('team');
+                    setShowTeamDetailsPage(false);
+                  }}
                   className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none focus:outline-none"
                 >
                   <div className="w-15 h-15 bg-slate-800 text-white flex items-center justify-center rounded-2xl transition-all group-hover:scale-105 shadow-md shadow-slate-700/20 shrink-0">
@@ -4463,7 +4467,7 @@ export default function Dashboard({
                                   <span className={`${theme.statVal} font-black`}>{p.dailyReturn.toLocaleString()} {getCurrency()}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs">
-                                  <span className={`${theme.statLabel} font-bold`}>Cycle défini</span>
+                                  <span className={`${theme.statLabel} font-bold`}>Revenu</span>
                                   <span className="font-extrabold text-slate-800 font-mono bg-slate-100/80 px-2.5 py-0.5 rounded-md text-[11px] border border-slate-200/50">
                                     {p.durationDays} Jours
                                   </span>
@@ -5378,6 +5382,181 @@ export default function Dashboard({
               return list.filter(u => getUserInvestedAmount(u.id) > 0).length;
             };
 
+            if (showTeamDetailsPage) {
+              return (
+                <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn">
+                  <div className="max-w-xl mx-auto w-full space-y-6">
+                    
+                    {/* Header with back button */}
+                    <div className="flex items-center space-x-3.5 mb-2 pt-2">
+                      <button 
+                        onClick={() => setShowTeamDetailsPage(false)}
+                        className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs active:scale-95"
+                      >
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                      </button>
+                      <div>
+                        <span className="text-[10px] text-blue-600 font-sans font-black uppercase tracking-widest block leading-none mb-1">RÉSEAU GOLDSPEED</span>
+                        <h2 className="font-sans font-black text-slate-900 text-base sm:text-lg uppercase tracking-tight leading-none">Détails de l'équipe</h2>
+                      </div>
+                    </div>
+
+                    {/* Level Tabs Inside the Details Page */}
+                    <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200/50">
+                      <button
+                        onClick={() => setReferralListTab('level1')}
+                        className={`py-3 text-center rounded-xl text-xs font-black transition-all cursor-pointer border-none outline-none ${
+                          referralListTab === 'level1'
+                            ? 'bg-white text-yellow-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-700 bg-transparent'
+                        }`}
+                      >
+                        🥇 Niv 1 ({level1Users.length})
+                      </button>
+                      <button
+                        onClick={() => setReferralListTab('level2')}
+                        className={`py-3 text-center rounded-xl text-xs font-black transition-all cursor-pointer border-none outline-none ${
+                          referralListTab === 'level2'
+                            ? 'bg-white text-emerald-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-700 bg-transparent'
+                        }`}
+                      >
+                        🥈 Niv 2 ({level2Users.length})
+                      </button>
+                      <button
+                        onClick={() => setReferralListTab('level3')}
+                        className={`py-3 text-center rounded-xl text-xs font-black transition-all cursor-pointer border-none outline-none ${
+                          referralListTab === 'level3'
+                            ? 'bg-white text-amber-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-700 bg-transparent'
+                        }`}
+                      >
+                        🥉 Niv 3 ({level3Users.length})
+                      </button>
+                    </div>
+
+                    {/* Commissions and total stats banner */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white p-4.5 rounded-3xl border border-slate-100 shadow-xs text-left">
+                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">Membres Actifs</span>
+                        <span className="text-xl font-sans font-black text-slate-800 block mt-1">
+                          {referralListTab === 'level1' 
+                            ? getActiveUsersCount(level1Users) 
+                            : referralListTab === 'level2' 
+                              ? getActiveUsersCount(level2Users) 
+                              : getActiveUsersCount(level3Users)}
+                        </span>
+                      </div>
+                      <div className="bg-white p-4.5 rounded-3xl border border-slate-100 shadow-xs text-left">
+                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">Total Investi</span>
+                        <span className="text-xl font-sans font-black text-emerald-600 block mt-1">
+                          {referralListTab === 'level1' 
+                            ? getLevelInvestedAmount(level1Users).toLocaleString() 
+                            : referralListTab === 'level2' 
+                              ? getLevelInvestedAmount(level2Users).toLocaleString() 
+                              : getLevelInvestedAmount(level3Users).toLocaleString()} XOF
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* DETAILED LIST OF MEMBERS */}
+                    <div className="bg-white rounded-[32px] p-5 sm:p-6 border border-slate-100 shadow-xs space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <span className="text-[11px] text-slate-700 font-black uppercase tracking-wider block pl-0.5">
+                          LISTE DES FILLEULS : {referralListTab === 'level1' ? 'Niveau 1' : referralListTab === 'level2' ? 'Niveau 2' : 'Niveau 3'}
+                        </span>
+                        <span className="text-[9px] bg-blue-50 text-blue-600 font-bold font-mono px-2.5 py-1 rounded-full border border-blue-100/50 uppercase tracking-wide">
+                          {referralListTab === 'level1' ? level1Users.length : referralListTab === 'level2' ? level2Users.length : level3Users.length} membres
+                        </span>
+                      </div>
+
+                      {/* Member Items */}
+                      <div className="space-y-3 pt-1">
+                        {referralListTab === 'level1' && (
+                          level1Users.length === 0 ? (
+                            <div className="text-center py-10 bg-slate-50/50 rounded-2xl border border-slate-100">
+                              <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
+                                Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) dans votre équipe.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5">
+                              {level1Users.map(u => (
+                                <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
+                                  <div className="flex flex-col text-left">
+                                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
+                                    <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
+                                    <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
+                                  </div>
+                                  <div className="flex flex-col text-right">
+                                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
+                                    <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )
+                        )}
+
+                        {referralListTab === 'level2' && (
+                          level2Users.length === 0 ? (
+                            <div className="text-center py-10 bg-slate-50/50 rounded-2xl border border-slate-100">
+                              <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
+                                Aucun membre de Niveau 2 enregistré dans votre réseau.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5">
+                              {level2Users.map(u => (
+                                <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
+                                  <div className="flex flex-col text-left">
+                                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
+                                    <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
+                                    <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
+                                  </div>
+                                  <div className="flex flex-col text-right">
+                                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
+                                    <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )
+                        )}
+
+                        {referralListTab === 'level3' && (
+                          level3Users.length === 0 ? (
+                            <div className="text-center py-10 bg-slate-50/50 rounded-2xl border border-slate-100">
+                              <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
+                                Aucun membre de Niveau 3 enregistré dans votre réseau.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5">
+                              {level3Users.map(u => (
+                                <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
+                                  <div className="flex flex-col text-left">
+                                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
+                                    <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
+                                    <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
+                                  </div>
+                                  <div className="flex flex-col text-right">
+                                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
+                                    <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div className="bg-[#f8fafc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 px-4 sm:px-6 md:px-12 xl:px-20 pt-6 pb-24 min-h-[95vh] text-slate-800 text-left animate-fadeIn animate-duration-300">
                 <div className="max-w-xl mx-auto w-full space-y-6">
@@ -5449,8 +5628,7 @@ export default function Dashboard({
                       </h3>
                       <button
                         onClick={() => {
-                          const el = document.getElementById('team-list-section');
-                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          setShowTeamDetailsPage(true);
                         }}
                         className="text-blue-600 hover:text-blue-700 text-xs font-extrabold flex items-center space-x-1.5 uppercase tracking-wider cursor-pointer bg-transparent border-none outline-none"
                       >
@@ -5464,7 +5642,10 @@ export default function Dashboard({
                       
                       {/* Level 1 (N1) - Golden Card */}
                       <div 
-                        onClick={() => setReferralListTab('level1')}
+                        onClick={() => {
+                          setReferralListTab('level1');
+                          setShowTeamDetailsPage(true);
+                        }}
                         className={`bg-[#fef9c3] rounded-3xl p-4 sm:p-5 flex items-center justify-between border transition-all duration-200 cursor-pointer ${
                           referralListTab === 'level1' 
                             ? 'border-yellow-400 ring-2 ring-yellow-400 ring-offset-4 ring-offset-white scale-[1.01]' 
@@ -5498,7 +5679,10 @@ export default function Dashboard({
 
                       {/* Level 2 (N2) - Mint Card */}
                       <div 
-                        onClick={() => setReferralListTab('level2')}
+                        onClick={() => {
+                          setReferralListTab('level2');
+                          setShowTeamDetailsPage(true);
+                        }}
                         className={`bg-[#eefcf3] rounded-3xl p-4 sm:p-5 flex items-center justify-between border transition-all duration-200 cursor-pointer ${
                           referralListTab === 'level2' 
                             ? 'border-emerald-400 ring-2 ring-emerald-400 ring-offset-4 ring-offset-white scale-[1.01]' 
@@ -5532,7 +5716,10 @@ export default function Dashboard({
 
                       {/* Level 3 (N3) - Soft Peach/Yellow Card */}
                       <div 
-                        onClick={() => setReferralListTab('level3')}
+                        onClick={() => {
+                          setReferralListTab('level3');
+                          setShowTeamDetailsPage(true);
+                        }}
                         className={`bg-[#fffbeb] rounded-3xl p-4 sm:p-5 flex items-center justify-between border transition-all duration-200 cursor-pointer ${
                           referralListTab === 'level3' 
                             ? 'border-amber-400 ring-2 ring-amber-400 ring-offset-4 ring-offset-white scale-[1.01]' 
@@ -5585,127 +5772,6 @@ export default function Dashboard({
                       <span className="text-sm font-black text-slate-800 block mt-0.5">
                         {totalReferrals} membres
                       </span>
-                    </div>
-                  </div>
-
-                  {/* DETAILED LIST OF MEMBERS */}
-                  <div id="team-list-section" className="bg-white rounded-[32px] p-5 sm:p-6 border border-slate-100 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                      <span className="text-[11px] text-slate-700 font-black uppercase tracking-wider block pl-0.5">
-                        DÉTAILS : {referralListTab === 'level1' ? 'Niveau 1' : referralListTab === 'level2' ? 'Niveau 2' : 'Niveau 3'}
-                      </span>
-                      <span className="text-[9px] bg-blue-50 text-blue-600 font-bold font-mono px-2.5 py-1 rounded-full border border-blue-100/50 uppercase tracking-wide">
-                        {referralListTab === 'level1' ? level1Users.length : referralListTab === 'level2' ? level2Users.length : level3Users.length} membres
-                      </span>
-                    </div>
-
-                    {/* Total Invested Per Level Banner */}
-                    <div className="pt-1">
-                      {referralListTab === 'level1' && (
-                        <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex justify-between items-center text-xs">
-                          <span className="font-sans font-black uppercase tracking-tight text-amber-800">Total investi Niveau 1 :</span>
-                          <span className="font-mono font-black text-amber-700">
-                            {getLevelInvestedAmount(level1Users).toLocaleString()} XOF
-                          </span>
-                        </div>
-                      )}
-                      {referralListTab === 'level2' && (
-                        <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-2xl flex justify-between items-center text-xs">
-                          <span className="font-sans font-black uppercase tracking-tight text-emerald-800">Total investi Niveau 2 :</span>
-                          <span className="font-mono font-black text-emerald-700">
-                            {getLevelInvestedAmount(level2Users).toLocaleString()} XOF
-                          </span>
-                        </div>
-                      )}
-                      {referralListTab === 'level3' && (
-                        <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex justify-between items-center text-xs">
-                          <span className="font-sans font-black uppercase tracking-tight text-amber-800">Total investi Niveau 3 :</span>
-                          <span className="font-mono font-black text-amber-700">
-                            {getLevelInvestedAmount(level3Users).toLocaleString()} XOF
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Member Items */}
-                    <div className="space-y-3 pt-1">
-                      {referralListTab === 'level1' && (
-                        level1Users.length === 0 ? (
-                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
-                            <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
-                              Vous n'avez pas encore de filleuls inscrits directement (Niveau 1) dans votre équipe.
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {level1Users.map(u => (
-                              <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
-                                <div className="flex flex-col text-left">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
-                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
-                                  <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
-                                </div>
-                                <div className="flex flex-col text-right">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
-                                  <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      )}
-
-                      {referralListTab === 'level2' && (
-                        level2Users.length === 0 ? (
-                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
-                            <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
-                              Aucun membre de Niveau 2 enregistré dans votre réseau.
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {level2Users.map(u => (
-                              <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
-                                <div className="flex flex-col text-left">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
-                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
-                                  <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
-                                </div>
-                                <div className="flex flex-col text-right">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
-                                  <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      )}
-
-                      {referralListTab === 'level3' && (
-                        level3Users.length === 0 ? (
-                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
-                            <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto leading-relaxed">
-                              Aucun membre de Niveau 3 enregistré dans votre réseau.
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {level3Users.map(u => (
-                              <div key={u.id} className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center justify-between hover:border-slate-200 transition-colors">
-                                <div className="flex flex-col text-left">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Membre parrainé</span>
-                                  <span className="text-xs sm:text-sm font-sans font-black text-slate-800 mt-0.5">{u.name || "Membre anonyme"}</span>
-                                  <span className="text-[10px] text-slate-400 font-mono font-medium">{maskPhoneNumber(u.whatsapp || u.id)}</span>
-                                </div>
-                                <div className="flex flex-col text-right">
-                                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Montant investi</span>
-                                  <span className="text-xs sm:text-sm font-mono font-black text-emerald-600 mt-0.5">{getUserInvestedAmount(u.id).toLocaleString()} XOF</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      )}
                     </div>
                   </div>
 
@@ -6230,7 +6296,10 @@ export default function Dashboard({
                     </button>
 
                     <button 
-                      onClick={() => setActiveTab('team')}
+                      onClick={() => {
+                        setActiveTab('team');
+                        setShowTeamDetailsPage(false);
+                      }}
                       className="flex flex-col items-center justify-center text-center group cursor-pointer border-none bg-transparent outline-none"
                     >
                       <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
@@ -6405,22 +6474,22 @@ export default function Dashboard({
                   </div>
 
                   {/* SYSTEM SECURITY ASSURANCE CARD */}
-                  <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white rounded-3xl p-5 shadow-lg border border-slate-800 space-y-3 text-left">
+                  <div className="bg-white text-slate-800 rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3 text-left">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                      <div className="w-9 h-9 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0b5cd5]">
                         <ShieldCheck className="w-5 h-5 stroke-[2.25]" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-100">Protection et Sécurité Garanties</h4>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Certificat SSL SHA-256 Actif</p>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Protection et Sécurité Garanties</h4>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Certificat SSL SHA-256 Actif</p>
                       </div>
                     </div>
-                    <div className="text-[11.5px] text-slate-300 leading-relaxed font-medium space-y-2 bg-slate-900/40 p-3.5 rounded-2xl border border-slate-800/40">
+                    <div className="text-[11.5px] text-slate-600 leading-relaxed font-medium space-y-2 bg-slate-50/60 p-3.5 rounded-2xl border border-slate-100">
                       <div className="flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="font-sans font-black text-emerald-400 text-[10px] uppercase tracking-wider">Connexion Chiffrée de Bout en Bout</span>
+                        <span className="font-sans font-black text-emerald-600 text-[10px] uppercase tracking-wider">Connexion Chiffrée de Bout en Bout</span>
                       </div>
-                      <p className="text-slate-300 text-[11px] leading-normal font-semibold">
+                      <p className="text-slate-600 text-[11px] leading-normal font-semibold">
                         Toutes vos recharges, retraits et informations d'investissement sont sécurisés par des protocoles anti-fraude d'infrastructure de niveau bancaire.
                       </p>
                     </div>
@@ -6453,6 +6522,7 @@ export default function Dashboard({
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('dashboard');
+              setShowTeamDetailsPage(false);
               setShowAnnouncementDismissible(true);
             }}
             className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
@@ -6470,6 +6540,7 @@ export default function Dashboard({
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('products');
+              setShowTeamDetailsPage(false);
             }}
             className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
               activeTab === 'products' && !isAdminMode 
@@ -6486,6 +6557,7 @@ export default function Dashboard({
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('proofs');
+              setShowTeamDetailsPage(false);
             }}
             className="flex flex-col items-center flex-1 transition-all relative -top-6 z-50 cursor-pointer duration-200"
           >
@@ -6506,6 +6578,7 @@ export default function Dashboard({
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('forum');
+              setShowTeamDetailsPage(false);
             }}
             className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
               activeTab === 'forum' && !isAdminMode 
@@ -6522,6 +6595,7 @@ export default function Dashboard({
               setIsAdminMode(false);
               setProfileSubPage(null);
               setActiveTab('profile');
+              setShowTeamDetailsPage(false);
             }}
             className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
               activeTab === 'profile' && !isAdminMode 

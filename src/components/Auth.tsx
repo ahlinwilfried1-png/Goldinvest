@@ -92,8 +92,8 @@ export default function Auth({
     envoyer: lang === 'FR' ? "ENVOYER" : "SEND",
     lostPassword: lang === 'FR' ? "Mot de passe perdu ?" : "Lost password?",
     lostPasswordTip: lang === 'FR' 
-      ? "💡 Pour récupérer ou réinitialiser votre compte d’investisseur, veuillez contacter notre service client en cliquant sur l'icône de l'assistance en bas à droite de votre écran."
-      : "💡 To recover or reset your investor account, please contact our customer service by clicking on the assistance icon in the bottom right corner of your screen.",
+      ? "💡 Pour récupérer ou réinitialiser votre compte d’investisseur, veuillez contacter l'administration de Goldspeed."
+      : "💡 To recover or reset your investor account, please contact Goldspeed administration.",
     submitBtn: loading
       ? (lang === 'FR' ? "Traitement en cours..." : "Processing...")
       : (isRegister 
@@ -700,8 +700,8 @@ export default function Auth({
         </p>
       </div>
 
-      {/* Floating Support Representative Badge in the bottom right corner exactly like screenshot */}
-      {!isRegister && (
+      {/* Floating Support Representative Badge removed */}
+      {false && !isRegister && (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-center select-none animate-bounce" style={{ animationDuration: '3s' }}>
           <button 
             type="button"
@@ -722,8 +722,8 @@ export default function Auth({
         </div>
       )}
 
-      {/* Modern interactive Customer Support Modal */}
-      {showSupportModal && (
+      {/* Modern interactive Customer Support Modal removed */}
+      {false && showSupportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative border border-slate-100 text-slate-800 text-left animate-scale-up">
             <button 

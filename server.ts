@@ -422,12 +422,9 @@ async function startServer() {
       modified = true;
     }
 
-    // Explicitly reset the cleanup timestamp to 0 so we don't trigger cache clearing on clients' browsers,
-    // thereby protecting users' local account and purchase data and allowing automatic merge/sync.
-    if (storeData["gi_cleanup_timestamp"] !== 0) {
-      console.log("[STARTUP] Resetting gi_cleanup_timestamp to 0 to prevent client cache wipe");
+    // Explicitly allow real cleanup timestamps to sync with clients' browsers
+    if (!storeData["gi_cleanup_timestamp"]) {
       storeData["gi_cleanup_timestamp"] = 0;
-      modified = true;
     }
 
     // CONFIGURE 21 PRODUCTS (7 STABILITY, 7 WELL-BEING, 7 ACTIVITY) WITH REQUESTED PRICE POINTS
@@ -1934,7 +1931,7 @@ async function startServer() {
         let oldVal = storeData[key];
 
         // Guard against outdated clients uploading resurrected users/history caches
-        if (!isGenuineAdmin && serverCleanup > incomingCleanup && tablesToGuard.includes(key)) {
+        if (serverCleanup > incomingCleanup && tablesToGuard.includes(key)) {
           console.log(`[API SAVE-STORE] Outdated client cache uploaded for key "${key}" (${incomingCleanup} < ${serverCleanup}). Skipping update to prevent resurrection.`);
           continue;
         }
