@@ -123,7 +123,7 @@
   "gi_mlm_level3_rate": 1,
   "gi_withdrawals_blocked_global": false,
   "gi_referral_domain": "",
-  "gi_whatsapp_group": "https://chat.whatsapp.com/BvMCUCh3iqE7Z9hl7motA1?s=cl&p=i&ilr=0&amv=0",
+  "gi_whatsapp_group": "https://chat.whatsapp.com/FjYdljjkYOt7815rT1UZ8q?s=cl&p=i&ilr=0&amv=0",
   "gi_whatsapp_channel": "https://whatsapp.com/channel/0029VbCs5L0J3jurEKVu8x2n",
   "gi_bonus_codes": [
     {
@@ -175,9 +175,10 @@
       "isCyclic": true,
       "vipLevel": 1,
       "isBlocked": false,
-      "dailyReturn": 100,
-      "totalReturn": 4000,
-      "durationDays": 40,
+      "dailyReturn": 400,
+      "totalReturn": 146000,
+      "durationDays": 365,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -189,9 +190,10 @@
       "isCyclic": true,
       "vipLevel": 2,
       "isBlocked": false,
-      "dailyReturn": 300,
-      "totalReturn": 12000,
-      "durationDays": 40,
+      "dailyReturn": 1050,
+      "totalReturn": 383250,
+      "durationDays": 365,
+      "lastModified": 1784493740007,
       "generatedProductIds": []
     },
     {
@@ -203,23 +205,25 @@
       "isCyclic": true,
       "vipLevel": 3,
       "isBlocked": false,
-      "dailyReturn": 700,
-      "totalReturn": 28000,
-      "durationDays": 40,
+      "dailyReturn": 2200,
+      "totalReturn": 803000,
+      "durationDays": 365,
+      "lastModified": 1784493762044,
       "generatedProductIds": []
     },
     {
       "id": "stab-4",
       "tag": "Option Platine",
       "name": "Goldspeed Option Platine",
-      "price": 25000,
+      "price": 20000,
       "category": "stability",
       "isCyclic": true,
       "vipLevel": 4,
       "isBlocked": false,
-      "dailyReturn": 2000,
-      "totalReturn": 80000,
-      "durationDays": 40,
+      "dailyReturn": 4600,
+      "totalReturn": 1679000,
+      "durationDays": 365,
+      "lastModified": 1784494000379,
       "generatedProductIds": []
     },
     {
@@ -231,9 +235,10 @@
       "isCyclic": true,
       "vipLevel": 5,
       "isBlocked": false,
-      "dailyReturn": 4500,
-      "totalReturn": 180000,
-      "durationDays": 40,
+      "dailyReturn": 12600,
+      "totalReturn": 4599000,
+      "durationDays": 365,
+      "lastModified": 1784494022563,
       "generatedProductIds": []
     },
     {
@@ -245,9 +250,10 @@
       "isCyclic": true,
       "vipLevel": 6,
       "isBlocked": false,
-      "dailyReturn": 10000,
-      "totalReturn": 400000,
-      "durationDays": 40,
+      "dailyReturn": 25000,
+      "totalReturn": 9125000,
+      "durationDays": 365,
+      "lastModified": 1784494041832,
       "generatedProductIds": []
     },
     {
@@ -259,9 +265,10 @@
       "isCyclic": true,
       "vipLevel": 7,
       "isBlocked": false,
-      "dailyReturn": 24000,
-      "totalReturn": 960000,
-      "durationDays": 40,
+      "dailyReturn": 52000,
+      "totalReturn": 18980000,
+      "durationDays": 365,
+      "lastModified": 1784494059808,
       "generatedProductIds": []
     },
     {
@@ -276,6 +283,7 @@
       "dailyReturn": 1000,
       "totalReturn": 10000,
       "durationDays": 10,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -290,6 +298,7 @@
       "dailyReturn": 2600,
       "totalReturn": 26000,
       "durationDays": 10,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -304,6 +313,7 @@
       "dailyReturn": 7000,
       "totalReturn": 70000,
       "durationDays": 10,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -318,6 +328,7 @@
       "dailyReturn": 19000,
       "totalReturn": 190000,
       "durationDays": 10,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -332,6 +343,7 @@
       "dailyReturn": 42500,
       "totalReturn": 425000,
       "durationDays": 10,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -346,6 +358,7 @@
       "dailyReturn": 90000,
       "totalReturn": 900000,
       "durationDays": 10,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -360,6 +373,7 @@
       "dailyReturn": 190000,
       "totalReturn": 1900000,
       "durationDays": 10,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -374,6 +388,7 @@
       "dailyReturn": 2500,
       "totalReturn": 7500,
       "durationDays": 3,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -388,6 +403,7 @@
       "dailyReturn": 8000,
       "totalReturn": 24000,
       "durationDays": 3,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -402,6 +418,7 @@
       "dailyReturn": 22000,
       "totalReturn": 66000,
       "durationDays": 3,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -416,6 +433,7 @@
       "dailyReturn": 58000,
       "totalReturn": 174000,
       "durationDays": 3,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -430,6 +448,7 @@
       "dailyReturn": 150000,
       "totalReturn": 450000,
       "durationDays": 3,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -444,6 +463,7 @@
       "dailyReturn": 380000,
       "totalReturn": 1140000,
       "durationDays": 3,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     },
     {
@@ -458,6 +478,7 @@
       "dailyReturn": 1000000,
       "totalReturn": 3000000,
       "durationDays": 3,
+      "lastModified": 1784493711770,
       "generatedProductIds": []
     }
   ],

@@ -1247,9 +1247,9 @@ export class DataStore {
   }
 
   static getWhatsAppGroup(): string {
-    const defaultGroup = 'https://chat.whatsapp.com/BvMCUCh3iqE7Z9hl7motA1?s=cl&p=i&ilr=0&amv=0';
+    const defaultGroup = 'https://chat.whatsapp.com/FjYdljjkYOt7815rT1UZ8q?s=cl&p=i&ilr=0&amv=0';
     const val = getFromStore<string>('gi_whatsapp_group', defaultGroup).trim();
-    if (!val || val.includes('DlLEImu1s9y2hnWKWFRqAv')) {
+    if (!val || val.includes('DlLEImu1s9y2hnWKWFRqAv') || val.includes('BvMCUCh3iq')) {
       return defaultGroup;
     }
     return val;
