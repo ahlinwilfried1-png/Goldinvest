@@ -511,11 +511,7 @@ export default function Dashboard({
 
   // Forum state variables
   const [forumPosts, setForumPosts] = useState<any[]>(() => {
-    try {
-      const stored = localStorage.getItem('rockygold_forum_posts_v3');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {}
-    return [];
+    return DataStore.getForumPosts();
   });
   const [forumMessageInput, setForumMessageInput] = useState<string>('');
   const [forumCommentInputs, setForumCommentInputs] = useState<Record<string, string>>({});
@@ -1444,6 +1440,8 @@ export default function Dashboard({
     // Sync configured deposit numbers from administrator so they update automatically without page refresh
     setManualDepositNumbers(DataStore.getManualDepositNumbers());
 
+    setForumPosts(DataStore.getForumPosts());
+
     try {
       const checkKey = `gi_last_daily_${currentUser.id}`;
       setHasCheckedInToday(localStorage.getItem(checkKey) === new Date().toDateString());
@@ -1735,8 +1733,10 @@ export default function Dashboard({
       image1: forumImage1 || undefined,
       image2: forumImage2 || undefined,
       likes: 0,
+      likedBy: [],
       hasLiked: false,
       createdAt: new Date().toISOString(),
+      lastModified: Date.now(),
       comments: []
     };
 
@@ -1745,27 +1745,30 @@ export default function Dashboard({
     setForumMessageInput('');
     setForumImage1(null);
     setForumImage2(null);
-    try {
-      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(updated));
-    } catch (err) {}
+    DataStore.saveForumPosts(updated);
     triggerToast("Votre message a été publié sur le Forum !", "success");
   };
 
   const handleLikeForumPost = (postId: string) => {
     const updated = forumPosts.map(p => {
       if (p.id === postId) {
+        const likedBy = p.likedBy || (p.hasLiked ? ['legacy-like'] : []);
+        const alreadyLiked = likedBy.includes(userState.id);
+        const newLikedBy = alreadyLiked 
+          ? likedBy.filter((id: string) => id !== userState.id)
+          : [...likedBy, userState.id];
         return {
           ...p,
-          likes: p.hasLiked ? p.likes - 1 : p.likes + 1,
-          hasLiked: !p.hasLiked
+          likedBy: newLikedBy,
+          likes: newLikedBy.length,
+          hasLiked: newLikedBy.includes(userState.id),
+          lastModified: Date.now()
         };
       }
       return p;
     });
     setForumPosts(updated);
-    try {
-      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(updated));
-    } catch (err) {}
+    DataStore.saveForumPosts(updated);
   };
 
   const handlePostForumComment = (postId: string) => {
@@ -1787,7 +1790,8 @@ export default function Dashboard({
           comments: [
             ...(p.comments || []),
             { author: userState.name || 'Membre', text: commentText }
-          ]
+          ],
+          lastModified: Date.now()
         };
       }
       return p;
@@ -1795,9 +1799,7 @@ export default function Dashboard({
 
     setForumPosts(updated);
     setForumCommentInputs(prev => ({ ...prev, [postId]: '' }));
-    try {
-      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(updated));
-    } catch (err) {}
+    DataStore.saveForumPosts(updated);
     triggerToast("Commentaire ajouté !", "success");
   };
 
@@ -5277,7 +5279,7 @@ export default function Dashboard({
               {/* FORUM TIMELINE OF POSTS */}
               <div className="space-y-4">
                 {forumPosts.map((post) => {
-                  const hasLiked = post.hasLiked;
+                  const hasLiked = post.likedBy ? post.likedBy.includes(userState.id) : post.hasLiked;
                   const commentInputVal = forumCommentInputs[post.id] || '';
 
                   return (

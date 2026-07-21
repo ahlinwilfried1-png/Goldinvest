@@ -114,14 +114,11 @@ export default function AdminPanel({
 
   // Forum and proofs sub-tabs states
   const [proofsSubTab, setProofsSubTab] = useState<'avis' | 'forum'>('avis');
-  const [forumPosts, setForumPosts] = useState<any[]>(() => {
-    try {
-      const stored = localStorage.getItem('rockygold_forum_posts_v3');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [forumPosts, setForumPosts] = useState<any[]>(() => DataStore.getForumPosts());
+
+  React.useEffect(() => {
+    setForumPosts(DataStore.getForumPosts());
+  }, [proofsSubTab]);
 
   const handleDeleteInvestment = (investmentId: string) => {
     const inv = investments.find(i => i.id === investmentId);
@@ -201,10 +198,9 @@ export default function AdminPanel({
       message: "Voulez-vous vraiment supprimer définitivement cette publication du Forum ? Elle sera retirée pour tous les utilisateurs.",
       onConfirm: () => {
         try {
-          const stored = localStorage.getItem('rockygold_forum_posts_v3');
-          const posts = stored ? JSON.parse(stored) : [];
+          const posts = DataStore.getForumPosts();
           const updated = posts.filter((p: any) => p.id !== postId);
-          localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(updated));
+          DataStore.saveForumPosts(updated);
           setForumPosts(updated);
           setNotification({
             message: "🗑️ Publication du Forum supprimée avec succès !",
@@ -4038,8 +4034,7 @@ export default function AdminPanel({
                 type="button"
                 onClick={() => {
                   try {
-                    const stored = localStorage.getItem('rockygold_forum_posts_v3');
-                    if (stored) setForumPosts(JSON.parse(stored));
+                    setForumPosts(DataStore.getForumPosts());
                   } catch {}
                   setProofsSubTab('forum');
                 }}

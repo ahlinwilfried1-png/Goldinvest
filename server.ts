@@ -384,6 +384,7 @@ async function startServer() {
       "gi_whatsapp_group": "https://chat.whatsapp.com/FjYdljjkYOt7815rT1UZ8q?s=cl&p=i&ilr=0&amv=0",
       "gi_whatsapp_channel": "https://whatsapp.com/channel/0029VbCs5L0J3jurEKVu8x2n",
       "gi_withdrawal_proofs": [],
+      "gi_forum_posts": [],
       "gi_manual_deposit_numbers": {
         "TG_37": "*145*1*montant*70903319*code#",
         "TG_38": "*155*1*1*78829438*78829438*montant*code#",

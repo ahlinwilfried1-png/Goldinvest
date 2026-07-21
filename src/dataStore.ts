@@ -946,6 +946,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_withdrawals_blocked_global',
           'gi_referral_domain',
           'gi_withdrawal_proofs',
+          'gi_forum_posts',
           'gi_deleted_investments',
           'gi_deleted_users',
           'gi_manual_deposit_numbers',
@@ -966,6 +967,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
         DataStore.areWithdrawalsBlocked();
         DataStore.getReferralDomain();
         DataStore.getWithdrawalProofs();
+        DataStore.getForumPosts();
         DataStore.getManualDepositNumbers();
  
         for (const key of keysToSync) {
@@ -1495,6 +1497,39 @@ export class DataStore {
 
   static saveWithdrawalProofs(proofs: WithdrawalProof[]): void {
     setToStore<WithdrawalProof[]>('gi_withdrawal_proofs', proofs);
+  }
+
+  static getForumPosts(): any[] {
+    const val = getFromStore<any[]>('gi_forum_posts', []);
+    if (val.length === 0) {
+      try {
+        const storedOld = localStorage.getItem('rockygold_forum_posts_v3');
+        if (storedOld) {
+          const oldPosts = JSON.parse(storedOld);
+          if (Array.isArray(oldPosts) && oldPosts.length > 0) {
+            setToStore<any[]>('gi_forum_posts', oldPosts);
+            return oldPosts;
+          }
+        }
+      } catch (e) {}
+    }
+    return val;
+  }
+
+  static saveForumPosts(posts: any[]): void {
+    setToStore<any[]>('gi_forum_posts', posts);
+    try {
+      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(posts));
+    } catch (e) {}
+    apiFetch(getApiUrl('/api/save-store'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gi_forum_posts: posts
+      })
+    }).catch(err => {
+      console.error("Error saving forum posts to server", err);
+    });
   }
 
   // Auth Operations
