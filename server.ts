@@ -13,8 +13,8 @@ async function startServer() {
 
   const rawUrl = (process.env.SUPABASE_URL || "").trim();
   const rawKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
-  const supabaseUrl = rawUrl && rawUrl !== "" ? rawUrl : "https://ebculgppsrefzuwyaoip.supabase.co";
-  const supabaseKey = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViY3VsZ3Bwc3JlZnp1d3lhb2lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDM2NjMxNSwiZXhwIjoyMDk5OTQyMzE1fQ.P8NpwfA0tE7Qtph-QTHa0Is3Ifr5Gswe9FpqgP3fSak";
+  const supabaseUrl = rawUrl && rawUrl !== "" ? rawUrl : "https://tkevnstmvdencszavtno.supabase.co";
+  const supabaseKey = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrZXZuc3RtdmRlbmNzemF2dG5vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDcyMjI4MiwiZXhwIjoyMTAwMjk4MjgyfQ.EazoyCGWzLSEsSWt6uEhPz4_rH6Y7eTX9Gx0tU1uNq4";
   
   let supabase: any = null;
   let supabaseEnabled = true;
@@ -47,9 +47,41 @@ async function startServer() {
   const handleSupabaseError = (err: any, context: string) => {
     const errMsg = err && typeof err === 'object' && err.message ? err.message : JSON.stringify(err);
     const now = Date.now();
-    const shouldLog = (now - lastSupabaseErrorLog) > 10000; // Log at most once every 10 seconds
+    const shouldLog = (now - lastSupabaseErrorLog) > 30000; // Log at most once every 30 seconds
 
-    if (shouldLog && (!errMsg || !errMsg.includes('relation "store" does not exist'))) {
+    const isMissingTable = errMsg && (
+      errMsg.includes('relation "store" does not exist') || 
+      errMsg.includes('Could not find the table') || 
+      errMsg.includes('schema cache')
+    );
+
+    if (isMissingTable) {
+      if (shouldLog) {
+        console.warn("\n======================================================================");
+        console.warn("[SUPABASE NOTICE] La table 'store' n'existe pas encore dans votre base Supabase !");
+        console.warn("Exécutez ce script SQL dans l'onglet SQL Editor de Supabase :");
+        console.warn(`
+CREATE TABLE IF NOT EXISTS public.store (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.store ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow service_role full access" ON public.store FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (true) WITH CHECK (true);
+`);
+        console.warn("L'application continue de fonctionner sur la base de données locale db.json.");
+        console.warn("======================================================================\n");
+        lastSupabaseErrorLog = now;
+      }
+      supabaseEnabled = false;
+      supabaseLastRetry = now;
+      return;
+    }
+
+    if (shouldLog) {
       console.warn(`[SUPABASE ERROR] Failed in ${context}:`, errMsg);
       lastSupabaseErrorLog = now;
     }
@@ -59,7 +91,7 @@ async function startServer() {
         console.warn(`[SUPABASE CRITICAL] Supabase project has exceeded egress quota or is restricted. Disabling cloud sync for 1 hour to protect performance.`);
       }
       supabaseEnabled = false;
-      supabaseLastRetry = now + 60 * 60 * 1000; // Disable for 1 hour instead of 23 hours to allow quicker recovery
+      supabaseLastRetry = now + 60 * 60 * 1000; // Disable for 1 hour
       return;
     }
 
@@ -826,7 +858,7 @@ async function startServer() {
         console.log("[SERVER STARTUP] Fetching state from Supabase 'store' table...");
         const { data, error } = await withTimeout(supabase.from('store').select('*'), 3000);
         if (error) {
-          if (error.message && error.message.includes('relation "store" does not exist')) {
+          if (error.message && (error.message.includes('relation "store" does not exist') || error.message.includes('Could not find the table') || error.message.includes('schema cache'))) {
             console.warn("\n======================================================================");
             console.warn("[SUPABASE NOTICE] La table 'store' n'existe pas encore dans votre base de données Supabase !");
             console.warn("Veuillez vous rendre dans le Dashboard Supabase (onglet SQL Editor) et exécuter le script SQL suivant :");

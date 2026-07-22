@@ -1784,16 +1784,11 @@ export default function Dashboard({
   };
 
   const handlePostForumComment = (postId: string) => {
-    const post = forumPosts.find(p => p.id === postId);
-    const hasCapture = post && (post.image1 || post.image2);
-
-    if (hasCapture && userState.role !== 'admin') {
-      triggerToast("⚠️ Les réponses aux preuves de capture sont désactivées pour les membres.", "error");
+    const commentText = (forumCommentInputs[postId] || '').trim();
+    if (!commentText) {
+      triggerToast("⚠️ Veuillez écrire un commentaire avant d'envoyer.", "error");
       return;
     }
-
-    const commentText = forumCommentInputs[postId] || '';
-    if (!commentText.trim()) return;
 
     const updated = forumPosts.map(p => {
       if (p.id === postId) {
@@ -1801,7 +1796,12 @@ export default function Dashboard({
           ...p,
           comments: [
             ...(p.comments || []),
-            { author: userState.name || 'Membre', text: commentText }
+            { 
+              id: 'c-' + Date.now(),
+              author: (userState.name || 'Membre') + ' ' + (userState.country === 'Cameroun' ? '🇨🇲' : userState.country === 'Togo' ? '🇹🇬' : userState.country === 'Bénin' ? '🇧🇯' : userState.country === 'Côte d’Ivoire' ? '🇨🇮' : userState.country === 'Burkina Faso' ? '🇧🇫' : userState.country === 'Sénégal' ? '🇸🇳' : userState.country === 'Mali' ? '🇲🇱' : userState.country === 'Niger' ? '🇳🇪' : '🌍'),
+              text: commentText,
+              date: new Date().toISOString()
+            }
           ],
           lastModified: Date.now()
         };
@@ -1812,7 +1812,7 @@ export default function Dashboard({
     setForumPosts(updated);
     setForumCommentInputs(prev => ({ ...prev, [postId]: '' }));
     DataStore.saveForumPosts(updated);
-    triggerToast("Commentaire ajouté !", "success");
+    triggerToast("Commentaire publié sur le forum !", "success");
   };
 
   const handleClaimMission = (missionId: string, reward: number, target: number) => {
@@ -5400,12 +5400,12 @@ export default function Dashboard({
                         );
                       })()}
 
-                      {/* Social counts & Likes */}
+                      {/* Social counts, Likes & Comments section */}
                       <div className="flex justify-between items-center border-t border-slate-100 mt-4 pt-3 text-slate-500">
                         <button
                           type="button"
                           onClick={() => handleLikeForumPost(post.id)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-sans font-black tracking-wide uppercase transition-all duration-150 ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-sans font-black tracking-wide uppercase transition-all duration-150 cursor-pointer ${
                             hasLiked
                               ? 'bg-[#f0f4ff] text-[#1b64d9] font-black saturate-150 border border-blue-100'
                               : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent'
@@ -5414,6 +5414,61 @@ export default function Dashboard({
                           <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-[#1b64d9] stroke-[#1b64d9]' : ''}`} />
                           <span>{post.likes} Likes</span>
                         </button>
+
+                        <span className="text-[10px] font-sans font-bold text-slate-400">
+                          💬 {(post.comments || []).length} commentaire{(post.comments || []).length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+
+                      {/* Comments List & Add Comment Form */}
+                      <div className="mt-3.5 pt-3 border-t border-slate-100/80 space-y-3">
+                        {/* Render existing comments if any */}
+                        {(post.comments && post.comments.length > 0) && (
+                          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {post.comments.map((comment: any, cIdx: number) => (
+                              <div key={comment.id || cIdx} className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl text-left text-xs">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="font-sans font-black text-slate-800 text-[11px]">
+                                    {maskUserPhone(comment.author || 'Membre')}
+                                  </span>
+                                  {comment.date && (
+                                    <span className="text-[8.5px] text-slate-400 font-bold">
+                                      {new Date(comment.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-slate-700 font-medium text-[11.5px] leading-relaxed">
+                                  {maskUserPhone(comment.text || '')}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Add Comment Input */}
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={commentInputVal}
+                            onChange={(e) => setForumCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handlePostForumComment(post.id);
+                              }
+                            }}
+                            placeholder="Écrire une réponse ou un commentaire..."
+                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/20 focus:border-[#1b64d9] transition-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handlePostForumComment(post.id)}
+                            className="px-3.5 py-2 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-[11px] rounded-xl transition-all cursor-pointer select-none active:scale-95 uppercase tracking-wider flex items-center gap-1 shadow-2xs"
+                          >
+                            <Send className="w-3 h-3 stroke-[2.5]" />
+                            <span className="hidden sm:inline">Répondre</span>
+                          </button>
+                        </div>
                       </div>
 
                     </div>
