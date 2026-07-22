@@ -419,8 +419,8 @@ export function getApiUrl(endpoint: string): string {
   return endpoint;
 }
 
-export const SUPABASE_URL = "https://ebculgppsrefzuwyaoip.supabase.co";
-export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViY3VsZ3Bwc3JlZnp1d3lhb2lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDM2NjMxNSwiZXhwIjoyMDk5OTQyMzE1fQ.P8NpwfA0tE7Qtph-QTHa0Is3Ifr5Gswe9FpqgP3fSak";
+export const SUPABASE_URL = "https://fpqxupbqxzsngezkqwcs.supabase.co";
+export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcXh1cGJxeHpzbmdlemtxd2NzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDcyOTY3OSwiZXhwIjoyMTAwMzA1Njc5fQ.ox4gSGLyYXqUaAeXem-HPjQRfJFxGCfo4gg3DQ9pkvc";
 
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   let activeUrl = url;

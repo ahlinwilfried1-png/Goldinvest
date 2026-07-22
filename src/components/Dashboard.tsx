@@ -5348,49 +5348,31 @@ export default function Dashboard({
                               <span className="text-[10px] font-sans font-black text-slate-600 uppercase tracking-wider flex items-center gap-1">
                                 📸 Captures d'écran ({imagesList.length})
                               </span>
-                              <span className="text-[9px] text-slate-400 font-bold">
-                                Toucher une image pour l'agrandir
-                              </span>
                             </div>
 
                             <div className={`grid gap-2.5 ${imagesList.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                               {imagesList.map((imgUrl, idx) => (
                                 <div key={idx} className="space-y-1.5">
-                                  <div 
-                                    onClick={() => setSelectedAvisImage(imgUrl)}
-                                    className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 flex justify-center items-center cursor-zoom-in group shadow-xs"
-                                  >
+                                  <div className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 flex justify-center items-center shadow-xs">
                                     <img
                                       src={imgUrl}
                                       alt={`Capture ${idx + 1}`}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                      className="w-full h-full object-cover"
                                       referrerPolicy="no-referrer"
                                     />
-                                    <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                      <span className="bg-slate-900/90 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border border-slate-700 shadow-md">
-                                        🔍 Agrandir
-                                      </span>
-                                    </div>
                                     <div className="absolute top-2 left-2 bg-slate-950/75 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md backdrop-blur-xs">
                                       Capture #{idx + 1}
                                     </div>
                                   </div>
 
                                   <div className="flex gap-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedAvisImage(imgUrl)}
-                                      className="flex-1 py-1 px-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-sans font-black text-[9.5px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider shadow-2xs"
-                                    >
-                                      🔍 Zoom
-                                    </button>
                                     <a
                                       href={imgUrl}
                                       download={`preuve-forum-${post.id}-${idx + 1}.png`}
                                       onClick={(e) => e.stopPropagation()}
-                                      className="flex-1 py-1 px-2 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-[9.5px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider shadow-2xs"
+                                      className="w-full py-1.5 px-2 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-[9.5px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider shadow-2xs"
                                     >
-                                      💾 Télécharger
+                                      💾 Télécharger la preuve
                                     </a>
                                   </div>
                                 </div>
@@ -5400,12 +5382,12 @@ export default function Dashboard({
                         );
                       })()}
 
-                      {/* Social counts, Likes & Comments section */}
+                      {/* Likes section */}
                       <div className="flex justify-between items-center border-t border-slate-100 mt-4 pt-3 text-slate-500">
                         <button
                           type="button"
                           onClick={() => handleLikeForumPost(post.id)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-sans font-black tracking-wide uppercase transition-all duration-150 cursor-pointer ${
+                          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-sans font-black tracking-wide uppercase transition-all duration-150 cursor-pointer ${
                             hasLiked
                               ? 'bg-[#f0f4ff] text-[#1b64d9] font-black saturate-150 border border-blue-100'
                               : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent'
@@ -5414,61 +5396,6 @@ export default function Dashboard({
                           <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-[#1b64d9] stroke-[#1b64d9]' : ''}`} />
                           <span>{post.likes} Likes</span>
                         </button>
-
-                        <span className="text-[10px] font-sans font-bold text-slate-400">
-                          💬 {(post.comments || []).length} commentaire{(post.comments || []).length > 1 ? 's' : ''}
-                        </span>
-                      </div>
-
-                      {/* Comments List & Add Comment Form */}
-                      <div className="mt-3.5 pt-3 border-t border-slate-100/80 space-y-3">
-                        {/* Render existing comments if any */}
-                        {(post.comments && post.comments.length > 0) && (
-                          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            {post.comments.map((comment: any, cIdx: number) => (
-                              <div key={comment.id || cIdx} className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl text-left text-xs">
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="font-sans font-black text-slate-800 text-[11px]">
-                                    {maskUserPhone(comment.author || 'Membre')}
-                                  </span>
-                                  {comment.date && (
-                                    <span className="text-[8.5px] text-slate-400 font-bold">
-                                      {new Date(comment.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-slate-700 font-medium text-[11.5px] leading-relaxed">
-                                  {maskUserPhone(comment.text || '')}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Add Comment Input */}
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={commentInputVal}
-                            onChange={(e) => setForumCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handlePostForumComment(post.id);
-                              }
-                            }}
-                            placeholder="Écrire une réponse ou un commentaire..."
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/20 focus:border-[#1b64d9] transition-all"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handlePostForumComment(post.id)}
-                            className="px-3.5 py-2 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-[11px] rounded-xl transition-all cursor-pointer select-none active:scale-95 uppercase tracking-wider flex items-center gap-1 shadow-2xs"
-                          >
-                            <Send className="w-3 h-3 stroke-[2.5]" />
-                            <span className="hidden sm:inline">Répondre</span>
-                          </button>
-                        </div>
                       </div>
 
                     </div>

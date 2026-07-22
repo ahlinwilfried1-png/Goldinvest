@@ -13,8 +13,8 @@ async function startServer() {
 
   const rawUrl = (process.env.SUPABASE_URL || "").trim();
   const rawKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
-  const supabaseUrl = rawUrl && rawUrl !== "" ? rawUrl : "https://tkevnstmvdencszavtno.supabase.co";
-  const supabaseKey = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrZXZuc3RtdmRlbmNzemF2dG5vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDcyMjI4MiwiZXhwIjoyMTAwMjk4MjgyfQ.EazoyCGWzLSEsSWt6uEhPz4_rH6Y7eTX9Gx0tU1uNq4";
+  const supabaseUrl = rawUrl && rawUrl !== "" ? rawUrl : "https://fpqxupbqxzsngezkqwcs.supabase.co";
+  const supabaseKey = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcXh1cGJxeHpzbmdlemtxd2NzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDcyOTY3OSwiZXhwIjoyMTAwMzA1Njc5fQ.ox4gSGLyYXqUaAeXem-HPjQRfJFxGCfo4gg3DQ9pkvc";
   
   let supabase: any = null;
   let supabaseEnabled = true;
