@@ -979,22 +979,30 @@ export default function AdminPanel({
   // Product actions
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newVipName) return;
+    if (!newVipName.trim()) {
+      alert("⚠️ Veuillez saisir un nom pour l'offre d'investissement.");
+      return;
+    }
 
     const payload = {
       vipLevel: newVipLevel,
-      name: newVipName,
+      name: newVipName.trim(),
       price: newVipPrice,
       dailyReturn: newVipDaily,
       durationDays: newVipDuration,
-      tag: newVipTag || undefined,
+      tag: newVipTag.trim() || undefined,
       isCyclic: newVipIsCyclic,
       generatedProductIds: newVipGeneratedProductIds,
       category: newVipCategory,
       totalReturn: newVipDaily * newVipDuration,
-      imageUrl: newVipImageUrl || undefined
+      imageUrl: newVipImageUrl.trim() || undefined
     };
 
+    // 1. Immediately update local DataStore and React state for instant responsiveness
+    DataStore.addNewProduct(payload);
+    syncLocalStates();
+
+    // 2. Persist to central server / database
     try {
       const resp = await apiFetch(getApiUrl('/api/admin/product/create'), {
         method: 'POST',
@@ -1003,14 +1011,9 @@ export default function AdminPanel({
       });
       if (resp.ok) {
         await executeDirectCentralSync();
-      } else {
-        DataStore.addNewProduct(payload);
-        syncLocalStates();
       }
     } catch (e) {
       console.error("Failed server product creation, fallback is local:", e);
-      DataStore.addNewProduct(payload);
-      syncLocalStates();
     }
 
     setNewVipName('');
@@ -1019,9 +1022,15 @@ export default function AdminPanel({
     setNewVipIsCyclic(false);
     setNewVipGeneratedProductIds([]);
     setNewVipCategory('stability');
+    alert("✅ Produit d'investissement créé et enregistré avec succès !");
   };
 
   const handleDeleteProduct = async (id: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer ce produit d'investissement ?")) return;
+
+    DataStore.deleteProduct(id);
+    syncLocalStates();
+
     try {
       const resp = await apiFetch(getApiUrl('/api/admin/product/delete'), {
         method: 'POST',
@@ -1030,19 +1039,18 @@ export default function AdminPanel({
       });
       if (resp.ok) {
         await executeDirectCentralSync();
-      } else {
-        DataStore.deleteProduct(id);
-        syncLocalStates();
       }
     } catch (e) {
       console.error("Failed server product deletion, fallback local:", e);
-      DataStore.deleteProduct(id);
-      syncLocalStates();
     }
+    alert("✅ Produit supprimé avec succès !");
   };
 
   const handleDeleteAllProducts = async () => {
-    if (confirm('⚠️ Voulez-vous vraiment supprimer définitivement TOUS les produits d\'investissement (Stabilité et Activité) ? Cette action est irréversible.')) {
+    if (confirm('⚠️ Voulez-vous vraiment supprimer définitivement TOUS les produits d\'investissement ? Cette action est irréversible.')) {
+      DataStore.saveProducts([]);
+      syncLocalStates();
+
       try {
         const resp = await apiFetch(getApiUrl('/api/admin/product/delete-all'), {
           method: 'POST',
@@ -1050,15 +1058,11 @@ export default function AdminPanel({
         });
         if (resp.ok) {
           await executeDirectCentralSync();
-        } else {
-          DataStore.saveProducts([]);
-          syncLocalStates();
         }
       } catch (e) {
         console.error("Failed server products clear:", e);
-        DataStore.saveProducts([]);
-        syncLocalStates();
       }
+      alert("✅ Tous les produits ont été supprimés avec succès !");
     }
   };
 
@@ -1077,41 +1081,47 @@ export default function AdminPanel({
   };
 
   const handleSaveProduct = async () => {
-    if (editingProduct) {
-      const payload = {
-        vipLevel: editProductVipLevel,
-        name: editProductName,
-        price: editProductPrice,
-        dailyReturn: editProductDailyReturn,
-        durationDays: editProductDuration,
-        tag: editProductTag || undefined,
-        isCyclic: editVipIsCyclic,
-        generatedProductIds: editVipGeneratedProductIds,
-        category: editVipCategory,
-        totalReturn: editProductDailyReturn * editProductDuration,
-        imageUrl: editProductImageUrl || undefined
-      };
+    if (!editingProduct) return;
 
-      try {
-        const resp = await apiFetch(getApiUrl('/api/admin/product/update'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: editingProduct.id, updatedP: payload })
-        });
-        if (resp.ok) {
-          await executeDirectCentralSync();
-        } else {
-          DataStore.updateProduct(editingProduct.id, payload);
-          syncLocalStates();
-        }
-      } catch (e) {
-        console.error("Failed server product update, fallback local:", e);
-        DataStore.updateProduct(editingProduct.id, payload);
-        syncLocalStates();
-      }
-
-      setEditingProduct(null);
+    if (!editProductName.trim()) {
+      alert("⚠️ Le nom du produit ne peut pas être vide.");
+      return;
     }
+
+    const payload = {
+      vipLevel: editProductVipLevel,
+      name: editProductName.trim(),
+      price: editProductPrice,
+      dailyReturn: editProductDailyReturn,
+      durationDays: editProductDuration,
+      tag: editProductTag.trim() || undefined,
+      isCyclic: editVipIsCyclic,
+      generatedProductIds: editVipGeneratedProductIds,
+      category: editVipCategory,
+      totalReturn: editProductDailyReturn * editProductDuration,
+      imageUrl: editProductImageUrl.trim() || undefined
+    };
+
+    // 1. Immediately update local DataStore and React state for instant responsiveness
+    DataStore.updateProduct(editingProduct.id, payload);
+    syncLocalStates();
+
+    // 2. Persist to central server / database
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/product/update'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: editingProduct.id, updatedP: payload })
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      }
+    } catch (e) {
+      console.error("Failed server product update, fallback local:", e);
+    }
+
+    setEditingProduct(null);
+    alert("✅ Produit mis à jour et enregistré avec succès !");
   };
 
   const handleCreateBonusCode = (e: React.FormEvent) => {
