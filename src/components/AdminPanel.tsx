@@ -23,7 +23,7 @@ import {
   Zap
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, BonusCode, SystemNotification, Investment, SupportMessage, WithdrawalProof } from '../types';
-import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl, apiFetch, safeLocalStorage } from '../dataStore';
+import { DataStore, DEFAULT_PRODUCTS, syncWithBackend, getApiUrl, apiFetch, safeLocalStorage, setToStore } from '../dataStore';
 
 const maskUserPhone = (str: string): string => {
   if (!str) return str;
@@ -365,17 +365,18 @@ export default function AdminPanel({
           if (Array.isArray(data['gi_investments'])) setInvestments(data['gi_investments']);
           if (Array.isArray(data['gi_support_messages'])) setSupportMessages(data['gi_support_messages']);
           if (Array.isArray(data['gi_withdrawal_proofs'])) setWithdrawalProofs(data['gi_withdrawal_proofs']);
+          if (Array.isArray(data['gi_forum_posts'])) setForumPosts(data['gi_forum_posts']);
           if (data['gi_manual_deposit_numbers'] && typeof data['gi_manual_deposit_numbers'] === 'object') {
             if (activeAdminTabRef.current !== 'canals') {
               setManualDepositNumbers(data['gi_manual_deposit_numbers']);
             }
           }
           
-          // 2. Keep local storage safe inside a try-catch to prevent iframe/sandboxed crashes
+          // 2. Keep local store and local storage safe
           try {
             for (const key of Object.keys(data)) {
               if (data[key] !== undefined && data[key] !== null) {
-                safeLocalStorage.setItem(key, JSON.stringify(data[key]));
+                setToStore(key, data[key]);
               }
             }
           } catch (storageErr) {
@@ -787,6 +788,8 @@ export default function AdminPanel({
     setBonusCodes(DataStore.getBonusCodes());
     setCommissions(DataStore.getCommissions());
     setInvestments(DataStore.getInvestments());
+    setWithdrawalProofs(DataStore.getWithdrawalProofs());
+    setForumPosts(DataStore.getForumPosts());
     onRefreshData();
   };
 
