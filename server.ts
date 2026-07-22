@@ -20,7 +20,7 @@ async function startServer() {
   let supabaseEnabled = true;
   let supabaseLastRetry = 0;
   let lastSupabaseErrorLog = 0;
-  const SUPABASE_RETRY_INTERVAL = 5000; // 5 seconds retry for high availability
+  const SUPABASE_RETRY_INTERVAL = 30000; // 30 seconds retry interval to protect Supabase compute resources
 
   const withTimeout = (promise: any, timeoutMs: number = 8000): Promise<any> => {
     return Promise.race([
@@ -66,7 +66,7 @@ async function startServer() {
     supabaseEnabled = false;
     supabaseLastRetry = now;
     if (shouldLog) {
-      console.warn(`[SUPABASE] Temporarily paused Supabase synchronization for 5 seconds to throttle requests.`);
+      console.warn(`[SUPABASE] Temporarily paused Supabase synchronization for 30 seconds to throttle requests and reduce CPU/memory load.`);
     }
   };
 
@@ -894,7 +894,7 @@ async function startServer() {
     if (!isSupabaseReady()) return;
     const now = Date.now();
     if (isSyncingSupabaseInBG) return;
-    if (now - lastSupabaseSyncTime < 8000) return; // Throttled to max once every 8 seconds
+    if (now - lastSupabaseSyncTime < 60000) return; // Throttled to max once every 60 seconds
     isSyncingSupabaseInBG = true;
     lastSupabaseSyncTime = now;
     syncWithSupabase()
@@ -904,10 +904,10 @@ async function startServer() {
       });
   }
 
-  // Periodic background synchronization every 12 seconds
+  // Periodic background synchronization every 60 seconds
   setInterval(() => {
     triggerBackgroundSupabaseSync();
-  }, 12000);
+  }, 60000);
 
   async function syncWithSupabase(): Promise<boolean> {
     if (!isSupabaseReady()) return false;
@@ -1859,9 +1859,6 @@ async function startServer() {
     } catch (e) {
       console.error("[SERVER GET-STORE] Error processing automatic payouts:", e);
     }
-
-    // Trigger non-blocking background sync with Supabase
-    triggerBackgroundSupabaseSync();
 
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
