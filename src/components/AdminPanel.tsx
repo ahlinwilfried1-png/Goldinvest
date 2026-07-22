@@ -432,6 +432,30 @@ export default function AdminPanel({
     }
   };
 
+  const handleSupabasePushToCloud = async () => {
+    try {
+      setSupabaseSyncLoading(true);
+      setSupabaseSyncResult(null);
+      const resp = await apiFetch(getApiUrl('/api/admin/push-to-supabase'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        setSupabaseSyncResult(`${data.message}`);
+        await executeDirectCentralSync();
+      } else {
+        setSupabaseSyncResult(`❌ Échec : ${data.message || 'Erreur inconnue'}`);
+      }
+    } catch (err: any) {
+      setSupabaseSyncResult(`❌ Erreur de transfert : ${err.message}`);
+    } finally {
+      setSupabaseSyncLoading(false);
+    }
+  };
+
   React.useEffect(() => {
     // Fast initial database load on mounts
     executeDirectCentralSync();
@@ -2033,14 +2057,22 @@ export default function AdminPanel({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               onClick={() => handleSupabaseForceSync(false)}
               disabled={supabaseSyncLoading}
-              className="px-4 py-2 bg-slate-900 border border-slate-700/60 hover:border-emerald-500 hover:bg-emerald-500/5 text-slate-200 transition-all font-bold rounded-lg text-xs flex flex-col items-center justify-center text-center cursor-pointer disabled:opacity-50"
+              className="px-3 py-2 bg-slate-900 border border-slate-700/60 hover:border-emerald-500 hover:bg-emerald-500/5 text-slate-200 transition-all font-bold rounded-lg text-xs flex flex-col items-center justify-center text-center cursor-pointer disabled:opacity-50"
             >
-              <span className="font-semibold text-[11px] text-slate-100">🤝 Fusionner les données</span>
-              <span className="text-[9px] text-slate-500 mt-0.5 font-normal">Récupère et fusionne sans écraser</span>
+              <span className="font-semibold text-[11px] text-slate-100">🤝 Fusionner Supabase</span>
+              <span className="text-[9px] text-slate-500 mt-0.5 font-normal">Récupère et fusionne</span>
+            </button>
+            <button
+              onClick={handleSupabasePushToCloud}
+              disabled={supabaseSyncLoading}
+              className="px-3 py-2 bg-slate-900 border border-blue-900/60 hover:border-blue-500 hover:bg-blue-500/10 text-slate-200 transition-all font-bold rounded-lg text-xs flex flex-col items-center justify-center text-center cursor-pointer disabled:opacity-50"
+            >
+              <span className="font-semibold text-[11px] text-blue-400">📤 Pousser vers Supabase</span>
+              <span className="text-[9px] text-slate-500 mt-0.5 font-normal">Envoie la base locale ({users.length} comptes)</span>
             </button>
             <button
               onClick={() => {
@@ -2049,10 +2081,10 @@ export default function AdminPanel({
                 }
               }}
               disabled={supabaseSyncLoading}
-              className="px-4 py-2 bg-slate-900 border border-red-950 hover:border-red-500 hover:bg-red-500/5 text-slate-200 transition-all font-bold rounded-lg text-xs flex flex-col items-center justify-center text-center cursor-pointer disabled:opacity-50"
+              className="px-3 py-2 bg-slate-900 border border-red-950 hover:border-red-500 hover:bg-red-500/5 text-slate-200 transition-all font-bold rounded-lg text-xs flex flex-col items-center justify-center text-center cursor-pointer disabled:opacity-50"
             >
               <span className="font-semibold text-[11px] text-red-400">⚠️ Restaurer / Écraser</span>
-              <span className="text-[9px] text-slate-500 mt-0.5 font-normal">Remplace tout par la copie Supabase</span>
+              <span className="text-[9px] text-slate-500 mt-0.5 font-normal">Remplace tout par Supabase</span>
             </button>
           </div>
 

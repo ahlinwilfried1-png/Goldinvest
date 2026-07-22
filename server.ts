@@ -1647,6 +1647,63 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
     }
   });
 
+  app.post("/api/admin/push-to-supabase", async (req, res) => {
+    try {
+      console.log("[PUSH TO SUPABASE] Manual push requested...");
+      supabaseEnabled = true;
+
+      if (!supabase) {
+        return res.status(400).json({
+          success: false,
+          message: "Le client Supabase n'est pas initialisé."
+        });
+      }
+
+      let pushedKeys = 0;
+      const allKeys = Object.keys(storeData);
+      
+      for (const key of allKeys) {
+        if (storeData[key] !== undefined) {
+          const { error } = await withTimeout(
+            supabase.from('store').upsert({
+              key,
+              value: storeData[key],
+              updated_at: new Date().toISOString()
+            }),
+            10000
+          );
+          if (error) {
+            console.error(`[PUSH TO SUPABASE] Error pushing key ${key}:`, error.message);
+            return res.status(500).json({
+              success: false,
+              message: `Erreur lors de l'envoi de '${key}' vers Supabase: ${error.message}`
+            });
+          }
+          pushedKeys++;
+        }
+      }
+
+      console.log(`[PUSH TO SUPABASE] Successfully pushed ${pushedKeys} keys to Supabase!`);
+      return res.json({
+        success: true,
+        message: `✅ Transfert réussi ! ${pushedKeys} collections (dont ${(storeData['gi_users'] || []).length} comptes, ${(storeData['gi_deposits'] || []).length} dépôts, ${(storeData['gi_withdrawals'] || []).length} retraits) ont été envoyées sur Supabase.`,
+        pushedKeys,
+        usersCount: (storeData["gi_users"] || []).length,
+        depositsCount: (storeData["gi_deposits"] || []).length,
+        withdrawalsCount: (storeData["gi_withdrawals"] || []).length,
+        investmentsCount: (storeData["gi_investments"] || []).length,
+        commissionsCount: (storeData["gi_commissions"] || []).length
+      });
+
+    } catch (e: any) {
+      console.error("[PUSH TO SUPABASE] Exception:", e);
+      return res.status(500).json({
+        success: false,
+        message: `Erreur lors du transfert : ${e.message}`
+      });
+    }
+  });
+
   app.get("/api/admin/force-cleanup-non-admins", async (req, res) => {
     try {
       console.log("[API CLEANUP] Wiping all non-administrative accounts and ALL transactions/deposits/withdrawals...");
@@ -1856,7 +1913,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
       if (supabase) {
         supabaseStatus = supabaseEnabled ? "initialise" : "desactive_temporairement";
         try {
-          const { error } = await withTimeout(supabase.from('store').select('key').limit(1), 2000);
+          const { error } = await withTimeout(supabase.from('store').select('key').limit(1), 8000);
           if (!error) {
             storeTableAccessible = true;
           } else {
