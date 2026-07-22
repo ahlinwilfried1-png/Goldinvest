@@ -224,13 +224,12 @@ async function startServer() {
       storeData["gi_withdrawal_proofs"] = [];
       storeData["gi_deleted_investments"] = [];
       storeData["gi_deleted_users"] = [];
-      storeData["gi_deleted_forum_posts"] = [];
       storeData["gi_cleanup_timestamp"] = incomingCleanup;
       modified = true;
     }
 
     // 1. Process deleted trackers first to ensure we have the complete deletion index in memory
-    const deleteKeys = ["gi_deleted_users", "gi_deleted_investments", "gi_deleted_forum_posts"];
+    const deleteKeys = ["gi_deleted_users", "gi_deleted_investments"];
     for (const key of deleteKeys) {
       if (payload[key] !== undefined) {
         const newVal = payload[key];
@@ -259,14 +258,13 @@ async function startServer() {
         continue;
       }
 
-      const isStringArray = Array.isArray(newVal) && Array.isArray(oldVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments" || key === "gi_deleted_forum_posts");
+      const isStringArray = Array.isArray(newVal) && Array.isArray(oldVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments");
       const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && !isStringArray && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
 
       if (shouldMerge) {
         const mergedMap = new Map<string, any>();
         const deletedUsers = storeData["gi_deleted_users"] || [];
         const deletedInvestments = storeData["gi_deleted_investments"] || [];
-        const deletedForumPosts = storeData["gi_deleted_forum_posts"] || [];
 
         for (const item of oldVal) {
           if (item && typeof item === "object") {
@@ -280,10 +278,6 @@ async function startServer() {
               if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
                 modified = true;
                 continue; // Skip previously deleted investment
-              }
-              if (key === "gi_forum_posts" && deletedForumPosts.includes(idStr)) {
-                modified = true;
-                continue; // Skip previously deleted forum post
               }
               mergedMap.set(idStr, item);
             }
@@ -300,9 +294,6 @@ async function startServer() {
               }
               if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
                 continue; // Skip deleted investment from remote
-              }
-              if (key === "gi_forum_posts" && deletedForumPosts.includes(idStr)) {
-                continue; // Skip deleted forum post from remote
               }
 
               if (!mergedMap.has(idStr)) {
@@ -1980,10 +1971,6 @@ async function startServer() {
           const deletedUsrs = storeData["gi_deleted_users"] || [];
           newVal = newVal.filter((u: any) => u && u.id && !deletedUsrs.includes(String(u.id)));
         }
-        if (key === "gi_forum_posts" && Array.isArray(newVal)) {
-          const deletedPosts = storeData["gi_deleted_forum_posts"] || [];
-          newVal = newVal.filter((p: any) => p && p.id && !deletedPosts.includes(String(p.id)));
-        }
 
         // Filter and scrub deleted investments or users from current old database value
         if (key === "gi_investments" && Array.isArray(oldVal)) {
@@ -1993,10 +1980,6 @@ async function startServer() {
         if (key === "gi_users" && Array.isArray(oldVal)) {
           const deletedUsrs = storeData["gi_deleted_users"] || [];
           oldVal = oldVal.filter((u: any) => u && u.id && !deletedUsrs.includes(String(u.id)));
-        }
-        if (key === "gi_forum_posts" && Array.isArray(oldVal)) {
-          const deletedPosts = storeData["gi_deleted_forum_posts"] || [];
-          oldVal = oldVal.filter((p: any) => p && p.id && !deletedPosts.includes(String(p.id)));
         }
 
         console.log(`[DEBUG SAVE-STORE] Client requested update for key: "${key}". Incoming value duration/type: ${Array.isArray(newVal) ? `Array of length ${newVal.length}` : typeof newVal}. Existing server value: ${Array.isArray(oldVal) ? `Array of length ${oldVal.length}` : typeof oldVal}.`);
@@ -2014,7 +1997,7 @@ async function startServer() {
 
         const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && 
           key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
-          key !== "gi_deleted_investments" && key !== "gi_deleted_users" && key !== "gi_deleted_forum_posts";
+          key !== "gi_deleted_investments" && key !== "gi_deleted_users";
         if (shouldMerge) {
           // Merge arrays by ID or Code and choose the item with the higher lastModified
           const mergedMap = new Map<string, any>();

@@ -198,8 +198,10 @@ export default function AdminPanel({
       message: "Voulez-vous vraiment supprimer définitivement cette publication du Forum ? Elle sera retirée pour tous les utilisateurs.",
       onConfirm: () => {
         try {
-          DataStore.deleteForumPost(postId);
-          setForumPosts(DataStore.getForumPosts());
+          const posts = DataStore.getForumPosts();
+          const updated = posts.filter((p: any) => p.id !== postId);
+          DataStore.saveForumPosts(updated);
+          setForumPosts(updated);
           setNotification({
             message: "🗑️ Publication du Forum supprimée avec succès !",
             type: "success"

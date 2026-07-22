@@ -1732,8 +1732,8 @@ export default function Dashboard({
   // Forum actions
   const handlePostForumMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!forumMessageInput.trim()) {
-      triggerToast("⚠️ Veuillez saisir un message ou commentaire.", "error");
+    if (!forumMessageInput.trim() && !forumImage1 && !forumImage2) {
+      triggerToast("⚠️ Veuillez rédiger un message ou joindre au moins une capture d'écran.", "error");
       return;
     }
 
@@ -1741,7 +1741,7 @@ export default function Dashboard({
       id: 'f-user-' + Date.now(),
       authorName: (userState.name || 'Membre') + ' ' + (userState.country === 'Cameroun' ? '🇨🇲' : userState.country === 'Togo' ? '🇹🇬' : userState.country === 'Bénin' ? '🇧🇯' : userState.country === 'Côte d’Ivoire' ? '🇨🇮' : userState.country === 'Burkina Faso' ? '🇧🇫' : userState.country === 'Sénégal' ? '🇸🇳' : userState.country === 'Mali' ? '🇲🇱' : userState.country === 'Niger' ? '🇳🇪' : '🌍'),
       avatarLetter: (userState.name || 'M').charAt(0).toUpperCase(),
-      text: forumMessageInput,
+      text: forumMessageInput.trim() || "📸 Capture d'écran partagée sur le forum.",
       image1: forumImage1 || undefined,
       image2: forumImage2 || undefined,
       likes: 0,
@@ -1758,7 +1758,7 @@ export default function Dashboard({
     setForumImage1(null);
     setForumImage2(null);
     DataStore.saveForumPosts(updated);
-    triggerToast("Votre message a été publié sur le Forum !", "success");
+    triggerToast("Votre publication avec capture d'écran a été publiée sur le Forum !", "success");
   };
 
   const handleLikeForumPost = (postId: string) => {
@@ -5331,48 +5331,74 @@ export default function Dashboard({
                         </p>
                       </div>
 
-                      {/* Image attachments side-by-side (collaged) */}
-                      {(post.image1 || post.image2) && (
-                        <div className={`mt-3 grid gap-2 bg-slate-100 p-2 rounded-2xl border border-slate-200 ${post.image1 && post.image2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                          {post.image1 && (
-                            <div 
-                              onClick={() => setSelectedAvisImage(post.image1)}
-                              className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center cursor-zoom-in group shadow-xs"
-                            >
-                              <img
-                                src={post.image1}
-                                alt="Image 1"
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                referrerPolicy="no-referrer"
-                              />
-                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">
-                                  Agrandir 🔍
-                                </span>
-                              </div>
-                            </div>
-                          )}
+                      {/* Image attachments / Screenshots section */}
+                      {(() => {
+                        const imagesList: string[] = [];
+                        if (post.image1) imagesList.push(post.image1);
+                        if (post.image2) imagesList.push(post.image2);
+                        if (post.image && !imagesList.includes(post.image)) imagesList.push(post.image);
+                        if (post.imageUrl && !imagesList.includes(post.imageUrl)) imagesList.push(post.imageUrl);
+                        if (post.proofImage && !imagesList.includes(post.proofImage)) imagesList.push(post.proofImage);
 
-                          {post.image2 && (
-                            <div 
-                              onClick={() => setSelectedAvisImage(post.image2)}
-                              className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-50 flex justify-center items-center cursor-zoom-in group shadow-xs"
-                            >
-                              <img
-                                src={post.image2}
-                                alt="Image 2"
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                referrerPolicy="no-referrer"
-                              />
-                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">
-                                  Agrandir 🔍
-                                </span>
-                              </div>
+                        if (imagesList.length === 0) return null;
+
+                        return (
+                          <div className="mt-3.5 space-y-2 bg-slate-100/90 p-3 rounded-2xl border border-slate-200/80">
+                            <div className="flex items-center justify-between px-1">
+                              <span className="text-[10px] font-sans font-black text-slate-600 uppercase tracking-wider flex items-center gap-1">
+                                📸 Captures d'écran ({imagesList.length})
+                              </span>
+                              <span className="text-[9px] text-slate-400 font-bold">
+                                Toucher une image pour l'agrandir
+                              </span>
                             </div>
-                          )}
-                        </div>
-                      )}
+
+                            <div className={`grid gap-2.5 ${imagesList.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                              {imagesList.map((imgUrl, idx) => (
+                                <div key={idx} className="space-y-1.5">
+                                  <div 
+                                    onClick={() => setSelectedAvisImage(imgUrl)}
+                                    className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 flex justify-center items-center cursor-zoom-in group shadow-xs"
+                                  >
+                                    <img
+                                      src={imgUrl}
+                                      alt={`Capture ${idx + 1}`}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                    <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                      <span className="bg-slate-900/90 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border border-slate-700 shadow-md">
+                                        🔍 Agrandir
+                                      </span>
+                                    </div>
+                                    <div className="absolute top-2 left-2 bg-slate-950/75 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md backdrop-blur-xs">
+                                      Capture #{idx + 1}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedAvisImage(imgUrl)}
+                                      className="flex-1 py-1 px-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-sans font-black text-[9.5px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider shadow-2xs"
+                                    >
+                                      🔍 Zoom
+                                    </button>
+                                    <a
+                                      href={imgUrl}
+                                      download={`preuve-forum-${post.id}-${idx + 1}.png`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex-1 py-1 px-2 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-[9.5px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider shadow-2xs"
+                                    >
+                                      💾 Télécharger
+                                    </a>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Social counts & Likes */}
                       <div className="flex justify-between items-center border-t border-slate-100 mt-4 pt-3 text-slate-500">
@@ -7454,9 +7480,29 @@ export default function Dashboard({
               <img
                 src={selectedAvisImage}
                 alt="Agrandissement"
-                className="max-w-full max-h-[80vh] object-contain rounded-2xl"
+                className="max-w-full max-h-[72vh] object-contain rounded-2xl mx-auto"
                 referrerPolicy="no-referrer"
               />
+              <div className="flex items-center justify-between px-4 py-3 mt-2 bg-slate-950/90 border-t border-slate-800/80 rounded-b-2xl">
+                <span className="text-xs font-sans font-bold text-slate-300">
+                  📸 Capture d'écran du Forum
+                </span>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={selectedAvisImage}
+                    download={`capture-forum-${Date.now()}.png`}
+                    className="px-4 py-2 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider shadow-sm"
+                  >
+                    💾 Télécharger
+                  </a>
+                  <button
+                    onClick={() => setSelectedAvisImage(null)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-sans font-black text-xs rounded-xl transition-all cursor-pointer uppercase tracking-wider"
+                  >
+                    Fermer
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedAvisImage(null)}
                 className="absolute top-4 right-4 w-10 h-10 bg-slate-950/80 hover:bg-slate-950 rounded-full flex items-center justify-center text-white border border-slate-800 transition-colors cursor-pointer"

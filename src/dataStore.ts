@@ -943,7 +943,6 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_forum_posts',
           'gi_deleted_investments',
           'gi_deleted_users',
-          'gi_deleted_forum_posts',
           'gi_manual_deposit_numbers',
           'gi_official_banners'
         ];
@@ -1007,13 +1006,12 @@ export const syncWithBackend = async (): Promise<boolean> => {
           
           const isMergeableArray = Array.isArray(remoteData) && Array.isArray(localData) && 
             key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
-            key !== "gi_deleted_investments" && key !== "gi_deleted_users" && key !== "gi_deleted_forum_posts";
+            key !== "gi_deleted_investments" && key !== "gi_deleted_users";
           if (isMergeableArray) {
             // Merge remote array and local array to avoid losing any offline changes or registrations!
             const mergedMap = new Map<string, any>();
             const deletedInvs = key === "gi_investments" ? (data["gi_deleted_investments"] || getFromStore<string[]>('gi_deleted_investments', [])) : [];
             const deletedUsers = key === "gi_users" ? (data["gi_deleted_users"] || getFromStore<string[]>('gi_deleted_users', [])) : [];
-            const deletedPosts = key === "gi_forum_posts" ? (data["gi_deleted_forum_posts"] || getFromStore<string[]>('gi_deleted_forum_posts', [])) : [];
 
             for (const item of remoteData) {
               if (item && typeof item === 'object') {
@@ -1022,7 +1020,6 @@ export const syncWithBackend = async (): Promise<boolean> => {
                   const idStr = String(id);
                   if (key === "gi_investments" && deletedInvs.includes(idStr)) continue;
                   if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
-                  if (key === "gi_forum_posts" && deletedPosts.includes(idStr)) continue;
                   mergedMap.set(idStr, item);
                 }
               }
@@ -1036,7 +1033,6 @@ export const syncWithBackend = async (): Promise<boolean> => {
                   const idStr = String(id);
                   if (key === "gi_investments" && deletedInvs.includes(idStr)) continue;
                   if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
-                  if (key === "gi_forum_posts" && deletedPosts.includes(idStr)) continue;
                   if (!mergedMap.has(idStr)) {
                     mergedMap.set(idStr, item);
                     localHasNewItems = true;
@@ -1498,22 +1494,15 @@ export class DataStore {
   }
 
   static getForumPosts(): any[] {
-    let val = getFromStore<any[]>('gi_forum_posts', []);
-    const deletedPosts = getFromStore<string[]>('gi_deleted_forum_posts', []);
-    if (deletedPosts.length > 0) {
-      val = val.filter(p => p && p.id && !deletedPosts.includes(String(p.id)));
-    }
+    const val = getFromStore<any[]>('gi_forum_posts', []);
     if (val.length === 0) {
       try {
         const storedOld = localStorage.getItem('rockygold_forum_posts_v3');
         if (storedOld) {
           const oldPosts = JSON.parse(storedOld);
           if (Array.isArray(oldPosts) && oldPosts.length > 0) {
-            const filteredOld = oldPosts.filter(p => p && p.id && !deletedPosts.includes(String(p.id)));
-            if (filteredOld.length > 0) {
-              setToStore<any[]>('gi_forum_posts', filteredOld);
-              val = filteredOld;
-            }
+            setToStore<any[]>('gi_forum_posts', oldPosts);
+            return oldPosts;
           }
         }
       } catch (e) {}
@@ -1525,24 +1514,20 @@ export class DataStore {
     });
   }
 
-  static deleteForumPost(postId: string): void {
-    const deleted = getFromStore<string[]>('gi_deleted_forum_posts', []);
-    if (!deleted.includes(postId)) {
-      deleted.push(postId);
-      setToStore<string[]>('gi_deleted_forum_posts', deleted);
-    }
-    const current = this.getForumPosts();
-    const updated = current.filter(p => p && p.id !== postId);
-    this.saveForumPosts(updated);
-  }
-
   static saveForumPosts(posts: any[]): void {
-    const deletedPosts = getFromStore<string[]>('gi_deleted_forum_posts', []);
-    const cleanPosts = posts.filter(p => p && p.id && !deletedPosts.includes(String(p.id)));
-    setToStore<any[]>('gi_forum_posts', cleanPosts);
+    setToStore<any[]>('gi_forum_posts', posts);
     try {
-      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(cleanPosts));
+      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(posts));
     } catch (e) {}
+    apiFetch(getApiUrl('/api/save-store'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gi_forum_posts: posts
+      })
+    }).catch(err => {
+      console.error("Error saving forum posts to server", err);
+    });
   }
 
   // Auth Operations
@@ -1593,42 +1578,6 @@ export class DataStore {
 
   // Log in specific helper
   static async login(whatsapp: string, passwordString: string): Promise<{ success: boolean, user?: User, message: string }> {
-    // 1. Instant local verification if user exists locally with correct password
-    const users = this.getUsers();
-    const localUser = users.find(u => {
-      if (u.whatsapp === whatsapp) return true;
-      const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
-      const inputNorm = normalizePhoneNumber(whatsapp, u.country);
-      if (uNorm && inputNorm && uNorm === inputNorm) {
-        return true;
-      }
-      return false;
-    });
-
-    if (localUser && !localUser.isBlocked) {
-      const expectedPassword = localUser.password || (localUser.role === 'admin' ? 'admin' : 'user123');
-      if (passwordString === expectedPassword) {
-        this.saveCurrentUser(localUser);
-        // Non-blocking background API login call
-        apiFetch(getApiUrl('/api/login'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ whatsapp, password: passwordString })
-        }).then(async (response) => {
-          if (response.ok) {
-            const res = await response.json();
-            if (res.success && res.user) {
-              this.saveCurrentUser(res.user);
-              window.dispatchEvent(new CustomEvent('gi_store_updated'));
-            }
-          }
-        }).catch((e) => console.warn('[BG LOGIN API WARN]', e));
-
-        return { success: true, user: localUser, message: 'Connexion réussie.' };
-      }
-    }
-
-    // 2. Query backend API if not found or password mismatched in local cache
     try {
       const response = await apiFetch(getApiUrl('/api/login'), {
         method: 'POST',
@@ -1647,14 +1596,29 @@ export class DataStore {
       console.warn('Login backend error, trying local:', error);
     }
 
-    if (localUser) {
-      if (localUser.isBlocked) {
-        return { success: false, message: 'Ce compte a été bloqué par l\'administrateur. Veuillez contacter le support.' };
+    const users = this.getUsers();
+    const user = users.find(u => {
+      if (u.whatsapp === whatsapp) return true;
+      const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
+      const inputNorm = normalizePhoneNumber(whatsapp, u.country);
+      if (uNorm && inputNorm && uNorm === inputNorm) {
+        return true;
       }
-      return { success: false, message: 'Mot de passe incorrect.' };
-    }
+      return false;
+    });
 
-    return { success: false, message: 'Aucun utilisateur trouvé avec ce numéro WhatsApp.' };
+    if (!user) {
+      return { success: false, message: 'Aucun utilisateur trouvé avec ce numéro WhatsApp.' };
+    }
+    if (user.isBlocked) {
+      return { success: false, message: 'Ce compte a été bloqué par l\'administrateur. Veuillez contacter le support.' };
+    }
+    const expectedPassword = user.password || (user.role === 'admin' ? 'admin' : 'user123');
+    if (passwordString === expectedPassword) {
+      this.saveCurrentUser(user);
+      return { success: true, user, message: 'Connexion réussie.' };
+    }
+    return { success: false, message: 'Mot de passe incorrect.' };
   }
 
   // Register modern form
