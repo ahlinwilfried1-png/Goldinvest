@@ -417,6 +417,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
       "gi_whatsapp_channel": "https://whatsapp.com/channel/0029VbCs5L0J3jurEKVu8x2n",
       "gi_withdrawal_proofs": [],
       "gi_forum_posts": [],
+      "gi_deleted_forum_posts": [],
       "gi_manual_deposit_numbers": {
         "TG_37": "*145*1*montant*70903319*code#",
         "TG_38": "*155*1*1*78829438*78829438*montant*code#",
@@ -981,7 +982,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
       // Identify which keys require remote merge before saving
       const keysToMerge = validKeys.filter(key => {
         const localVal = storeData[key];
-        const isStringArray = Array.isArray(localVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments");
+        const isStringArray = Array.isArray(localVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments" || key === "gi_deleted_forum_posts");
         const isMergeableArray = Array.isArray(localVal) && 
                                  !isStringArray && 
                                  key !== "gi_products" && 
@@ -1015,7 +1016,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
       for (const key of validKeys) {
         const localVal = storeData[key];
         let valToSave = localVal;
-        const isStringArray = Array.isArray(localVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments");
+        const isStringArray = Array.isArray(localVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments" || key === "gi_deleted_forum_posts");
         const isMergeableArray = Array.isArray(localVal) && 
                                  !isStringArray && 
                                  key !== "gi_products" && 
@@ -1032,6 +1033,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
           const mergedMap = new Map<string, any>();
           const deletedUsers = storeData["gi_deleted_users"] || [];
           const deletedInvestments = storeData["gi_deleted_investments"] || [];
+          const deletedForumPosts = storeData["gi_deleted_forum_posts"] || [];
 
           for (const item of remoteVal) {
             if (item && typeof item === "object") {
@@ -1040,6 +1042,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
                 const idStr = String(id);
                 if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
                 if (key === "gi_investments" && deletedInvestments.includes(idStr)) continue;
+                if (key === "gi_forum_posts" && deletedForumPosts.includes(idStr)) continue;
                 mergedMap.set(idStr, item);
               }
             }
@@ -1052,6 +1055,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
                 const idStr = String(id);
                 if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
                 if (key === "gi_investments" && deletedInvestments.includes(idStr)) continue;
+                if (key === "gi_forum_posts" && deletedForumPosts.includes(idStr)) continue;
                 if (!mergedMap.has(idStr)) {
                   mergedMap.set(idStr, item);
                 } else {
@@ -2048,7 +2052,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
           continue;
         }
 
-        // Filter and scrub deleted investments or users from incoming payload
+        // Filter and scrub deleted investments, users or forum posts from incoming payload
         if (key === "gi_investments" && Array.isArray(newVal)) {
           const deletedInvs = storeData["gi_deleted_investments"] || [];
           newVal = newVal.filter((i: any) => i && i.id && !deletedInvs.includes(String(i.id)));
@@ -2057,8 +2061,12 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
           const deletedUsrs = storeData["gi_deleted_users"] || [];
           newVal = newVal.filter((u: any) => u && u.id && !deletedUsrs.includes(String(u.id)));
         }
+        if (key === "gi_forum_posts" && Array.isArray(newVal)) {
+          const deletedPosts = storeData["gi_deleted_forum_posts"] || [];
+          newVal = newVal.filter((p: any) => p && p.id && !deletedPosts.includes(String(p.id)));
+        }
 
-        // Filter and scrub deleted investments or users from current old database value
+        // Filter and scrub deleted investments, users or forum posts from current old database value
         if (key === "gi_investments" && Array.isArray(oldVal)) {
           const deletedInvs = storeData["gi_deleted_investments"] || [];
           oldVal = oldVal.filter((i: any) => i && i.id && !deletedInvs.includes(String(i.id)));
@@ -2066,6 +2074,10 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
         if (key === "gi_users" && Array.isArray(oldVal)) {
           const deletedUsrs = storeData["gi_deleted_users"] || [];
           oldVal = oldVal.filter((u: any) => u && u.id && !deletedUsrs.includes(String(u.id)));
+        }
+        if (key === "gi_forum_posts" && Array.isArray(oldVal)) {
+          const deletedPosts = storeData["gi_deleted_forum_posts"] || [];
+          oldVal = oldVal.filter((p: any) => p && p.id && !deletedPosts.includes(String(p.id)));
         }
 
         console.log(`[DEBUG SAVE-STORE] Client requested update for key: "${key}". Incoming value duration/type: ${Array.isArray(newVal) ? `Array of length ${newVal.length}` : typeof newVal}. Existing server value: ${Array.isArray(oldVal) ? `Array of length ${oldVal.length}` : typeof oldVal}.`);

@@ -5236,9 +5236,29 @@ export default function Dashboard({
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const r = new FileReader();
-                                  r.onloadend = () => setForumImage1(r.result as string);
-                                  r.readAsDataURL(file);
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    const img = new Image();
+                                    img.onload = () => {
+                                      const canvas = document.createElement('canvas');
+                                      let w = img.width, h = img.height;
+                                      const maxD = 900;
+                                      if (w > maxD || h > maxD) {
+                                        if (w > h) { h = Math.round((h * maxD) / w); w = maxD; }
+                                        else { w = Math.round((w * maxD) / h); h = maxD; }
+                                      }
+                                      canvas.width = w; canvas.height = h;
+                                      const ctx = canvas.getContext('2d');
+                                      if (ctx) {
+                                        ctx.drawImage(img, 0, 0, w, h);
+                                        setForumImage1(canvas.toDataURL('image/jpeg', 0.75));
+                                      } else {
+                                        setForumImage1(ev.target?.result as string);
+                                      }
+                                    };
+                                    img.src = ev.target?.result as string;
+                                  };
+                                  reader.readAsDataURL(file);
                                 }
                               }}
                               className="hidden"
@@ -5271,9 +5291,29 @@ export default function Dashboard({
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const r = new FileReader();
-                                  r.onloadend = () => setForumImage2(r.result as string);
-                                  r.readAsDataURL(file);
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    const img = new Image();
+                                    img.onload = () => {
+                                      const canvas = document.createElement('canvas');
+                                      let w = img.width, h = img.height;
+                                      const maxD = 900;
+                                      if (w > maxD || h > maxD) {
+                                        if (w > h) { h = Math.round((h * maxD) / w); w = maxD; }
+                                        else { w = Math.round((w * maxD) / h); h = maxD; }
+                                      }
+                                      canvas.width = w; canvas.height = h;
+                                      const ctx = canvas.getContext('2d');
+                                      if (ctx) {
+                                        ctx.drawImage(img, 0, 0, w, h);
+                                        setForumImage2(canvas.toDataURL('image/jpeg', 0.75));
+                                      } else {
+                                        setForumImage2(ev.target?.result as string);
+                                      }
+                                    };
+                                    img.src = ev.target?.result as string;
+                                  };
+                                  reader.readAsDataURL(file);
                                 }
                               }}
                               className="hidden"
