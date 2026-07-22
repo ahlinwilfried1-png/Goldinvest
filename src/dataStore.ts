@@ -385,17 +385,11 @@ export function getApiUrl(endpoint: string): string {
   if (typeof window !== "undefined" && window.location) {
     const host = window.location.hostname;
     const isCloudRun = host.endsWith('.run.app');
+    const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.');
     
-    // Auto-align custom backend URL on Cloud Run containers to prevent stale configurations
-    if (isCloudRun) {
-      try {
-        const currentBaseUrl = `${window.location.protocol}//${host}`;
-        const cached = localStorage.getItem('gi_custom_backend_url');
-        if (!cached || !cached.includes(host)) {
-          console.log(`[getApiUrl] Aligning custom backend URL to current live Cloud Run host: ${currentBaseUrl}`);
-          localStorage.setItem('gi_custom_backend_url', currentBaseUrl);
-        }
-      } catch (e) {}
+    // Always use relative URLs on live Cloud Run containers or local development
+    if (isCloudRun || isLocalhost) {
+      return endpoint;
     }
   }
 
@@ -1580,6 +1574,42 @@ export class DataStore {
 
   // Log in specific helper
   static async login(whatsapp: string, passwordString: string): Promise<{ success: boolean, user?: User, message: string }> {
+    // 1. Instant local verification if user exists locally with correct password
+    const users = this.getUsers();
+    const localUser = users.find(u => {
+      if (u.whatsapp === whatsapp) return true;
+      const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
+      const inputNorm = normalizePhoneNumber(whatsapp, u.country);
+      if (uNorm && inputNorm && uNorm === inputNorm) {
+        return true;
+      }
+      return false;
+    });
+
+    if (localUser && !localUser.isBlocked) {
+      const expectedPassword = localUser.password || (localUser.role === 'admin' ? 'admin' : 'user123');
+      if (passwordString === expectedPassword) {
+        this.saveCurrentUser(localUser);
+        // Non-blocking background API login call
+        apiFetch(getApiUrl('/api/login'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ whatsapp, password: passwordString })
+        }).then(async (response) => {
+          if (response.ok) {
+            const res = await response.json();
+            if (res.success && res.user) {
+              this.saveCurrentUser(res.user);
+              window.dispatchEvent(new CustomEvent('gi_store_updated'));
+            }
+          }
+        }).catch((e) => console.warn('[BG LOGIN API WARN]', e));
+
+        return { success: true, user: localUser, message: 'Connexion réussie.' };
+      }
+    }
+
+    // 2. Query backend API if not found or password mismatched in local cache
     try {
       const response = await apiFetch(getApiUrl('/api/login'), {
         method: 'POST',
@@ -1590,7 +1620,7 @@ export class DataStore {
         const res = await response.json();
         if (res.success && res.user) {
           this.saveCurrentUser(res.user);
-          await syncWithBackend();
+          syncWithBackend().catch((e) => console.warn('[LOGIN SYNC WARN]', e));
         }
         return res;
       }
@@ -1598,29 +1628,14 @@ export class DataStore {
       console.warn('Login backend error, trying local:', error);
     }
 
-    // Local login fallback
-    const users = this.getUsers();
-    const user = users.find(u => {
-      if (u.whatsapp === whatsapp) return true;
-      const uNorm = normalizePhoneNumber(u.whatsapp, u.country);
-      const inputNorm = normalizePhoneNumber(whatsapp, u.country);
-      if (uNorm && inputNorm && uNorm === inputNorm) {
-        return true;
+    if (localUser) {
+      if (localUser.isBlocked) {
+        return { success: false, message: 'Ce compte a été bloqué par l\'administrateur. Veuillez contacter le support.' };
       }
-      return false;
-    });
-    if (!user) {
-      return { success: false, message: 'Aucun utilisateur trouvé avec ce numéro WhatsApp.' };
+      return { success: false, message: 'Mot de passe incorrect.' };
     }
-    if (user.isBlocked) {
-      return { success: false, message: 'Ce compte a été bloqué par l\'administrateur. Veuillez contacter le support.' };
-    }
-    const expectedPassword = user.password || (user.role === 'admin' ? 'admin' : 'user123');
-    if (passwordString === expectedPassword) {
-      this.saveCurrentUser(user);
-      return { success: true, user, message: 'Connexion réussie.' };
-    }
-    return { success: false, message: 'Mot de passe incorrect.' };
+
+    return { success: false, message: 'Aucun utilisateur trouvé avec ce numéro WhatsApp.' };
   }
 
   // Register modern form
@@ -1647,7 +1662,7 @@ export class DataStore {
         console.log(`[CLIENT REGISTER] Backend response received:`, res);
         if (res.success && res.user) {
           this.saveCurrentUser(res.user);
-          await syncWithBackend();
+          syncWithBackend().catch((e) => console.warn('[REGISTER SYNC WARN]', e));
           serverSuccess = true;
           serverResponse = res;
         } else {

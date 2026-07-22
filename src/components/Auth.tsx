@@ -232,15 +232,6 @@ export default function Auth({
     setSuccessMessage('');
     setLoading(true);
 
-    try {
-      // Force loading the latest data from server first
-      await syncWithBackend();
-    } catch (err) {
-      console.error('Failed to sync before login/register:', err);
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 1200));
-
     if (isRegister) {
       // Registration validations
       if (!whatsapp.trim()) {
@@ -296,10 +287,8 @@ export default function Auth({
         } catch (e) {
           console.error(e);
         }
-        setTimeout(() => {
-          onAuthSuccess(result.user!);
-          setLoading(false);
-        }, 1500);
+        onAuthSuccess(result.user!);
+        setLoading(false);
       } else {
         setErrorMessage(result.message || (lang === 'FR' ? "Une erreur s'est produite lors de la création de votre compte d'investissement." : "An error occurred while creating your investment account."));
         setLoading(false);
@@ -326,10 +315,8 @@ export default function Auth({
       const result = await DataStore.login(finalLoginWhatsapp, loginPassword);
       if (result.success && result.user) {
         setSuccessMessage(result.message);
-        setTimeout(() => {
-          onAuthSuccess(result.user!);
-          setLoading(false);
-        }, 1500);
+        onAuthSuccess(result.user!);
+        setLoading(false);
       } else {
         setErrorMessage(result.message);
         setLoading(false);
