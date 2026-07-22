@@ -707,6 +707,7 @@ export default function Dashboard({
   const [withdrawProofBase64, setWithdrawProofBase64] = useState<string>('');
   const [withdrawProofFileName, setWithdrawProofFileName] = useState<string>('');
   const [isDraggingWithdraw, setIsDraggingWithdraw] = useState<boolean>(false);
+  const [isSubmittingWithdrawal, setIsSubmittingWithdrawal] = useState<boolean>(false);
 
   const [bonusCodeInput, setBonusCodeInput] = useState<string>('');
   
@@ -2227,16 +2228,23 @@ export default function Dashboard({
       return;
     }
 
-    const res = await DataStore.createWithdrawal(userState.id, amt, withdrawOperator, withdrawNumber, withdrawProofBase64);
-    if (res.success) {
-      setWithdrawSuccess('Votre demande de retrait a été transmise ! Le solde a été mis à jour.');
-      setWithdrawAmount('');
-      setWithdrawNumber('');
-      setWithdrawProofBase64('');
-      setWithdrawProofFileName('');
-      syncDashboardData();
-    } else {
-      setWithdrawError(res.error || 'Erreur lors de la soumission.');
+    setIsSubmittingWithdrawal(true);
+    try {
+      const res = await DataStore.createWithdrawal(userState.id, amt, withdrawOperator, withdrawNumber, withdrawProofBase64);
+      if (res.success) {
+        setWithdrawSuccess('Votre demande de retrait a été transmise ! Le solde a été mis à jour.');
+        setWithdrawAmount('');
+        setWithdrawNumber('');
+        setWithdrawProofBase64('');
+        setWithdrawProofFileName('');
+        syncDashboardData();
+      } else {
+        setWithdrawError(res.error || 'Erreur lors de la soumission.');
+      }
+    } catch (err: any) {
+      setWithdrawError(err.message || 'Erreur lors de la soumission.');
+    } finally {
+      setIsSubmittingWithdrawal(false);
     }
 
     setTimeout(() => {
@@ -4710,7 +4718,7 @@ export default function Dashboard({
                           {isSubmittingDeposit ? (
                             <div className="flex items-center space-x-2">
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              <span>Facturation en cours...</span>
+                              <span>Traitement en cours...</span>
                             </div>
                           ) : (
                             <span>💳 Payer en ligne (Auto)</span>
@@ -4930,9 +4938,10 @@ export default function Dashboard({
 
                 <button
                   type="submit"
-                  className="w-full py-4 text-white font-sans font-black text-sm uppercase tracking-widest bg-gradient-to-r from-[#00bcff] to-[#0ea5e9] rounded-xl transition-all shadow-md active:scale-95 text-center flex items-center justify-center border-none hover:opacity-95 cursor-pointer"
+                  disabled={isSubmittingWithdrawal}
+                  className="w-full py-4 text-white font-sans font-black text-sm uppercase tracking-widest bg-gradient-to-r from-[#00bcff] to-[#0ea5e9] rounded-xl transition-all shadow-md active:scale-95 text-center flex items-center justify-center border-none hover:opacity-95 cursor-pointer disabled:opacity-50"
                 >
-                  Envoyer la demande de Retrait
+                  {isSubmittingWithdrawal ? "Traitement en cours..." : "Envoyer la demande de Retrait"}
                 </button>
               </form>
 
@@ -6870,7 +6879,7 @@ export default function Dashboard({
                       disabled={paymentProcessing}
                       className="flex-1 py-3 text-white bg-gradient-to-r from-[#1b64d9] to-[#3b82f6] hover:opacity-95 active:scale-95 transition-all text-[11px] font-black uppercase tracking-wider rounded-xl cursor-pointer shadow-md disabled:opacity-50"
                     >
-                      {paymentProcessing ? "Validation..." : "Valider"}
+                      {paymentProcessing ? "Traitement en cours..." : "Valider"}
                     </button>
                   </div>
                 </form>

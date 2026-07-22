@@ -22,7 +22,7 @@ async function startServer() {
   let lastSupabaseErrorLog = 0;
   const SUPABASE_RETRY_INTERVAL = 5000; // 5 seconds retry for high availability
 
-  const withTimeout = (promise: any, timeoutMs: number = 2500): Promise<any> => {
+  const withTimeout = (promise: any, timeoutMs: number = 8000): Promise<any> => {
     return Promise.race([
       Promise.resolve(promise),
       new Promise<never>((_, reject) =>
@@ -887,10 +887,32 @@ async function startServer() {
     }
   }
 
+  let lastSupabaseSyncTime = 0;
+  let isSyncingSupabaseInBG = false;
+
+  function triggerBackgroundSupabaseSync(): void {
+    if (!isSupabaseReady()) return;
+    const now = Date.now();
+    if (isSyncingSupabaseInBG) return;
+    if (now - lastSupabaseSyncTime < 8000) return; // Throttled to max once every 8 seconds
+    isSyncingSupabaseInBG = true;
+    lastSupabaseSyncTime = now;
+    syncWithSupabase()
+      .catch((err) => console.warn('[BG SUPABASE SYNC WARN]', err))
+      .finally(() => {
+        isSyncingSupabaseInBG = false;
+      });
+  }
+
+  // Periodic background synchronization every 12 seconds
+  setInterval(() => {
+    triggerBackgroundSupabaseSync();
+  }, 12000);
+
   async function syncWithSupabase(): Promise<boolean> {
     if (!isSupabaseReady()) return false;
     try {
-      const { data, error } = await withTimeout(supabase.from('store').select('*'), 3000);
+      const { data, error } = await withTimeout(supabase.from('store').select('*'), 5000);
       if (error) {
         handleSupabaseError(error, "syncWithSupabase");
         return false;
@@ -906,164 +928,167 @@ async function startServer() {
           return true;
         }
       }
-    } catch (e) {
-      handleSupabaseError(e, "syncWithSupabase Exception");
+    } catch (e: any) {
+      if (e?.message?.includes('TIMEOUT')) {
+        console.warn('[SUPABASE TIMEOUT] syncWithSupabase query timed out, falling back gracefully to local store.');
+      } else {
+        handleSupabaseError(e, "syncWithSupabase Exception");
+      }
     }
     return false;
   }
 
-  async function saveStore(specificKeys?: string[]): Promise<void> {
-    saveStoreLocal();
+  async function saveStoreRemote(specificKeys?: string[]): Promise<void> {
     if (!isSupabaseReady()) return;
     
-    // We must fully await the database synchronization to guarantee that Cloud Run
-    // does not freeze the CPU container mid-execution, losing critical registration and financial data.
     try {
       const keys = specificKeys || Object.keys(storeData);
-      for (const key of keys) {
+      const validKeys = keys.filter(k => storeData[k] !== undefined);
+      if (validKeys.length === 0) return;
+
+      // Identify which keys require remote merge before saving
+      const keysToMerge = validKeys.filter(key => {
         const localVal = storeData[key];
-        if (localVal === undefined) continue;
-        
-        let valToSave = localVal;
-        
-        // Distinguish between mergeable object array, string array, or raw value
         const isStringArray = Array.isArray(localVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments");
         const isMergeableArray = Array.isArray(localVal) && 
                                  !isStringArray && 
                                  key !== "gi_products" && 
                                  key !== "gi_bonus_codes" && 
                                  key !== "gi_withdrawal_proofs";
-        
-        if (isStringArray) {
-          try {
-            const { data: remoteRow, error: fetchErr } = await withTimeout(
-              supabase
-                .from('store')
-                .select('value')
-                .eq('key', key)
-                .maybeSingle(),
-              2000
-            );
-              
-            if (!fetchErr && remoteRow && remoteRow.value) {
-              const remoteVal = remoteRow.value;
-              if (Array.isArray(remoteVal)) {
-                // Merge unique string array items (like deleted user IDs) to prevent losing deletions
-                const mergedSet = new Set<string>([...remoteVal, ...localVal]);
-                valToSave = Array.from(mergedSet);
-                storeData[key] = valToSave; // Update runtime cache
+        return isStringArray || isMergeableArray;
+      });
+
+      // Fetch remote rows for all mergeable keys in ONE batch call
+      const remoteMap = new Map<string, any>();
+      if (keysToMerge.length > 0) {
+        try {
+          const { data: remoteRows, error: fetchErr } = await withTimeout(
+            supabase.from('store').select('key, value').in('key', keysToMerge),
+            4000
+          );
+          if (!fetchErr && remoteRows && Array.isArray(remoteRows)) {
+            for (const r of remoteRows) {
+              if (r && r.key) {
+                remoteMap.set(r.key, r.value);
               }
             }
-          } catch (e) {
-            console.error(`[SUPABASE MERGE ERROR] Failed to merge string array "${key}":`, e);
           }
-        } else if (isMergeableArray) {
-          try {
-            const { data: remoteRow, error: fetchErr } = await withTimeout(
-              supabase
-                .from('store')
-                .select('value')
-                .eq('key', key)
-                .maybeSingle(),
-              2000
-            );
-              
-            if (!fetchErr && remoteRow && remoteRow.value) {
-              const remoteVal = remoteRow.value;
-              if (Array.isArray(remoteVal)) {
-                // Merge remote array and local array to avoid losing any items from other phones
-                const mergedMap = new Map<string, any>();
-                const deletedUsers = storeData["gi_deleted_users"] || [];
-                const deletedInvestments = storeData["gi_deleted_investments"] || [];
+        } catch (e: any) {
+          console.warn('[SUPABASE MERGE NOTICE] Remote merge fetch timed out, proceeding with local data:', e?.message || e);
+        }
+      }
 
-                for (const item of remoteVal) {
-                  if (item && typeof item === "object") {
-                    const id = item.id || item.code;
-                    if (id) {
-                      const idStr = String(id);
-                      if (key === "gi_users" && deletedUsers.includes(idStr)) {
-                        continue; // Already deleted
-                      }
-                      if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
-                        continue; // Already deleted
-                      }
+      const rowsToUpsert: { key: string; value: any; updated_at: string }[] = [];
+
+      for (const key of validKeys) {
+        const localVal = storeData[key];
+        let valToSave = localVal;
+        const isStringArray = Array.isArray(localVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments");
+        const isMergeableArray = Array.isArray(localVal) && 
+                                 !isStringArray && 
+                                 key !== "gi_products" && 
+                                 key !== "gi_bonus_codes" && 
+                                 key !== "gi_withdrawal_proofs";
+
+        const remoteVal = remoteMap.get(key);
+
+        if (isStringArray && Array.isArray(remoteVal)) {
+          const mergedSet = new Set<string>([...remoteVal, ...localVal]);
+          valToSave = Array.from(mergedSet);
+          storeData[key] = valToSave;
+        } else if (isMergeableArray && Array.isArray(remoteVal)) {
+          const mergedMap = new Map<string, any>();
+          const deletedUsers = storeData["gi_deleted_users"] || [];
+          const deletedInvestments = storeData["gi_deleted_investments"] || [];
+
+          for (const item of remoteVal) {
+            if (item && typeof item === "object") {
+              const id = item.id || item.code;
+              if (id) {
+                const idStr = String(id);
+                if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
+                if (key === "gi_investments" && deletedInvestments.includes(idStr)) continue;
+                mergedMap.set(idStr, item);
+              }
+            }
+          }
+
+          for (const item of localVal) {
+            if (item && typeof item === "object") {
+              const id = item.id || item.code;
+              if (id) {
+                const idStr = String(id);
+                if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
+                if (key === "gi_investments" && deletedInvestments.includes(idStr)) continue;
+                if (!mergedMap.has(idStr)) {
+                  mergedMap.set(idStr, item);
+                } else {
+                  const existingItem = mergedMap.get(idStr);
+                  const existingTime = existingItem.lastModified || 0;
+                  const incomingTime = item.lastModified || 0;
+
+                  if (key === "gi_users") {
+                    const useIncoming = incomingTime > existingTime;
+                    const mergedUser = {
+                      ...(useIncoming ? item : existingItem),
+                      balance: (useIncoming ? item.balance : existingItem.balance) ?? 0,
+                      dailyEarnings: (useIncoming ? item.dailyEarnings : existingItem.dailyEarnings) ?? 0,
+                      totalEarnings: (useIncoming ? item.totalEarnings : existingItem.totalEarnings) ?? 0,
+                      bonus: (useIncoming ? item.bonus : existingItem.bonus) ?? 0,
+                      role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
+                      isBlocked: (useIncoming ? item.isBlocked : existingItem.isBlocked) ?? false,
+                      lastModified: Math.max(existingTime, incomingTime)
+                    };
+                    mergedMap.set(idStr, mergedUser);
+                  } else {
+                    if (incomingTime >= existingTime) {
                       mergedMap.set(idStr, item);
                     }
                   }
                 }
-                
-                for (const item of localVal) {
-                  if (item && typeof item === "object") {
-                    const id = item.id || item.code;
-                    if (id) {
-                      const idStr = String(id);
-                      if (key === "gi_users" && deletedUsers.includes(idStr)) {
-                        continue; // Already deleted
-                      }
-                      if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
-                        continue; // Already deleted
-                      }
-                      if (!mergedMap.has(idStr)) {
-                        mergedMap.set(idStr, item);
-                      } else {
-                        const existingItem = mergedMap.get(idStr);
-                        const existingTime = existingItem.lastModified || 0;
-                        const incomingTime = item.lastModified || 0;
-                        
-                        if (key === "gi_users") {
-                          const useIncoming = incomingTime > existingTime;
-                          const mergedUser = {
-                            ...(useIncoming ? item : existingItem),
-                            balance: (useIncoming ? item.balance : existingItem.balance) ?? 0,
-                            dailyEarnings: (useIncoming ? item.dailyEarnings : existingItem.dailyEarnings) ?? 0,
-                            totalEarnings: (useIncoming ? item.totalEarnings : existingItem.totalEarnings) ?? 0,
-                            bonus: (useIncoming ? item.bonus : existingItem.bonus) ?? 0,
-                            role: (existingItem.role === 'admin' || item.role === 'admin') ? 'admin' : (useIncoming ? (item.role || 'user') : (existingItem.role || 'user')),
-                            isBlocked: (useIncoming ? item.isBlocked : existingItem.isBlocked) ?? false,
-                            lastModified: Math.max(existingTime, incomingTime)
-                          };
-                          mergedMap.set(idStr, mergedUser);
-                        } else {
-                          if (incomingTime >= existingTime) {
-                            mergedMap.set(idStr, item);
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                valToSave = Array.from(mergedMap.values());
-                storeData[key] = valToSave; // Keep server runtime cache completely unified!
               }
             }
-          } catch (e) {
-            console.error(`[SUPABASE MERGE ERROR] Failed to fetch and merge existing remote key "${key}":`, e);
           }
+          valToSave = Array.from(mergedMap.values());
+          storeData[key] = valToSave;
         }
-        
+
+        rowsToUpsert.push({
+          key: key,
+          value: valToSave,
+          updated_at: new Date().toISOString()
+        });
+      }
+
+      if (rowsToUpsert.length > 0) {
         const { error } = await withTimeout(
-          supabase.from('store').upsert({
-            key: key,
-            value: valToSave,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'key' }),
-          2000
+          supabase.from('store').upsert(rowsToUpsert, { onConflict: 'key' }),
+          5000
         );
 
         if (error) {
-          // Quietly abort loop if the store table doesn't exist to prevent terminal noise
-          if (error.message && error.message.includes('relation "store" does not exist')) {
-            break;
+          if (!error.message || !error.message.includes('relation "store" does not exist')) {
+            handleSupabaseError(error, `saveStore batch (${rowsToUpsert.length} keys)`);
           }
-          handleSupabaseError(error, `saveStore upsert key "${key}"`);
-          continue;
+        } else {
+          saveStoreLocal();
         }
       }
-      console.log("[SUPABASE] Cloud database synced with local modifications.");
-      saveStoreLocal(); // Reflux changes back to disk
-    } catch (e) {
-      handleSupabaseError(e, "saveStore main");
+    } catch (e: any) {
+      if (e?.message?.includes('TIMEOUT')) {
+        console.warn('[SUPABASE TIMEOUT] saveStore batch timed out, local modifications safely saved to disk.');
+      } else {
+        handleSupabaseError(e, "saveStore main");
+      }
     }
+  }
+
+  async function saveStore(specificKeys?: string[]): Promise<void> {
+    saveStoreLocal();
+    // Non-blocking background push to Supabase to keep responses instant
+    saveStoreRemote(specificKeys).catch((e) => {
+      console.warn('[BG SAVE SUPABASE WARN]', e);
+    });
   }
 
   function handleCyclicCompletion(inv: any, users: any[], products: any[], investments: any[], notifications: any[]) {
@@ -1835,8 +1860,8 @@ async function startServer() {
       console.error("[SERVER GET-STORE] Error processing automatic payouts:", e);
     }
 
-    // Intercept and merge the latest records from Supabase to stay continuously synchronized real-time across devices
-    await syncWithSupabase();
+    // Trigger non-blocking background sync with Supabase
+    triggerBackgroundSupabaseSync();
 
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -2154,8 +2179,8 @@ async function startServer() {
 
       console.log(`[DEBUG REGISTER] Incoming signup request. Name: "${data.name}", Phone: "${data.whatsapp}", Country: "${data.country || 'Cameroun'}", Sponsor: "${data.referredByCode || 'Aucun'}", Device: "${data.device || 'Inconnu'}"`);
 
-      // Always sync with Supabase first to ensure we check duplication against the latest dataset
-      await syncWithSupabase();
+      // Trigger background sync with Supabase
+      triggerBackgroundSupabaseSync();
 
       let users = storeData["gi_users"] || [];
       
@@ -2323,8 +2348,7 @@ async function startServer() {
   // Centralized Login API
   app.post("/api/login", async (req, res) => {
     const { whatsapp, password } = req.body;
-    // Always sync with Supabase first to ensure credentials are fully up to date
-    await syncWithSupabase();
+    triggerBackgroundSupabaseSync();
     let users = storeData["gi_users"] || [];
     
     const user = users.find((u: any) => {
@@ -4303,7 +4327,6 @@ async function startServer() {
   // Admin Account controls
   app.post("/api/admin/deposit-action", async (req, res) => {
     const { depositId, action } = req.body; // 'approve' or 'reject'
-    await syncWithSupabase();
     let deposits = storeData["gi_deposits"] || [];
     let users = storeData["gi_users"] || [];
     let notifications = storeData["gi_notifications"] || [];
@@ -4360,7 +4383,6 @@ async function startServer() {
 
   app.post("/api/admin/withdrawal-action", async (req, res) => {
     const { withdrawalId, action } = req.body; // 'approve' or 'reject'
-    await syncWithSupabase();
     let withdrawals = storeData["gi_withdrawals"] || [];
     let users = storeData["gi_users"] || [];
     let notifications = storeData["gi_notifications"] || [];
@@ -4417,7 +4439,6 @@ async function startServer() {
 
   app.post("/api/admin/update-user", async (req, res) => {
     const { userId, balance, bonus, role, password, referredBy, withdrawBlocked } = req.body;
-    await syncWithSupabase();
     let users = storeData["gi_users"] || [];
     const idx = users.findIndex((u: any) => u.id === userId);
     if (idx !== -1) {

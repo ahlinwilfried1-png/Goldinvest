@@ -42,68 +42,64 @@ html, body, #root {
 
 /* Perfect compact base layout scaling with optimized typography visibility */
 html {
-  font-size: 13.5px !important;
+  font-size: 15px !important;
 }
 
 @media (min-width: 640px) {
   html {
-    font-size: 14.5px !important;
+    font-size: 16px !important;
   }
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 15px !important;
-  }
+/* Perfect balanced text overrides with maximum clarity and legibility */
+.text-\[8px\],
+.text-\[8\.5px\] {
+  font-size: 0.85rem !important;
 }
 
-/* Perfect balanced text overrides with supreme clarity and zero disproportion */
-.text-\[8px\] {
-  font-size: 0.72rem !important;
-}
-
-.text-\[9px\] {
-  font-size: 0.78rem !important;
+.text-\[9px\],
+.text-\[9\.5px\] {
+  font-size: 0.90rem !important;
 }
 
 .text-\[10px\] {
-  font-size: 0.83rem !important;
+  font-size: 0.95rem !important;
 }
 
 .text-\[11px\] {
-  font-size: 0.88rem !important;
+  font-size: 1.0rem !important;
 }
 
 .text-xs {
-  font-size: 0.94rem !important;
+  font-size: 1.05rem !important;
 }
 
 .text-sm {
-  font-size: 1.06rem !important;
+  font-size: 1.15rem !important;
 }
 
 .text-base {
-  font-size: 1.18rem !important;
+  font-size: 1.25rem !important;
 }
 
 .text-lg {
-  font-size: 1.34rem !important;
+  font-size: 1.40rem !important;
 }
 
 .text-xl {
-  font-size: 1.54rem !important;
+  font-size: 1.60rem !important;
 }
 
 .text-2xl {
-  font-size: 1.85rem !important;
+  font-size: 1.90rem !important;
 }
 
 .text-3xl {
-  font-size: 2.22rem !important;
+  font-size: 2.30rem !important;
 }
 
 .text-4xl {
-  font-size: 2.75rem !important;
+  font-size: 2.80rem !important;
 }
 
 .text-5xl {
@@ -391,22 +387,80 @@ button {
   transition: transform 1.2s ease-out;
 }
 
-/* --- CUSTOM TYPOGRAPHY WEIGHT ADJUSTMENTS --- */
-/* Force normal/medium weight for standard views to guarantee elegance */
-.font-bold, 
-.font-extrabold, 
-.font-black, 
-.font-semibold,
+/* --- MAXIMUM VISIBILITY & TYPOGRAPHY CONTRAST --- */
+.font-bold,
+strong, b {
+  font-weight: 700 !important;
+}
+
+.font-extrabold {
+  font-weight: 800 !important;
+}
+
+.font-black,
 h1, h2, h3, h4, h5, h6,
-strong, b,
-button,
-th,
 span.font-black,
 div.font-black {
+  font-weight: 900 !important;
+}
+
+.font-semibold {
+  font-weight: 600 !important;
+}
+
+.font-medium {
   font-weight: 500 !important;
 }
 
-/* Keep only the account balance bold */
+/* Force dark, crisp contrast for all slate/gray text classes so investors can read everything clearly */
+.text-slate-300,
+.text-slate-350,
+.text-slate-400,
+.text-slate-450,
+.text-slate-500,
+.text-gray-300,
+.text-gray-400,
+.text-gray-500,
+.text-zinc-400,
+.text-zinc-500 {
+  color: #1e293b !important; /* Dark Slate 800 - crisp high contrast */
+}
+
+.text-slate-600,
+.text-slate-650,
+.text-slate-700,
+.text-slate-800,
+.text-slate-850,
+.text-slate-900,
+.text-gray-600,
+.text-gray-700,
+.text-gray-800,
+.text-gray-900,
+.text-slate-950 {
+  color: #020617 !important; /* Slate 950 - pitch black contrast */
+}
+
+/* Ensure labels inside cards & forms are ultra clear */
+label {
+  color: #020617 !important;
+  font-weight: 700 !important;
+}
+
+/* Form Inputs readability */
+input, select, textarea {
+  color: #020617 !important;
+  font-weight: 600 !important;
+}
+
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: #475569 !important;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
+/* Keep the account balance bold */
 .solde-bold,
 .solde-bold *,
 [id="main-balance-text"],
