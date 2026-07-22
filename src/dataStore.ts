@@ -943,6 +943,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_forum_posts',
           'gi_deleted_investments',
           'gi_deleted_users',
+          'gi_deleted_forum_posts',
           'gi_manual_deposit_numbers',
           'gi_official_banners'
         ];
@@ -1006,12 +1007,13 @@ export const syncWithBackend = async (): Promise<boolean> => {
           
           const isMergeableArray = Array.isArray(remoteData) && Array.isArray(localData) && 
             key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
-            key !== "gi_deleted_investments" && key !== "gi_deleted_users";
+            key !== "gi_deleted_investments" && key !== "gi_deleted_users" && key !== "gi_deleted_forum_posts";
           if (isMergeableArray) {
             // Merge remote array and local array to avoid losing any offline changes or registrations!
             const mergedMap = new Map<string, any>();
             const deletedInvs = key === "gi_investments" ? (data["gi_deleted_investments"] || getFromStore<string[]>('gi_deleted_investments', [])) : [];
             const deletedUsers = key === "gi_users" ? (data["gi_deleted_users"] || getFromStore<string[]>('gi_deleted_users', [])) : [];
+            const deletedPosts = key === "gi_forum_posts" ? (data["gi_deleted_forum_posts"] || getFromStore<string[]>('gi_deleted_forum_posts', [])) : [];
 
             for (const item of remoteData) {
               if (item && typeof item === 'object') {
@@ -1020,6 +1022,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
                   const idStr = String(id);
                   if (key === "gi_investments" && deletedInvs.includes(idStr)) continue;
                   if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
+                  if (key === "gi_forum_posts" && deletedPosts.includes(idStr)) continue;
                   mergedMap.set(idStr, item);
                 }
               }
@@ -1033,6 +1036,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
                   const idStr = String(id);
                   if (key === "gi_investments" && deletedInvs.includes(idStr)) continue;
                   if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
+                  if (key === "gi_forum_posts" && deletedPosts.includes(idStr)) continue;
                   if (!mergedMap.has(idStr)) {
                     mergedMap.set(idStr, item);
                     localHasNewItems = true;
@@ -1494,36 +1498,51 @@ export class DataStore {
   }
 
   static getForumPosts(): any[] {
-    const val = getFromStore<any[]>('gi_forum_posts', []);
+    let val = getFromStore<any[]>('gi_forum_posts', []);
+    const deletedPosts = getFromStore<string[]>('gi_deleted_forum_posts', []);
+    if (deletedPosts.length > 0) {
+      val = val.filter(p => p && p.id && !deletedPosts.includes(String(p.id)));
+    }
     if (val.length === 0) {
       try {
         const storedOld = localStorage.getItem('rockygold_forum_posts_v3');
         if (storedOld) {
           const oldPosts = JSON.parse(storedOld);
           if (Array.isArray(oldPosts) && oldPosts.length > 0) {
-            setToStore<any[]>('gi_forum_posts', oldPosts);
-            return oldPosts;
+            const filteredOld = oldPosts.filter(p => p && p.id && !deletedPosts.includes(String(p.id)));
+            if (filteredOld.length > 0) {
+              setToStore<any[]>('gi_forum_posts', filteredOld);
+              val = filteredOld;
+            }
           }
         }
       } catch (e) {}
     }
-    return val;
+    return val.sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.lastModified || 0).getTime();
+      const timeB = new Date(b.createdAt || b.lastModified || 0).getTime();
+      return timeB - timeA;
+    });
+  }
+
+  static deleteForumPost(postId: string): void {
+    const deleted = getFromStore<string[]>('gi_deleted_forum_posts', []);
+    if (!deleted.includes(postId)) {
+      deleted.push(postId);
+      setToStore<string[]>('gi_deleted_forum_posts', deleted);
+    }
+    const current = this.getForumPosts();
+    const updated = current.filter(p => p && p.id !== postId);
+    this.saveForumPosts(updated);
   }
 
   static saveForumPosts(posts: any[]): void {
-    setToStore<any[]>('gi_forum_posts', posts);
+    const deletedPosts = getFromStore<string[]>('gi_deleted_forum_posts', []);
+    const cleanPosts = posts.filter(p => p && p.id && !deletedPosts.includes(String(p.id)));
+    setToStore<any[]>('gi_forum_posts', cleanPosts);
     try {
-      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(posts));
+      localStorage.setItem('rockygold_forum_posts_v3', JSON.stringify(cleanPosts));
     } catch (e) {}
-    apiFetch(getApiUrl('/api/save-store'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        gi_forum_posts: posts
-      })
-    }).catch(err => {
-      console.error("Error saving forum posts to server", err);
-    });
   }
 
   // Auth Operations

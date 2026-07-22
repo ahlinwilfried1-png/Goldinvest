@@ -1181,6 +1181,9 @@ export default function Dashboard({
 
   const manualDepositNumbersRef = useRef(manualDepositNumbers);
   manualDepositNumbersRef.current = manualDepositNumbers;
+
+  const forumPostsRef = useRef(forumPosts);
+  forumPostsRef.current = forumPosts;
   
   const myIdUpper = userState.id.toUpperCase();
   const myCodeUpper = userState.referralCode ? userState.referralCode.trim().toUpperCase() : '';
@@ -1497,6 +1500,7 @@ export default function Dashboard({
       const oldUsersLen = allUsersRef.current.length;
       const oldProductsStr = JSON.stringify(productsRef.current);
       const oldManualNumsStr = JSON.stringify(manualDepositNumbersRef.current);
+      const oldForumPostsStr = JSON.stringify(forumPostsRef.current);
       DataStore.processAutomaticDailyInstallments();
       
       const fresh = DataStore.getCurrentUser();
@@ -1505,6 +1509,8 @@ export default function Dashboard({
       const freshProductsStr = JSON.stringify(freshProducts);
       const freshManualNums = DataStore.getManualDepositNumbers();
       const freshManualNumsStr = JSON.stringify(freshManualNums);
+      const freshForumPosts = DataStore.getForumPosts();
+      const freshForumPostsStr = JSON.stringify(freshForumPosts);
       
       // Pull real-time notifications
       const freshNotifs = DataStore.getNotifications().filter(n => n.userId === undefined || n.userId === currentUser.id);
@@ -1520,7 +1526,8 @@ export default function Dashboard({
         (fresh && fresh.balance !== oldBal) || 
         freshUsers.length !== oldUsersLen ||
         freshProductsStr !== oldProductsStr ||
-        freshManualNumsStr !== oldManualNumsStr
+        freshManualNumsStr !== oldManualNumsStr ||
+        freshForumPostsStr !== oldForumPostsStr
       ) {
         syncDashboardData();
       }
@@ -1569,6 +1576,10 @@ export default function Dashboard({
   useEffect(() => {
     if (activeTab === 'dashboard') {
       setShowAnnouncementDismissible(true);
+    } else if (activeTab === 'forum') {
+      syncWithBackend().then(() => {
+        setForumPosts(DataStore.getForumPosts());
+      }).catch(() => {});
     }
   }, [activeTab]);
 
