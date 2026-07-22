@@ -903,7 +903,9 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_support_messages',
           'gi_withdrawal_proofs',
           'gi_deleted_investments',
-          'gi_deleted_users'
+          'gi_deleted_users',
+          'gi_deleted_forum_posts',
+          'gi_deleted_products'
         ];
         for (const k of keysToClear) {
           try {
@@ -944,6 +946,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
           'gi_deleted_investments',
           'gi_deleted_users',
           'gi_deleted_forum_posts',
+          'gi_deleted_products',
           'gi_manual_deposit_numbers',
           'gi_official_banners'
         ];
@@ -1006,14 +1009,16 @@ export const syncWithBackend = async (): Promise<boolean> => {
           let mergedVal = remoteData;
           
           const isMergeableArray = Array.isArray(remoteData) && Array.isArray(localData) && 
-            key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
-            key !== "gi_deleted_investments" && key !== "gi_deleted_users" && key !== "gi_deleted_forum_posts";
+            key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
+            key !== "gi_deleted_investments" && key !== "gi_deleted_users" &&
+            key !== "gi_deleted_forum_posts" && key !== "gi_deleted_products";
           if (isMergeableArray) {
             // Merge remote array and local array to avoid losing any offline changes or registrations!
             const mergedMap = new Map<string, any>();
             const deletedInvs = key === "gi_investments" ? (data["gi_deleted_investments"] || getFromStore<string[]>('gi_deleted_investments', [])) : [];
             const deletedUsers = key === "gi_users" ? (data["gi_deleted_users"] || getFromStore<string[]>('gi_deleted_users', [])) : [];
             const deletedForumPosts = key === "gi_forum_posts" ? (data["gi_deleted_forum_posts"] || getFromStore<string[]>('gi_deleted_forum_posts', [])) : [];
+            const deletedProducts = key === "gi_products" ? (data["gi_deleted_products"] || getFromStore<string[]>('gi_deleted_products', [])) : [];
 
             for (const item of remoteData) {
               if (item && typeof item === 'object') {
@@ -1023,6 +1028,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
                   if (key === "gi_investments" && deletedInvs.includes(idStr)) continue;
                   if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
                   if (key === "gi_forum_posts" && deletedForumPosts.includes(idStr)) continue;
+                  if (key === "gi_products" && deletedProducts.includes(idStr)) continue;
                   mergedMap.set(idStr, item);
                 }
               }
@@ -1037,6 +1043,7 @@ export const syncWithBackend = async (): Promise<boolean> => {
                   if (key === "gi_investments" && deletedInvs.includes(idStr)) continue;
                   if (key === "gi_users" && deletedUsers.includes(idStr)) continue;
                   if (key === "gi_forum_posts" && deletedForumPosts.includes(idStr)) continue;
+                  if (key === "gi_products" && deletedProducts.includes(idStr)) continue;
                   if (!mergedMap.has(idStr)) {
                     mergedMap.set(idStr, item);
                     localHasNewItems = true;
@@ -1359,6 +1366,10 @@ export class DataStore {
 
   static getProducts(): Product[] {
     let list = getFromStore<Product[]>('gi_products', DEFAULT_PRODUCTS);
+    const deletedList = getFromStore<string[]>('gi_deleted_products', []);
+    if (deletedList.length > 0) {
+      list = list.filter(p => p && p.id && !deletedList.includes(String(p.id)));
+    }
 
     let changed = false;
     const now = new Date();
@@ -1427,6 +1438,20 @@ export class DataStore {
 
   static saveProducts(products: Product[]): void {
     setToStore<Product[]>('gi_products', products);
+    try {
+      window.dispatchEvent(new Event('gi_store_updated'));
+    } catch (e) {}
+
+    // Persist to server database
+    apiFetch('/api/save-store', {
+      method: 'POST',
+      body: JSON.stringify({
+        gi_products: products,
+        gi_deleted_products: getFromStore<string[]>('gi_deleted_products', [])
+      })
+    }).catch(err => {
+      console.error("Error saving products to server database", err);
+    });
   }
 
   static getDeposits(): Deposit[] {
@@ -3595,7 +3620,8 @@ export class DataStore {
       isCyclic: (p as any).isCyclic || false,
       generatedProductIds: (p as any).generatedProductIds || [],
       category: (p as any).category || 'stability',
-      imageUrl: (p as any).imageUrl || undefined
+      imageUrl: (p as any).imageUrl || undefined,
+      lastModified: Date.now()
     };
 
     list.push(newP);
@@ -3605,6 +3631,11 @@ export class DataStore {
   static deleteProduct(productId: string): void {
     let list = this.getProducts();
     list = list.filter(p => p.id !== productId);
+    const deletedProducts = getFromStore<string[]>('gi_deleted_products', []);
+    if (!deletedProducts.includes(productId)) {
+      deletedProducts.push(productId);
+      setToStore<string[]>('gi_deleted_products', deletedProducts);
+    }
     this.saveProducts(list);
   }
 
@@ -3644,7 +3675,8 @@ export class DataStore {
         isCyclic,
         generatedProductIds,
         category,
-        imageUrl
+        imageUrl,
+        lastModified: Date.now()
       };
       this.saveProducts(list);
     }
@@ -3656,6 +3688,7 @@ export class DataStore {
     if (idx !== -1) {
       list[idx].isBlocked = isBlocked;
       list[idx].reopenDateTime = isBlocked ? (reopenDateTime || undefined) : undefined;
+      list[idx].lastModified = Date.now();
       this.saveProducts(list);
     }
   }

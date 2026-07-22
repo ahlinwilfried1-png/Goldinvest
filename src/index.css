@@ -51,63 +51,63 @@ html {
   }
 }
 
-/* Perfect balanced text overrides with maximum clarity and legibility */
+/* Perfect balanced typography scale with clean proportions and maximum legibility */
 .text-\[8px\],
 .text-\[8\.5px\] {
-  font-size: 0.85rem !important;
+  font-size: 0.65rem !important;
 }
 
 .text-\[9px\],
 .text-\[9\.5px\] {
-  font-size: 0.90rem !important;
+  font-size: 0.70rem !important;
 }
 
 .text-\[10px\] {
-  font-size: 0.95rem !important;
+  font-size: 0.75rem !important;
 }
 
 .text-\[11px\] {
-  font-size: 1.0rem !important;
+  font-size: 0.80rem !important;
 }
 
 .text-xs {
-  font-size: 1.05rem !important;
+  font-size: 0.8125rem !important;
 }
 
 .text-sm {
-  font-size: 1.15rem !important;
+  font-size: 0.875rem !important;
 }
 
 .text-base {
-  font-size: 1.25rem !important;
+  font-size: 1.0rem !important;
 }
 
 .text-lg {
-  font-size: 1.40rem !important;
+  font-size: 1.125rem !important;
 }
 
 .text-xl {
-  font-size: 1.60rem !important;
+  font-size: 1.25rem !important;
 }
 
 .text-2xl {
-  font-size: 1.90rem !important;
+  font-size: 1.50rem !important;
 }
 
 .text-3xl {
-  font-size: 2.30rem !important;
+  font-size: 1.875rem !important;
 }
 
 .text-4xl {
-  font-size: 2.80rem !important;
+  font-size: 2.25rem !important;
 }
 
 .text-5xl {
-  font-size: 3.4rem !important;
+  font-size: 2.75rem !important;
 }
 
 .text-6xl {
-  font-size: 4.1rem !important;
+  font-size: 3.25rem !important;
 }
 
 body {

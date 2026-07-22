@@ -261,7 +261,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
     }
 
     // 1. Process deleted trackers first to ensure we have the complete deletion index in memory
-    const deleteKeys = ["gi_deleted_users", "gi_deleted_investments"];
+    const deleteKeys = ["gi_deleted_users", "gi_deleted_investments", "gi_deleted_forum_posts", "gi_deleted_products"];
     for (const key of deleteKeys) {
       if (payload[key] !== undefined) {
         const newVal = payload[key];
@@ -290,13 +290,15 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
         continue;
       }
 
-      const isStringArray = Array.isArray(newVal) && Array.isArray(oldVal) && (key === "gi_deleted_users" || key === "gi_deleted_investments");
-      const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && !isStringArray && key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
+      const isStringArray = Array.isArray(newVal) && Array.isArray(oldVal) && deleteKeys.includes(key);
+      const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && !isStringArray && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs";
 
       if (shouldMerge) {
         const mergedMap = new Map<string, any>();
         const deletedUsers = storeData["gi_deleted_users"] || [];
         const deletedInvestments = storeData["gi_deleted_investments"] || [];
+        const deletedForumPosts = storeData["gi_deleted_forum_posts"] || [];
+        const deletedProducts = storeData["gi_deleted_products"] || [];
 
         for (const item of oldVal) {
           if (item && typeof item === "object") {
@@ -310,6 +312,14 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
               if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
                 modified = true;
                 continue; // Skip previously deleted investment
+              }
+              if (key === "gi_forum_posts" && deletedForumPosts.includes(idStr)) {
+                modified = true;
+                continue;
+              }
+              if (key === "gi_products" && deletedProducts.includes(idStr)) {
+                modified = true;
+                continue;
               }
               mergedMap.set(idStr, item);
             }
@@ -326,6 +336,12 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
               }
               if (key === "gi_investments" && deletedInvestments.includes(idStr)) {
                 continue; // Skip deleted investment from remote
+              }
+              if (key === "gi_forum_posts" && deletedForumPosts.includes(idStr)) {
+                continue;
+              }
+              if (key === "gi_products" && deletedProducts.includes(idStr)) {
+                continue;
               }
 
               if (!mergedMap.has(idStr)) {
@@ -349,9 +365,11 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
                     modified = true;
                   }
                 } else {
-                  if (incomingTime > existingTime) {
-                    mergedMap.set(idStr, item);
-                    modified = true;
+                  if (incomingTime >= existingTime) {
+                    if (JSON.stringify(existingItem) !== JSON.stringify(item)) {
+                      mergedMap.set(idStr, item);
+                      modified = true;
+                    }
                   }
                 }
               }
@@ -376,6 +394,35 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
     }
     return modified;
   }
+
+const SERVER_DEFAULT_PRODUCTS = [
+  // STABILITÉ (7 products)
+  { id: "stab-1", vipLevel: 1, name: "Goldspeed Option Bronze", tag: "Option Bronze", price: 2000, dailyReturn: 100, durationDays: 40, totalReturn: 4000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-2", vipLevel: 2, name: "Goldspeed Option Argent", tag: "Option Argent", price: 5000, dailyReturn: 300, durationDays: 40, totalReturn: 12000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-3", vipLevel: 3, name: "Goldspeed Option Or", tag: "Option Or", price: 10000, dailyReturn: 700, durationDays: 40, totalReturn: 28000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-4", vipLevel: 4, name: "Goldspeed Option Platine", tag: "Option Platine", price: 25000, dailyReturn: 2000, durationDays: 40, totalReturn: 80000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-5", vipLevel: 5, name: "Goldspeed Option Diamant", tag: "Option Diamant", price: 50000, dailyReturn: 4500, durationDays: 40, totalReturn: 180000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-6", vipLevel: 6, name: "Goldspeed Option Saphir", tag: "Option Saphir", price: 100000, dailyReturn: 10000, durationDays: 40, totalReturn: 400000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-7", vipLevel: 7, name: "Goldspeed Option Émeraude", tag: "Option Émeraude", price: 200000, dailyReturn: 24000, durationDays: 40, totalReturn: 960000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+
+  // BIEN-ÊTRE (7 products)
+  { id: "well-1", vipLevel: 1, name: "Goldspeed Bien-être Source", tag: "Bien-être Source", price: 5000, dailyReturn: 1000, durationDays: 10, totalReturn: 10000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-2", vipLevel: 2, name: "Goldspeed Bien-être Harmonie", tag: "Bien-être Harmonie", price: 12000, dailyReturn: 2600, durationDays: 10, totalReturn: 26000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-3", vipLevel: 3, name: "Goldspeed Bien-être Sérénité", tag: "Bien-être Sérénité", price: 30000, dailyReturn: 7000, durationDays: 10, totalReturn: 70000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-4", vipLevel: 4, name: "Goldspeed Bien-être Vitalité", tag: "Bien-être Vitalité", price: 75000, dailyReturn: 19000, durationDays: 10, totalReturn: 190000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-5", vipLevel: 5, name: "Goldspeed Bien-être Énergie", tag: "Bien-être Énergie", price: 150000, dailyReturn: 42500, durationDays: 10, totalReturn: 425000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-6", vipLevel: 6, name: "Goldspeed Bien-être Équilibre", tag: "Bien-être Équilibre", price: 300000, dailyReturn: 90000, durationDays: 10, totalReturn: 900000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-7", vipLevel: 7, name: "Goldspeed Bien-être Plénitude", tag: "Bien-être Plénitude", price: 600000, dailyReturn: 190000, durationDays: 10, totalReturn: 1900000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+
+  // ACTIVITÉ (7 products)
+  { id: "act-1", vipLevel: 1, name: "Goldspeed Activité Éclair", tag: "Activité Éclair", price: 5000, dailyReturn: 2500, durationDays: 3, totalReturn: 7500, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-2", vipLevel: 2, name: "Goldspeed Activité Flash", tag: "Activité Flash", price: 15000, dailyReturn: 8000, durationDays: 3, totalReturn: 24000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-3", vipLevel: 3, name: "Goldspeed Activité Boost", tag: "Activité Boost", price: 40000, dailyReturn: 22000, durationDays: 3, totalReturn: 66000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-4", vipLevel: 4, name: "Goldspeed Activité Turbo", tag: "Activité Turbo", price: 100000, dailyReturn: 58000, durationDays: 3, totalReturn: 174000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-5", vipLevel: 5, name: "Goldspeed Activité Hyper", tag: "Activité Hyper", price: 250000, dailyReturn: 150000, durationDays: 3, totalReturn: 450000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-6", vipLevel: 6, name: "Goldspeed Activité Master", tag: "Activité Master", price: 600000, dailyReturn: 380000, durationDays: 3, totalReturn: 1140000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-7", vipLevel: 7, name: "Goldspeed Activité Elite", tag: "Activité Elite", price: 1500000, dailyReturn: 1000000, durationDays: 3, totalReturn: 3000000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] }
+];
 
   function loadStore() {
     if (fs.existsSync(dbPath)) {
@@ -407,7 +454,8 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
         { code: 'VIPBONUS', amount: 2000, maxUses: 10, usedCount: 0, usedByUsers: [] }
       ],
       "gi_support_messages": [],
-      "gi_products": [],
+      "gi_products": JSON.parse(JSON.stringify(SERVER_DEFAULT_PRODUCTS)),
+      "gi_deleted_products": [],
       "gi_mlm_level1_rate": 20,
       "gi_mlm_level2_rate": 3,
       "gi_mlm_level3_rate": 1,
@@ -434,6 +482,14 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
     for (const key of Object.keys(defaultData)) {
       if (storeData[key] === undefined) {
         storeData[key] = defaultData[key];
+        modified = true;
+      }
+    }
+
+    if (!Array.isArray(storeData["gi_products"]) || storeData["gi_products"].length === 0) {
+      const deletedProducts = storeData["gi_deleted_products"] || [];
+      if (deletedProducts.length === 0) {
+        storeData["gi_products"] = JSON.parse(JSON.stringify(SERVER_DEFAULT_PRODUCTS));
         modified = true;
       }
     }
@@ -2065,6 +2121,10 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
           const deletedPosts = storeData["gi_deleted_forum_posts"] || [];
           newVal = newVal.filter((p: any) => p && p.id && !deletedPosts.includes(String(p.id)));
         }
+        if (key === "gi_products" && Array.isArray(newVal)) {
+          const deletedProds = storeData["gi_deleted_products"] || [];
+          newVal = newVal.filter((p: any) => p && p.id && !deletedProds.includes(String(p.id)));
+        }
 
         // Filter and scrub deleted investments, users or forum posts from current old database value
         if (key === "gi_investments" && Array.isArray(oldVal)) {
@@ -2078,6 +2138,10 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
         if (key === "gi_forum_posts" && Array.isArray(oldVal)) {
           const deletedPosts = storeData["gi_deleted_forum_posts"] || [];
           oldVal = oldVal.filter((p: any) => p && p.id && !deletedPosts.includes(String(p.id)));
+        }
+        if (key === "gi_products" && Array.isArray(oldVal)) {
+          const deletedProds = storeData["gi_deleted_products"] || [];
+          oldVal = oldVal.filter((p: any) => p && p.id && !deletedProds.includes(String(p.id)));
         }
 
         console.log(`[DEBUG SAVE-STORE] Client requested update for key: "${key}". Incoming value duration/type: ${Array.isArray(newVal) ? `Array of length ${newVal.length}` : typeof newVal}. Existing server value: ${Array.isArray(oldVal) ? `Array of length ${oldVal.length}` : typeof oldVal}.`);
@@ -2094,8 +2158,9 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
         }
 
         const shouldMerge = Array.isArray(newVal) && Array.isArray(oldVal) && 
-          key !== "gi_products" && key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
-          key !== "gi_deleted_investments" && key !== "gi_deleted_users";
+          key !== "gi_bonus_codes" && key !== "gi_withdrawal_proofs" &&
+          key !== "gi_deleted_investments" && key !== "gi_deleted_users" &&
+          key !== "gi_deleted_forum_posts" && key !== "gi_deleted_products";
         if (shouldMerge) {
           // Merge arrays by ID or Code and choose the item with the higher lastModified
           const mergedMap = new Map<string, any>();
@@ -4754,20 +4819,36 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
     const { productId } = req.body;
     let list = storeData["gi_products"] || [];
     storeData["gi_products"] = list.filter((p: any) => p.id !== productId);
-    await saveStore();
+    let deletedList = storeData["gi_deleted_products"] || [];
+    if (!deletedList.includes(productId)) {
+      deletedList.push(productId);
+      storeData["gi_deleted_products"] = deletedList;
+    }
+    await saveStore(["gi_products", "gi_deleted_products"]);
     res.json({ success: true });
   });
 
   app.post("/api/admin/product/delete-all", async (req, res) => {
+    let list = storeData["gi_products"] || [];
+    let deletedList = storeData["gi_deleted_products"] || [];
+    for (const p of list) {
+      if (p && p.id && !deletedList.includes(p.id)) {
+        deletedList.push(p.id);
+      }
+    }
+    storeData["gi_deleted_products"] = deletedList;
     storeData["gi_products"] = [];
-    await saveStore();
+    await saveStore(["gi_products", "gi_deleted_products"]);
     res.json({ success: true });
   });
 
   app.post("/api/admin/product/update", async (req, res) => {
     const { productId, updatedP } = req.body;
-    let list = storeData["gi_products"] || [];
-    const idx = list.findIndex((p: any) => p.id === productId);
+    let list = storeData["gi_products"];
+    if (!Array.isArray(list) || list.length === 0) {
+      list = JSON.parse(JSON.stringify(SERVER_DEFAULT_PRODUCTS));
+    }
+    let idx = list.findIndex((p: any) => p.id === productId);
     if (idx !== -1) {
        const current = list[idx];
        const daily = updatedP.dailyReturn !== undefined ? updatedP.dailyReturn : current.dailyReturn;
@@ -4780,12 +4861,17 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
          category: updatedP.category || current.category || 'stability',
          lastModified: Date.now()
        };
-       sanitizeProductsInPlace(storeData["gi_products"]);
-       await saveStore();
-       res.json({ success: true });
     } else {
-       res.status(404).json({ error: 'Produit introuvable' });
+       list.push({
+         id: productId,
+         ...updatedP,
+         lastModified: Date.now()
+       });
     }
+    storeData["gi_products"] = list;
+    sanitizeProductsInPlace(storeData["gi_products"]);
+    await saveStore(["gi_products"]);
+    res.json({ success: true, products: storeData["gi_products"] });
   });
 
   app.post("/api/admin/product/toggle-block", async (req, res) => {
@@ -4796,7 +4882,7 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
       list[idx].isBlocked = isBlocked;
       list[idx].reopenDateTime = isBlocked ? (reopenDateTime || undefined) : undefined;
       list[idx].lastModified = Date.now();
-      await saveStore();
+      await saveStore(["gi_products"]);
       res.json({ success: true });
     } else {
       res.status(404).json({ error: 'Produit introuvable' });
