@@ -346,10 +346,14 @@ export default function AdminPanel({
   const [txTypeFilter, setTxTypeFilter] = useState<'all' | 'Dépôt' | 'Retrait' | 'Commission' | 'Achat VIP'>('all');
   const [txStatusFilter, setTxStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
+  const isSyncingRef = React.useRef(false);
+
   // Real-time synchronization directly with the central Express database server.
   // Bypasses any client integration bottlenecks, ensures 100% of registrations on standard,
   // mobile, and tablet devices appear instantly without exclusion, pagination boundaries, or filter caching.
   const executeDirectCentralSync = async () => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
     try {
       setSyncStatus('checking');
       const resp = await apiFetch(getApiUrl('/api/get-store?t=' + Date.now()));
@@ -403,6 +407,8 @@ export default function AdminPanel({
     } catch (err) {
       console.error("[ADMIN SYNC] Failed direct central DB refresh:", err);
       setSyncError(err instanceof Error ? err.message : String(err));
+    } finally {
+      isSyncingRef.current = false;
     }
   };
 
@@ -459,8 +465,8 @@ export default function AdminPanel({
     // Fast initial database load on mounts
     executeDirectCentralSync();
 
-    // Constant real-time active synchronization (poll every 4 seconds for instant updates across terminals!)
-    const interval = setInterval(executeDirectCentralSync, 4000);
+    // Constant real-time active synchronization (poll every 1 second for instant updates across terminals!)
+    const interval = setInterval(executeDirectCentralSync, 1000);
     
     const handleStoreUpdated = () => {
       executeDirectCentralSync();
@@ -1768,7 +1774,7 @@ export default function AdminPanel({
           <h2 className="text-xl font-display font-medium text-white">Console d'Administration Globale</h2>
           <div className="flex items-center space-x-1.5 mt-1 text-[11px] text-emerald-400 font-bold uppercase tracking-wider font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Synchro automatique instantanée (Toutes les 4s)</span>
+            <span>Synchro automatique instantanée (Chaque seconde ⚡)</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -2055,7 +2061,7 @@ export default function AdminPanel({
             <div>
               <span className="text-emerald-400 font-bold block uppercase text-[8px] tracking-wider font-mono">⚡ BASE DE DONNÉES CLOUD SUPABASE (DIRECT SYNC)</span>
               <p className="text-slate-300 text-[10px] leading-relaxed mt-0.5">
-                L'application est connectée directement à votre instance de production Supabase. Toute action sur n'importe quel appareil est propagée et l'Admin Panel s'actualise automatiquement toutes les 4 secondes.
+                L'application est connectée directement à votre instance de production Supabase. Toute action sur n'importe quel appareil est propagée et l'Admin Panel s'actualise automatiquement chaque seconde.
               </p>
             </div>
             <span className={`px-2 py-0.5 border text-xs font-bold rounded uppercase tracking-wider font-mono flex items-center gap-1 ${serverDiag?.storeTableAccessible ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400 animate-pulse'}`}>
