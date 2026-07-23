@@ -5393,27 +5393,25 @@ export default function Dashboard({
                             <div className={`grid gap-2.5 ${imagesList.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                               {imagesList.map((imgUrl, idx) => (
                                 <div key={idx} className="space-y-1.5">
-                                  <div className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 flex justify-center items-center shadow-xs">
+                                  <div 
+                                    onClick={() => setSelectedAvisImage(imgUrl)}
+                                    className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 flex justify-center items-center shadow-xs cursor-zoom-in select-none group"
+                                  >
                                     <img
                                       src={imgUrl}
                                       alt={`Capture ${idx + 1}`}
-                                      className="w-full h-full object-cover"
+                                      className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-105 transition-transform duration-200"
+                                      onContextMenu={(e) => e.preventDefault()}
+                                      onDragStart={(e) => e.preventDefault()}
+                                      style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
                                       referrerPolicy="no-referrer"
                                     />
-                                    <div className="absolute top-2 left-2 bg-slate-950/75 text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md backdrop-blur-xs">
+                                    <div className="absolute top-2 left-2 bg-slate-950/80 text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-xs">
                                       Capture #{idx + 1}
                                     </div>
-                                  </div>
-
-                                  <div className="flex gap-1.5">
-                                    <a
-                                      href={imgUrl}
-                                      download={`preuve-forum-${post.id}-${idx + 1}.png`}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="w-full py-1.5 px-2 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-[9.5px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer uppercase tracking-wider shadow-2xs"
-                                    >
-                                      💾 Télécharger la preuve
-                                    </a>
+                                    <div className="absolute bottom-2 right-2 bg-slate-950/80 text-amber-300 border border-amber-500/30 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-xs flex items-center gap-1 shadow-xs">
+                                      🔒 Non téléchargeable
+                                    </div>
                                   </div>
                                 </div>
                               ))}
@@ -7499,24 +7497,25 @@ export default function Dashboard({
               onClick={(e) => e.stopPropagation()}
               className="relative max-w-4xl max-h-[85vh] overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 p-2 flex flex-col justify-center"
             >
-              <img
-                src={selectedAvisImage}
-                alt="Agrandissement"
-                className="max-w-full max-h-[72vh] object-contain rounded-2xl mx-auto"
-                referrerPolicy="no-referrer"
-              />
+              <div className="relative overflow-hidden rounded-2xl mx-auto flex justify-center items-center select-none">
+                <img
+                  src={selectedAvisImage}
+                  alt="Agrandissement"
+                  className="max-w-full max-h-[72vh] object-contain rounded-2xl mx-auto select-none pointer-events-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                  style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
+                  referrerPolicy="no-referrer"
+                />
+              </div>
               <div className="flex items-center justify-between px-4 py-3 mt-2 bg-slate-950/90 border-t border-slate-800/80 rounded-b-2xl">
-                <span className="text-xs font-sans font-bold text-slate-300">
+                <span className="text-xs font-sans font-bold text-slate-300 flex items-center gap-1.5">
                   📸 Capture d'écran du Forum
                 </span>
                 <div className="flex items-center gap-2">
-                  <a
-                    href={selectedAvisImage}
-                    download={`capture-forum-${Date.now()}.png`}
-                    className="px-4 py-2 bg-[#1b64d9] hover:bg-blue-600 text-white font-sans font-black text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider shadow-sm"
-                  >
-                    💾 Télécharger
-                  </a>
+                  <span className="px-3 py-1.5 bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[10px] font-sans font-black rounded-xl uppercase tracking-wider flex items-center gap-1">
+                    🔒 Téléchargement désactivé
+                  </span>
                   <button
                     onClick={() => setSelectedAvisImage(null)}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-sans font-black text-xs rounded-xl transition-all cursor-pointer uppercase tracking-wider"

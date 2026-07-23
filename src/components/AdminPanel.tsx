@@ -835,9 +835,22 @@ export default function AdminPanel({
   };
 
   // User events
-  const handleBlockToggle = (userId: string, currentBlocked: boolean) => {
+  const handleBlockToggle = async (userId: string, currentBlocked: boolean) => {
     DataStore.setBlockUser(userId, !currentBlocked);
     syncLocalStates();
+
+    try {
+      const resp = await apiFetch(getApiUrl('/api/admin/block-user'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, isBlocked: !currentBlocked })
+      });
+      if (resp.ok) {
+        await executeDirectCentralSync();
+      }
+    } catch (e) {
+      console.error("Failed server block user toggle:", e);
+    }
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
@@ -864,7 +877,7 @@ export default function AdminPanel({
     setEditWithdrawBlocked(user.withdrawBlocked === true);
   };
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (editingUser) {
       DataStore.updateUserBalance(editingUser.id, {
         balance: editBalance,
@@ -874,12 +887,34 @@ export default function AdminPanel({
         referredBy: editReferredBy === '' ? null : editReferredBy,
         withdrawBlocked: editWithdrawBlocked
       });
+      const targetUserId = editingUser.id;
       setEditingUser(null);
       syncLocalStates();
+
+      try {
+        const resp = await apiFetch(getApiUrl('/api/admin/update-user'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: targetUserId,
+            balance: editBalance,
+            bonus: editBonus,
+            role: editRole,
+            password: editPassword,
+            referredBy: editReferredBy === '' ? null : editReferredBy,
+            withdrawBlocked: editWithdrawBlocked
+          })
+        });
+        if (resp.ok) {
+          await executeDirectCentralSync();
+        }
+      } catch (e) {
+        console.error("Failed server update of user:", e);
+      }
     }
   };
 
-  const handleDeleteSponsor = (filleulId: string) => {
+  const handleDeleteSponsor = async (filleulId: string) => {
     const filleul = users.find(u => u.id === filleulId);
     if (filleul) {
       if (window.confirm(`Êtes-vous sûr de vouloir supprimer le parrain de ${filleul.name} ?`)) {
@@ -891,6 +926,26 @@ export default function AdminPanel({
           referredBy: null
         });
         syncLocalStates();
+
+        try {
+          const resp = await apiFetch(getApiUrl('/api/admin/update-user'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: filleul.id,
+              balance: filleul.balance,
+              bonus: filleul.bonus,
+              role: filleul.role,
+              password: filleul.password,
+              referredBy: null
+            })
+          });
+          if (resp.ok) {
+            await executeDirectCentralSync();
+          }
+        } catch (e) {
+          console.error("Failed server update of sponsor removal:", e);
+        }
       }
     }
   };

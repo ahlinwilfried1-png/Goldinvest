@@ -1443,8 +1443,9 @@ export class DataStore {
     } catch (e) {}
 
     // Persist to server database
-    apiFetch('/api/save-store', {
+    apiFetch(getApiUrl('/api/save-store'), {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         gi_products: products,
         gi_deleted_products: getFromStore<string[]>('gi_deleted_products', [])
