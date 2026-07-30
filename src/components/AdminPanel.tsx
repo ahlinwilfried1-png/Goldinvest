@@ -112,7 +112,7 @@ export default function AdminPanel({
   }, [activeAdminTab]);
   const [commissions, setCommissions] = useState<any[]>(() => DataStore.getCommissions());
 
-  // Forum and proofs sub-tabs states
+  // Forum sub-tab state
   const [proofsSubTab, setProofsSubTab] = useState<'avis' | 'forum'>('avis');
   const [forumPosts, setForumPosts] = useState<any[]>(() => DataStore.getForumPosts());
 
@@ -208,6 +208,30 @@ export default function AdminPanel({
           onRefreshData();
         } catch (err: any) {
           console.error("Error deleting forum post:", err);
+          setNotification({
+            message: "Erreur: " + err.message,
+            type: "error"
+          });
+        }
+      }
+    });
+  };
+
+  const handleClearAllForumPosts = () => {
+    setConfirmConfig({
+      title: "🗑️ PURGER LE FORUM",
+      message: "Voulez-vous vraiment supprimer TOUTES les publications du Forum ? Cette action est irréversible et effacera l'ensemble du forum pour tous les membres.",
+      onConfirm: async () => {
+        try {
+          await DataStore.clearAllForumPosts();
+          setForumPosts([]);
+          setNotification({
+            message: "🧹 Toutes les publications du Forum ont été supprimées avec succès !",
+            type: "success"
+          });
+          onRefreshData();
+        } catch (err: any) {
+          console.error("Error clearing forum posts:", err);
           setNotification({
             message: "Erreur: " + err.message,
             type: "error"
@@ -2593,6 +2617,14 @@ export default function AdminPanel({
                         .filter(w => w.userId === user.id && (w.status === 'approved' || w.status === 'completed' || w.status === 'success'))
                         .reduce((sum, w) => sum + w.amount, 0);
 
+                      const userPendingDepositsNum = deposits
+                        .filter(d => d.userId === user.id && d.status === 'pending')
+                        .reduce((sum, d) => sum + d.amount, 0);
+
+                      const userPendingWithdrawalsNum = withdrawals
+                        .filter(w => w.userId === user.id && w.status === 'pending')
+                        .reduce((sum, w) => sum + w.amount, 0);
+
                       // Get active VIP investment details
                       const activeUserPlans = investments.filter(i => i.userId === user.id && i.status === 'active');
                       const activeUserPlansValue = activeUserPlans.reduce((sum, i) => sum + i.price, 0);
@@ -2667,15 +2699,33 @@ export default function AdminPanel({
                               <span className="text-slate-600 text-[10px] italic">0 filleul</span>
                             )}
                           </td>
-                          <td className="p-3 text-right space-y-1">
+                          <td className="p-3 text-right space-y-1 bg-slate-950/40 rounded-xl">
                             <div>
                               <span className="text-[9px] text-slate-400 block font-semibold uppercase">Solde :</span>
-                              <span className="font-bold font-mono text-yellow-500 text-xs">{user.balance.toLocaleString()} F</span>
+                              <span className="font-bold font-mono text-yellow-400 text-xs">{user.balance.toLocaleString()} FCFA</span>
                             </div>
-                            <div className="flex items-center justify-end gap-1.5 text-[9px] font-mono">
-                              <span className="text-green-400" title="Total Dépôts Approuvés">📥 +{userApprovedDepositsNum.toLocaleString()} F</span>
-                              <span className="text-slate-700">|</span>
-                              <span className="text-red-400" title="Total Retraits Approuvés">📤 -{userApprovedWithdrawalsNum.toLocaleString()} F</span><div className="pt-1 border-t border-slate-800/60 mt-1"><span className="text-[8px] text-emerald-500 block font-semibold uppercase text-right">Commissions :</span><span className={`font-bold font-mono text-[10px] block text-right ${userTotalCommission > 0 ? "text-emerald-400" : "text-slate-500"}`} title="Total des commissions de parrainage reçues">🎁 +{userTotalCommission.toLocaleString()} F</span></div>
+                            <div className="flex flex-col items-end gap-0.5 text-[9px] font-mono mt-1 pt-1 border-t border-slate-800/60">
+                              <span className="text-emerald-400 font-bold" title="Total Dépôts Approuvés">
+                                📥 Dépôts : +{userApprovedDepositsNum.toLocaleString()} F
+                              </span>
+                              <span className="text-rose-400 font-bold" title="Total Retraits Approuvés">
+                                📤 Retraits : -{userApprovedWithdrawalsNum.toLocaleString()} F
+                              </span>
+                              {userPendingDepositsNum > 0 && (
+                                <span className="text-amber-400 font-bold text-[8.5px]" title="Dépôt en attente de validation">
+                                  ⏳ Attente Dépôt : +{userPendingDepositsNum.toLocaleString()} F
+                                </span>
+                              )}
+                              {userPendingWithdrawalsNum > 0 && (
+                                <span className="text-amber-400 font-bold text-[8.5px]" title="Retrait en attente de validation">
+                                  ⏳ Attente Retrait : -{userPendingWithdrawalsNum.toLocaleString()} F
+                                </span>
+                              )}
+                              {userTotalCommission > 0 && (
+                                <span className="text-blue-400 font-bold text-[8.5px]" title="Total commissions">
+                                  🎁 Commissions : +{userTotalCommission.toLocaleString()} F
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="p-3 text-center">
@@ -3284,7 +3334,7 @@ export default function AdminPanel({
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: goldspeed-dreampod.vercel.app ou https://mes-investissements.com"
+                  placeholder="Ex: gold_avenue-dreampod.vercel.app ou https://mes-investissements.com"
                   value={referralDomain}
                   onChange={(e) => setReferralDomain(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-800 focus:border-yellow-500/40 rounded-xl py-2.5 px-4 text-sm text-yellow-400 font-mono focus:outline-none"
@@ -4358,12 +4408,23 @@ export default function AdminPanel({
 
             {proofsSubTab === 'forum' && (
               <div className="space-y-4">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-800 gap-2">
                   <h4 className="text-xs text-slate-400 font-bold uppercase tracking-wider pl-1">
                     Publications Actuelles sur le Forum Public
                   </h4>
-                  <div className="bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400">
-                    Total Posts: <span className="text-yellow-400 font-bold">{forumPosts.length}</span>
+                  <div className="flex items-center gap-2">
+                    {forumPosts.length > 0 && (
+                      <button
+                        onClick={handleClearAllForumPosts}
+                        className="px-3 py-1 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-600/30 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Tout Supprimer</span>
+                      </button>
+                    )}
+                    <div className="bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400">
+                      Total Posts: <span className="text-yellow-400 font-bold">{forumPosts.length}</span>
+                    </div>
                   </div>
                 </div>
 

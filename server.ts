@@ -13,8 +13,8 @@ async function startServer() {
 
   const rawUrl = (process.env.SUPABASE_URL || "").trim();
   const rawKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
-  const supabaseUrl = rawUrl && rawUrl !== "" ? rawUrl : "https://fpqxupbqxzsngezkqwcs.supabase.co";
-  const supabaseKey = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcXh1cGJxeHpzbmdlemtxd2NzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDcyOTY3OSwiZXhwIjoyMTAwMzA1Njc5fQ.ox4gSGLyYXqUaAeXem-HPjQRfJFxGCfo4gg3DQ9pkvc";
+  const supabaseUrl = rawUrl && rawUrl !== "" ? rawUrl : "https://ajluqalpxchoshqieuyj.supabase.co";
+  const supabaseKey = rawKey && rawKey !== "" ? rawKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbHVxYWxweGNob3NocWlldXlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTM5ODY3NywiZXhwIjoyMTAwOTc0Njc3fQ.qI2moa-kqW6Hzcuslcoj_W9aezPC1DqXNNkCk-e6bW4";
   
   let supabase: any = null;
   let supabaseEnabled = true;
@@ -199,19 +199,19 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
       if (needsNameUpdate) {
         modified = true;
         if (item.vipLevel === 6) {
-          item.name = "Goldspeed Or d'Investissement";
+          item.name = "Gold Avenue Or d'Investissement";
           item.tag = "Or d'Investissement";
         } else if (item.vipLevel === 7) {
-          item.name = "Goldspeed Lingot d'Or Pur";
+          item.name = "Gold Avenue Lingot d'Or Pur";
           item.tag = "Lingot d'Or Pur";
         } else if (item.vipLevel === 8) {
-          item.name = "Goldspeed Réserve Souveraine";
+          item.name = "Gold Avenue Réserve Souveraine";
           item.tag = "Réserve Souveraine";
         } else if (item.vipLevel === 9) {
-          item.name = "Goldspeed Trésor Impérial";
+          item.name = "Gold Avenue Trésor Impérial";
           item.tag = "Trésor Impérial";
         } else {
-          item.name = `Goldspeed Option Or VIP ${item.vipLevel || ''}`;
+          item.name = `Gold Avenue Option Or VIP ${item.vipLevel || ''}`;
           item.tag = "Or d'Investissement";
         }
       }
@@ -397,31 +397,31 @@ CREATE POLICY "Allow anon full access" ON public.store FOR ALL TO anon USING (tr
 
 const SERVER_DEFAULT_PRODUCTS = [
   // STABILITÉ (7 products)
-  { id: "stab-1", vipLevel: 1, name: "Goldspeed Option Bronze", tag: "Option Bronze", price: 2000, dailyReturn: 100, durationDays: 40, totalReturn: 4000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "stab-2", vipLevel: 2, name: "Goldspeed Option Argent", tag: "Option Argent", price: 5000, dailyReturn: 300, durationDays: 40, totalReturn: 12000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "stab-3", vipLevel: 3, name: "Goldspeed Option Or", tag: "Option Or", price: 10000, dailyReturn: 700, durationDays: 40, totalReturn: 28000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "stab-4", vipLevel: 4, name: "Goldspeed Option Platine", tag: "Option Platine", price: 25000, dailyReturn: 2000, durationDays: 40, totalReturn: 80000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "stab-5", vipLevel: 5, name: "Goldspeed Option Diamant", tag: "Option Diamant", price: 50000, dailyReturn: 4500, durationDays: 40, totalReturn: 180000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "stab-6", vipLevel: 6, name: "Goldspeed Option Saphir", tag: "Option Saphir", price: 100000, dailyReturn: 10000, durationDays: 40, totalReturn: 400000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "stab-7", vipLevel: 7, name: "Goldspeed Option Émeraude", tag: "Option Émeraude", price: 200000, dailyReturn: 24000, durationDays: 40, totalReturn: 960000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-1", vipLevel: 1, name: "Gold Avenue Option Bronze", tag: "Option Bronze", price: 2000, dailyReturn: 100, durationDays: 40, totalReturn: 4000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-2", vipLevel: 2, name: "Gold Avenue Option Argent", tag: "Option Argent", price: 5000, dailyReturn: 300, durationDays: 40, totalReturn: 12000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-3", vipLevel: 3, name: "Gold Avenue Option Or", tag: "Option Or", price: 10000, dailyReturn: 700, durationDays: 40, totalReturn: 28000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-4", vipLevel: 4, name: "Gold Avenue Option Platine", tag: "Option Platine", price: 25000, dailyReturn: 2000, durationDays: 40, totalReturn: 80000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-5", vipLevel: 5, name: "Gold Avenue Option Diamant", tag: "Option Diamant", price: 50000, dailyReturn: 4500, durationDays: 40, totalReturn: 180000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-6", vipLevel: 6, name: "Gold Avenue Option Saphir", tag: "Option Saphir", price: 100000, dailyReturn: 10000, durationDays: 40, totalReturn: 400000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "stab-7", vipLevel: 7, name: "Gold Avenue Option Émeraude", tag: "Option Émeraude", price: 200000, dailyReturn: 24000, durationDays: 40, totalReturn: 960000, category: "stability", isBlocked: false, isCyclic: true, generatedProductIds: [] },
 
   // BIEN-ÊTRE (7 products)
-  { id: "well-1", vipLevel: 1, name: "Goldspeed Bien-être Source", tag: "Bien-être Source", price: 5000, dailyReturn: 1000, durationDays: 10, totalReturn: 10000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "well-2", vipLevel: 2, name: "Goldspeed Bien-être Harmonie", tag: "Bien-être Harmonie", price: 12000, dailyReturn: 2600, durationDays: 10, totalReturn: 26000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "well-3", vipLevel: 3, name: "Goldspeed Bien-être Sérénité", tag: "Bien-être Sérénité", price: 30000, dailyReturn: 7000, durationDays: 10, totalReturn: 70000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "well-4", vipLevel: 4, name: "Goldspeed Bien-être Vitalité", tag: "Bien-être Vitalité", price: 75000, dailyReturn: 19000, durationDays: 10, totalReturn: 190000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "well-5", vipLevel: 5, name: "Goldspeed Bien-être Énergie", tag: "Bien-être Énergie", price: 150000, dailyReturn: 42500, durationDays: 10, totalReturn: 425000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "well-6", vipLevel: 6, name: "Goldspeed Bien-être Équilibre", tag: "Bien-être Équilibre", price: 300000, dailyReturn: 90000, durationDays: 10, totalReturn: 900000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "well-7", vipLevel: 7, name: "Goldspeed Bien-être Plénitude", tag: "Bien-être Plénitude", price: 600000, dailyReturn: 190000, durationDays: 10, totalReturn: 1900000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-1", vipLevel: 1, name: "Gold Avenue Bien-être Source", tag: "Bien-être Source", price: 5000, dailyReturn: 1000, durationDays: 10, totalReturn: 10000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-2", vipLevel: 2, name: "Gold Avenue Bien-être Harmonie", tag: "Bien-être Harmonie", price: 12000, dailyReturn: 2600, durationDays: 10, totalReturn: 26000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-3", vipLevel: 3, name: "Gold Avenue Bien-être Sérénité", tag: "Bien-être Sérénité", price: 30000, dailyReturn: 7000, durationDays: 10, totalReturn: 70000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-4", vipLevel: 4, name: "Gold Avenue Bien-être Vitalité", tag: "Bien-être Vitalité", price: 75000, dailyReturn: 19000, durationDays: 10, totalReturn: 190000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-5", vipLevel: 5, name: "Gold Avenue Bien-être Énergie", tag: "Bien-être Énergie", price: 150000, dailyReturn: 42500, durationDays: 10, totalReturn: 425000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-6", vipLevel: 6, name: "Gold Avenue Bien-être Équilibre", tag: "Bien-être Équilibre", price: 300000, dailyReturn: 90000, durationDays: 10, totalReturn: 900000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "well-7", vipLevel: 7, name: "Gold Avenue Bien-être Plénitude", tag: "Bien-être Plénitude", price: 600000, dailyReturn: 190000, durationDays: 10, totalReturn: 1900000, category: "wellbeing", isBlocked: false, isCyclic: true, generatedProductIds: [] },
 
   // ACTIVITÉ (7 products)
-  { id: "act-1", vipLevel: 1, name: "Goldspeed Activité Éclair", tag: "Activité Éclair", price: 5000, dailyReturn: 2500, durationDays: 3, totalReturn: 7500, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "act-2", vipLevel: 2, name: "Goldspeed Activité Flash", tag: "Activité Flash", price: 15000, dailyReturn: 8000, durationDays: 3, totalReturn: 24000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "act-3", vipLevel: 3, name: "Goldspeed Activité Boost", tag: "Activité Boost", price: 40000, dailyReturn: 22000, durationDays: 3, totalReturn: 66000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "act-4", vipLevel: 4, name: "Goldspeed Activité Turbo", tag: "Activité Turbo", price: 100000, dailyReturn: 58000, durationDays: 3, totalReturn: 174000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "act-5", vipLevel: 5, name: "Goldspeed Activité Hyper", tag: "Activité Hyper", price: 250000, dailyReturn: 150000, durationDays: 3, totalReturn: 450000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "act-6", vipLevel: 6, name: "Goldspeed Activité Master", tag: "Activité Master", price: 600000, dailyReturn: 380000, durationDays: 3, totalReturn: 1140000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
-  { id: "act-7", vipLevel: 7, name: "Goldspeed Activité Elite", tag: "Activité Elite", price: 1500000, dailyReturn: 1000000, durationDays: 3, totalReturn: 3000000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] }
+  { id: "act-1", vipLevel: 1, name: "Gold Avenue Activité Éclair", tag: "Activité Éclair", price: 5000, dailyReturn: 2500, durationDays: 3, totalReturn: 7500, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-2", vipLevel: 2, name: "Gold Avenue Activité Flash", tag: "Activité Flash", price: 15000, dailyReturn: 8000, durationDays: 3, totalReturn: 24000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-3", vipLevel: 3, name: "Gold Avenue Activité Boost", tag: "Activité Boost", price: 40000, dailyReturn: 22000, durationDays: 3, totalReturn: 66000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-4", vipLevel: 4, name: "Gold Avenue Activité Turbo", tag: "Activité Turbo", price: 100000, dailyReturn: 58000, durationDays: 3, totalReturn: 174000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-5", vipLevel: 5, name: "Gold Avenue Activité Hyper", tag: "Activité Hyper", price: 250000, dailyReturn: 150000, durationDays: 3, totalReturn: 450000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-6", vipLevel: 6, name: "Gold Avenue Activité Master", tag: "Activité Master", price: 600000, dailyReturn: 380000, durationDays: 3, totalReturn: 1140000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] },
+  { id: "act-7", vipLevel: 7, name: "Gold Avenue Activité Elite", tag: "Activité Elite", price: 1500000, dailyReturn: 1000000, durationDays: 3, totalReturn: 3000000, category: "activity", isBlocked: false, isCyclic: true, generatedProductIds: [] }
 ];
 
   function loadStore() {
@@ -523,7 +523,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "stab-1",
         vipLevel: 1,
-        name: "Goldspeed Option Bronze",
+        name: "Gold Avenue Option Bronze",
         tag: "Option Bronze",
         price: 2000,
         dailyReturn: 100,
@@ -537,7 +537,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "stab-2",
         vipLevel: 2,
-        name: "Goldspeed Option Argent",
+        name: "Gold Avenue Option Argent",
         tag: "Option Argent",
         price: 5000,
         dailyReturn: 300,
@@ -551,7 +551,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "stab-3",
         vipLevel: 3,
-        name: "Goldspeed Option Or",
+        name: "Gold Avenue Option Or",
         tag: "Option Or",
         price: 10000,
         dailyReturn: 700,
@@ -565,7 +565,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "stab-4",
         vipLevel: 4,
-        name: "Goldspeed Option Platine",
+        name: "Gold Avenue Option Platine",
         tag: "Option Platine",
         price: 25000,
         dailyReturn: 2000,
@@ -579,7 +579,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "stab-5",
         vipLevel: 5,
-        name: "Goldspeed Option Diamant",
+        name: "Gold Avenue Option Diamant",
         tag: "Option Diamant",
         price: 50000,
         dailyReturn: 4500,
@@ -593,7 +593,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "stab-6",
         vipLevel: 6,
-        name: "Goldspeed Option Saphir",
+        name: "Gold Avenue Option Saphir",
         tag: "Option Saphir",
         price: 100000,
         dailyReturn: 10000,
@@ -607,7 +607,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "stab-7",
         vipLevel: 7,
-        name: "Goldspeed Option Émeraude",
+        name: "Gold Avenue Option Émeraude",
         tag: "Option Émeraude",
         price: 200000,
         dailyReturn: 24000,
@@ -623,7 +623,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "well-1",
         vipLevel: 1,
-        name: "Goldspeed Bien-être Source",
+        name: "Gold Avenue Bien-être Source",
         tag: "Bien-être Source",
         price: 5000,
         dailyReturn: 1000,
@@ -637,7 +637,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "well-2",
         vipLevel: 2,
-        name: "Goldspeed Bien-être Harmonie",
+        name: "Gold Avenue Bien-être Harmonie",
         tag: "Bien-être Harmonie",
         price: 12000,
         dailyReturn: 2600,
@@ -651,7 +651,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "well-3",
         vipLevel: 3,
-        name: "Goldspeed Bien-être Sérénité",
+        name: "Gold Avenue Bien-être Sérénité",
         tag: "Bien-être Sérénité",
         price: 30000,
         dailyReturn: 7000,
@@ -665,7 +665,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "well-4",
         vipLevel: 4,
-        name: "Goldspeed Bien-être Vitalité",
+        name: "Gold Avenue Bien-être Vitalité",
         tag: "Bien-être Vitalité",
         price: 75000,
         dailyReturn: 19000,
@@ -679,7 +679,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "well-5",
         vipLevel: 5,
-        name: "Goldspeed Bien-être Énergie",
+        name: "Gold Avenue Bien-être Énergie",
         tag: "Bien-être Énergie",
         price: 150000,
         dailyReturn: 42500,
@@ -693,7 +693,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "well-6",
         vipLevel: 6,
-        name: "Goldspeed Bien-être Équilibre",
+        name: "Gold Avenue Bien-être Équilibre",
         tag: "Bien-être Équilibre",
         price: 300000,
         dailyReturn: 90000,
@@ -707,7 +707,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "well-7",
         vipLevel: 7,
-        name: "Goldspeed Bien-être Plénitude",
+        name: "Gold Avenue Bien-être Plénitude",
         tag: "Bien-être Plénitude",
         price: 600000,
         dailyReturn: 190000,
@@ -723,7 +723,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "act-1",
         vipLevel: 1,
-        name: "Goldspeed Activité Éclair",
+        name: "Gold Avenue Activité Éclair",
         tag: "Activité Éclair",
         price: 5000,
         dailyReturn: 2500,
@@ -737,7 +737,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "act-2",
         vipLevel: 2,
-        name: "Goldspeed Activité Flash",
+        name: "Gold Avenue Activité Flash",
         tag: "Activité Flash",
         price: 15000,
         dailyReturn: 8000,
@@ -751,7 +751,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "act-3",
         vipLevel: 3,
-        name: "Goldspeed Activité Boost",
+        name: "Gold Avenue Activité Boost",
         tag: "Activité Boost",
         price: 40000,
         dailyReturn: 22000,
@@ -765,7 +765,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "act-4",
         vipLevel: 4,
-        name: "Goldspeed Activité Turbo",
+        name: "Gold Avenue Activité Turbo",
         tag: "Activité Turbo",
         price: 100000,
         dailyReturn: 58000,
@@ -779,7 +779,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "act-5",
         vipLevel: 5,
-        name: "Goldspeed Activité Hyper",
+        name: "Gold Avenue Activité Hyper",
         tag: "Activité Hyper",
         price: 250000,
         dailyReturn: 150000,
@@ -793,7 +793,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "act-6",
         vipLevel: 6,
-        name: "Goldspeed Activité Master",
+        name: "Gold Avenue Activité Master",
         tag: "Activité Master",
         price: 600000,
         dailyReturn: 380000,
@@ -807,7 +807,7 @@ const SERVER_DEFAULT_PRODUCTS = [
       {
         id: "act-7",
         vipLevel: 7,
-        name: "Goldspeed Activité Elite",
+        name: "Gold Avenue Activité Elite",
         tag: "Activité Elite",
         price: 1500000,
         dailyReturn: 1000000,
@@ -4899,8 +4899,8 @@ const SERVER_DEFAULT_PRODUCTS = [
   app.get("/manifest.json", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(JSON.stringify({
-      "name": "Goldspeed Mobile App",
-      "short_name": "Goldspeed",
+      "name": "Gold Avenue Mobile App",
+      "short_name": "Gold Avenue",
       "description": "Plateforme d'investissement aurifère de premier choix pour rendements stables et garantis.",
       "start_url": "/",
       "display": "standalone",

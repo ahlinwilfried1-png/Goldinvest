@@ -410,13 +410,13 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
   }
 
   return (
-    <div className="min-h-screen bg-[#fff6ed] pb-24 text-slate-900 selection:bg-orange-200">
+    <div className="min-h-screen bg-[#f4f8ff] pb-24 text-slate-900 selection:bg-blue-200">
       {/* HEADER SECTION */}
-      <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-orange-100 z-50">
+      <header className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-blue-100/80 z-50 shadow-xs">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <button 
             onClick={() => onNavigate('/')}
-            className="flex items-center space-x-2 text-slate-600 hover:text-slate-950 transition-colors font-bold text-sm cursor-pointer"
+            className="flex items-center space-x-2 text-slate-600 hover:text-blue-600 transition-colors font-bold text-sm cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
             <span>{t('Tableau de bord', 'Dashboard')}</span>
@@ -429,7 +429,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
           <button 
             onClick={handleRefresh}
             disabled={loading}
-            className={`p-2.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-full transition-all cursor-pointer ${loading ? 'animate-spin' : ''}`}
+            className={`p-2.5 bg-blue-50 hover:bg-blue-100 text-[#1b64d9] rounded-full transition-all cursor-pointer ${loading ? 'animate-spin' : ''}`}
             title={t('Synchroniser', 'Synchronize')}
           >
             <RefreshCw className="w-4 h-4 stroke-[2.5]" />
@@ -441,7 +441,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
         
         {/* TABS SEPARATOR CATEGORIES */}
         {hashActive !== '#retrait' && (
-          <div className="bg-white p-1.5 rounded-2xl border border-orange-100/80 shadow-sm flex overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:grid md:grid-cols-4">
+          <div className="bg-white p-1.5 rounded-2xl border border-blue-100 shadow-xs flex overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:grid md:grid-cols-4">
             <button
               onClick={() => {
                 setActiveTab('recharge');
@@ -449,11 +449,11 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               }}
               className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'recharge' 
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25' 
+                  : 'text-slate-600 hover:bg-blue-50/60 hover:text-blue-900'
               }`}
             >
-              <PlusCircle className={`w-4 h-4 shrink-0 ${activeTab === 'recharge' ? 'text-white' : 'text-emerald-500'}`} />
+              <PlusCircle className={`w-4 h-4 shrink-0 ${activeTab === 'recharge' ? 'text-white' : 'text-blue-600'}`} />
               <span>{t('1. Recharges', '1. Deposits')}</span>
             </button>
 
@@ -464,11 +464,11 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               }}
               className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'retrait' 
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25' 
+                  : 'text-slate-600 hover:bg-blue-50/60 hover:text-blue-900'
               }`}
             >
-              <ArrowUpCircle className={`w-4 h-4 shrink-0 ${activeTab === 'retrait' ? 'text-white' : 'text-rose-500'}`} />
+              <ArrowUpCircle className={`w-4 h-4 shrink-0 ${activeTab === 'retrait' ? 'text-white' : 'text-blue-600'}`} />
               <span>{t('2. Retraits', '2. Withdrawals')}</span>
             </button>
 
@@ -479,11 +479,11 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               }}
               className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'achat' 
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25' 
+                  : 'text-slate-600 hover:bg-blue-50/60 hover:text-blue-900'
               }`}
             >
-              <ShoppingBag className={`w-4 h-4 shrink-0 ${activeTab === 'achat' ? 'text-white' : 'text-purple-500'}`} />
+              <ShoppingBag className={`w-4 h-4 shrink-0 ${activeTab === 'achat' ? 'text-white' : 'text-blue-600'}`} />
               <span>{t('3. Achats', '3. Purchases')}</span>
             </button>
 
@@ -494,11 +494,11 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               }}
               className={`flex-1 md:flex-initial py-3 px-4 sm:py-3.5 rounded-xl font-sans font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex flex-row items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'revenu' 
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25' 
+                  : 'text-slate-600 hover:bg-blue-50/60 hover:text-blue-900'
               }`}
             >
-              <TrendingUp className={`w-4 h-4 shrink-0 ${activeTab === 'revenu' ? 'text-white' : 'text-blue-500'}`} />
+              <TrendingUp className={`w-4 h-4 shrink-0 ${activeTab === 'revenu' ? 'text-white' : 'text-blue-600'}`} />
               <span>{t('4. Revenus', '4. Earnings')}</span>
             </button>
           </div>
@@ -519,12 +519,12 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
               }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-orange-100 rounded-2xl pl-10 pr-4 py-3 text-xs md:text-sm focus:outline-none focus:border-orange-400 font-medium"
+              className="w-full bg-white border border-blue-100 rounded-2xl pl-10 pr-4 py-3 text-xs md:text-sm focus:outline-none focus:border-blue-400 font-medium shadow-xs"
             />
           </div>
 
-          <div className="flex items-center space-x-2 bg-white px-3 py-2 border border-orange-100 rounded-2xl">
-            <SlidersHorizontal className="w-4 h-4 text-slate-400" />
+          <div className="flex items-center space-x-2 bg-white px-3 py-2 border border-blue-100 rounded-2xl shadow-xs">
+            <SlidersHorizontal className="w-4 h-4 text-blue-500" />
             <select
               value={statusFilter}
               onChange={(e: any) => setStatusFilter(e.target.value)}
@@ -551,18 +551,18 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
         </div>
 
         {/* RESULT CONTAINER */}
-        <div className="bg-white border border-orange-100/80 rounded-3xl shadow-sm overflow-hidden min-h-[250px]">
+        <div className="bg-white border border-blue-100 rounded-3xl shadow-xs overflow-hidden min-h-[250px]">
           
           {filteredItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center space-y-3">
-              <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
                 <Clock className="w-7 h-7 stroke-[1.5]" />
               </div>
               <div className="space-y-1">
                 <p className="font-sans font-black text-sm text-slate-800">{t("Aucune opération trouvée", "No transactions found")}</p>
                 <p className="text-xs text-slate-400 max-w-sm">
                   {t("Il n’y a aucun historique correspondant à vos critères ou de type", "There is no history matching your criteria or of type")}{' '}
-                  <span className="font-bold underline text-orange-500">
+                  <span className="font-bold underline text-blue-600">
                     type = {activeTab}
                   </span>.
                 </p>
@@ -572,14 +572,14 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-orange-50 font-sans font-black text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest select-none">
+                  <tr className="bg-blue-50/70 border-b border-blue-100 font-sans font-black text-[10px] sm:text-xs text-blue-900 uppercase tracking-widest select-none">
                     <th className="py-4 px-4 sm:px-6">{t("Date & ID", "Date & ID")}</th>
                     {activeTab !== 'retrait' && activeTab !== 'recharge' && <th className="py-4 px-4">{t("Détails de l’opération", "Transaction Details")}</th>}
                     <th className="py-4 px-4 text-right">{t("Montant", "Amount")} ({getCurrency()})</th>
                     <th className="py-4 px-4 sm:px-6 text-right">{t("Statut / Type", "Status / Type")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-orange-50/50 text-xs">
+                <tbody className="divide-y divide-blue-50 text-xs">
                   
                   {/* RECHARGE TAB ROWS */}
                   {activeTab === 'recharge' && (filteredItems as Deposit[]).map((dep) => (
@@ -624,7 +624,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                     <tr 
                       key={wth.id} 
                       onClick={() => setSelectedWithdrawal(wth)}
-                      className="hover:bg-orange-50/50 transition-colors cursor-pointer group"
+                      className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
                       title={t("Cliquez pour voir le reçu", "Click to view receipt")}
                     >
                       <td className="py-4 px-4 sm:px-6 space-y-1">
@@ -633,7 +633,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                           <span className="font-mono font-medium text-[11px]">{formatDate(wth.createdAt)}</span>
                         </div>
                         <div className="font-mono text-[9px] text-slate-400">ID: {wth.id}</div>
-                        <div className="text-[10px] text-slate-600 font-bold group-hover:text-orange-600 transition-colors">
+                        <div className="text-[10px] text-slate-600 font-bold group-hover:text-blue-600 transition-colors">
                           Vers: {wth.operator} ({maskPhoneNumber(wth.number)})
                         </div>
                       </td>
@@ -667,7 +667,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
 
                   {/* ACHAT TAB ROWS */}
                   {activeTab === 'achat' && (filteredItems as Investment[]).map((inv) => (
-                    <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={inv.id} className="hover:bg-blue-50/40 transition-colors">
                       <td className="py-4 px-4 sm:px-6 space-y-1">
                         <div className="flex items-center gap-1.5 text-slate-500">
                           <Calendar className="w-3.5 h-3.5" />
@@ -677,7 +677,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                       </td>
                       <td className="py-4 px-4 space-y-1">
                         <div className="font-sans font-bold text-slate-850 flex items-center gap-1.5">
-                          <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">
+                          <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">
                             type = achat
                           </span>
                           <span>Formule {inv.productName}</span>
@@ -688,7 +688,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                         </div>
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <span className="font-mono font-black text-purple-600 text-[13px]">
+                        <span className="font-mono font-black text-blue-600 text-[13px]">
                           {inv.price.toLocaleString()}
                         </span>
                       </td>
@@ -711,7 +711,7 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
 
                   {/* COMMISSION TAB ROWS */}
                   {activeTab === 'commission' && (filteredItems as Commission[]).map((comm) => (
-                    <tr key={comm.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={comm.id} className="hover:bg-blue-50/40 transition-colors">
                       <td className="py-4 px-4 sm:px-6 space-y-1">
                         <div className="flex items-center gap-1.5 text-slate-500">
                           <Calendar className="w-3.5 h-3.5" />
@@ -721,17 +721,17 @@ export default function HistoriquePage({ user, onNavigate }: HistoriquePageProps
                       </td>
                       <td className="py-4 px-4 space-y-1">
                         <div className="font-sans font-bold text-slate-850 flex items-center gap-1.5 flex-wrap">
-                          <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">
+                          <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">
                             type = commission
                           </span>
                           <span>Parrainage de {comm.fromUserName}</span>
                         </div>
                         <div className="text-[11px] text-slate-500 font-bold">
-                          Filleul direct de <span className="text-orange-600 font-extrabold">Niveau {comm.level}</span>
+                          Filleul direct de <span className="text-blue-600 font-extrabold">Niveau {comm.level}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <span className="font-mono font-black text-orange-600 text-[13px]">
+                        <span className="font-mono font-black text-blue-600 text-[13px]">
                           +{comm.amount.toLocaleString()}
                         </span>
                       </td>

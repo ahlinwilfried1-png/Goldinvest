@@ -53,7 +53,8 @@ import {
   Speaker,
   Volume2,
   Music,
-  CreditCard
+  CreditCard,
+  ShoppingBag
 } from 'lucide-react';
 import { User, Deposit, Withdrawal, Product, Investment, Commission, SystemNotification, SupportMessage, WithdrawalProof } from '../types';
 import { DataStore, syncWithBackend, getApiUrl, apiFetch } from '../dataStore';
@@ -203,22 +204,22 @@ const getVipCropDetails = (level: number, category?: string) => {
     switch (level) {
       case 1:
         return {
-          name: "Goldspeed Épargne Express ⚡",
+          name: "Gold Avenue Épargne Express ⚡",
           desc: "Package spécial court terme basé sur la rotation de micro-lingots d'or."
         };
       case 2:
         return {
-          name: "Goldspeed Rendement Éclair ⚡",
+          name: "Gold Avenue Rendement Éclair ⚡",
           desc: "Plan promotionnel à rotation rapide avec intérêts crédités quotidiennement."
         };
       case 3:
         return {
-          name: "Goldspeed Option Flash Or ⚡",
+          name: "Gold Avenue Option Flash Or ⚡",
           desc: "Édition limitée à très haut rendement sur un cycle court et ultra-sécurisé."
         };
       default:
         return {
-          name: "Goldspeed Offre Spéciale ⚡",
+          name: "Gold Avenue Offre Spéciale ⚡",
           desc: "Édition spéciale exclusive pour booster vos revenus journaliers de manière sécurisée."
         };
     }
@@ -227,52 +228,52 @@ const getVipCropDetails = (level: number, category?: string) => {
   switch (level) {
     case 1:
       return {
-        name: "Goldspeed Lingot Classique 🪙",
+        name: "Gold Avenue Lingot Classique 🪙",
         desc: "Notre formule d'entrée de gamme offrant un rendement journalier passif, régulier et stable."
       };
     case 2:
       return {
-        name: "Goldspeed Lingot Bronze 🥉",
+        name: "Gold Avenue Lingot Bronze 🥉",
         desc: "Deuxième niveau d'investissement aurifère pour des revenus journaliers plus solides."
       };
     case 3:
       return {
-        name: "Goldspeed Lingot Argent 🥈",
+        name: "Gold Avenue Lingot Argent 🥈",
         desc: "Rendement journalier optimisé sur l'achat et la conservation de réserves d'or intermédiaire."
       };
     case 4:
       return {
-        name: "Goldspeed Lingot Or Jaune 🥇",
+        name: "Gold Avenue Lingot Or Jaune 🥇",
         desc: "Plan performant assurant des revenus très solides et réguliers sur l'or d'investissement."
       };
     case 5:
       return {
-        name: "Goldspeed Pack Premium Gold 💎",
+        name: "Gold Avenue Pack Premium Gold 💎",
         desc: "Le fleuron haut de gamme idéal pour maximiser vos gains sur des lingots purs de 100g."
       };
     case 6:
       return {
-        name: "Goldspeed Or d'Investissement 🛡️",
+        name: "Gold Avenue Or d'Investissement 🛡️",
         desc: "Plan à forte rentabilité soutenu par des coffres physiques assurés et un taux majoré."
       };
     case 7:
       return {
-        name: "Goldspeed Lingot d'Or Pur ✨",
+        name: "Gold Avenue Lingot d'Or Pur ✨",
         desc: "Le summum du placement et de la performance financière pour les investisseurs VIP."
       };
     case 8:
       return {
-        name: "Goldspeed Réserve Souveraine 🏛️",
+        name: "Gold Avenue Réserve Souveraine 🏛️",
         desc: "Placement institutionnel de prestige à haut rendement réservé aux investisseurs majeurs."
       };
     case 9:
       return {
-        name: "Goldspeed Trésor Impérial 👑",
+        name: "Gold Avenue Trésor Impérial 👑",
         desc: "Trésor de prestige ultime offrant des gains passifs spectaculaires et sécurisés."
       };
     default:
       return {
-        name: "Goldspeed Trésor Impérial 👑",
+        name: "Gold Avenue Trésor Impérial 👑",
         desc: "Formule de prestige ultime réservée aux investisseurs d'élite de la communauté."
       };
   }
@@ -389,11 +390,11 @@ export const WHEEL_REWARDS = [
   { amount: 20, label: "20 F", color: "#ef4444" }  // red
 ];
 
-export const GOLDSPEED_SLIDES = [
+export const GOLD_AVENUE_SLIDES = [
   {
     id: 'slide-1',
     url: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=1000',
-    title: 'Goldspeed Lingot d\'Or Pur 💎',
+    title: 'Gold Avenue Lingot d\'Or Pur 💎',
     desc: 'Bénéficiez de la sécurité absolue d\'un investissement aurifère de premier choix.',
   }
 ];
@@ -522,11 +523,11 @@ export default function Dashboard({
   const [slideDirection, setSlideDirection] = useState<'forward' | 'backward'>('forward');
 
   useEffect(() => {
-    if (GOLDSPEED_SLIDES.length <= 1) return;
+    if (GOLD_AVENUE_SLIDES.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentSlide(prev => {
         if (slideDirection === 'forward') {
-          if (prev === GOLDSPEED_SLIDES.length - 1) {
+          if (prev === GOLD_AVENUE_SLIDES.length - 1) {
             setSlideDirection('backward');
             return prev - 1;
           }
@@ -971,8 +972,8 @@ export default function Dashboard({
   const handleDownloadAndInstallApp = async () => {
     // 1. Trigger the direct APK download programmatically
     const link = document.createElement('a');
-    link.href = '/Goldspeed_v2.6.apk';
-    link.download = 'Goldspeed_v2.6.apk';
+    link.href = '/Gold Avenue_v2.6.apk';
+    link.download = 'Gold Avenue_v2.6.apk';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -995,7 +996,7 @@ export default function Dashboard({
     // 3. Show a clear, precise alert instruction explaining what to do next & handling install errors
     openAlert(
       "Téléchargement Lancé ! 📲",
-      "Le téléchargement de l'application 'Goldspeed_v2.6.apk' a commencé ! Ouvrez le fichier téléchargé pour l'installer.\n\n⚠️ IMPORTANT : Si l'installation refuse ou dit 'Application non installée', désinstallez d'abord TOUTE ancienne version (comme l'application Goldspeed ou AgroProfit) de votre téléphone, puis réessayez. Cela résout 100% des erreurs d'installation !",
+      "Le téléchargement de l'application 'Gold Avenue_v2.6.apk' a commencé ! Ouvrez le fichier téléchargé pour l'installer.\n\n⚠️ IMPORTANT : Si l'installation refuse ou dit 'Application non installée', désinstallez d'abord TOUTE ancienne version (comme l'application Gold Avenue ou AgroProfit) de votre téléphone, puis réessayez. Cela résout 100% des erreurs d'installation !",
       "success"
     );
   };
@@ -1081,7 +1082,7 @@ export default function Dashboard({
         openAlert('Activé avec succès 🎉', 'Vous recevrez désormais des alertes instantanées dans Chrome à chaque fois qu\'une recharge est approuvée, qu\'un gain tombe ou qu\'une annonce officielle de l\'administrateur est diffusée.', 'success');
         try {
           new Notification("Vous avez reçu une nouvelle notification", {
-            body: "Notifications de bureau Chrome activées sur Goldspeed ! 🔔"
+            body: "Notifications de bureau Chrome activées sur Gold Avenue ! 🔔"
           });
         } catch (e) {
           console.error(e);
@@ -2597,7 +2598,7 @@ export default function Dashboard({
             </div>
             <div className="flex-1 text-left min-w-0">
               <div className="flex justify-between items-center mb-0.5">
-                <span className="text-[10px] font-sans font-black uppercase text-yellow-500 tracking-wider">Alerte Goldspeed 🔔</span>
+                <span className="text-[10px] font-sans font-black uppercase text-yellow-500 tracking-wider">Alerte Gold Avenue 🔔</span>
                 <span className="text-[8px] opacity-60 font-mono font-bold uppercase shrink-0">À l'instant</span>
               </div>
               <p className="text-[11.5px] font-bold text-slate-100 leading-snug break-words">
@@ -2685,7 +2686,7 @@ export default function Dashboard({
 
               {/* Footer */}
               <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between">
-                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Sécurité garantie</span>
+                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Sécurité certifiée</span>
                 <button 
                   onClick={() => setIsRulesModalOpen(false)}
                   className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
@@ -2912,11 +2913,11 @@ export default function Dashboard({
                 {/* Microchip and MDB branding */}
                 <div className="flex justify-between items-start">
                   <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-black uppercase tracking-wider opacity-90">GOLDSPEED INVESTMENT</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider opacity-90">GOLD_AVENUE INVESTMENT</span>
                     <span className="text-[7px] font-mono font-bold tracking-widest opacity-60">MEMBRE CERTIFIÉ</span>
                   </div>
                   <div className="w-16 h-8 rounded-md bg-white/20 flex items-center justify-center border border-white/20 px-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider">Goldspeed</span>
+                    <span className="text-[9px] font-black uppercase tracking-wider">Gold Avenue</span>
                   </div>
                 </div>
 
@@ -3091,30 +3092,30 @@ export default function Dashboard({
             const totalCommissions = commissions.reduce((acc, c) => acc + c.amount, 0);
             const activeInvsCount = activeInvestments.filter(i => i.status === 'active').length;
 
-            if (profileSubPage === 'missions') {
-              const directReferrals = level1Users;
-              const allInvs = DataStore.getInvestments() || [];
-              const investedReferralCount = directReferrals.filter(u => allInvs.some(inv => inv.userId === u.id)).length;
-              const claimed = (userState as any).claimedMissions || [];
+            if (profileSubPage === 'missions' || profileSubPage === 'pointage') {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const isCheckedInToday = userState.lastCheckInDate === todayStr;
 
-              const MISSIONS = [
-                { id: 'invite_10', target: 10, reward: 500, label: "Inviter à activer 10 personnes" },
-                { id: 'invite_20', target: 20, reward: 1000, label: "Inviter à activer 20 personnes" },
-                { id: 'invite_50', target: 50, reward: 3000, label: "Inviter à activer 50 personnes" },
-                { id: 'invite_100', target: 100, reward: 7000, label: "Inviter à activer 100 personnes" }
-              ];
+              const handleDailyCheckIn = () => {
+                if (isCheckedInToday) {
+                  triggerToast("Vous avez déjà effectué votre pointage aujourd'hui ! Revenez demain.", "info");
+                  return;
+                }
 
-              const handleClaimMission = (missionId: string, reward: number, target: number) => {
-                if (investedReferralCount < target) return;
-                if (claimed.includes(missionId)) return;
-
+                const reward = 20;
                 const newBalance = userState.balance + reward;
-                const newClaimed = [...claimed, missionId];
+                
+                // Calculate streak
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const newStreak = (userState.lastCheckInDate === yesterday) 
+                  ? (userState.checkInStreak || 0) + 1 
+                  : 1;
 
                 const updatedUser: User = {
                   ...userState,
                   balance: newBalance,
-                  claimedMissions: newClaimed as any
+                  lastCheckInDate: todayStr,
+                  checkInStreak: newStreak
                 };
 
                 DataStore.saveCurrentUser(updatedUser);
@@ -3130,15 +3131,13 @@ export default function Dashboard({
                   onRefreshUser(updatedUser);
                 }
 
-                triggerToast(`Félicitations ! Votre bonus de +${reward.toLocaleString()} FCFA a été ajouté à votre solde ! 🎯`, "success");
+                triggerToast(`Pointage quotidien réussi ! 🎉 +20 FCFA ajoutés à votre solde.`, "success");
               };
-
-              const shareLink = `${window.location.origin}/register?ref=${userState.referralCode || ''}`;
 
               return (
                 <div className="bg-[#f4f7fc] -mx-2 sm:-mx-6 md:-mx-12 xl:-mx-20 -mt-3.5 pb-24 min-h-screen text-slate-800 text-left animate-fadeIn">
-                  {/* Vibrant Blue Header */}
-                  <div className="bg-gradient-to-b from-[#1b64d9] to-[#2575fc] text-white pt-6 pb-28 px-4 rounded-b-[2.5rem] relative shadow-md overflow-hidden">
+                  {/* Sky Blue Header */}
+                  <div className="bg-gradient-to-b from-[#0284c7] to-[#0369a1] text-white pt-6 pb-28 px-4 rounded-b-[2.5rem] relative shadow-md overflow-hidden">
                     
                     {/* Top navigation row */}
                     <div className="max-w-xl mx-auto flex items-center justify-between relative z-10 mb-6">
@@ -3150,7 +3149,7 @@ export default function Dashboard({
                       </button>
                       
                       <h2 className="font-sans font-black text-white text-base tracking-tight uppercase">
-                        {t("Récompense de mission", "Mission Reward")}
+                        {t("Pointage Quotidien", "Daily Check-in")}
                       </h2>
 
                       <button 
@@ -3161,155 +3160,150 @@ export default function Dashboard({
                       </button>
                     </div>
 
-                    {/* Commissions information */}
+                    {/* Daily Reward Title & Stats */}
                     <div className="max-w-xl mx-auto flex items-center justify-between relative z-10 pb-4">
                       <div>
-                        <span className="text-white/85 text-[11.5px] font-bold tracking-wide uppercase block">
-                          {t("Total des commissions obtenues", "Total Commissions Earned")}
+                        <span className="text-sky-100 text-[11.5px] font-bold tracking-wide uppercase block">
+                          {t("Récompense Quotidienne", "Daily Reward")}
                         </span>
-                        <span className="text-3xl font-sans font-black tracking-tight block mt-1.5">
-                          FCFA {totalCommissions.toLocaleString()}
+                        <span className="text-3xl font-sans font-black tracking-tight block mt-1.5 text-amber-300 drop-shadow-sm">
+                          +20 FCFA / jour
                         </span>
                       </div>
 
-                      {/* Celebration Visual illustration */}
-                      <div className="w-28 h-20 relative select-none pointer-events-none shrink-0 hidden sm:block">
-                        <div className="absolute right-0 bottom-0 w-12 h-12 bg-amber-400 rounded-2xl rotate-12 flex items-center justify-center shadow-lg border border-amber-300">
-                          <Megaphone className="w-6 h-6 text-white -rotate-12 animate-pulse" />
-                        </div>
-                        <div className="absolute right-8 bottom-1 w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center shadow-md border border-amber-400">
-                          <Gift className="w-4 h-4 text-white" />
-                        </div>
-                        <div className="absolute right-4 bottom-7 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center shadow">
-                          <span className="text-[8px] font-black text-yellow-900">$</span>
+                      <div className="w-24 h-20 relative select-none pointer-events-none shrink-0 hidden sm:flex items-center justify-center">
+                        <div className="w-14 h-14 bg-amber-400 rounded-2xl rotate-6 flex items-center justify-center shadow-lg border border-amber-300">
+                          <Calendar className="w-7 h-7 text-white stroke-[2.25]" />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Overlapping Invitation Link Card */}
-                  <div className="max-w-xl mx-auto -mt-10 px-4 relative z-10">
-                    <div className="bg-white rounded-[24px] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center justify-between gap-3">
-                      <div className="flex items-center space-x-3 min-w-0">
-                        <div className="w-11 h-11 bg-blue-50 text-[#1b64d9] rounded-[18px] flex items-center justify-center shrink-0 border border-blue-100/40">
-                          <Gift className="w-5.5 h-5.5 stroke-[2.25]" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-[10px] font-sans font-black text-slate-400 leading-none uppercase tracking-wider mb-1">
-                            Lien d'invitation
-                          </h4>
-                          <p className="text-[11px] font-mono text-slate-600 font-bold truncate leading-none">
-                            {shareLink}
+                  {/* Main Check-In Card Overlapping Header */}
+                  <div className="max-w-xl mx-auto -mt-20 px-4 relative z-10">
+                    <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-slate-100 space-y-6">
+                      
+                      {/* Header Status */}
+                      <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                        <div>
+                          <h3 className="text-base font-sans font-black text-slate-800 uppercase tracking-tight">
+                            Pointage du jour
+                          </h3>
+                          <p className="text-xs text-slate-400 font-bold mt-0.5">
+                            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                           </p>
                         </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(shareLink);
-                          triggerToast(t("Lien d'invitation copié ! 📋", "Invitation link copied! 📋"), "success");
-                        }}
-                        className="bg-[#1b64d9] text-white hover:bg-blue-700 py-1.5 px-4 rounded-full text-xs font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-sm border-0 shrink-0"
-                      >
-                        Copier
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Mission Center container */}
-                  <div className="max-w-xl mx-auto mt-6 px-4">
-                    <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 space-y-6">
-                      
-                      <div className="space-y-1">
-                        <h3 className="text-[15px] font-sans font-black text-slate-800 uppercase tracking-tight">
-                          Centre de missions
-                        </h3>
-                        <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                          Après avoir complété chaque mission, vous recevrez une récompense
-                        </p>
+                        
+                        <div className={`px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                          isCheckedInToday 
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60' 
+                            : 'bg-amber-50 text-amber-600 border border-amber-200/60 animate-pulse'
+                        }`}>
+                          {isCheckedInToday ? (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                              <span>Effectué</span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="w-4 h-4 stroke-[2.5]" />
+                              <span>En attente</span>
+                            </>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Missions Timeline */}
-                      <div className="relative pl-7 space-y-6 pt-1">
-                        {/* Connecting Line */}
-                        <div className="absolute left-3 top-4 bottom-8 w-[2px] bg-slate-100" />
+                      {/* Large Action Box */}
+                      <div className="text-center py-4 px-2 space-y-4">
+                        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-amber-400 to-yellow-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 border-2 border-amber-300">
+                          {isCheckedInToday ? (
+                            <Check className="w-10 h-10 stroke-[3]" />
+                          ) : (
+                            <Coins className="w-10 h-10 stroke-[2.25] animate-bounce" />
+                          )}
+                        </div>
 
-                        {MISSIONS.map((m) => {
-                          const isCompleted = investedReferralCount >= m.target;
-                          const isClaimed = claimed.includes(m.id);
+                        <div>
+                          <h4 className="text-xl font-sans font-black text-slate-800">
+                            {isCheckedInToday 
+                              ? "Pointage du jour effectué !" 
+                              : "Réclamez vos 20 FCFA gratuits"}
+                          </h4>
+                          <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto mt-1 leading-relaxed">
+                            {isCheckedInToday 
+                              ? "Vous avez déjà reçu vos 20 FCFA aujourd'hui. Revenez demain pour le prochain pointage !" 
+                              : "Cliquez sur le bouton ci-dessous pour ajouter instantanément 20 FCFA à votre solde."}
+                          </p>
+                        </div>
 
-                          return (
-                            <div key={m.id} className="relative">
-                              {/* Timeline dot */}
-                              <div className={`absolute left-[-28px] top-1.5 w-6 h-6 rounded-full border flex items-center justify-center transition-all shadow-xs z-10 ${
-                                isClaimed || isCompleted 
-                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-500' 
-                                  : 'bg-white border-slate-200 text-slate-400'
-                              }`}>
-                                {isClaimed ? (
-                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                ) : (
-                                  <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
-                                )}
-                              </div>
+                        {/* Check-In Button */}
+                        <button
+                          onClick={handleDailyCheckIn}
+                          disabled={isCheckedInToday}
+                          className={`w-full py-4 px-6 rounded-2xl text-sm font-sans font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-lg border-0 flex items-center justify-center gap-2 ${
+                            isCheckedInToday
+                              ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                              : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-105 active:scale-[0.98] text-slate-950 shadow-amber-500/25 animate-pulse'
+                          }`}
+                        >
+                          {isCheckedInToday ? (
+                            <>
+                              <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
+                              <span>Pointage Effectué (+20 FCFA) ✓</span>
+                            </>
+                          ) : (
+                            <>
+                              <Coins className="w-5 h-5 stroke-[2.5]" />
+                              <span>Pointer Maintenant (+20 FCFA)</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
 
-                              {/* Mission details card */}
-                              <div className="bg-slate-50/70 border border-slate-100/80 p-4 rounded-2xl space-y-3 relative overflow-hidden transition-all">
-                                <h4 className="font-sans font-black text-[12.5px] text-slate-800 leading-tight">
-                                  {m.label}
-                                </h4>
+                      {/* 7 Days Streak Visual */}
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-black text-slate-700 uppercase tracking-tight">
+                            Série de pointage (7 Jours)
+                          </span>
+                          <span className="text-[11px] font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-100">
+                            {userState.checkInStreak || 0} Jour(s) d'affilée
+                          </span>
+                        </div>
 
-                                {/* Grid metrics */}
-                                <div className="grid grid-cols-3 gap-2 text-center py-2 bg-white rounded-xl border border-slate-100/60 shadow-xs">
-                                  <div className="flex flex-col items-center justify-center border-r border-slate-100">
-                                    <span className="text-[11.5px] font-sans font-black text-slate-800 leading-none">
-                                      FCFA {m.reward.toLocaleString()}.00
-                                    </span>
-                                    <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wide">
-                                      Récompense
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col items-center justify-center border-r border-slate-100">
-                                    <span className="text-[12px] font-sans font-black text-blue-600 leading-none">
-                                      {m.target}
-                                    </span>
-                                    <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wide">
-                                      Exigé
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col items-center justify-center">
-                                    <span className={`text-[12px] font-sans font-black leading-none ${isCompleted ? 'text-emerald-600' : 'text-slate-500'}`}>
-                                      {Math.min(investedReferralCount, m.target)}
-                                    </span>
-                                    <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-wide">
-                                      Complété
-                                    </span>
-                                  </div>
-                                </div>
+                        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                          {[1, 2, 3, 4, 5, 6, 7].map((dayNum) => {
+                            const currentStreak = userState.checkInStreak || 0;
+                            const isCompletedDay = dayNum <= (currentStreak % 7 === 0 && currentStreak > 0 ? 7 : currentStreak % 7);
 
-                                {/* Claims button / status */}
-                                <div className="flex justify-end pt-1">
-                                  {isClaimed ? (
-                                    <span className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 py-1 px-3.5 rounded-full text-[10px] font-sans font-black flex items-center gap-1 select-none">
-                                      ✓ Récupéré
-                                    </span>
-                                  ) : isCompleted ? (
-                                    <button
-                                      onClick={() => handleClaimMission(m.id, m.reward, m.target)}
-                                      className="bg-[#1b64d9] hover:bg-blue-700 text-white py-1.5 px-4 rounded-full text-[10px] font-sans font-black transition-all active:scale-95 cursor-pointer shadow-md border-0 animate-pulse"
-                                    >
-                                      Récupérer le bonus
-                                    </button>
+                            return (
+                              <div 
+                                key={dayNum}
+                                className={`flex flex-col items-center justify-center p-2 rounded-xl border text-center transition-all ${
+                                  isCompletedDay 
+                                    ? 'bg-amber-500/10 border-amber-300 text-amber-700 shadow-xs' 
+                                    : 'bg-slate-50 border-slate-100 text-slate-400'
+                                }`}
+                              >
+                                <span className="text-[10px] font-black uppercase tracking-tight block">
+                                  J{dayNum}
+                                </span>
+                                <span className="text-[11px] font-extrabold mt-0.5 block">
+                                  +20
+                                </span>
+                                <div className="mt-1">
+                                  {isCompletedDay ? (
+                                    <Check className="w-3.5 h-3.5 text-amber-600 stroke-[3] mx-auto" />
                                   ) : (
-                                    <span className="bg-[#e9ecef] text-slate-400 py-1 px-3.5 rounded-full text-[10px] font-sans font-black select-none">
-                                      En cours
-                                    </span>
+                                    <div className="w-2 h-2 rounded-full bg-slate-200 mx-auto" />
                                   )}
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
+
                     </div>
                   </div>
 
@@ -3319,7 +3313,7 @@ export default function Dashboard({
                       <div className="bg-white rounded-[2rem] max-w-lg w-full p-6 space-y-4 animate-scaleUp shadow-2xl relative text-left">
                         <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                           <h3 className="font-sans font-black text-slate-900 text-base uppercase tracking-tight">
-                            Règles de Mission 📋
+                            Règles du Pointage Quotidien 📋
                           </h3>
                           <button
                             onClick={() => setIsMissionsRulesOpen(false)}
@@ -3330,21 +3324,21 @@ export default function Dashboard({
                         </div>
                         <div className="text-[11.5px] text-slate-500 font-bold leading-relaxed space-y-3">
                           <p>
-                            1. <span className="text-slate-800">Validation des Filleuls actifs</span> : Pour qu'un filleul soit comptabilisé comme "actif", il doit s'inscrire via votre lien d'invitation et procéder à l'activation d'au moins un pack d'investissement (produit d'or).
+                            1. <span className="text-slate-800">Pointage Gratuit</span> : Chaque utilisateur bénéficie d'un pointage quotidien gratuit attribuant un bonus de 20 FCFA.
                           </p>
                           <p>
-                            2. <span className="text-slate-800">Récompenses cumulatives</span> : Vous pouvez débloquer et réclamer les bonus de mission à chaque étape franchie (10, 20, 50, 100 filleuls actifs).
+                            2. <span className="text-slate-800">Fréquence</span> : Le pointage s'effectue une seule fois par jour calendaire (réinitialisation à minuit GMT).
                           </p>
                           <p>
-                            3. <span className="text-slate-800">Crédit instantané</span> : Les bonus réclamés sont instantanément ajoutés à votre solde principal, utilisables pour des investissements ou des retraits.
+                            3. <span className="text-slate-800">Ajout Instantané</span> : Le montant de 20 FCFA est immédiatement crédité sur votre solde principal.
                           </p>
                           <p>
-                            4. <span className="text-slate-800">Transparence</span> : Toute tentative de création de faux comptes d'auto-parrainage ou de fraude entraînera la suspension définitive du compte.
+                            4. <span className="text-slate-800">Utilisation Libre</span> : Les fonds accumulés peuvent être utilisés librement pour acheter des packs d'investissement ou effectuer un retrait.
                           </p>
                         </div>
                         <button
                           onClick={() => setIsMissionsRulesOpen(false)}
-                          className="w-full bg-[#1b64d9] text-white py-3 rounded-2xl text-xs font-sans font-black uppercase tracking-wider hover:bg-blue-700 transition-all border-none outline-none cursor-pointer shadow-md"
+                          className="w-full bg-[#0284c7] text-white py-3 rounded-2xl text-xs font-sans font-black uppercase tracking-wider hover:bg-sky-700 transition-all border-none outline-none cursor-pointer shadow-md"
                         >
                           J'ai compris
                         </button>
@@ -3721,17 +3715,17 @@ export default function Dashboard({
                         </div>
                       </div>
                       
-                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Goldspeed Investment S.A.</h3>
+                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Gold Avenue Investment S.A.</h3>
                       
                       <p className="text-[11px] text-slate-400 font-bold leading-relaxed text-center">
-                        Goldspeed Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
+                        Gold Avenue Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
                       </p>
 
                       <div className="border-t border-slate-50 pt-4 space-y-3.5">
                         <div>
                           <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-wider">🔒 Sécurité &amp; Fiabilité</h4>
                           <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-relaxed">
-                            Tous vos investissements sont protégés par des fonds de garantie stricts. Les processus de retrait sont chiffrés et vérifiés par notre équipe d'experts financiers.
+                            Tous vos investissements sont suivis en temps réel. Les processus de retrait sont chiffrés et vérifiés par notre équipe d'experts financiers.
                           </p>
                         </div>
 
@@ -3964,7 +3958,7 @@ export default function Dashboard({
 
                         {/* Share to earn more spins */}
                         <p className="text-[10.5px] text-slate-500 font-bold leading-relaxed max-w-xs mx-auto pt-1">
-                          💡 Astuce : Invitez de nouveaux membres sur Goldspeed pour obtenir des tickets de tirage supplémentaires !
+                          💡 Astuce : Invitez de nouveaux membres sur Gold Avenue pour obtenir des tickets de tirage supplémentaires !
                         </p>
                       </div>
 
@@ -4016,8 +4010,8 @@ export default function Dashboard({
                   <AnimatePresence mode="popLayout">
                     <motion.img 
                       key={currentSlide}
-                      src={GOLDSPEED_SLIDES[currentSlide].url} 
-                      alt={GOLDSPEED_SLIDES[currentSlide].title} 
+                      src={GOLD_AVENUE_SLIDES[currentSlide].url} 
+                      alt={GOLD_AVENUE_SLIDES[currentSlide].title} 
                       initial={{ opacity: 0, scale: 1.05 }}
                       animate={{ opacity: 0.75, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
@@ -4052,17 +4046,17 @@ export default function Dashboard({
                 {/* Bottom Title & Dynamic Slide Info */}
                 <div className="relative z-20 pr-12">
                   <h1 className="text-sm sm:text-base font-sans font-extrabold tracking-[0.05em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-200 to-yellow-400 uppercase leading-tight drop-shadow-[0_2px_12px_rgba(245,158,11,0.25)]">
-                    {t(GOLDSPEED_SLIDES[currentSlide].title, 'Goldspeed Pure Gold Bullion 💎')}
+                    {t(GOLD_AVENUE_SLIDES[currentSlide].title, 'Gold Avenue Pure Gold Bullion 💎')}
                   </h1>
                   <p className="text-[8.5px] sm:text-[9.5px] font-sans font-bold text-slate-200 uppercase mt-0.5 pl-0.5 select-none leading-tight">
-                    {t(GOLDSPEED_SLIDES[currentSlide].desc, 'Benefit from the absolute safety of a premium gold investment.')}
+                    {t(GOLD_AVENUE_SLIDES[currentSlide].desc, 'Benefit from the absolute safety of a premium gold investment.')}
                   </p>
                 </div>
 
                 {/* Slide Indicators / Dots */}
-                {GOLDSPEED_SLIDES.length > 1 && (
+                {GOLD_AVENUE_SLIDES.length > 1 && (
                   <div className="absolute bottom-3 right-4 z-25 flex gap-1">
-                    {GOLDSPEED_SLIDES.map((_, idx) => (
+                    {GOLD_AVENUE_SLIDES.map((_, idx) => (
                       <button
                         key={idx}
                         onClick={(e) => {
@@ -4153,27 +4147,26 @@ export default function Dashboard({
                 <div className="bg-slate-50/70 rounded-2xl p-3 border-2 border-slate-100/60 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
-                      <Share className="w-4 h-4 stroke-[2.25]" />
+                      <Users className="w-4 h-4 stroke-[2.25]" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[9px] text-slate-400 font-black block leading-none uppercase tracking-wider">
-                        {t("Lien d'invitation", "Invitation Link")}
+                      <span className="text-[12px] text-slate-800 font-sans font-black block leading-none uppercase tracking-tight">
+                        {t("Inviter des amis", "Invite Friends")}
                       </span>
-                      <span className="text-[10.5px] text-indigo-600 font-black truncate block mt-0.5 font-mono">
-                        {`${window.location.origin}/register?ref=${userState.referralCode || ''}`}
+                      <span className="text-[10px] text-slate-500 font-bold block mt-1 leading-tight">
+                        {t("Obtenez votre lien et vos commissions d'invitation", "Get your invitation link and referral commissions")}
                       </span>
                     </div>
                   </div>
 
                   <button
                     onClick={() => {
-                      const shareLink = `${window.location.origin}/register?ref=${userState.referralCode || ''}`;
-                      navigator.clipboard.writeText(shareLink);
-                      triggerToast(t("Lien d'invitation copié ! 📋", "Invitation link copied! 📋"), "success");
+                      setProfileSubPage(null);
+                      setActiveTab('team');
                     }}
-                    className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 text-slate-950 py-2 px-4 rounded-full text-[10.5px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0"
+                    className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 text-slate-950 py-2 px-5 rounded-full text-[11px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-xs border-0 shrink-0 uppercase"
                   >
-                    {t('Copier', 'Copy')}
+                    {t('Allez', 'Go')}
                   </button>
                 </div>
               </div>
@@ -4214,18 +4207,18 @@ export default function Dashboard({
                     </button>
                   </div>
 
-                  {/* Centre des missions row */}
+                  {/* Pointage quotidien row */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50/10 transition-all duration-300">
                     <div className="flex items-center gap-3.5">
                       <div className="w-13 h-13 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shrink-0 border-2 border-amber-100/40 shadow-xs">
-                        <Gift className="w-7 h-7 stroke-[2.25]" />
+                        <Calendar className="w-7 h-7 stroke-[2.25]" />
                       </div>
                       <div>
                         <h4 className="font-sans font-black text-[14.5px] sm:text-[15.5px] text-slate-800 leading-snug">
-                          {t("Centre des missions", "Mission Center")}
+                          {t("Pointage quotidien", "Daily Check-in")}
                         </h4>
                         <span className="text-[11px] sm:text-xs text-slate-500 font-bold block mt-1 leading-normal max-w-sm">
-                          {t("Après avoir complété chaque mission, vous recevrez une récompense", "Complete missions for rewards")}
+                          {t("Gagnez 20 FCFA gratuitement chaque jour en effectuant votre pointage", "Earn 20 FCFA free every day by checking in")}
                         </span>
                       </div>
                     </div>
@@ -4234,7 +4227,7 @@ export default function Dashboard({
                       onClick={() => setProfileSubPage('missions')}
                       className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 py-3 px-6 rounded-2xl text-[12px] sm:text-[13px] font-sans font-black tracking-wide transition-all active:scale-95 cursor-pointer shadow-md shadow-amber-500/10 border-0 shrink-0 text-center uppercase"
                     >
-                      {t("Visiter", "Visit")}
+                      {t("Pointer", "Check In")}
                     </button>
                   </div>
                 </div>
@@ -4273,12 +4266,12 @@ export default function Dashboard({
                       onClick={() => setProductSubTab('stability')}
                       className={`group w-full flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-2 px-1 sm:px-2 md:px-2.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all duration-300 shrink-0 cursor-pointer text-left ${
                         productSubTab === 'stability'
-                          ? 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 border-amber-400 shadow-[0_6px_14px_rgba(245,158,11,0.25)] scale-[1.01]'
-                          : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200/60 hover:border-slate-300 hover:text-slate-800 shadow-sm'
+                          ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white border-blue-400 shadow-[0_6px_14px_rgba(27,100,217,0.25)] scale-[1.01]'
+                          : 'bg-blue-50/80 hover:bg-blue-100/80 text-blue-900 border-blue-200/80 hover:border-blue-300 shadow-xs'
                       }`}
                     >
                       <div className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
-                        productSubTab === 'stability' ? 'bg-slate-950/15 text-slate-950' : 'bg-amber-50 text-amber-500'
+                        productSubTab === 'stability' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
                       }`}>
                         <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.25]" />
                       </div>
@@ -4288,13 +4281,13 @@ export default function Dashboard({
                             {t('Stabilité', 'Stability')}
                           </span>
                           <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
-                            productSubTab === 'stability' ? 'bg-slate-950/15 text-slate-950' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                            productSubTab === 'stability' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-800 border border-blue-200'
                           }`}>
                             {stabilityCount}
                           </span>
                         </div>
                         <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
-                          productSubTab === 'stability' ? 'text-slate-900/80 font-black' : 'text-slate-400'
+                          productSubTab === 'stability' ? 'text-blue-100' : 'text-blue-600/80'
                         }`}>
                           {t('Plans Standard', 'Standard Plans')}
                         </span>
@@ -4307,12 +4300,12 @@ export default function Dashboard({
                       onClick={() => setProductSubTab('wellbeing')}
                       className={`group w-full flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-2 px-1 sm:px-2 md:px-2.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all duration-300 shrink-0 cursor-pointer text-left ${
                         productSubTab === 'wellbeing'
-                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white border-purple-400 shadow-[0_6px_14px_rgba(168,85,247,0.12)] scale-[1.01]'
-                          : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200/60 hover:border-slate-300 hover:text-slate-800 shadow-sm'
+                          ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 text-white border-blue-400 shadow-[0_6px_14px_rgba(27,100,217,0.25)] scale-[1.01]'
+                          : 'bg-blue-50/80 hover:bg-blue-100/80 text-blue-900 border-blue-200/80 hover:border-blue-300 shadow-xs'
                       }`}
                     >
                       <div className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
-                        productSubTab === 'wellbeing' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-500'
+                        productSubTab === 'wellbeing' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
                       }`}>
                         <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.25]" />
                       </div>
@@ -4322,13 +4315,13 @@ export default function Dashboard({
                             {t('Bien-être', 'Well-being')}
                           </span>
                           <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
-                            productSubTab === 'wellbeing' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-600 border border-purple-100'
+                            productSubTab === 'wellbeing' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-800 border border-blue-200'
                           }`}>
                             {wellbeingCount}
                           </span>
                         </div>
                         <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
-                          productSubTab === 'wellbeing' ? 'text-purple-100' : 'text-slate-400'
+                          productSubTab === 'wellbeing' ? 'text-blue-100' : 'text-blue-600/80'
                         }`}>
                           {t('Santé & Gains', 'Health & Gains')}
                         </span>
@@ -4341,12 +4334,12 @@ export default function Dashboard({
                       onClick={() => setProductSubTab('activity')}
                       className={`group w-full flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-2 px-1 sm:px-2 md:px-2.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl border transition-all duration-300 shrink-0 cursor-pointer text-left ${
                         productSubTab === 'activity'
-                          ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-emerald-400 shadow-[0_6px_14px_rgba(16,185,129,0.12)] scale-[1.01]'
-                          : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200/60 hover:border-slate-300 hover:text-slate-800 shadow-sm'
+                          ? 'bg-gradient-to-r from-indigo-600 via-blue-600 to-blue-500 text-white border-blue-400 shadow-[0_6px_14px_rgba(27,100,217,0.25)] scale-[1.01]'
+                          : 'bg-blue-50/80 hover:bg-blue-100/80 text-blue-900 border-blue-200/80 hover:border-blue-300 shadow-xs'
                       }`}
                     >
                       <div className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
-                        productSubTab === 'activity' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-500'
+                        productSubTab === 'activity' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
                       }`}>
                         <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.25]" />
                       </div>
@@ -4356,13 +4349,13 @@ export default function Dashboard({
                             {t('Activité', 'Activity')}
                           </span>
                           <span className={`hidden sm:inline-flex items-center justify-center px-1 py-0.5 text-[8px] font-black rounded-full font-mono leading-none ${
-                            productSubTab === 'activity' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                            productSubTab === 'activity' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-800 border border-blue-200'
                           }`}>
                             {activityCount}
                           </span>
                         </div>
                         <span className={`hidden sm:block text-[8px] font-bold mt-0.5 ${
-                          productSubTab === 'activity' ? 'text-emerald-100' : 'text-slate-400'
+                          productSubTab === 'activity' ? 'text-blue-100' : 'text-blue-600/80'
                         }`}>
                           {t('Cycles Courts', 'Short Cycles')}
                         </span>
@@ -4390,10 +4383,10 @@ export default function Dashboard({
 
                         const getVipDisplayName = (prod: Product, defaultVipLevel: number) => {
                           if (prod.category === 'activity') {
-                            return `Goldspeed Activité ${prod.vipLevel || defaultVipLevel}`;
+                            return `Gold Avenue Activité ${prod.vipLevel || defaultVipLevel}`;
                           }
                           if (prod.category === 'wellbeing') {
-                            return `Goldspeed Bien-être ${prod.vipLevel || defaultVipLevel}`;
+                            return `Gold Avenue Bien-être ${prod.vipLevel || defaultVipLevel}`;
                           }
                           return `Titres à revenu fixe ${prod.vipLevel || defaultVipLevel}`;
                         };
@@ -4401,41 +4394,41 @@ export default function Dashboard({
                         const getCardStyle = (cat?: string) => {
                           if (cat === 'activity') {
                             return {
-                              container: 'bg-emerald-50/40 border-2 border-emerald-100 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(16,185,129,0.06)] hover:shadow-lg hover:border-emerald-200 transition-all duration-300 relative flex flex-col justify-between',
-                              imgBg: 'bg-[#10b981] border border-emerald-100',
-                              badge: 'text-[#047857] bg-[#d1fae5]',
-                              statLabel: 'text-emerald-600/80',
-                              statVal: 'text-[#10b981]',
-                              statValTotal: 'text-[#047857]',
-                              buttonLeft: 'bg-[#f0fdf4] text-[#047857]',
-                              buttonRight: 'bg-[#10b981] hover:bg-[#047857]',
-                              buttonBorder: 'border-emerald-200'
+                              container: 'bg-blue-50/40 border-2 border-blue-100 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(27,100,217,0.06)] hover:shadow-lg hover:border-blue-200 transition-all duration-300 relative flex flex-col justify-between',
+                              imgBg: 'bg-[#1b64d9] border border-blue-100',
+                              badge: 'text-[#1b64d9] bg-blue-100/80',
+                              statLabel: 'text-blue-600/80',
+                              statVal: 'text-[#1b64d9] font-extrabold',
+                              statValTotal: 'text-blue-900 font-black',
+                              buttonLeft: 'bg-blue-50/90 text-[#1b64d9]',
+                              buttonRight: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black',
+                              buttonBorder: 'border-blue-200'
                             };
                           }
                           if (cat === 'wellbeing') {
                             return {
-                              container: 'bg-purple-50/40 border-2 border-purple-100 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(168,85,247,0.06)] hover:shadow-lg hover:border-purple-200 transition-all duration-300 relative flex flex-col justify-between',
-                              imgBg: 'bg-[#a855f7] border border-purple-100',
-                              badge: 'text-[#7e22ce] bg-[#f3e8ff]',
-                              statLabel: 'text-purple-600/80',
-                              statVal: 'text-[#a855f7]',
-                              statValTotal: 'text-[#7e22ce]',
-                              buttonLeft: 'bg-[#faf5ff] text-[#7e22ce]',
-                              buttonRight: 'bg-[#a855f7] hover:bg-[#7e22ce]',
-                              buttonBorder: 'border-purple-200'
+                              container: 'bg-indigo-50/40 border-2 border-indigo-100 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(27,100,217,0.06)] hover:shadow-lg hover:border-indigo-200 transition-all duration-300 relative flex flex-col justify-between',
+                              imgBg: 'bg-indigo-600 border border-indigo-100',
+                              badge: 'text-indigo-700 bg-indigo-100/80',
+                              statLabel: 'text-indigo-600/80',
+                              statVal: 'text-indigo-600 font-extrabold',
+                              statValTotal: 'text-indigo-900 font-black',
+                              buttonLeft: 'bg-indigo-50/90 text-indigo-700',
+                              buttonRight: 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-black',
+                              buttonBorder: 'border-indigo-200'
                             };
                           }
-                          // Default stability (gold)
+                          // Default stability (blue elegance)
                           return {
-                            container: 'bg-amber-50/30 border-2 border-amber-200 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(245,158,11,0.08)] hover:shadow-lg hover:border-amber-300/80 transition-all duration-300 relative flex flex-col justify-between',
-                            imgBg: 'bg-gradient-to-r from-amber-400 to-yellow-500 border border-amber-200',
-                            badge: 'text-amber-800 bg-amber-100/80',
-                            statLabel: 'text-amber-700/80',
-                            statVal: 'text-amber-600 font-extrabold',
-                            statValTotal: 'text-amber-900 font-black',
-                            buttonLeft: 'bg-amber-50 text-amber-800',
-                            buttonRight: 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-105 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-black',
-                            buttonBorder: 'border-amber-200'
+                            container: 'bg-blue-50/30 border-2 border-blue-200/80 rounded-[32px] p-6 sm:p-7 shadow-[0_6px_25px_rgba(27,100,217,0.08)] hover:shadow-lg hover:border-blue-300/80 transition-all duration-300 relative flex flex-col justify-between',
+                            imgBg: 'bg-gradient-to-r from-blue-600 to-indigo-600 border border-blue-200',
+                            badge: 'text-blue-800 bg-blue-100/80',
+                            statLabel: 'text-blue-700/80',
+                            statVal: 'text-[#1b64d9] font-extrabold',
+                            statValTotal: 'text-blue-900 font-black',
+                            buttonLeft: 'bg-blue-50 text-blue-800',
+                            buttonRight: 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:brightness-105 text-white font-black',
+                            buttonBorder: 'border-blue-200'
                           };
                         };
 
@@ -4463,7 +4456,7 @@ export default function Dashboard({
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-black/35 pointer-events-none" />
 
                                 {/* VIP level badge written directly on the image */}
-                                <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-sans font-black text-[10px] px-2.5 py-1 rounded-xl uppercase tracking-wider shadow-md border border-yellow-200/50 flex items-center gap-1">
+                                <div className="absolute top-3 left-3 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white font-sans font-black text-[10px] px-2.5 py-1 rounded-xl uppercase tracking-wider shadow-md border border-blue-300/50 flex items-center gap-1">
                                   🏆 VIP {p.vipLevel || 0}
                                 </div>
 
@@ -4482,14 +4475,14 @@ export default function Dashboard({
                               </div>
 
                               {/* Key-Value Details */}
-                              <div className="mt-2 space-y-2 text-left select-none border-t border-slate-100 pt-3">
+                              <div className="mt-2 space-y-2 text-left select-none border-t border-blue-200/50 pt-3">
                                 <div className="flex justify-between items-center text-xs">
                                   <span className={`${theme.statLabel} font-bold`}>Revenus Quotidiens</span>
                                   <span className={`${theme.statVal} font-black`}>{p.dailyReturn.toLocaleString()} {getCurrency()}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs">
                                   <span className={`${theme.statLabel} font-bold`}>Revenu</span>
-                                  <span className="font-extrabold text-slate-800 font-mono bg-slate-100/80 px-2.5 py-0.5 rounded-md text-[11px] border border-slate-200/50">
+                                  <span className="font-extrabold text-blue-900 font-mono bg-blue-100/70 px-2.5 py-0.5 rounded-md text-[11px] border border-blue-200/60">
                                     {p.durationDays} Jours
                                   </span>
                                 </div>
@@ -4991,171 +4984,6 @@ export default function Dashboard({
             </div>
           )}
 
-          {/* WITHDRAWAL PROOFS FEED TAB (AVIS) */}
-          {activeTab === 'proofs' && (
-            <div className="space-y-6 max-w-2xl mx-auto text-left animate-fadeIn animate-duration-300">
-              {/* Header Card */}
-              <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-950 border border-slate-800 rounded-[32px] p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
-                <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-                
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-                  <div className="flex items-center gap-4">
-                    {/* Elevated and stylized Avis logo */}
-                    <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-2xl shadow-[0_8px_20px_rgba(245,158,11,0.15)] relative overflow-hidden shrink-0 -mt-1 hover:scale-105 transition-transform duration-300">
-                      <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/15 via-transparent to-transparent" />
-                      📢
-                    </div>
-                    <div className="space-y-1">
-                      <div className="inline-flex items-center space-x-2 bg-amber-500/15 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-                        <span>Goldspeed Officiel</span>
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-sans font-black tracking-tight text-white uppercase leading-tight">
-                        Avis &amp; Communiqués
-                      </h2>
-                    </div>
-                  </div>
-                  
-                  {userState.role === 'admin' && (
-                    <button
-                      onClick={() => {
-                        setIsAdminMode(true);
-                      }}
-                      className="whitespace-nowrap px-4 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-sans font-black text-xs rounded-xl shadow-lg hover:shadow-yellow-500/20 active:scale-95 duration-150 flex items-center space-x-1.5 uppercase tracking-wider border-0 cursor-pointer"
-                    >
-                      <span>✍️ Publier un Avis</span>
-                    </button>
-                  )}
-                </div>
-                <div className="mt-3 pl-0 sm:pl-[72px]">
-                  <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-md">
-                    Suivez les annonces de maintenance, les notes de sécurité de l'administration et les reçus de gains officiels de la plateforme.
-                  </p>
-                </div>
-              </div>
-
-              {/* Announcements Feed */}
-              <div className="space-y-4">
-                {withdrawalProofs.length === 0 ? (
-                  <div className="text-center py-16 px-6 rounded-[32px] bg-white border border-blue-50 shadow-sm">
-                    <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                      <span className="text-2xl">📭</span>
-                    </div>
-                    <h3 className="text-sm font-sans font-black text-slate-700 uppercase tracking-wider">Aucun communiqué disponible</h3>
-                    <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-                      L'administration n'a pas encore publié d'annonce officielle pour le moment.
-                    </p>
-                  </div>
-                ) : (
-                  [...withdrawalProofs]
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map((proof) => {
-                      const userHasLiked = proof.likes?.includes(userState.id) || false;
-                      return (
-                        <div
-                          key={proof.id}
-                          className="bg-white border border-blue-50/70 rounded-[32px] p-5 sm:p-6 shadow-[0_12px_40px_rgba(27,100,217,0.02)] space-y-4 hover:border-blue-100 transition-all duration-150"
-                        >
-                          {/* Post Header */}
-                          <div className="flex justify-between items-start gap-3">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-slate-100 border border-slate-200/60 rounded-2xl flex items-center justify-center font-display font-bold text-lg text-slate-700 shadow-inner">
-                                {proof.userName.toLowerCase().includes('admin') || proof.userName.toLowerCase().includes('officiel') ? '👑' : '📢'}
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="font-sans font-black text-xs text-slate-800 tracking-tight">
-                                    {maskUserPhone(proof.userName)}
-                                  </span>
-                                  <span className="bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-lg">
-                                    {proof.userCountry || 'Officiel'}
-                                  </span>
-                                </div>
-                                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
-                                  📅 {new Date(proof.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Optional Amount badge */}
-                            {proof.amount > 0 && (
-                              <div className="bg-emerald-50 text-emerald-600 border border-emerald-100/60 px-3 py-1.5 rounded-2xl text-[11px] font-mono font-black shadow-sm">
-                                +{proof.amount.toLocaleString('fr-FR')} XOF
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Message Body */}
-                          <div className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans whitespace-pre-wrap pl-1 font-medium">
-                            {maskUserPhone(proof.message)}
-                          </div>
-
-                          {/* Optional Transaction confirmation banner */}
-                          {proof.amount > 0 && (
-                            <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-2xl p-3 flex items-center space-x-3">
-                              <div className="w-8 h-8 rounded-xl bg-emerald-100/60 flex items-center justify-center text-emerald-600 font-bold text-xs">
-                                ✓
-                              </div>
-                              <div className="text-left">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 block">Paiement Effectué avec Succès</span>
-                                <span className="text-[9px] text-emerald-600/90 font-medium block mt-0.5">La somme de {proof.amount.toLocaleString('fr-FR')} XOF a été versée sur le compte mobile money du bénéficiaire.</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Image Attachment with Lightbox Zoom option */}
-                          {proof.image && (
-                            <div 
-                              onClick={() => setSelectedAvisImage(proof.image || null)}
-                              className="relative rounded-2xl overflow-hidden border border-slate-100 max-h-72 bg-slate-50 flex justify-center items-center cursor-zoom-in group shadow-sm"
-                            >
-                              <img
-                                src={proof.image}
-                                alt="Communiqué ou Preuve de retrait"
-                                className="w-full max-h-72 object-cover group-hover:scale-[1.02] transition-transform duration-200 animate-fadeIn"
-                                referrerPolicy="no-referrer"
-                              />
-                              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="bg-slate-900/85 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl shadow-lg border border-slate-750">
-                                  🔍 Cliquer pour agrandir
-                                </span>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Likes & Interactions footer */}
-                          <div className="flex items-center justify-between border-t border-slate-50 pt-3.5 pl-1">
-                            <button
-                              onClick={() => handleLikeProof(proof.id)}
-                              className={`flex items-center space-x-2 text-[11px] font-bold py-1.5 px-3 rounded-xl border transition-all duration-150 cursor-pointer ${
-                                userHasLiked
-                                  ? 'bg-blue-50 text-[#1b64d9] border-blue-100 scale-105 shadow-sm'
-                                  : 'bg-slate-50 hover:bg-slate-100 text-slate-500 border-slate-100'
-                              }`}
-                            >
-                              <span className={userHasLiked ? 'animate-bounce block' : ''}>👍</span>
-                              <span>{proof.likes?.length || 0}</span>
-                              <span className="text-[10px] opacity-70">Apprécier</span>
-                            </button>
-
-                            {userState.role === 'admin' && (
-                              <button
-                                onClick={() => handleDeleteProof(proof.id)}
-                                className="px-3 py-1.5 text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-100 hover:border-transparent rounded-xl text-[10px] font-bold transition-all duration-150 cursor-pointer"
-                              >
-                                Supprimer du flux
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                )}
-              </div>
-            </div>
-          )}
-
           {/* FORUM / COMMUNICATION TAB */}
           {!profileSubPage && activeTab === 'forum' && (
             <div className="space-y-6 max-w-4xl mx-auto text-left bg-white p-6 sm:p-8 rounded-[34px] border border-blue-50 shadow-[0_12px_45px_rgba(249,115,22,0.04)] animate-fadeIn">
@@ -5168,7 +4996,7 @@ export default function Dashboard({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 relative z-10">
                   <div className="space-y-1.5 flex-1">
                     <h2 className="text-2xl sm:text-3xl font-sans font-black tracking-tight leading-none text-white">
-                      Forum Goldspeed
+                      Forum Gold Avenue
                     </h2>
                     <p className="text-xs text-slate-300 font-medium max-w-lg">
                       Partagez vos astuces de minage d'or, vos objectifs, ou discutez en direct avec d'autres investisseurs de la communauté !
@@ -5196,9 +5024,9 @@ export default function Dashboard({
                       rows={3}
                       value={forumMessageInput}
                       onChange={(e) => setForumMessageInput(e.target.value)}
-                      placeholder="Partagez votre expérience ! (Ex: Goldspeed est vraiment fiable, merci à l'équipe!)"
+                      placeholder="Partagez votre expérience ! (Ex: Gold Avenue est vraiment fiable, merci à l'équipe!)"
                       maxLength={500}
-                      className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/25 focus:border-[#1b64d9] transition-all resize-none shadow-xs"
+                      className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-xs font-normal text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1b64d9]/25 focus:border-[#1b64d9] transition-all resize-none shadow-xs"
                     />
                     <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold px-1 select-none">
                       <span>Auteur : {maskUserPhone(userState.name || 'Moi')} ({userState.country || 'Cameroun'})</span>
@@ -5338,107 +5166,119 @@ export default function Dashboard({
 
               {/* FORUM TIMELINE OF POSTS */}
               <div className="space-y-4">
-                {forumPosts.map((post) => {
-                  const hasLiked = post.likedBy ? post.likedBy.includes(userState.id) : post.hasLiked;
-                  const commentInputVal = forumCommentInputs[post.id] || '';
+                {forumPosts.length === 0 ? (
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-3xl p-8 text-center space-y-2">
+                    <div className="text-3xl mb-1">💬</div>
+                    <p className="text-slate-700 font-normal text-xs sm:text-sm">
+                      Aucune publication sur le forum pour le moment.
+                    </p>
+                    <p className="text-slate-400 font-normal text-[11px]">
+                      Soyez le premier à publier un message sur le forum !
+                    </p>
+                  </div>
+                ) : (
+                  forumPosts.map((post) => {
+                    const hasLiked = post.likedBy ? post.likedBy.includes(userState.id) : post.hasLiked;
+                    const commentInputVal = forumCommentInputs[post.id] || '';
 
-                  return (
-                    <div
-                      key={post.id}
-                      className="bg-white border border-slate-150 hover:border-blue-100 hover:shadow-md transition-all rounded-3xl p-5 text-left shadow-xs"
-                    >
-                      {/* Author row */}
-                      <div className="flex justify-between items-start">
-                        <div className="flex gap-3">
-                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white font-sans font-black flex items-center justify-center text-sm shadow-sm">
-                            {post.avatarLetter || post.authorName.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="leading-tight">
-                            <span className="font-sans font-black text-slate-800 text-sm block">
-                              {maskUserPhone(post.authorName)}
-                            </span>
-                            <span className="text-slate-400 text-[9px] font-black tracking-normal uppercase opacity-75 mt-0.5 block">
-                              {new Date(post.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Content block */}
-                      <div className="mt-4 bg-slate-50/50 border border-slate-100/60 p-4 rounded-2xl">
-                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold whitespace-pre-wrap">
-                          {maskUserPhone(post.text)}
-                        </p>
-                      </div>
-
-                      {/* Image attachments / Screenshots section */}
-                      {(() => {
-                        const imagesList: string[] = [];
-                        if (post.image1) imagesList.push(post.image1);
-                        if (post.image2) imagesList.push(post.image2);
-                        if (post.image && !imagesList.includes(post.image)) imagesList.push(post.image);
-                        if (post.imageUrl && !imagesList.includes(post.imageUrl)) imagesList.push(post.imageUrl);
-                        if (post.proofImage && !imagesList.includes(post.proofImage)) imagesList.push(post.proofImage);
-
-                        if (imagesList.length === 0) return null;
-
-                        return (
-                          <div className="mt-3.5 space-y-2 bg-slate-100/90 p-3 rounded-2xl border border-slate-200/80">
-                            <div className="flex items-center justify-between px-1">
-                              <span className="text-[10px] font-sans font-black text-slate-600 uppercase tracking-wider flex items-center gap-1">
-                                📸 Captures d'écran ({imagesList.length})
+                    return (
+                      <div
+                        key={post.id}
+                        className="bg-white border border-slate-150 hover:border-blue-100 hover:shadow-md transition-all rounded-3xl p-5 text-left shadow-xs"
+                      >
+                        {/* Author row */}
+                        <div className="flex justify-between items-start">
+                          <div className="flex gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white font-sans font-bold flex items-center justify-center text-sm shadow-sm">
+                              {post.avatarLetter || post.authorName.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="leading-tight">
+                              <span className="font-sans font-normal text-slate-800 text-sm block">
+                                {maskUserPhone(post.authorName)}
+                              </span>
+                              <span className="text-slate-400 text-[9px] font-normal tracking-normal uppercase opacity-75 mt-0.5 block">
+                                {new Date(post.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
+                          </div>
+                        </div>
 
-                            <div className={`grid gap-2.5 ${imagesList.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                              {imagesList.map((imgUrl, idx) => (
-                                <div key={idx} className="space-y-1.5">
-                                  <div 
-                                    onClick={() => setSelectedAvisImage(imgUrl)}
-                                    className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 flex justify-center items-center shadow-xs cursor-zoom-in select-none group"
-                                  >
-                                    <img
-                                      src={imgUrl}
-                                      alt={`Capture ${idx + 1}`}
-                                      className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-105 transition-transform duration-200"
-                                      onContextMenu={(e) => e.preventDefault()}
-                                      onDragStart={(e) => e.preventDefault()}
-                                      style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
-                                      referrerPolicy="no-referrer"
-                                    />
-                                    <div className="absolute top-2 left-2 bg-slate-950/80 text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-xs">
-                                      Capture #{idx + 1}
-                                    </div>
-                                    <div className="absolute bottom-2 right-2 bg-slate-950/80 text-amber-300 border border-amber-500/30 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-xs flex items-center gap-1 shadow-xs">
-                                      🔒 Non téléchargeable
+                        {/* Content block */}
+                        <div className="mt-4 bg-slate-50/50 border border-slate-100/60 p-4 rounded-2xl">
+                          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal whitespace-pre-wrap">
+                            {maskUserPhone(post.text)}
+                          </p>
+                        </div>
+
+                        {/* Image attachments / Screenshots section */}
+                        {(() => {
+                          const imagesList: string[] = [];
+                          if (post.image1) imagesList.push(post.image1);
+                          if (post.image2) imagesList.push(post.image2);
+                          if (post.image && !imagesList.includes(post.image)) imagesList.push(post.image);
+                          if (post.imageUrl && !imagesList.includes(post.imageUrl)) imagesList.push(post.imageUrl);
+                          if (post.proofImage && !imagesList.includes(post.proofImage)) imagesList.push(post.proofImage);
+
+                          if (imagesList.length === 0) return null;
+
+                          return (
+                            <div className="mt-3.5 space-y-2 bg-slate-100/90 p-3 rounded-2xl border border-slate-200/80">
+                              <div className="flex items-center justify-between px-1">
+                                <span className="text-[10px] font-sans font-normal text-slate-600 uppercase tracking-wider flex items-center gap-1">
+                                  📸 Captures d'écran ({imagesList.length})
+                                </span>
+                              </div>
+
+                              <div className={`grid gap-2.5 ${imagesList.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                {imagesList.map((imgUrl, idx) => (
+                                  <div key={idx} className="space-y-1.5">
+                                    <div 
+                                      onClick={() => setSelectedAvisImage(imgUrl)}
+                                      className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-900 flex justify-center items-center shadow-xs cursor-zoom-in select-none group"
+                                    >
+                                      <img
+                                        src={imgUrl}
+                                        alt={`Capture ${idx + 1}`}
+                                        className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-105 transition-transform duration-200"
+                                        onContextMenu={(e) => e.preventDefault()}
+                                        onDragStart={(e) => e.preventDefault()}
+                                        style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
+                                        referrerPolicy="no-referrer"
+                                      />
+                                      <div className="absolute top-2 left-2 bg-slate-950/80 text-white text-[8px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-xs">
+                                        Capture #{idx + 1}
+                                      </div>
+                                      <div className="absolute bottom-2 right-2 bg-slate-950/80 text-amber-300 border border-amber-500/30 text-[8px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-xs flex items-center gap-1 shadow-xs">
+                                        🔒 Non téléchargeable
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })()}
+                          );
+                        })()}
 
-                      {/* Likes section */}
-                      <div className="flex justify-between items-center border-t border-slate-100 mt-4 pt-3 text-slate-500">
-                        <button
-                          type="button"
-                          onClick={() => handleLikeForumPost(post.id)}
-                          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-sans font-black tracking-wide uppercase transition-all duration-150 cursor-pointer ${
-                            hasLiked
-                              ? 'bg-[#f0f4ff] text-[#1b64d9] font-black saturate-150 border border-blue-100'
-                              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent'
-                          }`}
-                        >
-                          <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-[#1b64d9] stroke-[#1b64d9]' : ''}`} />
-                          <span>{post.likes} Likes</span>
-                        </button>
+                        {/* Likes section */}
+                        <div className="flex justify-between items-center border-t border-slate-100 mt-4 pt-3 text-slate-500">
+                          <button
+                            type="button"
+                            onClick={() => handleLikeForumPost(post.id)}
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-sans font-normal tracking-wide uppercase transition-all duration-150 cursor-pointer ${
+                              hasLiked
+                                ? 'bg-[#f0f4ff] text-[#1b64d9] font-normal saturate-150 border border-blue-100'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent'
+                            }`}
+                          >
+                            <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-[#1b64d9] stroke-[#1b64d9]' : ''}`} />
+                            <span>{post.likes} Likes</span>
+                          </button>
+                        </div>
+
                       </div>
-
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
 
             </div>
@@ -5464,7 +5304,7 @@ export default function Dashboard({
                         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
                       </button>
                       <div>
-                        <span className="text-[10px] text-blue-600 font-sans font-black uppercase tracking-widest block leading-none mb-1">RÉSEAU GOLDSPEED</span>
+                        <span className="text-[10px] text-blue-600 font-sans font-black uppercase tracking-widest block leading-none mb-1">RÉSEAU GOLD_AVENUE</span>
                         <h2 className="font-sans font-black text-slate-900 text-base sm:text-lg uppercase tracking-tight leading-none">Détails de l'équipe</h2>
                       </div>
                     </div>
@@ -5851,7 +5691,7 @@ export default function Dashboard({
                     <div className="grid grid-cols-4 gap-2.5 font-sans">
                       {/* WhatsApp */}
                       <a 
-                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Goldspeed et obtenez des rendements quotidiens exceptionnels ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Rejoignez Gold Avenue et obtenez des rendements quotidiens exceptionnels ! Utilisez mon lien d'inscription : ${referralURL}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex flex-col items-center justify-center p-3 bg-emerald-50 hover:bg-emerald-100/70 rounded-2xl transition-all text-emerald-600 border-none cursor-pointer"
@@ -5862,7 +5702,7 @@ export default function Dashboard({
 
                       {/* Telegram */}
                       <a 
-                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Goldspeed et obtenez des rendements quotidiens exceptionnels !`)}`}
+                        href={`https://t.me/share/url?url=${encodeURIComponent(referralURL)}&text=${encodeURIComponent(`Rejoignez Gold Avenue et obtenez des rendements quotidiens exceptionnels !`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex flex-col items-center justify-center p-3 bg-sky-50 hover:bg-sky-100/70 rounded-2xl transition-all text-sky-600 border-none cursor-pointer"
@@ -6137,17 +5977,17 @@ export default function Dashboard({
                         </div>
                       </div>
                       
-                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Goldspeed Investment S.A.</h3>
+                      <h3 className="text-center font-sans font-black text-slate-800 text-sm uppercase">Gold Avenue Investment S.A.</h3>
                       
                       <p className="text-[11px] text-slate-400 font-bold leading-relaxed text-center">
-                        Goldspeed Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
+                        Gold Avenue Investment est une plateforme financière innovante dédiée à l'investissement et à la gestion de produits à haute rentabilité pour tous les investisseurs d'Afrique.
                       </p>
 
                       <div className="border-t border-slate-50 pt-4 space-y-3.5">
                         <div>
                           <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-wider">🔒 Sécurité &amp; Fiabilité</h4>
                           <p className="text-[10.5px] text-slate-400 font-bold mt-1 leading-relaxed">
-                            Tous vos investissements sont protégés par des fonds de garantie stricts. Les processus de retrait sont chiffrés et vérifiés par notre équipe d'experts financiers.
+                            Tous vos investissements sont suivis en temps réel. Les processus de retrait sont chiffrés et vérifiés par notre équipe d'experts financiers.
                           </p>
                         </div>
 
@@ -6264,33 +6104,39 @@ export default function Dashboard({
                 <div className="max-w-md mx-auto w-full space-y-4">
                   
                   {/* USER GREETING BANNER */}
-                  <div className="flex items-center space-x-3.5 pb-2 pt-1 pl-1">
-                    <div className="w-15 h-15 rounded-full bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] text-slate-950 text-xl font-sans font-black shadow-md shrink-0 border border-[#c5a133]/60 flex items-center justify-center">
-                      {userState.name ? userState.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="font-sans font-black text-slate-900 text-lg leading-tight">
-                          {userState.name || "Cher Investisseur"}
-                        </h3>
-                        {userState.role === 'admin' && (
-                          <span className="bg-red-500 text-white text-[7px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider">
-                            Admin
-                          </span>
-                        )}
+                  <div className="bg-gradient-to-r from-[#1b64d9] via-blue-600 to-indigo-700 rounded-3xl p-5 text-white shadow-md flex items-center justify-between">
+                    <div className="flex items-center space-x-3.5">
+                      <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-xl font-sans font-black shadow-sm shrink-0 flex items-center justify-center">
+                        {userState.name ? userState.name.charAt(0).toUpperCase() : 'U'}
                       </div>
-                      <span className="text-[11.5px] text-slate-400 font-bold block mt-1 uppercase tracking-wider">
-                        {userState.whatsapp || "Aucun numéro"}
-                      </span>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="font-sans font-black text-white text-lg leading-tight drop-shadow-xs">
+                            {userState.name || "Cher Investisseur"}
+                          </h3>
+                          {userState.role === 'admin' && (
+                            <span className="bg-red-500 text-white text-[7px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11.5px] text-blue-100 font-bold block mt-1 uppercase tracking-wider">
+                          {userState.whatsapp || "Aucun numéro"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-white/15 px-3 py-1.5 rounded-xl border border-white/20 text-right">
+                      <span className="text-[9px] text-blue-100 uppercase font-black block">Statut</span>
+                      <span className="text-xs font-black text-amber-300">VIP Actif</span>
                     </div>
                   </div>
 
-                  {/* GOLDSPEED PROFILE IMAGE SHOWCASE */}
+                  {/* GOLD_AVENUE PROFILE IMAGE SHOWCASE */}
                   <div id="profile-dreampod-showcase" className="bg-white rounded-3xl overflow-hidden shadow-xs border border-slate-100 relative group">
                     <div className="relative h-48 w-full bg-slate-900">
                       <img
                         src="https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=800"
-                        alt="Goldspeed Lingot d'Or Pur"
+                        alt="Gold Avenue Lingot d'Or Pur"
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         referrerPolicy="no-referrer"
                       />
@@ -6306,10 +6152,10 @@ export default function Dashboard({
                       <div className="absolute bottom-4 left-4 right-4 text-white text-left">
                         <span className="text-[8px] text-yellow-300 font-black uppercase tracking-widest block mb-0.5">OR PUR ET INVESTISSEMENTS SÉCURISÉS</span>
                         <h4 className="text-sm font-black uppercase tracking-wide text-white drop-shadow-md">
-                          💎 Goldspeed Lingot d'Or Pur &amp; Placement
+                          💎 Gold Avenue Lingot d'Or Pur &amp; Placement
                         </h4>
                         <p className="text-[10px] text-slate-300 font-semibold mt-1 leading-normal drop-shadow-sm">
-                          Rendements passifs et garantis grâce à l'investissement aurifère hautement sécurisé au Togo.
+                          Rendements passifs grâce à l'investissement aurifère hautement sécurisé au Togo.
                         </p>
                       </div>
                       
@@ -6320,12 +6166,12 @@ export default function Dashboard({
                   </div>
 
                   {/* RECHARGE & RETRAIT CARD BUTTONS (ENLARGED ORIGINAL PLAN) */}
-                  <div className="bg-white rounded-[28px] p-6 shadow-xs border border-slate-100 flex items-center justify-between">
+                  <div className="bg-white rounded-[28px] p-6 shadow-xs border border-blue-100 flex items-center justify-between">
                     <button 
                       onClick={() => setActiveTab('deposit')}
-                      className="flex-1 flex items-center justify-center gap-3.5 font-sans font-black text-slate-800 hover:text-amber-600 transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
+                      className="flex-1 flex items-center justify-center gap-3.5 font-sans font-black text-slate-800 hover:text-blue-600 transition-all cursor-pointer border-0 bg-transparent py-2 border-r border-slate-100 outline-none"
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25">
                         <Coins className="w-7.5 h-7.5 stroke-[2.25]" />
                       </div>
                       <span className="text-sm sm:text-base font-sans font-black text-slate-800">Recharge &gt;</span>
@@ -6334,7 +6180,7 @@ export default function Dashboard({
                       onClick={() => setActiveTab('withdraw')}
                       className="flex-1 flex items-center justify-center gap-3.5 font-sans font-black text-slate-800 hover:text-blue-600 transition-all cursor-pointer border-0 bg-transparent py-2 outline-none"
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+                      <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25">
                         <ArrowUpCircle className="w-7.5 h-7.5 stroke-[2.25]" />
                       </div>
                       <span className="text-sm sm:text-base font-sans font-black text-slate-800">Retrait &gt;</span>
@@ -6388,7 +6234,7 @@ export default function Dashboard({
                   </div>
 
                   {/* MES REVENUS CARD */}
-                  <div id="mes-revenus-card" className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 space-y-4 text-left">
+                  <div id="mes-revenus-card" className="bg-white rounded-3xl p-5 shadow-xs border border-blue-100/80 space-y-4 text-left">
                     <div className="flex justify-between items-center">
                       <h3 className="font-sans font-black text-slate-800 text-base uppercase tracking-wider pl-0.5">Mes Revenus</h3>
                       <button 
@@ -6397,22 +6243,22 @@ export default function Dashboard({
                             onNavigate('/historique');
                           }
                         }}
-                        className="text-[11.5px] font-black text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none bg-transparent outline-none"
+                        className="text-[11.5px] font-black text-blue-600 hover:text-blue-800 transition-colors cursor-pointer border-none bg-transparent outline-none"
                       >
                         Détails des Revenus &gt;
                       </button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 pb-2">
-                      <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-left shadow-xs">
-                        <span className="text-[11px] text-blue-600 font-black uppercase tracking-widest block mb-1">Recharge</span>
+                      <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-4 text-left shadow-xs">
+                        <span className="text-[11px] text-blue-700 font-black uppercase tracking-widest block mb-1">Recharge</span>
                         <span className="text-xl sm:text-2xl font-sans font-black text-blue-900 block font-mono leading-none">
                           {rechargeBal.toLocaleString()} F
                         </span>
                       </div>
-                      <div className="bg-gradient-to-r from-[#ffe082] via-[#d4af37] to-[#aa7c11] border border-[#c5a133] rounded-2xl p-4 text-left shadow-md">
-                        <span className="text-[11px] text-slate-900 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
-                        <span className="text-xl sm:text-2xl font-sans font-black text-slate-950 block font-mono leading-none animate-pulse">
+                      <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-700 border border-blue-400/40 rounded-2xl p-4 text-left shadow-md text-white">
+                        <span className="text-[11px] text-blue-100 font-black uppercase tracking-widest block mb-1">Solde Retirable</span>
+                        <span className="text-xl sm:text-2xl font-sans font-black text-white block font-mono leading-none animate-pulse">
                           {userState.balance.toLocaleString()} F
                         </span>
                       </div>
@@ -6440,14 +6286,14 @@ export default function Dashboard({
                     </div>
                   </div>
 
-                  {/* COLLAPSIBLE MY PRODUCTS ACCORDION */}
+                  {/* COLLAPSIBLE MY PRODUCTS / ACTIVITIES ACCORDION */}
                   <div id="mes-produits-section" className="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 text-left space-y-4">
                     <div 
                       onClick={() => setShowStabilityOrders(!showStabilityOrders)}
                       className="flex justify-between items-center cursor-pointer select-none group"
                     >
                       <div>
-                        <h3 className="font-sans font-black text-base text-slate-800 uppercase tracking-wider pl-0.5">Mes produits ({activeInvestments.filter(i => i.status === 'active').length})</h3>
+                        <h3 className="font-sans font-black text-base text-slate-800 uppercase tracking-wider pl-0.5">Activité et récompense ({activeInvestments.filter(i => i.status === 'active').length})</h3>
                         <p className="text-[11.5px] text-slate-400 font-black mt-1 group-hover:text-slate-500 transition-colors">
                           Les gains s'accumulent au quotidien et sont versés à la fin de chaque cycle.
                         </p>
@@ -6459,7 +6305,7 @@ export default function Dashboard({
                       <div className="pt-2 space-y-3.5 border-t border-slate-100">
                         {activeInvestments.filter(i => i.status === 'active').length === 0 ? (
                           <div className="text-center py-4 text-slate-400 text-[11px] font-bold">
-                            Aucun produit d'investissement actif pour le moment.
+                            Aucune activité ou récompense active pour le moment.
                           </div>
                         ) : (
                           <div className="space-y-3">
@@ -6548,7 +6394,7 @@ export default function Dashboard({
                         <ShieldCheck className="w-5 h-5 stroke-[2.25]" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Protection et Sécurité Garanties</h4>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Sécurité &amp; Anti-Fraude Chiffrée</h4>
                         <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Certificat SSL SHA-256 Actif</p>
                       </div>
                     </div>
@@ -6593,14 +6439,18 @@ export default function Dashboard({
               setShowTeamDetailsPage(false);
               setShowAnnouncementDismissible(true);
             }}
-            className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all duration-200 cursor-pointer ${
               activeTab === 'dashboard' && !isAdminMode 
-                ? 'text-[#1b64d9] scale-112 font-black' 
+                ? 'text-[#1b64d9] scale-110 font-black' 
                 : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
             }`}
           >
-            <Home className="w-7.5 h-7.5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px]">{t('Accueil', 'Home')}</span>
+            <div className={`p-1.5 rounded-xl transition-all ${
+              activeTab === 'dashboard' && !isAdminMode ? 'bg-blue-50 text-[#1b64d9]' : ''
+            }`}>
+              <Home className="w-6.5 h-6.5 stroke-[2.5]" />
+            </div>
+            <span className="font-sans font-black uppercase tracking-wide text-[10px] sm:text-[11px] md:text-[12px]">{t('Accueil', 'Home')}</span>
           </button>
   
           <button
@@ -6610,35 +6460,39 @@ export default function Dashboard({
               setActiveTab('products');
               setShowTeamDetailsPage(false);
             }}
-            className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all duration-200 cursor-pointer ${
               activeTab === 'products' && !isAdminMode 
-                ? 'text-[#1b64d9] scale-112 font-black' 
+                ? 'text-[#1b64d9] scale-110 font-black' 
                 : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
             }`}
           >
-            <Briefcase className="w-7.5 h-7.5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px]">{t('Produit', 'Product')}</span>
+            <div className={`p-1.5 rounded-xl transition-all ${
+              activeTab === 'products' && !isAdminMode ? 'bg-blue-50 text-[#1b64d9]' : ''
+            }`}>
+              <ShoppingBag className="w-6.5 h-6.5 stroke-[2.5]" />
+            </div>
+            <span className="font-sans font-black uppercase tracking-wide text-[10px] sm:text-[11px] md:text-[12px]">{t('Produit', 'Product')}</span>
           </button>
   
           <button
             onClick={() => {
               setIsAdminMode(false);
               setProfileSubPage(null);
-              setActiveTab('proofs');
+              setActiveTab('team');
               setShowTeamDetailsPage(false);
             }}
-            className="flex flex-col items-center flex-1 transition-all relative -top-6 z-50 cursor-pointer duration-200"
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all duration-200 cursor-pointer ${
+              activeTab === 'team' && !isAdminMode 
+                ? 'text-[#1b64d9] scale-110 font-black' 
+                : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
+            }`}
           >
-            <div className={`w-17 h-17 rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(27,100,217,0.35)] transition-all duration-200 border-2 ${
-              activeTab === 'proofs' && !isAdminMode 
-                ? 'bg-[#1b64d9] text-white border-white scale-115 shadow-blue-500/40' 
-                : 'bg-white text-slate-500 border-slate-150 hover:text-slate-700 hover:border-slate-250'
+            <div className={`p-1.5 rounded-xl transition-all ${
+              activeTab === 'team' && !isAdminMode ? 'bg-blue-50 text-[#1b64d9]' : ''
             }`}>
-              <Megaphone className="w-7.5 h-7.5 stroke-[2.5]" />
+              <Users className="w-6.5 h-6.5 stroke-[2.5]" />
             </div>
-            <span className={`font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px] mt-1 transition-colors duration-250 ${
-              activeTab === 'proofs' && !isAdminMode ? 'text-[#1b64d9] scale-105' : 'text-slate-500'
-            }`}>{t('Avis', 'Reviews')}</span>
+            <span className="font-sans font-black uppercase tracking-wide text-[10px] sm:text-[11px] md:text-[12px]">{t('Équipe', 'Team')}</span>
           </button>
   
           <button
@@ -6648,14 +6502,18 @@ export default function Dashboard({
               setActiveTab('forum');
               setShowTeamDetailsPage(false);
             }}
-            className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all duration-200 cursor-pointer ${
               activeTab === 'forum' && !isAdminMode 
-                ? 'text-[#1b64d9] scale-112 font-black' 
+                ? 'text-[#1b64d9] scale-110 font-black' 
                 : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
             }`}
           >
-            <MessageSquare className="w-7.5 h-7.5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px]">{t('Forum', 'Forum')}</span>
+            <div className={`p-1.5 rounded-xl transition-all ${
+              activeTab === 'forum' && !isAdminMode ? 'bg-blue-50 text-[#1b64d9]' : ''
+            }`}>
+              <MessageCircle className="w-6.5 h-6.5 stroke-[2.5]" />
+            </div>
+            <span className="font-sans font-black uppercase tracking-wide text-[10px] sm:text-[11px] md:text-[12px]">{t('Forum', 'Forum')}</span>
           </button>
   
           <button
@@ -6665,14 +6523,18 @@ export default function Dashboard({
               setActiveTab('profile');
               setShowTeamDetailsPage(false);
             }}
-            className={`flex flex-col items-center space-y-1.5 flex-1 transition-all duration-200 cursor-pointer ${
+            className={`flex flex-col items-center space-y-1 flex-1 transition-all duration-200 cursor-pointer ${
               activeTab === 'profile' && !isAdminMode 
-                ? 'text-[#1b64d9] scale-112 font-black' 
+                ? 'text-[#1b64d9] scale-110 font-black' 
                 : 'text-slate-500 opacity-80 hover:opacity-100 hover:scale-105'
             }`}
           >
-            <UserIcon className="w-7.5 h-7.5 stroke-[2.5]" />
-            <span className="font-sans font-black uppercase tracking-wide text-[11px] sm:text-[12px] md:text-[13px]">{t('Profil', 'Profile')}</span>
+            <div className={`p-1.5 rounded-xl transition-all ${
+              activeTab === 'profile' && !isAdminMode ? 'bg-blue-50 text-[#1b64d9]' : ''
+            }`}>
+              <UserIcon className="w-6.5 h-6.5 stroke-[2.5]" />
+            </div>
+            <span className="font-sans font-black uppercase tracking-wide text-[10px] sm:text-[11px] md:text-[12px]">{t('Moi', 'Me')}</span>
           </button>
  
         </div>
@@ -6780,7 +6642,7 @@ export default function Dashboard({
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border border-slate-900 animate-pulse"></span>
                   </div>
                   <div>
-                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support Goldspeed</h4>
+                    <h4 className="font-sans font-black text-xs uppercase tracking-wide leading-none">Support Gold Avenue</h4>
                     <span className="text-[9px] font-bold text-slate-100/90 block mt-1 uppercase tracking-wide">Réponse sous 2H maximum</span>
                   </div>
                 </div>
@@ -6805,7 +6667,7 @@ export default function Dashboard({
                         Discuter en ligne !
                       </h5>
                       <p className="text-[11px] text-slate-500 font-semibold max-w-[240px] leading-relaxed mx-auto">
-                        Écrivez votre message ci-dessous. Un conseiller Goldspeed vous répondra directement ici.
+                        Écrivez votre message ci-dessous. Un conseiller Gold Avenue vous répondra directement ici.
                       </p>
                     </div>
                   </div>
@@ -7075,7 +6937,7 @@ export default function Dashboard({
                       À Propos de Nous
                     </h3>
                     <p className="text-[9px] text-[#ea580c] font-black uppercase tracking-wider font-mono">
-                      Fonctionnement Goldspeed
+                      Fonctionnement Gold Avenue
                     </p>
                   </div>
                 </div>
@@ -7095,7 +6957,7 @@ export default function Dashboard({
                 <div className="space-y-2">
                   <span className="text-[10px] sm:text-xs font-black text-[#1b64d9] block uppercase tracking-widest">PROPULSER LE COMMERCE TECHNOLOGIQUE EN AFRIQUE 🎧</span>
                   <p className="text-[11.5px] leading-relaxed text-slate-600 font-medium">
-                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Goldspeed</strong> est la première interface d'investissement technologique en ligne conçue pour démocratiser la distribution de systèmes audio haut de gamme modernes au Togo. Nous canalisons votre épargne vers des stocks réels d'écouteurs et de pods intelligents connectés de dernière génération afin de générer pour vous des profits stables de manière continue.
+                    <strong className="text-slate-850 font-black" style={{ fontWeight: '800' }}>Gold Avenue</strong> est la première interface d'investissement technologique en ligne conçue pour démocratiser la distribution de systèmes audio haut de gamme modernes au Togo. Nous canalisons votre épargne vers des stocks réels d'écouteurs et de pods intelligents connectés de dernière génération afin de générer pour vous des profits stables de manière continue.
                   </p>
                 </div>
 
@@ -7161,7 +7023,7 @@ export default function Dashboard({
                           Retraits Automatisés Instantanés vers votre Mobile Money
                         </h5>
                         <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed">
-                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. Goldspeed valide les flux financiers intelligemment pour créditer votre compte sans délai !
+                          À tout moment, soumettez votre demande de retrait depuis votre Profil vers votre numéro Momo local. Gold Avenue valide les flux financiers intelligemment pour créditer votre compte sans délai !
                         </p>
                       </div>
                     </div>
@@ -7198,7 +7060,7 @@ export default function Dashboard({
               
               {/* Footer */}
               <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between">
-                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Goldspeed &copy; 2026. Tous droits réservés.</span>
+                <span className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">Gold Avenue &copy; 2026. Tous droits réservés.</span>
                 <button 
                   onClick={() => setIsAboutModalOpen(false)}
                   className="px-5 py-2.5 bg-gradient-to-r from-[#1b64d9] to-orange-600 hover:opacity-95 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
@@ -7324,7 +7186,7 @@ export default function Dashboard({
                             Ajouter à l'Écran d'Accueil Maintenant
                           </button>
                           <p className="text-[9px] text-slate-400 text-center font-medium">
-                            En un clic, l'icône Goldspeed sera ajoutée à votre écran.
+                            En un clic, l'icône Gold Avenue sera ajoutée à votre écran.
                           </p>
                         </div>
                       ) : (
@@ -7359,7 +7221,7 @@ export default function Dashboard({
                           <div className="flex gap-3 items-start bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
                             <span className="text-sm">✨</span>
                             <p className="text-[10.5px] font-bold text-emerald-300 leading-relaxed">
-                              Félicitations ! L'application s'installe en arrière-plan. Vous trouverez l'icône Goldspeed sur votre écran d'accueil avec vos autres applications.
+                              Félicitations ! L'application s'installe en arrière-plan. Vous trouverez l'icône Gold Avenue sur votre écran d'accueil avec vos autres applications.
                             </p>
                           </div>
                         </div>
@@ -7377,14 +7239,14 @@ export default function Dashboard({
                       <button 
                         onClick={() => {
                           const link = document.createElement('a');
-                          link.href = '/Goldspeed_v2.6.apk';
-                          link.download = 'Goldspeed_v2.6.apk';
+                          link.href = '/Gold Avenue_v2.6.apk';
+                          link.download = 'Gold Avenue_v2.6.apk';
                           document.body.appendChild(link);
                           link.click();
                           document.body.removeChild(link);
                           openAlert(
                             "Téléchargement APK !",
-                            "Le téléchargement de l'APK Goldspeed a commencé. N'oubliez pas de désinstaller les anciennes versions de votre téléphone avant d'installer ce fichier !",
+                            "Le téléchargement de l'APK Gold Avenue a commencé. N'oubliez pas de désinstaller les anciennes versions de votre téléphone avant d'installer ce fichier !",
                             "success"
                           );
                         }}
@@ -7394,7 +7256,7 @@ export default function Dashboard({
                         Télécharger le Fichier APK (Direct)
                       </button>
                       <p className="text-[9px] text-slate-500 leading-tight">
-                        ⚠️ <strong className="text-amber-400">Rappel :</strong> Pour éviter l'erreur de package ou l'échec de l'installation, supprimez l'ancienne application <strong className="text-yellow-400">"AgroProfit"</strong> ou <strong className="text-yellow-400">"Goldspeed"</strong> de votre appareil au préalable.
+                        ⚠️ <strong className="text-amber-400">Rappel :</strong> Pour éviter l'erreur de package ou l'échec de l'installation, supprimez l'ancienne application <strong className="text-yellow-400">"AgroProfit"</strong> ou <strong className="text-yellow-400">"Gold Avenue"</strong> de votre appareil au préalable.
                       </p>
                     </div>
                   </div>
@@ -7451,7 +7313,7 @@ export default function Dashboard({
                         <div className="flex gap-3 items-start bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20">
                           <span className="text-sm">✨</span>
                           <p className="text-[10.5px] font-bold text-emerald-300 leading-relaxed">
-                            Terminé ! L'application Goldspeed s'affiche sur l'écran d'accueil de votre iPhone. Ouvrez-la pour vous connecter normalement et en toute sécurité.
+                            Terminé ! L'application Gold Avenue s'affiche sur l'écran d'accueil de votre iPhone. Ouvrez-la pour vous connecter normalement et en toute sécurité.
                           </p>
                         </div>
                       </div>
@@ -7463,7 +7325,7 @@ export default function Dashboard({
               
               {/* Footer */}
               <div className="border-t border-slate-800 pt-4 mt-4 flex items-center justify-between">
-                <span className="text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">Goldspeed © 2026</span>
+                <span className="text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">Gold Avenue © 2026</span>
                 <button 
                   onClick={() => setIsInstallModalOpen(false)}
                   className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer border border-slate-700"

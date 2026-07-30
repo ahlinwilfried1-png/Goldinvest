@@ -18,7 +18,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "stab-1",
     vipLevel: 1,
-    name: "Goldspeed Option Bronze",
+    name: "Gold Avenue Option Bronze",
     tag: "Option Bronze",
     price: 2000,
     dailyReturn: 100,
@@ -32,7 +32,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "stab-2",
     vipLevel: 2,
-    name: "Goldspeed Option Argent",
+    name: "Gold Avenue Option Argent",
     tag: "Option Argent",
     price: 5000,
     dailyReturn: 300,
@@ -46,7 +46,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "stab-3",
     vipLevel: 3,
-    name: "Goldspeed Option Or",
+    name: "Gold Avenue Option Or",
     tag: "Option Or",
     price: 10000,
     dailyReturn: 700,
@@ -60,7 +60,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "stab-4",
     vipLevel: 4,
-    name: "Goldspeed Option Platine",
+    name: "Gold Avenue Option Platine",
     tag: "Option Platine",
     price: 25000,
     dailyReturn: 2000,
@@ -74,7 +74,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "stab-5",
     vipLevel: 5,
-    name: "Goldspeed Option Diamant",
+    name: "Gold Avenue Option Diamant",
     tag: "Option Diamant",
     price: 50000,
     dailyReturn: 4500,
@@ -88,7 +88,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "stab-6",
     vipLevel: 6,
-    name: "Goldspeed Option Saphir",
+    name: "Gold Avenue Option Saphir",
     tag: "Option Saphir",
     price: 100000,
     dailyReturn: 10000,
@@ -102,7 +102,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "stab-7",
     vipLevel: 7,
-    name: "Goldspeed Option Émeraude",
+    name: "Gold Avenue Option Émeraude",
     tag: "Option Émeraude",
     price: 200000,
     dailyReturn: 24000,
@@ -118,7 +118,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "well-1",
     vipLevel: 1,
-    name: "Goldspeed Bien-être Source",
+    name: "Gold Avenue Bien-être Source",
     tag: "Bien-être Source",
     price: 5000,
     dailyReturn: 1000,
@@ -132,7 +132,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "well-2",
     vipLevel: 2,
-    name: "Goldspeed Bien-être Harmonie",
+    name: "Gold Avenue Bien-être Harmonie",
     tag: "Bien-être Harmonie",
     price: 12000,
     dailyReturn: 2600,
@@ -146,7 +146,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "well-3",
     vipLevel: 3,
-    name: "Goldspeed Bien-être Sérénité",
+    name: "Gold Avenue Bien-être Sérénité",
     tag: "Bien-être Sérénité",
     price: 30000,
     dailyReturn: 7000,
@@ -160,7 +160,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "well-4",
     vipLevel: 4,
-    name: "Goldspeed Bien-être Vitalité",
+    name: "Gold Avenue Bien-être Vitalité",
     tag: "Bien-être Vitalité",
     price: 75000,
     dailyReturn: 19000,
@@ -174,7 +174,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "well-5",
     vipLevel: 5,
-    name: "Goldspeed Bien-être Énergie",
+    name: "Gold Avenue Bien-être Énergie",
     tag: "Bien-être Énergie",
     price: 150000,
     dailyReturn: 42500,
@@ -188,7 +188,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "well-6",
     vipLevel: 6,
-    name: "Goldspeed Bien-être Équilibre",
+    name: "Gold Avenue Bien-être Équilibre",
     tag: "Bien-être Équilibre",
     price: 300000,
     dailyReturn: 90000,
@@ -202,7 +202,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "well-7",
     vipLevel: 7,
-    name: "Goldspeed Bien-être Plénitude",
+    name: "Gold Avenue Bien-être Plénitude",
     tag: "Bien-être Plénitude",
     price: 600000,
     dailyReturn: 190000,
@@ -218,7 +218,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "act-1",
     vipLevel: 1,
-    name: "Goldspeed Activité Éclair",
+    name: "Gold Avenue Activité Éclair",
     tag: "Activité Éclair",
     price: 5000,
     dailyReturn: 2500,
@@ -232,7 +232,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "act-2",
     vipLevel: 2,
-    name: "Goldspeed Activité Flash",
+    name: "Gold Avenue Activité Flash",
     tag: "Activité Flash",
     price: 15000,
     dailyReturn: 8000,
@@ -246,7 +246,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "act-3",
     vipLevel: 3,
-    name: "Goldspeed Activité Boost",
+    name: "Gold Avenue Activité Boost",
     tag: "Activité Boost",
     price: 40000,
     dailyReturn: 22000,
@@ -260,7 +260,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "act-4",
     vipLevel: 4,
-    name: "Goldspeed Activité Turbo",
+    name: "Gold Avenue Activité Turbo",
     tag: "Activité Turbo",
     price: 100000,
     dailyReturn: 58000,
@@ -274,7 +274,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "act-5",
     vipLevel: 5,
-    name: "Goldspeed Activité Hyper",
+    name: "Gold Avenue Activité Hyper",
     tag: "Activité Hyper",
     price: 250000,
     dailyReturn: 150000,
@@ -288,7 +288,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "act-6",
     vipLevel: 6,
-    name: "Goldspeed Activité Master",
+    name: "Gold Avenue Activité Master",
     tag: "Activité Master",
     price: 600000,
     dailyReturn: 380000,
@@ -302,7 +302,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "act-7",
     vipLevel: 7,
-    name: "Goldspeed Activité Elite",
+    name: "Gold Avenue Activité Elite",
     tag: "Activité Elite",
     price: 1500000,
     dailyReturn: 1000000,
@@ -403,7 +403,7 @@ export function getApiUrl(endpoint: string): string {
     }
   } catch (e) {}
 
-  // If the host is an external domain (like goldspeed-lac.vercel.app)
+  // If the host is an external domain (like gold_avenue-lac.vercel.app)
   // we must automatically route requests to the live Cloud Run production instance
   if (typeof window !== "undefined" && window.location) {
     const host = window.location.hostname;
@@ -419,8 +419,8 @@ export function getApiUrl(endpoint: string): string {
   return endpoint;
 }
 
-export const SUPABASE_URL = "https://fpqxupbqxzsngezkqwcs.supabase.co";
-export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwcXh1cGJxeHpzbmdlemtxd2NzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDcyOTY3OSwiZXhwIjoyMTAwMzA1Njc5fQ.ox4gSGLyYXqUaAeXem-HPjQRfJFxGCfo4gg3DQ9pkvc";
+export const SUPABASE_URL = "https://ajluqalpxchoshqieuyj.supabase.co";
+export const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbHVxYWxweGNob3NocWlldXlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTM5ODY3NywiZXhwIjoyMTAwOTc0Njc3fQ.qI2moa-kqW6Hzcuslcoj_W9aezPC1DqXNNkCk-e6bW4";
 
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   let activeUrl = url;
@@ -1387,19 +1387,19 @@ export class DataStore {
       )) {
         changed = true;
         if (item.vipLevel === 6) {
-          item.name = "Goldspeed Or d'Investissement";
+          item.name = "Gold Avenue Or d'Investissement";
           item.tag = "Or d'Investissement";
         } else if (item.vipLevel === 7) {
-          item.name = "Goldspeed Lingot d'Or Pur";
+          item.name = "Gold Avenue Lingot d'Or Pur";
           item.tag = "Lingot d'Or Pur";
         } else if (item.vipLevel === 8) {
-          item.name = "Goldspeed Réserve Souveraine";
+          item.name = "Gold Avenue Réserve Souveraine";
           item.tag = "Réserve Souveraine";
         } else if (item.vipLevel === 9) {
-          item.name = "Goldspeed Trésor Impérial";
+          item.name = "Gold Avenue Trésor Impérial";
           item.tag = "Trésor Impérial";
         } else {
-          item.name = `Goldspeed Option Or VIP ${item.vipLevel || ''}`;
+          item.name = `Gold Avenue Option Or VIP ${item.vipLevel || ''}`;
           item.tag = "Or d'Investissement";
         }
       }
@@ -1526,25 +1526,20 @@ export class DataStore {
   static getForumPosts(): any[] {
     const val = getFromStore<any[]>('gi_forum_posts', []);
     const deletedList = getFromStore<string[]>('gi_deleted_forum_posts', []);
-    if (val.length === 0) {
-      try {
-        const storedOld = localStorage.getItem('rockygold_forum_posts_v3');
-        if (storedOld) {
-          const oldPosts = JSON.parse(storedOld);
-          if (Array.isArray(oldPosts) && oldPosts.length > 0) {
-            const filteredOld = oldPosts.filter((p: any) => p && p.id && !deletedList.includes(String(p.id)));
-            setToStore<any[]>('gi_forum_posts', filteredOld);
-            return filteredOld;
-          }
-        }
-      } catch (e) {}
-    }
     const filtered = val.filter((p: any) => p && p.id && !deletedList.includes(String(p.id)));
     return filtered.sort((a, b) => {
       const timeA = new Date(a.createdAt || a.lastModified || 0).getTime();
       const timeB = new Date(b.createdAt || b.lastModified || 0).getTime();
       return timeB - timeA;
     });
+  }
+
+  static async clearAllForumPosts(): Promise<void> {
+    setToStore<any[]>('gi_forum_posts', []);
+    try {
+      localStorage.removeItem('rockygold_forum_posts_v3');
+    } catch (e) {}
+    await this.saveForumPosts([]);
   }
 
   static async saveForumPosts(posts: any[]): Promise<void> {

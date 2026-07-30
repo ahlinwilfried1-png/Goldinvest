@@ -92,8 +92,8 @@ export default function Auth({
     envoyer: lang === 'FR' ? "ENVOYER" : "SEND",
     lostPassword: lang === 'FR' ? "Mot de passe perdu ?" : "Lost password?",
     lostPasswordTip: lang === 'FR' 
-      ? "💡 Pour récupérer ou réinitialiser votre compte d’investisseur, veuillez contacter l'administration de Goldspeed."
-      : "💡 To recover or reset your investor account, please contact Goldspeed administration.",
+      ? "💡 Pour récupérer ou réinitialiser votre compte d’investisseur, veuillez contacter l'administration de Gold Avenue."
+      : "💡 To recover or reset your investor account, please contact Gold Avenue administration.",
     submitBtn: loading
       ? (lang === 'FR' ? "Traitement en cours..." : "Processing...")
       : (isRegister 
@@ -103,7 +103,7 @@ export default function Auth({
       ? (lang === 'FR' ? "Se connecter maintenant" : "Log in now")
       : (lang === 'FR' ? "Créer un compte maintenant" : "Create an account now"),
     customerService: lang === 'FR' ? "Service client" : "Customer service",
-    footerText: lang === 'FR' ? "Goldspeed • Système de Placement Sécurisé" : "Goldspeed • Secure Investment System",
+    footerText: lang === 'FR' ? "Gold Avenue • Système de Placement Sécurisé" : "Gold Avenue • Secure Investment System",
     securePlacement: lang === 'FR' ? "Placement Sécurisé" : "Secure Investment",
     whatsappRequired: lang === 'FR' 
       ? "Veuillez saisir votre numéro de téléphone avant d'envoyer l'OTP."
@@ -325,10 +325,14 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between py-6 p-4 relative overflow-y-auto overflow-x-hidden font-sans text-slate-900 select-none" id="auth-container">
+    <div className="min-h-screen flex flex-col justify-between py-6 p-4 relative overflow-y-auto overflow-x-hidden font-sans text-slate-900 select-none bg-gradient-to-b from-[#38bdf8] via-[#0284c7] to-[#0369a1]" id="auth-container">
       
-      {/* Immersive bright and clean background gradient matching gold brand without any dark/gray overlay */}
-      <div className="absolute inset-0 z-0 overflow-hidden select-none pointer-events-none bg-gradient-to-tr from-amber-50/20 via-white/80 to-amber-50/10" />
+      {/* Sky blue theme glowing background circles with gold accent highlights */}
+      <div className="absolute inset-0 z-0 overflow-hidden select-none pointer-events-none">
+        <div className="absolute -top-20 -left-20 w-80 h-80 bg-sky-200/40 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 -right-20 w-80 h-80 bg-amber-300/25 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 left-1/3 w-80 h-80 bg-sky-300/30 rounded-full blur-3xl" />
+      </div>
 
       {/* Top Navigation Bar containing Back minimalist chevron and Direct Language Switcher */}
       <div className="w-full max-w-md mx-auto flex items-center justify-between relative z-10 mb-6 shrink-0 px-2">
@@ -336,7 +340,7 @@ export default function Auth({
           <button
             onClick={onBackToHome}
             type="button"
-            className="text-slate-700 hover:text-slate-900 active:scale-95 transition-all cursor-pointer p-1"
+            className="text-white hover:text-sky-100 active:scale-95 transition-all cursor-pointer p-1"
             title="Retour"
           >
             <ChevronLeft className="w-8 h-8" strokeWidth={2.5} />
@@ -346,7 +350,7 @@ export default function Auth({
         )}
 
         {/* Direct inline language switch without any subpages */}
-        <div className="flex items-center bg-white/85 backdrop-blur-xs rounded-full p-1 border border-slate-200/60 shadow-xs">
+        <div className="flex items-center bg-white/20 backdrop-blur-md rounded-full p-1 border border-white/30 shadow-xs">
           <button
             type="button"
             onClick={() => {
@@ -356,8 +360,8 @@ export default function Auth({
             }}
             className={`px-3 py-1.5 rounded-full text-[11px] font-extrabold transition-all duration-200 flex items-center gap-1 ${
               lang === 'FR' 
-                ? 'bg-[#0b5cd5] text-white shadow-xs' 
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-white text-[#0284c7] shadow-xs' 
+                : 'text-white/80 hover:text-white'
             }`}
           >
             <span>🇫🇷</span> FR
@@ -371,8 +375,8 @@ export default function Auth({
             }}
             className={`px-3 py-1.5 rounded-full text-[11px] font-extrabold transition-all duration-200 flex items-center gap-1 ${
               lang === 'EN' 
-                ? 'bg-[#0b5cd5] text-white shadow-xs' 
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-white text-[#0284c7] shadow-xs' 
+                : 'text-white/80 hover:text-white'
             }`}
           >
             <span>🇬🇧</span> EN
@@ -385,55 +389,89 @@ export default function Auth({
         
         <div className="w-full flex flex-col justify-center shrink-0">
           
-          {/* Centered Goldspeed Bold Golden Stylized Logo */}
-          <div className="flex flex-col items-center mb-6 animate-fade-in select-none">
+          {/* Left-aligned Gold Avenue Bold Golden Stylized Logo */}
+          <div className="flex flex-col items-start mb-6 animate-fade-in select-none pl-1">
             <div 
-              className="text-[40px] md:text-[48px] font-sans font-black italic tracking-tighter text-[#d97706] leading-none select-none drop-shadow-sm"
+              className="text-[38px] md:text-[46px] font-sans font-black italic tracking-tighter text-amber-300 drop-shadow-[0_2px_12px_rgba(251,191,36,0.65)] leading-none select-none text-left"
             >
-              Goldspeed
+              Gold Avenue
             </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t.securePlacement}</span>
+            <span className="text-[10px] font-bold text-sky-100 uppercase tracking-widest mt-1.5 drop-shadow-xs text-left">{t.securePlacement}</span>
           </div>
 
-          {/* Floating Auth Card matching modern app styles - styled with white background card for both login and register */}
-          <div className="w-full relative z-10 animate-fade-in transition-all bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100/90">
+          {/* Direct Form Content without outer card frame */}
+          <div className="w-full relative z-10 animate-fade-in text-white px-1">
           
+          {/* Mode Segment Switcher: Se connecter (White) & S'inscrire (Clear Light) */}
+          <div className="flex items-center bg-black/15 p-1.5 rounded-2xl mb-6 backdrop-blur-md border border-white/20 shadow-inner">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegister(false);
+                setErrorMessage('');
+                setSuccessMessage('');
+              }}
+              className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 text-center cursor-pointer ${
+                !isRegister
+                  ? 'bg-white text-[#0284c7] shadow-lg scale-[1.02]'
+                  : 'text-white bg-white/10 hover:bg-white/20 font-bold'
+              }`}
+            >
+              Se connecter
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegister(true);
+                setErrorMessage('');
+                setSuccessMessage('');
+              }}
+              className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 text-center cursor-pointer ${
+                isRegister
+                  ? 'bg-sky-100/90 text-[#0284c7] shadow-lg border border-white/80 scale-[1.02]'
+                  : 'text-sky-100 bg-white/10 hover:bg-white/20 font-bold border border-white/10'
+              }`}
+            >
+              S'inscrire
+            </button>
+          </div>
+
           <div className="mb-6">
-            <h1 className="text-xl font-sans font-black text-slate-800 tracking-tight">
+            <h1 className="text-xl font-sans font-black text-white tracking-tight">
               {t.title}
             </h1>
-            <p className="text-xs text-slate-400 font-bold mt-1">
+            <p className="text-xs text-sky-100 font-bold mt-1">
               {t.subtitle}
             </p>
           </div>
 
           {/* Error and Success alerts */}
           {errorMessage && (
-            <div className="mb-5 p-4 rounded-2xl bg-red-50 border border-red-100 text-xs text-red-800 font-bold flex items-start space-x-2 animate-fade-in">
-              <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="mb-5 p-4 rounded-2xl bg-red-500/20 border border-red-300/40 text-xs text-white font-bold flex items-start space-x-2 animate-fade-in">
+              <AlertTriangle className="w-4 h-4 text-red-200 flex-shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="mb-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-xs text-emerald-800 font-bold flex items-start space-x-2 animate-fade-in">
-              <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <div className="mb-5 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-300/40 text-xs text-white font-bold flex items-start space-x-2 animate-fade-in">
+              <Check className="w-4 h-4 text-emerald-200 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <span>{successMessage}</span>
               </div>
             </div>
           )}
 
-          {/* Form inputs styled exactly as gray rounded boxes with top labels as requested */}
+          {/* Form inputs styled as white boxes with dark readable text */}
           <form onSubmit={handleSubmit} className="space-y-4" id="auth-form">
             
             {isRegister ? (
-              /* REGISTRATION FIELDS - STYLED EXACTLY TO MATCH THE UPLOADED SCREENSHOT */
+              /* REGISTRATION FIELDS - WHITE BOXES ON BLUE BACKGROUND */
               <>
                 {/* Pays Selector Box */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.pays}</label>
-                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between relative cursor-pointer hover:border-[#0b5cd5] transition-all h-16">
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.pays}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between relative cursor-pointer hover:border-blue-500 transition-all h-16">
                     <span className="text-sm font-bold text-slate-800 flex items-center gap-2">
                       <span className="text-lg leading-none">
                         {eligibleCountries.find(c => c.code === selectedCode)?.flag || '🇹🇬'}
@@ -463,7 +501,7 @@ export default function Auth({
 
                 {/* Phone Input Box */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.phone}</label>
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.phone}</label>
                   <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center h-16">
                     <input
                       type="tel"
@@ -478,7 +516,7 @@ export default function Auth({
 
                 {/* Nickname (Surnom) Box */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.nickname}</label>
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.nickname}</label>
                   <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center h-16">
                     <input
                       type="text"
@@ -493,7 +531,7 @@ export default function Auth({
 
                 {/* Password field */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.password}</label>
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.password}</label>
                   <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between h-16">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -515,7 +553,7 @@ export default function Auth({
 
                 {/* Invitation / Sponsor Code Field */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.invitationCode}</label>
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.invitationCode}</label>
                   <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between h-16">
                     <input
                       type="text"
@@ -530,7 +568,7 @@ export default function Auth({
 
                 {/* Code de vérification (OTP) Field with ENVOYER action */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.otp}</label>
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.otp}</label>
                   <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between h-16">
                     <input
                       type="text"
@@ -544,7 +582,7 @@ export default function Auth({
                       type="button"
                       onClick={handleSendOTP}
                       disabled={sendingOtp || otpCountdown > 0}
-                      className="text-[#0b5cd5] hover:text-[#0a4fb9] active:scale-95 disabled:opacity-50 text-sm font-black uppercase tracking-wider bg-transparent border-none py-1 px-3 cursor-pointer transition-all shrink-0 font-sans"
+                      className="text-[#0b5cd5] hover:text-[#094bb8] active:scale-95 disabled:opacity-50 text-sm font-black uppercase tracking-wider bg-transparent border-none py-1 px-3 cursor-pointer transition-all shrink-0 font-sans"
                     >
                       {otpCountdown > 0 ? `${otpCountdown}s` : t.envoyer}
                     </button>
@@ -558,8 +596,8 @@ export default function Auth({
               <>
                 {/* Pays Selector Box */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.pays}</label>
-                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between relative cursor-pointer hover:border-[#0b5cd5] transition-all h-16">
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.pays}</label>
+                  <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between relative cursor-pointer hover:border-blue-500 transition-all h-16">
                     <span className="text-sm font-bold text-slate-800 flex items-center gap-2">
                       <span className="text-lg leading-none">
                         {eligibleCountries.find(c => c.code === loginSelectedCode)?.flag || '🇹🇬'}
@@ -584,7 +622,7 @@ export default function Auth({
 
                 {/* Login Phone Input */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.phone}</label>
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.phone}</label>
                   <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center h-16">
                     <input
                       type="text"
@@ -599,7 +637,7 @@ export default function Auth({
 
                 {/* Login Password Input */}
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-sans font-bold text-slate-500 block">{t.password}</label>
+                  <label className="text-[13px] font-sans font-bold text-blue-100 block">{t.password}</label>
                   <div className="w-full auth-field-wrapper rounded-2xl px-4 flex items-center justify-between h-16">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -624,30 +662,34 @@ export default function Auth({
                   <button 
                     type="button"
                     onClick={() => setResetTip(!resetTip)}
-                    className="text-xs text-[#0b5cd5] hover:text-[#0a4fb9] font-black underline cursor-pointer hover:no-underline transition-colors uppercase tracking-wider font-sans"
+                    className="text-xs text-amber-300 hover:text-amber-200 font-black underline cursor-pointer hover:no-underline transition-colors uppercase tracking-wider font-sans"
                   >
                     {t.lostPassword}
                   </button>
                 </div>
 
                 {resetTip && (
-                  <div className="p-4 bg-slate-50 rounded-2xl text-xs font-semibold text-slate-600 leading-relaxed text-left border border-slate-100 animate-fade-in">
+                  <div className="p-4 bg-blue-900/60 rounded-2xl text-xs font-semibold text-blue-100 leading-relaxed text-left border border-blue-400/30 animate-fade-in">
                     {t.lostPasswordTip}
                   </div>
                 )}
               </>
             )}
 
-            {/* Primary Submit Button - Styled as solid blue rounded pill exactly like screenshot */}
+            {/* Primary Submit Button */}
             <button
               id="auth-submit-btn"
               type="submit"
               disabled={loading}
-              className="w-full bg-[#0b5cd5] hover:bg-[#0a4fb9] active:scale-[0.98] text-white font-sans font-extrabold text-sm uppercase tracking-wider py-4 px-4 rounded-full flex items-center justify-center transition-all select-none cursor-pointer disabled:opacity-50 mt-6 shadow-[0_8px_24px_rgba(11,92,213,0.2)]"
+              className={`w-full font-sans font-black text-sm uppercase tracking-wider py-4 px-4 rounded-full flex items-center justify-center transition-all select-none cursor-pointer disabled:opacity-50 mt-6 shadow-xl active:scale-[0.98] ${
+                !isRegister
+                  ? 'bg-white hover:bg-sky-50 text-[#0284c7]'
+                  : 'bg-sky-100/95 hover:bg-white text-[#0284c7] border border-white/80'
+              }`}
             >
               {loading ? (
                 <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-[#0284c7] border-t-transparent rounded-full animate-spin" />
                   <span>{t.submitBtn}</span>
                 </div>
               ) : (
@@ -655,7 +697,7 @@ export default function Auth({
               )}
             </button>
 
-            {/* Secondary Toggle Mode Button - Styled as outlined blue rounded pill exactly like screenshot */}
+            {/* Secondary Toggle Mode Button */}
             <div className="mt-3">
               <button
                 id="auth-toggle-mode-btn"
@@ -665,7 +707,11 @@ export default function Auth({
                   setErrorMessage('');
                   setSuccessMessage('');
                 }}
-                className="w-full border-2 border-[#0b5cd5] hover:bg-blue-50/50 active:scale-[0.98] text-[#0b5cd5] font-sans font-extrabold text-sm uppercase tracking-wider py-4 px-4 rounded-full flex items-center justify-center transition-all select-none cursor-pointer"
+                className={`w-full font-sans font-extrabold text-sm uppercase tracking-wider py-3.5 px-4 rounded-full flex items-center justify-center transition-all select-none cursor-pointer active:scale-[0.98] ${
+                  !isRegister
+                    ? 'border-2 border-white/80 hover:bg-white/10 text-white bg-white/10 backdrop-blur-sm'
+                    : 'bg-white hover:bg-sky-50 text-[#0284c7] shadow-lg'
+                }`}
               >
                 <span>{t.toggleBtn}</span>
               </button>
@@ -682,7 +728,7 @@ export default function Auth({
 
       {/* Footer Branding label */}
       <div className="w-full text-center relative z-10 py-2 shrink-0">
-        <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest drop-shadow-xs">
+        <p className="text-[10px] font-mono font-bold text-blue-100/90 uppercase tracking-widest drop-shadow-xs">
           {t.footerText}
         </p>
       </div>
@@ -730,7 +776,7 @@ export default function Auth({
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 leading-none">
-                  {lang === 'FR' ? "Support Client Goldspeed" : "Goldspeed Customer Support"}
+                  {lang === 'FR' ? "Support Client Gold Avenue" : "Gold Avenue Customer Support"}
                 </h3>
                 <span className="text-xs text-emerald-600 font-bold flex items-center gap-1 mt-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />

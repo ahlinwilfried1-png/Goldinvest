@@ -19,6 +19,9 @@ export interface User {
   bankCardName?: string;
   bankCardOperator?: string;
   bankCardNumber?: string;
+  lastCheckInDate?: string;
+  checkInStreak?: number;
+  claimedMissions?: string[];
 }
 
 export interface Deposit {
